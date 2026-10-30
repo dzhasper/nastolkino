@@ -1,0 +1,295 @@
+/* =====================================================================
+   Стили сценариев. body[data-skin="…"] меняет весь интерфейс комнаты:
+   шрифты, палитру, фактуру фона, форму кнопок и плиток, карты ролей.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------- 🕴 КЛАССИКА: нуар, строго, чёрное/белое/кровь */
+body[data-skin="classic"] {
+  --bg: #080808; --card: #111; --card2: #1b1b1b; --line: #2a2a2a; --text: #ece8e1; --muted: #8b857c;
+  --accent: #b5121b; --accent2: #3a0306; --radius: 3px; --bad: #b5121b; --good: #a8a29e;
+  --font-head: "Playfair Display", Georgia, serif; --font-body: "Inter", sans-serif;
+  --card-bg: #0d0d0d; --card-front: #0d0d0d;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(181, 18, 27, .16), transparent 55%),
+    radial-gradient(ellipse at 50% 120%, rgba(0, 0, 0, .9), transparent 60%), #080808;
+}
+body[data-skin="classic"]::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+body[data-skin="classic"] #app { position: relative; z-index: 1; }
+body[data-skin="classic"] h1, body[data-skin="classic"] h2, body[data-skin="classic"] .gamebar .title b {
+  text-transform: uppercase; letter-spacing: .14em; font-weight: 700; }
+body[data-skin="classic"] .card { backdrop-filter: none; border-color: #232323; }
+body[data-skin="classic"] .btn { background: var(--accent); box-shadow: none; border-radius: 2px; text-transform: uppercase;
+  letter-spacing: .18em; font-size: 13px; padding: 17px; }
+body[data-skin="classic"] .btn.ghost { background: transparent; border: 1px solid #3a3a3a; }
+body[data-skin="classic"] .pill { border-radius: 2px; background: transparent; border: 1px solid #333; text-transform: uppercase; letter-spacing: .08em; font-size: 11px; }
+body[data-skin="classic"] .pill.on { background: var(--accent); border-color: var(--accent); }
+body[data-skin="classic"] .player { border-radius: 2px; background: #0f0f0f; border: 1px solid #222; }
+body[data-skin="classic"] .player .avatar { filter: grayscale(1) contrast(1.1); border-radius: 0; }
+body[data-skin="classic"] .player.sel { border-color: var(--accent); background: #1a0607; }
+body[data-skin="classic"] .player .nm { text-transform: uppercase; letter-spacing: .08em; font-size: 10.5px; }
+body[data-skin="classic"] .avatar { border-radius: 0; }
+body[data-skin="classic"] .code { background: none; color: #ece8e1; -webkit-text-fill-color: #ece8e1; font-family: "Playfair Display", serif; letter-spacing: .3em; }
+body[data-skin="classic"] .chat-fab { border-radius: 0; background: #ece8e1; color: #000; box-shadow: none; }
+body[data-skin="classic"] .story { border-left: 1px solid var(--accent); font-family: "Playfair Display", serif; font-style: italic; }
+body[data-skin="classic"] .phase-hero h2 { letter-spacing: .2em; }
+body[data-skin="classic"] .ph-icon { color: #ece8e1; }
+body[data-skin="classic"] .ph-night .ph-icon { color: var(--accent); }
+body[data-skin="classic"] .timer circle:last-child { stroke: #ece8e1; }
+body[data-skin="classic"] .night-sky { background: radial-gradient(circle at 78% 14%, rgba(181,18,27,.35) 0 34px, transparent 35px), #050505; }
+body[data-skin="classic"] .stars { display: none; }
+body[data-skin="classic"] .win { background: #0f0f0f; border: 1px solid var(--accent); border-radius: 2px; }
+body[data-skin="classic"] .theme { border-radius: 2px; filter: grayscale(.85) contrast(1.1); }
+body[data-skin="classic"] .theme.sel { filter: none; }
+body[data-skin="classic"] .face { border-radius: 6px; border: 1px solid #2c2c2c; }
+body[data-skin="classic"] .cf { border: 1px solid #3a0a0d; outline: 1px solid #3a0a0d; outline-offset: -10px; }
+body[data-skin="classic"] .cf-mono { font-family: "Playfair Display", serif; font-size: 120px; color: var(--accent); font-style: italic; }
+body[data-skin="classic"] .rc { border: 1px solid #2b2b2b; outline: 1px solid #1d1d1d; outline-offset: -8px; padding: 18px 14px; }
+body[data-skin="classic"] .rc-top { width: 100%; display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .25em; text-transform: uppercase; color: var(--muted); }
+body[data-skin="classic"] .rc-name { text-transform: uppercase; letter-spacing: .12em; font-size: 24px; }
+body[data-skin="classic"] .rc-motto { font-family: "Playfair Display", serif; }
+body[data-skin="classic"] .glyph span { filter: grayscale(1) contrast(1.4) brightness(1.05); }
+body[data-skin="classic"] .glyph::after { content: ""; position: absolute; inset: 0; background: var(--accent); mix-blend-mode: multiply; border-radius: 50%; }
+body[data-skin="classic"] .glyph { border: 1px solid #333; border-radius: 50%; }
+body[data-skin="classic"] .rc-team-town .glyph::after { background: #9a9a9a; }
+body[data-skin="classic"] .rc-stamp { position: absolute; right: 18px; bottom: 70px; transform: rotate(-14deg); border: 2px solid #777; color: #777;
+  padding: 2px 10px; font-weight: 800; letter-spacing: .3em; text-transform: uppercase; font-size: 12px; }
+body[data-skin="classic"] .rc-stamp.evil { border-color: var(--accent); color: var(--accent); }
+
+/* ---------------------------------------------------------------- 📼 90-е: VHS, неон, кассеты */
+body[data-skin="90s"] {
+  --bg: #0e0717; --card: rgba(255, 43, 214, .07); --card2: rgba(255, 255, 255, .09); --line: rgba(255, 43, 214, .28);
+  --text: #fff6d6; --muted: #b9a2c9; --accent: #ffd400; --accent2: #ff2bd6; --radius: 0px;
+  --font-head: "Russo One", "Arial Black", sans-serif, sans-serif; --font-body: "Inter", sans-serif; --card-bg: #140a20; --card-front: #1a1a1a;
+  background: linear-gradient(180deg, #1b0b2e, #0e0717 45%, #12051c);
+}
+body[data-skin="90s"]::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 70; opacity: .5;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+body[data-skin="90s"] h1, body[data-skin="90s"] h2, body[data-skin="90s"] .gamebar .title b, body[data-skin="90s"] .rc-name {
+  text-shadow: -2px 0 #ff2bd6, 2px 0 #00e5ff; text-transform: uppercase; }
+body[data-skin="90s"] .card { border-radius: 0; backdrop-filter: none; border: 1px solid var(--line); }
+body[data-skin="90s"] .btn { background: #ffd400; color: #120717; border-radius: 0; box-shadow: 5px 5px 0 #ff2bd6; text-transform: uppercase; font-family: "Russo One", "Arial Black", sans-serif, sans-serif; }
+body[data-skin="90s"] .btn:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 #ff2bd6; }
+body[data-skin="90s"] .btn.ghost { background: transparent; color: #fff6d6; border: 2px solid #ff2bd6; box-shadow: none; }
+body[data-skin="90s"] .pill { border-radius: 0; background: rgba(255, 212, 0, .12); color: #ffd400; }
+body[data-skin="90s"] .pill.on { background: #ffd400; color: #000; }
+body[data-skin="90s"] .player { border-radius: 0; background: rgba(0,0,0,.35); border: 1px solid rgba(255,43,214,.3); }
+body[data-skin="90s"] .player.sel { border-color: #ffd400; box-shadow: 0 0 18px rgba(255,212,0,.35); background: rgba(255,212,0,.08); }
+body[data-skin="90s"] .avatar { border-radius: 4px; }
+body[data-skin="90s"] .code { background: none; -webkit-text-fill-color: #ffd400; font-family: "Russo One", "Arial Black", sans-serif; text-shadow: -3px 0 #ff2bd6, 3px 0 #00e5ff; }
+body[data-skin="90s"] .chat-fab { border-radius: 0; background: #ff2bd6; box-shadow: 4px 4px 0 #ffd400; }
+body[data-skin="90s"] .gamebar .title::before { content: "● REC"; color: #ff3b3b; font-family: "Russo One", "Arial Black", sans-serif; font-size: 11px;
+  animation: blink 1s steps(2) infinite; display: block; margin-bottom: 2px; }
+@keyframes blink { 50% { opacity: 0; } }
+body[data-skin="90s"] .story { border-left: 3px solid #ff2bd6; }
+body[data-skin="90s"] .night-sky { background: linear-gradient(#05020a, #1b0533 70%, #3b0a4d); }
+body[data-skin="90s"] .win { border-radius: 0; background: linear-gradient(135deg, #ff2bd6, #5b13a3); box-shadow: 8px 8px 0 #ffd400; }
+body[data-skin="90s"] .face { border-radius: 4px; }
+body[data-skin="90s"] .cf { background: linear-gradient(#222, #111); }
+body[data-skin="90s"] .reels { display: flex; gap: 40px; padding: 26px 30px; background: #2b2b2b; border: 3px solid #444; }
+body[data-skin="90s"] .reels i { width: 62px; height: 62px; border-radius: 50%; border: 10px dotted #ddd; animation: spin 4s linear infinite; display: block; }
+body[data-skin="90s"] .cf-line { color: #ffd400; font-family: "Russo One", "Arial Black", sans-serif; }
+body[data-skin="90s"] .rc { padding: 14px; background: linear-gradient(180deg, #170a24, #0d0613); }
+body[data-skin="90s"] .vhs-top { width: 100%; display: flex; justify-content: space-between; font-family: "Russo One", "Arial Black", sans-serif; font-size: 12px; color: #ff2bd6; }
+body[data-skin="90s"] .vhs-label { width: 100%; background: #fff6d6; color: #120717; margin-top: 8px; padding: 6px 10px 12px; transform: rotate(-1.5deg);
+  box-shadow: 4px 4px 0 #ff2bd6; }
+body[data-skin="90s"] .vhs-label .rc-name { color: #120717; font-size: 24px; text-shadow: 2px 0 #ff2bd6; }
+body[data-skin="90s"] .glyph span { filter: saturate(2) contrast(1.2); }
+body[data-skin="90s"] .glyph::before { content: ""; position: absolute; inset: 8px; background: linear-gradient(135deg, #ffd400, #ff2bd6); border-radius: 50%; z-index: -1; opacity: .7; }
+body[data-skin="90s"] .vhs-stripes { width: 100%; display: grid; gap: 4px; margin: 14px 0 6px; }
+body[data-skin="90s"] .vhs-stripes i { height: 5px; display: block; background: #ffd400; }
+body[data-skin="90s"] .vhs-stripes i:nth-child(2) { background: #ff2bd6; }
+body[data-skin="90s"] .vhs-stripes i:nth-child(3) { background: #00e5ff; }
+body[data-skin="90s"] .vhs-rec { font-family: "Russo One", "Arial Black", sans-serif; font-size: 11px; margin-top: 8px; color: #fff6d6; }
+body[data-skin="90s"] .vhs-rec b { color: #ff3b3b; animation: blink 1s steps(2) infinite; }
+
+/* ---------------------------------------------------------------- 🎃 ХЭЛЛОУИН: готика, таро, свечи */
+body[data-skin="halloween"] {
+  --bg: #0b0610; --card: rgba(255, 122, 24, .05); --card2: rgba(255, 255, 255, .07); --line: rgba(255, 140, 50, .18);
+  --text: #f6e7d4; --muted: #a8917e; --accent: #ff7a18; --accent2: #4a1670; --radius: 14px;
+  --font-head: "Cormorant SC", "Cormorant Garamond", Georgia, serif; --font-body: "Cormorant Garamond", Georgia, serif;
+  --card-bg: #120917; --card-front: #1a0c22;
+  font-size: 17px;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 122, 24, .14), transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(122, 44, 191, .3), transparent 55%), #0b0610;
+}
+body[data-skin="halloween"] h1, body[data-skin="halloween"] h2, body[data-skin="halloween"] .gamebar .title b { font-weight: 700; letter-spacing: .04em; }
+body[data-skin="halloween"] .btn { background: linear-gradient(180deg, #ff8a2a, #c2410c); border-radius: 40px; box-shadow: 0 0 26px rgba(255, 122, 24, .45);
+  font-family: "Cormorant SC", serif; font-size: 19px; letter-spacing: .08em; }
+body[data-skin="halloween"] .btn.ghost { background: transparent; border: 1px solid rgba(255, 140, 50, .4); box-shadow: none; }
+body[data-skin="halloween"] .card { border: 1px solid var(--line); box-shadow: inset 0 0 0 4px rgba(0,0,0,.2), inset 0 0 0 5px rgba(255,140,50,.12); }
+body[data-skin="halloween"] .player { border-radius: 50% 50% 14px 14px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,140,50,.15); }
+body[data-skin="halloween"] .player.sel { border-color: #ff7a18; box-shadow: 0 0 22px rgba(255,122,24,.5); }
+body[data-skin="halloween"] .player .avatar { box-shadow: 0 0 0 2px rgba(255,122,24,.25); }
+body[data-skin="halloween"] .code { background: none; -webkit-text-fill-color: #ffb067; font-family: "Cormorant SC", serif; text-shadow: 0 0 24px rgba(255, 122, 24, .7); }
+body[data-skin="halloween"] .chat-fab { background: #4a1670; box-shadow: 0 0 24px rgba(160, 80, 255, .5); }
+body[data-skin="halloween"] .ph-icon { color: #ffb067; filter: drop-shadow(0 0 12px rgba(255, 122, 24, .8)); }
+body[data-skin="halloween"] .story { border-left: 2px solid #7b2cbf; font-size: 18px; }
+body[data-skin="halloween"] .night-sky { background: radial-gradient(circle at 75% 15%, rgba(255, 220, 160, .55) 0 38px, rgba(255,180,100,.12) 39px 90px, transparent 91px),
+  linear-gradient(#07030b, #1b0a2b 70%, #2c0d3a); }
+body[data-skin="halloween"] .win { background: linear-gradient(180deg, #2a0f3a, #0f0617); border: 1px solid rgba(255,140,50,.4); }
+body[data-skin="halloween"] .face { border-radius: 18px; border: 1px solid rgba(255,170,90,.35); }
+body[data-skin="halloween"] .cf { border: 2px solid rgba(255, 170, 90, .35); border-radius: 12px; outline: 1px solid rgba(255,170,90,.2); outline-offset: -10px;
+  background: radial-gradient(circle, rgba(122,44,191,.35), transparent 70%); }
+body[data-skin="halloween"] .cf-moon { font-size: 110px; color: #ffcf8a; text-shadow: 0 0 40px rgba(255, 180, 90, .8); }
+body[data-skin="halloween"] .cf-stars { color: #ffcf8a; letter-spacing: .6em; }
+body[data-skin="halloween"] .rc { border: 2px solid rgba(255, 170, 90, .45); border-radius: 12px; outline: 1px solid rgba(255,170,90,.25); outline-offset: -9px; padding: 16px 14px; }
+body[data-skin="halloween"] .tarot-num { font-family: "Cormorant SC", serif; font-size: 22px; color: #ffcf8a; letter-spacing: .2em; }
+body[data-skin="halloween"] .tarot-window { margin: 8px 0; padding: 18px 26px 12px; border: 1px solid rgba(255,170,90,.45); border-radius: 90px 90px 6px 6px;
+  background: radial-gradient(circle at 50% 30%, rgba(255,140,50,.35), rgba(74,22,112,.4) 70%); }
+body[data-skin="halloween"] .glyph span { filter: drop-shadow(0 0 14px rgba(255,140,50,.7)); }
+body[data-skin="halloween"] .rc-name { font-family: "Cormorant SC", serif; font-size: 30px; color: #ffcf8a; }
+body[data-skin="halloween"] .rc-motto { font-size: 17px; }
+body[data-skin="halloween"] .rc-desc { font-size: 15px; }
+body[data-skin="halloween"] .tarot-team { margin-top: 8px; font-family: "Cormorant SC", serif; color: #ffcf8a; letter-spacing: .2em; }
+
+/* ---------------------------------------------------------------- ☣ БУНКЕР: военный терминал */
+body[data-skin="bunker"] {
+  --bg: #040704; --card: #07100a; --card2: #0d1a10; --line: #1f3d22; --text: #b8ffa1; --muted: #5d8f52;
+  --accent: #9cff57; --accent2: #0d2b12; --radius: 0px; --bad: #ff5a3c;
+  --font-head: "JetBrains Mono", monospace; --font-body: "JetBrains Mono", monospace; --card-bg: #050a06; --card-front: #0a120b;
+  font-size: 14px; background: radial-gradient(ellipse at 50% 30%, #0b1a0d, #030503 75%);
+}
+body[data-skin="bunker"]::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 70;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 2px, transparent 2px 4px); }
+body[data-skin="bunker"] * { text-shadow: 0 0 6px rgba(156, 255, 87, .25); }
+body[data-skin="bunker"] h1, body[data-skin="bunker"] h2, body[data-skin="bunker"] .gamebar .title b { text-transform: uppercase; font-weight: 800; font-size: 16px; }
+body[data-skin="bunker"] .card { border-radius: 0; backdrop-filter: none; border: 1px solid var(--line); position: relative; }
+body[data-skin="bunker"] .btn { background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: 0; box-shadow: none;
+  text-transform: uppercase; letter-spacing: .1em; font-size: 14px; }
+body[data-skin="bunker"] .btn::before { content: "[ "; } body[data-skin="bunker"] .btn::after { content: " ]"; }
+body[data-skin="bunker"] .btn:active { background: var(--accent); color: #000; }
+body[data-skin="bunker"] .btn.ghost { border-color: var(--line); color: var(--muted); }
+body[data-skin="bunker"] .btn.danger { border-color: var(--bad); color: var(--bad); }
+body[data-skin="bunker"] .pill { border-radius: 0; background: transparent; border: 1px solid var(--line); color: var(--accent); }
+body[data-skin="bunker"] .pill.on { background: var(--accent); color: #000; }
+body[data-skin="bunker"] .player { border-radius: 0; background: transparent; border: 1px dashed var(--line); }
+body[data-skin="bunker"] .player.sel { border: 1px solid var(--accent); background: rgba(156,255,87,.08); }
+body[data-skin="bunker"] .player .avatar { border-radius: 0; filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(3) brightness(.9); }
+body[data-skin="bunker"] .avatar { border-radius: 0; }
+body[data-skin="bunker"] .code { background: none; -webkit-text-fill-color: var(--accent); font-family: "JetBrains Mono"; }
+body[data-skin="bunker"] .chat-fab { border-radius: 0; background: #000; border: 1px solid var(--accent); box-shadow: none; }
+body[data-skin="bunker"] .story { border-left: 0; padding-left: 0; } body[data-skin="bunker"] .story::before { content: "> "; color: var(--accent); }
+body[data-skin="bunker"] .night-sky { background: #020402; } body[data-skin="bunker"] .stars { display: none; }
+body[data-skin="bunker"] .gamebar { border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+body[data-skin="bunker"] .card:first-of-type::before { content: ""; position: absolute; top: -1px; left: -1px; right: -1px; height: 4px;
+  background: repeating-linear-gradient(45deg, #f5c400 0 8px, #111 8px 16px); }
+body[data-skin="bunker"] .win { background: #050a06; border: 1px solid var(--accent); border-radius: 0; }
+body[data-skin="bunker"] .face { border-radius: 0; border: 1px solid var(--line); }
+body[data-skin="bunker"] .cf { background: repeating-linear-gradient(45deg, #0a120b 0 14px, #0c160d 14px 28px); }
+body[data-skin="bunker"] .cf-stamp { border: 3px solid var(--bad); color: var(--bad); padding: 8px 18px; transform: rotate(-12deg); font-weight: 800; font-size: 26px; letter-spacing: .2em; text-shadow: none; }
+body[data-skin="bunker"] .rc { text-align: left; align-items: stretch; padding: 0 14px 12px; }
+body[data-skin="bunker"] .hazard { height: 10px; margin: 0 -14px 10px; background: repeating-linear-gradient(45deg, #f5c400 0 10px, #111 10px 20px); }
+body[data-skin="bunker"] .file-head { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
+body[data-skin="bunker"] .file-row { display: flex; gap: 12px; align-items: center; margin: 10px 0; }
+body[data-skin="bunker"] .file-row .rc-art { margin: 0; border: 1px solid var(--line); }
+body[data-skin="bunker"] .glyph { width: 96px; height: 96px; } body[data-skin="bunker"] .glyph span { font-size: 60px; filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(4); }
+body[data-skin="bunker"] .file-data { font-size: 12px; display: grid; gap: 6px; }
+body[data-skin="bunker"] .file-data i { display: block; font-style: normal; color: var(--muted); font-size: 10px; }
+body[data-skin="bunker"] .file-data .bad { color: var(--bad); } body[data-skin="bunker"] .file-data .ok { color: var(--accent); }
+body[data-skin="bunker"] .rc-motto { font-style: normal; border-left: 2px solid var(--accent); padding-left: 8px; }
+body[data-skin="bunker"] .file-foot { font-size: 11px; color: var(--muted); margin-top: 8px; animation: blink 1.2s steps(2) infinite; }
+
+/* ---------------------------------------------------------------- 🤠 ДИКИЙ ЗАПАД: старая бумага, плакаты */
+body[data-skin="west"] {
+  --bg: #e7d6b4; --card: rgba(255, 247, 228, .55); --card2: rgba(90, 60, 30, .1); --line: rgba(90, 60, 30, .25);
+  --text: #2a1a0c; --muted: #6e5434; --accent: #8b2e16; --accent2: #5a3a1a; --radius: 4px; --bad: #8b2e16; --good: #4d6b2a;
+  --font-head: "Oswald", "Arial Narrow", sans-serif; --font-body: "Old Standard TT", Georgia, serif; --card-bg: #efe0bf; --card-front: #d9c296;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(90, 50, 20, .35)),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    #e7d6b4;
+}
+body[data-skin="west"] h1, body[data-skin="west"] h2, body[data-skin="west"] .gamebar .title b { text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+body[data-skin="west"] .card { backdrop-filter: none; border: 1px solid var(--line); box-shadow: 2px 3px 0 rgba(90, 60, 30, .15); }
+body[data-skin="west"] .btn { background: #8b2e16; color: #f5e9d0; border-radius: 3px; box-shadow: 0 3px 0 #4f170a; font-family: "Oswald"; text-transform: uppercase; letter-spacing: .12em; }
+body[data-skin="west"] .btn.ghost { background: transparent; color: var(--text); border: 2px solid var(--text); box-shadow: none; }
+body[data-skin="west"] .pill { background: rgba(90,60,30,.12); border-radius: 3px; font-family: "Oswald"; text-transform: uppercase; font-weight: 500; }
+body[data-skin="west"] .pill.on { background: #8b2e16; color: #f5e9d0; }
+body[data-skin="west"] .player { background: #f3e6c8; border: 1px solid rgba(90,60,30,.35); border-radius: 2px; box-shadow: 2px 3px 0 rgba(90,60,30,.18); }
+body[data-skin="west"] .player:nth-child(odd) { transform: rotate(-1.2deg); } body[data-skin="west"] .player:nth-child(even) { transform: rotate(1deg); }
+body[data-skin="west"] .player .avatar { border-radius: 2px; filter: sepia(.8) contrast(1.05); background: #d9c296; }
+body[data-skin="west"] .player.sel { border: 2px solid #8b2e16; }
+body[data-skin="west"] .player .nm { font-family: "Oswald"; text-transform: uppercase; }
+body[data-skin="west"] .avatar { background: rgba(90,60,30,.12); }
+body[data-skin="west"] .code { background: none; -webkit-text-fill-color: #2a1a0c; font-family: "Oswald"; }
+body[data-skin="west"] .chat-fab { background: #8b2e16; box-shadow: 0 3px 0 #4f170a; }
+body[data-skin="west"] .ph-icon { color: #5a3a1a; }
+body[data-skin="west"] .night-sky { background: linear-gradient(#1c120a, #3b2414 70%, #6b3d1d); }
+body[data-skin="west"] .stars { opacity: .6; }
+body[data-skin="west"] .story { border-left: 2px solid #8b2e16; font-size: 16px; }
+body[data-skin="west"] .win { background: #f3e6c8; color: #2a1a0c; border: 3px double #5a3a1a; border-radius: 2px; }
+body[data-skin="west"] .tabs, body[data-skin="west"] .sheet-body { background: #efe0bf; }
+body[data-skin="west"] .face { border-radius: 3px; border: 1px solid rgba(90,60,30,.4); box-shadow: 0 20px 50px -20px rgba(60,30,10,.6); color: #2a1a0c; }
+body[data-skin="west"] .cf-star { font-size: 120px; color: #8b2e16; }
+body[data-skin="west"] .rc { padding: 14px 14px 12px; border: 3px double rgba(60, 35, 15, .7); }
+body[data-skin="west"] .wanted { font-family: "Oswald"; font-size: 30px; white-space: nowrap; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; line-height: 1; }
+body[data-skin="west"] .wanted-sub { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; border-top: 1px solid; border-bottom: 1px solid; padding: 3px 0; width: 100%; margin-top: 4px; }
+body[data-skin="west"] .rc-art { border: 2px solid #2a1a0c; padding: 4px; background: #e2cfa4; }
+body[data-skin="west"] .portrait { width: 120px; height: 130px; } body[data-skin="west"] .portrait img { filter: sepia(1) contrast(1.1) brightness(.95); }
+body[data-skin="west"] .glyph span { filter: sepia(1) contrast(1.2); }
+body[data-skin="west"] .rc-name { text-transform: uppercase; font-size: 24px; }
+body[data-skin="west"] .wanted-who { font-family: "Oswald"; text-transform: uppercase; letter-spacing: .1em; font-size: 13px; }
+body[data-skin="west"] .reward { font-family: "Oswald"; font-size: 20px; text-transform: uppercase; color: #8b2e16; margin-top: 6px; }
+
+/* ---------------------------------------------------------------- 💼 КОРПОРАТИВ: светлый офисный интерфейс */
+body[data-skin="office"] {
+  --bg: #f4f6fb; --card: #fff; --card2: #eef2f8; --line: #e2e8f0; --text: #0f172a; --muted: #64748b;
+  --accent: #2563eb; --accent2: #1e3a8a; --radius: 14px; --bad: #e11d48; --good: #059669;
+  --font-head: "Manrope", "Inter", sans-serif; --font-body: "Manrope", "Inter", sans-serif; --card-bg: #fff; --card-front: #1e3a8a;
+  background: #f4f6fb;
+}
+body[data-skin="office"] .card { backdrop-filter: none; box-shadow: 0 1px 2px rgba(15,23,42,.06), 0 6px 20px -10px rgba(15,23,42,.15); }
+body[data-skin="office"] h1, body[data-skin="office"] h2 { font-weight: 800; letter-spacing: -.02em; }
+body[data-skin="office"] .btn { background: #2563eb; box-shadow: 0 8px 20px -8px rgba(37,99,235,.6); border-radius: 12px; }
+body[data-skin="office"] .btn.ghost { background: #eef2f8; color: #0f172a; box-shadow: none; }
+body[data-skin="office"] .pill { background: #eef2f8; color: #334155; }
+body[data-skin="office"] .pill.on { background: #2563eb; color: #fff; }
+body[data-skin="office"] .player { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+body[data-skin="office"] .player.sel { border-color: #2563eb; background: #eff6ff; }
+body[data-skin="office"] .avatar { background: #eef2f8; }
+body[data-skin="office"] .code { background: none; -webkit-text-fill-color: #1e3a8a; font-family: "Manrope"; }
+body[data-skin="office"] .chat-fab { background: #2563eb; }
+body[data-skin="office"] .tabs, body[data-skin="office"] .sheet-body { background: #fff; }
+body[data-skin="office"] .toast { background: #0f172a; color: #fff; }
+body[data-skin="office"] .night-sky { background: linear-gradient(#0b1224, #16213e); }
+body[data-skin="office"] .stars { opacity: .3; }
+body[data-skin="office"].night { --text: #e2e8f0; }
+body[data-skin="office"] .story { border-left: 3px solid #2563eb; background: #f8fafc; padding: 8px 12px; border-radius: 0 8px 8px 0; }
+body[data-skin="office"] .win { background: linear-gradient(135deg, #2563eb, #1e3a8a); color: #fff; }
+body[data-skin="office"] .msg .b { background: #eef2f8; }
+body[data-skin="office"] .msg.mine .b { background: #2563eb; color: #fff; }
+body[data-skin="office"] .face { border-radius: 18px; border: 1px solid #e2e8f0; color: #0f172a; }
+body[data-skin="office"] .face.front { color: #fff; }
+body[data-skin="office"] .cf-chip { width: 64px; height: 50px; border-radius: 8px; background: linear-gradient(135deg, #fde68a, #f59e0b); }
+body[data-skin="office"] .rc { padding: 0 16px 14px; }
+body[data-skin="office"] .badge-hole { width: 54px; height: 10px; border-radius: 6px; background: #e2e8f0; margin: 14px auto 10px; }
+body[data-skin="office"] .badge-co { width: calc(100% + 32px); margin: 0 -16px; background: #1e3a8a; color: #fff; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+body[data-skin="office"] .badge-main { display: flex; gap: 14px; align-items: center; text-align: left; width: 100%; margin: 12px 0 6px; }
+body[data-skin="office"] .badge-main .rc-art { margin: 0; border-radius: 12px; overflow: hidden; background: #eef2f8; }
+body[data-skin="office"] .portrait { width: 96px; height: 116px; } body[data-skin="office"] .glyph { width: 96px; height: 116px; } body[data-skin="office"] .glyph span { font-size: 60px; }
+body[data-skin="office"] .badge-name { font-weight: 800; font-size: 18px; }
+body[data-skin="office"] .rc-name { font-size: 15px; color: #2563eb; font-weight: 700; }
+body[data-skin="office"] .badge-dept { font-size: 12px; color: #64748b; margin-top: 2px; }
+body[data-skin="office"] .rc-team-mafia .badge-dept { color: #e11d48; font-weight: 700; }
+body[data-skin="office"] .rc-motto { font-style: normal; color: #475569; }
+body[data-skin="office"] .barcode { width: 70%; height: 34px; margin-top: 10px;
+  background: repeating-linear-gradient(90deg, #0f172a 0 2px, transparent 2px 4px, #0f172a 4px 5px, transparent 5px 8px, #0f172a 8px 11px, transparent 11px 13px); }
+
+/* ночью светлые стили становятся тёмными, иначе текст не читается на ночном небе */
+body[data-skin="office"].night { --text: #e2e8f0; --muted: #94a3b8; --card: rgba(255,255,255,.06); --card2: rgba(255,255,255,.1); --line: rgba(255,255,255,.12); --bg: #0b1224; }
+body[data-skin="office"].night .player { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.1); }
+body[data-skin="office"].night .player.sel { background: rgba(37,99,235,.25); }
+body[data-skin="office"].night .card { box-shadow: none; }
+body[data-skin="west"].night { --text: #f3e6c8; --muted: #c9a97c; --card: rgba(243,230,200,.07); --card2: rgba(243,230,200,.12); --line: rgba(243,230,200,.2); --bg: #1c120a; }
+body[data-skin="west"].night .player { background: rgba(243,230,200,.08); border-color: rgba(243,230,200,.2); }
+body[data-skin="west"].night .ph-icon { color: #f3e6c8; }
+
+/* светлые стили: цвета команд темнее, чтобы читались на бумаге/белом */
+body[data-skin="west"]:not(.night) .team-town { color: #3f6212; }
+body[data-skin="west"]:not(.night) .team-mafia { color: #8b2e16; }
+body[data-skin="west"]:not(.night) .team-solo, body[data-skin="west"]:not(.night) .team-bounty { color: #92400e; }
+body[data-skin="office"]:not(.night) .team-town { color: #047857; }
+body[data-skin="office"]:not(.night) .team-mafia { color: #be123c; }
+body[data-skin="office"]:not(.night) .team-solo, body[data-skin="office"]:not(.night) .team-bounty { color: #b45309; }
