@@ -1,0 +1,247 @@
+/* =====================================================================
+   ПИКСЕЛЬНЫЙ СТИЛЬ (body.pixel). У каждой вкладки и каждого сценария свой:
+   главная — аркада · профиль — RPG · вход — титульный экран игры · комнаты — 6 пиксельных миров.
+   Рамки «лесенкой» делаются тенями (--px — размер пикселя, --bd — цвет рамки).
+   ===================================================================== */
+body.pixel {
+  --px: 3px; --bd: #05010d;
+  --font-head: "Press Start 2P", monospace; --font-body: "Pixelify Sans", sans-serif;
+  -webkit-font-smoothing: none; font-size: 16px; letter-spacing: 0;
+}
+body.pixel canvas.pix, body.pixel .sprite, body.pixel .pxscene, body.pixel .theme, body.pixel .game-hero { image-rendering: pixelated; }
+body.pixel .sprite { display: inline-block; vertical-align: middle; }
+body.pixel .night-sky, body.pixel .stars { display: none; }
+body.pixel h1 { font-size: 15px; line-height: 1.5; }
+body.pixel h2 { font-size: 16px; line-height: 1.5; }
+body.pixel .hero h1 { font-size: 20px; }
+body.pixel .gamebar .title b { font-size: 13px; line-height: 1.6; letter-spacing: 0 !important; }
+body.pixel .kicker, body.pixel .section-title { font-family: var(--font-head); font-size: 9px; letter-spacing: .08em; }
+body.pixel .code { font-family: var(--font-head) !important; font-size: 34px; letter-spacing: .12em; background: none !important;
+  -webkit-text-fill-color: var(--accent) !important; text-shadow: 3px 3px 0 var(--bd) !important; }
+body.pixel .display { font-family: var(--font-head); font-size: 12px; }
+
+/* ---- пиксельные рамки со «ступенчатыми» углами */
+body.pixel .card, body.pixel .btn, body.pixel .player, body.pixel .input, body.pixel .pill, body.pixel .theme, body.pixel .game-tile,
+body.pixel .game-hero, body.pixel .win, body.pixel .tabs, body.pixel .chat-fab, body.pixel .net-banner, body.pixel .toast,
+body.pixel .msg .b, body.pixel .switch, body.pixel .face, body.pixel .kick, body.pixel .count {
+  border-radius: 0 !important; border: 0 !important; backdrop-filter: none !important;
+  box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--bd), 0 var(--px) 0 0 var(--bd), calc(-1 * var(--px)) 0 0 0 var(--bd), var(--px) 0 0 0 var(--bd) !important;
+}
+body.pixel .card { background: var(--card); margin-left: var(--px); margin-right: var(--px); }
+body.pixel .btn { font-family: var(--font-head) !important; font-size: 11px !important; line-height: 1.5; letter-spacing: 0 !important; text-transform: uppercase;
+  background: var(--accent) !important; color: var(--btn-ink, #fff) !important; padding: 16px 12px;
+  box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--bd), 0 var(--px) 0 0 var(--bd), calc(-1 * var(--px)) 0 0 0 var(--bd), var(--px) 0 0 0 var(--bd),
+    inset 0 -5px 0 0 rgba(0, 0, 0, .35), inset 0 3px 0 0 rgba(255, 255, 255, .3) !important; }
+body.pixel .btn::before, body.pixel .btn::after { content: none !important; }
+body.pixel .btn:active { transform: translateY(2px); }
+body.pixel .btn.ghost { background: var(--card2) !important; color: var(--text) !important; }
+body.pixel .btn.danger { background: #d0263a !important; }
+body.pixel .btn.small { padding: 10px; }
+body.pixel .pill { font-family: var(--font-body); font-size: 13px; background: var(--card2); color: var(--text); text-transform: none; margin: 2px; }
+body.pixel .pill.on { background: var(--accent); color: var(--btn-ink, #fff); }
+body.pixel .pill canvas.pix { width: 16px; height: 16px; vertical-align: -3px; }
+body.pixel .input { background: var(--bg) !important; font-family: var(--font-body); margin: 0 var(--px); }
+body.pixel .switch { background: var(--card2); }
+body.pixel .switch::after { border-radius: 0; background: var(--text); }
+body.pixel .switch.on { background: var(--accent); }
+
+/* аватары и плитки игроков */
+body.pixel .avatar { border-radius: 0 !important; filter: none !important; }
+body.pixel .avatar.pxav { padding: 0; overflow: hidden; background: var(--card2); }
+body.pixel .avatar.pxav canvas { width: 100%; height: 100%; display: block; }
+body.pixel .player { background: var(--card); margin: var(--px); transform: none !important; }
+body.pixel .player.sel { background: var(--accent) !important; color: var(--btn-ink, #fff); }
+body.pixel .player.sel .nm, body.pixel .player.sel .role-mini { color: var(--btn-ink, #fff); }
+body.pixel .player .nm { font-family: var(--font-body) !important; font-size: 13px; text-transform: none !important; letter-spacing: 0 !important; }
+body.pixel .player .role-mini canvas.pix { width: 12px; height: 12px; vertical-align: -2px; }
+body.pixel .player .votes .avatar.mini { width: 16px; height: 16px; }
+body.pixel .players { gap: 12px; }
+body.pixel .kick { background: var(--card2); color: var(--text); }
+
+/* пиксельная сцена сверху экранов */
+body.pixel .pxscene { height: 130px; margin: calc(-14px - var(--safe-top)) -16px 16px; background-size: cover; background-position: center bottom;
+  border-bottom: var(--px) solid var(--bd); position: relative; }
+body.pixel .pxscene.big { height: 170px; }
+body.pixel .pxscene.title { height: 190px; margin-bottom: -60px; }
+body.pixel.night .pxscene { filter: brightness(.45) saturate(.7) hue-rotate(-10deg); }
+body.pixel .pxscene::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 1px, transparent 1px 3px); }
+body.pixel .ph-icon { color: var(--accent); filter: drop-shadow(3px 3px 0 var(--bd)); }
+body.pixel .phase-hero { padding-top: 4px; }
+body.pixel .story { font-family: var(--font-body) !important; font-style: normal !important; border-left: var(--px) solid var(--accent) !important; }
+body.pixel .story::before { content: "▸ "; color: var(--accent); }
+body.pixel .timer circle:last-child { stroke-linecap: butt; }
+body.pixel .timer span { font-family: var(--font-head); font-size: 11px; }
+body.pixel .chat-fab { background: var(--accent); }
+body.pixel .tabs { background: var(--card); }
+body.pixel .tabs button { border-radius: 0; font-family: var(--font-head); font-size: 10px; }
+body.pixel .tabs button.on { background: var(--accent); color: var(--btn-ink, #fff); }
+body.pixel .logo { background: none !important; box-shadow: none !important; width: auto; height: auto; }
+body.pixel .net-banner { font-family: var(--font-body); }
+body.pixel .game-tile canvas.pix { width: 40px; height: 40px; }
+body.pixel .theme canvas.pix, body.pixel .lobby-theme canvas.pix, body.pixel .card .row > div > canvas.pix { width: 40px; height: 40px; }
+
+/* сценарии — как картриджи: пиксельная сцена на ярлыке */
+body.pixel .theme { background-size: cover !important; background-position: center bottom !important; min-height: 120px; filter: none !important; margin: var(--px);
+  display: flex; flex-direction: column; justify-content: flex-end; }
+body.pixel .theme b, body.pixel .theme span { background: rgba(0, 0, 0, .72); color: #fff; padding: 2px 6px; align-self: flex-start; }
+body.pixel .theme b { font-family: var(--font-head); font-size: 9px; line-height: 1.6; margin-top: 4px; }
+body.pixel .theme .e { position: absolute; top: 8px; left: 8px; }
+body.pixel .theme.sel { transform: translateY(-3px); box-shadow: 0 -3px 0 0 #fff, 0 3px 0 0 #fff, -3px 0 0 0 #fff, 3px 0 0 0 #fff, 0 6px 0 0 #000 !important; }
+body.pixel .theme.sel::after { border-radius: 0; }
+
+/* карта персонажа */
+body.pixel .flip { height: 480px; }
+body.pixel .face { background: var(--card) !important; color: var(--text); }
+body.pixel .face.front { background: var(--accent) !important; }
+body.pixel .rc-name { font-family: var(--font-head) !important; font-size: 15px !important; line-height: 1.5; letter-spacing: 0 !important; }
+body.pixel .rc-motto, body.pixel .rc-desc { font-family: var(--font-body) !important; font-style: normal !important; }
+body.pixel .glyph { border-radius: 0 !important; border: 0 !important; }
+body.pixel .glyph::after, body.pixel .glyph::before { content: none !important; }
+body.pixel .glyph canvas.pix { width: 100px; height: 100px; }
+body.pixel .portrait canvas.pix { width: 100%; height: 100%; display: block; }
+body.pixel .win { background: var(--card) !important; color: var(--text) !important; }
+body.pixel .win h2 { font-size: 20px; }
+
+/* RPG-лист в профиле */
+body.pixel .rpg-banner { margin-top: 18px; margin-bottom: 0; height: 110px; }
+body.pixel .rpg .lvl { font-family: "Press Start 2P", monospace; font-size: 14px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
+body.pixel .bar-label { font-size: 13px; margin: 10px 0 4px; display: flex; align-items: center; gap: 6px; }
+body.pixel .bar { height: 14px; background: #0a0a1a; box-shadow: 0 -3px 0 0 #fff, 0 3px 0 0 #fff, -3px 0 0 0 #fff, 3px 0 0 0 #fff; margin: 0 3px; }
+body.pixel .bar i { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--c1) 0 6px, var(--c2) 6px 8px); }
+body.pixel .bar.hp i { --c1: #ff3355; --c2: #c01a3a; }
+body.pixel .bar.xp i { --c1: #3ec8ff; --c2: #1a8ac0; }
+body.pixel .loot { display: flex; align-items: center; gap: 4px; font-family: "Press Start 2P", monospace; font-size: 11px; }
+
+/* титульный экран */
+body.pixel .press-start { font-family: "Press Start 2P", monospace; font-size: 11px; color: var(--accent); margin-top: 14px; animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+body.pixel .hero { position: relative; }
+body.pixel .avatars button { border-radius: 0; box-shadow: 0 -3px 0 0 var(--bd), 0 3px 0 0 var(--bd), -3px 0 0 0 var(--bd), 3px 0 0 0 var(--bd); margin: 3px; }
+body.pixel .avatars button.sel { background: var(--accent); transform: none; }
+
+/* =================================================================== вкладки приложения */
+/* ГЛАВНАЯ — аркадный автомат */
+body.pixel[data-skin="app"] {
+  --bg: #12062a; --card: #1f0f3f; --card2: #2e1860; --bd: #05010d; --accent: #ff3ec8; --accent2: #43f0ff; --text: #fff3ff; --muted: #b8a6e0;
+  background: #12062a !important;
+}
+body.pixel[data-skin="app"]::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 70;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px); }
+body.pixel .game-hero { background-size: cover !important; background-position: center bottom !important; margin: 3px; }
+body.pixel .game-hero h2 { font-size: 22px; text-shadow: 3px 3px 0 #000; color: #fff; }
+body.pixel .game-hero p { color: #fff; background: rgba(10, 2, 30, .7); padding: 4px 8px; display: inline-block; }
+body.pixel .game-hero .btn { background: #ffd23f !important; color: #1a0b2e !important; }
+body.pixel .game-hero .pill { background: #000; color: #ffd23f; }
+body.pixel .game-hero .big-emoji { right: 6px; bottom: 6px; transform: none; filter: drop-shadow(4px 4px 0 #000); }
+body.pixel .game-hero .big-emoji canvas { width: 120px; height: 120px; }
+body.pixel[data-skin="app"] .game-tile { background: #1f0f3f; margin: 3px; }
+body.pixel[data-skin="app"] .game-tile .soon { border-radius: 0; background: #ff3ec8; color: #fff; font-family: "Press Start 2P"; font-size: 7px; }
+body.pixel[data-skin="app"] .game-tile b { font-family: "Press Start 2P"; font-size: 10px; line-height: 1.5; }
+body.pixel[data-skin="app"] .join-box .input { color: #43f0ff; font-family: "Press Start 2P"; font-size: 16px; }
+body.pixel[data-skin="app"] .section-title { color: #43f0ff; }
+
+/* ПРОФИЛЬ — RPG-меню (синие окна с белой рамкой, как в старых JRPG) */
+body.pixel[data-screen="profile"] {
+  --bg: #0c1030; --card: linear-gradient(180deg, #2c4ad0, #121e78); --card2: #1a2a90; --bd: #f2f4ff; --accent: #ffd23f; --text: #ffffff; --muted: #c8d0ff;
+  --btn-ink: #1a1030; background: #0c1030 !important;
+}
+body.pixel[data-screen="profile"] .card { background: linear-gradient(180deg, #2c4ad0, #121e78) !important; }
+body.pixel[data-screen="profile"] .stat b { font-family: "Press Start 2P"; font-size: 18px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
+body.pixel[data-screen="profile"] h2 { font-size: 14px; }
+
+/* ВХОД — титульный экран */
+body.pixel[data-screen="register"] { --bg: #000; --card: #111; --card2: #1d1d1d; --bd: #fff; --accent: #ffd23f; --btn-ink: #000; --text: #fff; background: #000 !important; }
+body.pixel[data-screen="register"] .hero .logo { position: relative; z-index: 2; margin-top: 0; }
+body.pixel[data-screen="register"] .hero h1 { position: relative; z-index: 2; color: #fff; text-shadow: 4px 4px 0 #ff3ec8; }
+
+/* =================================================================== 6 пиксельных миров мафии */
+/* КЛАССИКА — 1-бит нуар: чёрное, белое и кровь */
+body.pixel[data-skin="classic"] {
+  --bg: #000; --card: #0b0b0b; --card2: #1c1c1c; --bd: #e8e4dc; --accent: #c0141f; --text: #e8e4dc; --muted: #8a857c; --btn-ink: #fff;
+  --font-head: "Press Start 2P", monospace; --font-body: "Tiny5", "Pixelify Sans", sans-serif; background: #000 !important; font-size: 17px;
+}
+body.pixel[data-skin="classic"]::before { opacity: .05; }
+body.pixel[data-skin="classic"] .player .avatar canvas { filter: grayscale(1) contrast(1.2); }
+body.pixel[data-skin="classic"] .player.sel .avatar canvas { filter: grayscale(1) contrast(1.2) sepia(1) hue-rotate(-50deg) saturate(4); }
+body.pixel[data-skin="classic"] .glyph canvas { filter: grayscale(1) contrast(1.6) brightness(1.1) sepia(1) hue-rotate(-50deg) saturate(5); }
+body.pixel[data-skin="classic"] .rc-stamp { border-radius: 0; font-family: "Press Start 2P"; font-size: 8px; }
+body.pixel[data-skin="classic"] .face.front { background: #000 !important; }
+body.pixel[data-skin="classic"] .cf { border: 0; outline: 3px solid #c0141f; outline-offset: -14px; }
+body.pixel[data-skin="classic"] .cf-mono { font-family: "Press Start 2P"; font-style: normal; font-size: 64px; }
+
+/* 90-е — неон, 8-бит кассета */
+body.pixel[data-skin="90s"] {
+  --bg: #12051c; --card: #1d0a2c; --card2: #2e1244; --bd: #ff2bd6; --accent: #ffd400; --btn-ink: #12051c; --text: #fff6d6; --muted: #c9a8d9;
+  --font-head: "Press Start 2P", monospace; --font-body: "Pixelify Sans", sans-serif; background: #12051c !important;
+}
+body.pixel[data-skin="90s"] h1, body.pixel[data-skin="90s"] h2, body.pixel[data-skin="90s"] .gamebar .title b { text-shadow: -2px 0 #ff2bd6, 2px 0 #00e5ff; }
+body.pixel[data-skin="90s"] .vhs-label { transform: none; box-shadow: 4px 4px 0 #ff2bd6; }
+body.pixel[data-skin="90s"] .vhs-label .rc-name { color: #12051c !important; }
+body.pixel[data-skin="90s"] .reels i { border-radius: 0; border-style: dashed; }
+body.pixel[data-skin="90s"] .face.front { background: #1a1a1a !important; }
+
+/* ХЭЛЛОУИН — фиолетовая ночь и тыквенный свет */
+body.pixel[data-skin="halloween"] {
+  --bg: #0b0614; --card: #1a0c28; --card2: #2a1440; --bd: #ff8a2a; --accent: #ff7a18; --btn-ink: #1a0800; --text: #ffe8cc; --muted: #c4a0c8;
+  --font-head: "Press Start 2P", monospace; --font-body: "Pixelify Sans", sans-serif; background: #0b0614 !important;
+}
+body.pixel[data-skin="halloween"] .player { border-radius: 0 !important; }
+body.pixel[data-skin="halloween"] .tarot-window { border-radius: 0; box-shadow: 0 -3px 0 0 #ff8a2a, 0 3px 0 0 #ff8a2a, -3px 0 0 0 #ff8a2a, 3px 0 0 0 #ff8a2a; border: 0; }
+body.pixel[data-skin="halloween"] .rc { border-radius: 0; }
+body.pixel[data-skin="halloween"] .rc-name { color: #ffb067 !important; }
+body.pixel[data-skin="halloween"] .tarot-num, body.pixel[data-skin="halloween"] .tarot-team { font-family: "Press Start 2P"; font-size: 10px; }
+body.pixel[data-skin="halloween"] .face.front { background: #2a1440 !important; }
+body.pixel[data-skin="halloween"] .cf { border-radius: 0; }
+
+/* БУНКЕР — зелёный терминал */
+body.pixel[data-skin="bunker"] {
+  --bg: #020502; --card: #06120a; --card2: #0d1f12; --bd: #9cff57; --accent: #9cff57; --btn-ink: #021004; --text: #b8ffa1; --muted: #5d8f52;
+  --font-head: "Press Start 2P", monospace; --font-body: "Handjet", "Pixelify Sans", monospace; background: #020502 !important; font-size: 19px;
+}
+body.pixel[data-skin="bunker"] * { text-shadow: none; }
+body.pixel[data-skin="bunker"] .btn { background: #9cff57 !important; }
+body.pixel[data-skin="bunker"] .btn.ghost { background: #06120a !important; color: #9cff57 !important; }
+body.pixel[data-skin="bunker"] .player .avatar canvas, body.pixel[data-skin="bunker"] .glyph canvas, body.pixel[data-skin="bunker"] .portrait canvas {
+  filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(4) brightness(.95); }
+body.pixel[data-skin="bunker"] .hazard { height: 9px; }
+body.pixel[data-skin="bunker"] .face.front { background: #0a120b !important; }
+body.pixel[data-skin="bunker"] .cf-stamp { font-family: "Press Start 2P"; font-size: 14px; }
+
+/* ДИКИЙ ЗАПАД — песок, дерево, плакаты */
+body.pixel[data-skin="west"], body.pixel[data-skin="west"].night {
+  --bg: #e9d2a4; --card: #f6e6c4; --card2: #e2c894; --bd: #4a2a12; --accent: #b03a1a; --btn-ink: #fff3dc; --text: #2a160a; --muted: #7a5a34;
+  --font-head: "Press Start 2P", monospace; --font-body: "Pixelify Sans", sans-serif; background: #e9d2a4 !important;
+}
+body.pixel[data-skin="west"] .portrait canvas, body.pixel[data-skin="west"] .player .avatar canvas { filter: sepia(.85) contrast(1.05); }
+body.pixel[data-skin="west"] .wanted { font-family: "Press Start 2P" !important; font-size: 15px !important; line-height: 1.6; }
+body.pixel[data-skin="west"] .reward, body.pixel[data-skin="west"] .wanted-who { font-family: "Press Start 2P" !important; font-size: 10px !important; }
+body.pixel[data-skin="west"] .rc { border: 0; box-shadow: inset 0 0 0 3px #4a2a12, inset 0 0 0 6px #f6e6c4, inset 0 0 0 9px #4a2a12; }
+body.pixel[data-skin="west"] .rc-art { border: 0; box-shadow: 0 -3px 0 0 #2a160a, 0 3px 0 0 #2a160a, -3px 0 0 0 #2a160a, 3px 0 0 0 #2a160a; }
+body.pixel[data-skin="west"] .face.front { background: #c98e4a !important; }
+
+/* КОРПОРАТИВ — интерфейс Windows 95: серые окна, бирюзовый рабочий стол */
+body.pixel[data-skin="office"], body.pixel[data-skin="office"].night {
+  --bg: #008080; --card: #c0c0c0; --card2: #d4d0c8; --bd: #000; --accent: #000080; --btn-ink: #fff; --text: #000; --muted: #404040;
+  --font-head: "Press Start 2P", monospace; --font-body: "Tiny5", "Pixelify Sans", sans-serif; background: #008080 !important; font-size: 17px;
+}
+body.pixel[data-skin="office"].night { --bg: #000040; background: #000040 !important; }
+body.pixel[data-skin="office"] .card, body.pixel[data-skin="office"] .player, body.pixel[data-skin="office"] .face, body.pixel[data-skin="office"] .win {
+  background: #c0c0c0 !important; box-shadow: inset -2px -2px 0 0 #404040, inset 2px 2px 0 0 #fff, 0 0 0 2px #000 !important; }
+body.pixel[data-skin="office"] .card:not(.lobby-theme)::before { content: ""; display: block; height: 18px; margin: -16px -16px 10px;
+  background: linear-gradient(90deg, #000080, #1084d0); }
+body.pixel[data-skin="office"] .btn { background: #c0c0c0 !important; color: #000 !important;
+  box-shadow: inset -2px -2px 0 0 #404040, inset 2px 2px 0 0 #fff, 0 0 0 2px #000 !important; }
+body.pixel[data-skin="office"] .btn:active { box-shadow: inset 2px 2px 0 0 #404040, inset -2px -2px 0 0 #fff, 0 0 0 2px #000 !important; }
+body.pixel[data-skin="office"] .player.sel { background: #000080 !important; }
+body.pixel[data-skin="office"] .gamebar .title b, body.pixel[data-skin="office"] .gamebar .kicker, body.pixel[data-skin="office"] .gamebar .muted,
+body.pixel[data-skin="office"] .phase-hero h2, body.pixel[data-skin="office"] .section-title, body.pixel[data-skin="office"] .top h1,
+body.pixel[data-skin="office"] .top .muted { color: #fff !important; text-shadow: 2px 2px 0 #000; }
+body.pixel[data-skin="office"] .ph-icon { color: #ffff00; }
+body.pixel[data-skin="office"] .badge-co { background: #000080 !important; }
+body.pixel[data-skin="office"] .face.front { background: #000080 !important; }
+body.pixel[data-skin="office"] .code { -webkit-text-fill-color: #000080 !important; text-shadow: 2px 2px 0 #fff !important; }
+body.pixel[data-skin="office"] .chat-fab { background: #c0c0c0; }
+
+/* иконки ролей на «таблетках» — маленькие */
+body.pixel .pill canvas.pix, body.pixel .lobby-theme .pill canvas.pix { width: 20px !important; height: 20px !important; vertical-align: -5px; }
+body.pixel .avatars button canvas.pix { width: 34px; height: 34px; pointer-events: none; }

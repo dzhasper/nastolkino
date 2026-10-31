@@ -57,11 +57,16 @@ const ICON_PATHS = {
   end: '<path d="M8 21h8M12 16v5M7 4h10v5a5 5 0 0 1-10 0zM7 6H4.5a2.5 2.5 0 0 0 2.6 3.6M17 6h2.5a2.5 2.5 0 0 1-2.6 3.6"/>',
   card: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
 };
-const icon = (k, size = 54) => `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+const icon = (k, size = 54) => (PX() && k !== "card") ? Pixel.sprite(k, ["night", "day"].includes(k) ? Math.max(2, Math.round(size / 28)) : Math.max(2, Math.round(size / 14))) : `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
   stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[k] || ""}</svg>`;
+
+const PX = () => S.pixel && typeof Pixel !== "undefined";
+const themeBg = (t) => (PX() ? `background-image:url(${Pixel.scene(t.key)})` : `background:linear-gradient(150deg, ${t.accent}, ${t.accent2})`);
+const emo = (e, res = 28) => (PX() ? Pixel.emoji(e, Math.max(res, 24)) : e);
 
 function av(p, cls = "") {
   if (!p) return `<div class="avatar ${cls}"></div>`;
+  if (PX()) return `<div class="avatar pxav ${cls}">${p.photo ? Pixel.photo(p.photo, 32) : Pixel.emoji(p.avatar, 24)}</div>`;
   return p.photo ? `<div class="avatar photo ${cls}"><img src="${esc(p.photo)}" alt="" referrerpolicy="no-referrer" loading="lazy"></div>`
     : `<div class="avatar ${cls}">${esc(p.avatar)}</div>`;
 }
@@ -167,6 +172,7 @@ function boot() {
   Net.onMessage = onMessage;
   Net.onStatus = (s) => { S.net = s; const el = document.getElementById("net-banner"); if (el) el.outerHTML = netBanner(); else if (S.screen === "room") render(); };
   loadProfile(() => {
+    S.pixel = store.pixel !== false;
     S.registered = !!store.name;
     const startParam = tg && tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
     if (startParam && /^[A-Z0-9]{4}$/i.test(startParam)) S.pendingRoom = startParam;
@@ -227,6 +233,8 @@ function onMessage(m) {
 /* ---------------------------------------------------------------- отрисовка */
 function render() {
   document.body.dataset.skin = skinKey();
+  document.body.dataset.screen = S.screen;
+  document.body.classList.toggle("pixel", !!S.pixel);
   document.body.classList.toggle("night", S.screen === "room" && !!S.room && S.room.phase === "night");
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
@@ -234,6 +242,7 @@ function render() {
   const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, mafia: viewMafia, room: viewRoom };
   $app.innerHTML = (screens[S.screen] || viewLoading)();
   renderOverlay();
+  if (PX()) Pixel.apply();
   updateBack();
   if (tg) {
     const bg = getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#0b0b14";
@@ -260,14 +269,15 @@ function viewLoading() {
 
 function avatarGrid(selected) {
   return `<div class="avatars">${S.catalog.avatars.map((a) =>
-    `<button data-a="avatar" data-v="${a}" class="${a === selected ? "sel" : ""}">${a}</button>`).join("")}</div>`;
+    `<button data-a="avatar" data-v="${a}" class="${a === selected ? "sel" : ""}">${emo(a, 24)}</button>`).join("")}</div>`;
 }
 
 function viewRegister() {
   if (S.regAvatar === null) S.regAvatar = S.catalog.avatars[Math.floor(Math.random() * S.catalog.avatars.length)];
   if (!S.regName) S.regName = S.suggest;
   return `<div class="fade-in">
-    <div class="hero"><div class="logo">🎲</div><h1>${esc(S.catalog.app)}</h1>
+    <div class="hero">${PX() ? `<div class="pxscene title" style="background-image:url(${Pixel.scene("arcade")})"></div>` : ""}<div class="logo">${PX() ? Pixel.sprite("dice", 4) : "🎲"}</div><h1>${esc(S.catalog.app)}</h1>
+      ${PX() ? '<div class="press-start">▶ НАЖМИ СТАРТ</div>' : ""}
       <p class="muted mt">Настолки с друзьями прямо в Telegram.<br>Мафия, вечеринки и не только.</p></div>
     <div class="section-title">Как тебя зовут?</div>
     <input class="input" id="reg-name" maxlength="20" placeholder="Имя или ник" value="${esc(S.regName)}" autocomplete="off">
@@ -289,10 +299,10 @@ const SOON = [["🐊", "Крокодил", "Покажи слово без сл�
 function viewHome() {
   const p = S.profile;
   return `<div class="fade-in">
-    <div class="top"><div class="logo">🎲</div><div class="grow"><h1>${esc(S.catalog.app)}</h1>
+    <div class="top"><div class="logo">${PX() ? Pixel.sprite("dice", 3) : "🎲"}</div><div class="grow"><h1>${esc(S.catalog.app)}</h1>
       <div class="muted small">Привет, ${esc(p.name)}!</div></div>${av(p)}</div>
-    <div class="game-hero" data-a="go" data-v="mafia">
-      <div class="big-emoji">🕴️</div>
+    <div class="game-hero" data-a="go" data-v="mafia" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
+      ${PX() ? `<div class="big-emoji">${Pixel.emoji("🕴️", 40)}</div>` : '<div class="big-emoji">🕴️</div>'}
       <div class="pill" style="background:rgba(255,255,255,.15)">🔥 ${S.catalog.min}–${S.catalog.max} игроков</div>
       <h2 class="mt">Мафия</h2>
       <p>6 сценариев: Классика, 90-е, Хэллоуин, Бункер, Дикий Запад, Корпоратив</p>
@@ -302,7 +312,7 @@ function viewHome() {
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
       <button class="btn" data-a="join">Войти</button></div>
     <div class="section-title">Скоро</div>
-    <div class="games">${SOON.map(([e, n, d]) => `<div class="game-tile"><span class="soon">СКОРО</span><div class="e">${e}</div>
+    <div class="games">${SOON.map(([e, n, d]) => `<div class="game-tile"><span class="soon">СКОРО</span><div class="e">${emo(e)}</div>
       <b>${n}</b><span class="muted small">${d}</span></div>`).join("")}</div>
   </div>${tabs()}`;
 }
@@ -316,7 +326,9 @@ function viewProfile() {
     <div class="stats mt2"><div class="card stat"><b>${p.games}</b><span class="muted small">игр</span></div>
       <div class="card stat"><b>${p.wins}</b><span class="muted small">побед</span></div>
       <div class="card stat"><b>${rate}%</b><span class="muted small">винрейт</span></div></div>
+    ${PX() ? rpgSheet(p, rate) : ""}
     ${p.favorite_role ? `<div class="card mt"><span class="muted small">Чаще всего играешь</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
+    <div class="card mt"><div class="toggle"><span>👾 Пиксельный стиль</span><button class="switch ${S.pixel ? "on" : ""}" data-a="pixel-toggle"></button></div></div>
     <div class="section-title">Изменить профиль</div>
     <input class="input" id="reg-name" maxlength="20" value="${esc(S.regName || p.name)}">
     ${p.has_tg_photo ? `<div class="card mt"><div class="toggle"><span>Фото из Telegram</span>
@@ -326,6 +338,18 @@ function viewProfile() {
   </div>${tabs()}`;
 }
 
+const RANKS = ["Новичок", "Свидетель", "Завсегдатай", "Детектив", "Шулер", "Консильери", "Капо", "Крёстный отец"];
+function rpgSheet(p, rate) {
+  const lvl = Math.floor(p.games / 5) + 1;
+  const xp = Math.round(((p.games % 5) / 5) * 100);
+  return `<div class="pxscene rpg-banner" style="background-image:url(${Pixel.scene("rpg")})"></div>
+    <div class="card rpg mt"><div class="row"><div class="grow"><span class="kicker">Класс</span><b class="display">${RANKS[Math.min(lvl - 1, RANKS.length - 1)]}</b></div>
+      <div class="lvl">LV ${lvl}</div></div>
+      <div class="bar-label mt">${Pixel.sprite("heart", 2)} Сила · побед ${rate}%</div><div class="bar hp"><i style="width:${Math.max(rate, 3)}%"></i></div>
+      <div class="bar-label">${Pixel.sprite("star", 2)} Опыт · до LV ${lvl + 1}: ${5 - (p.games % 5)} игр</div><div class="bar xp"><i style="width:${Math.max(xp, 3)}%"></i></div>
+      <div class="loot mt">${Pixel.sprite("end", 2)} ×${p.wins}&nbsp;&nbsp;${Pixel.sprite("coin", 3)} ×${p.games * 10}&nbsp;&nbsp;${Pixel.sprite("skull", 2)} ×${Math.max(0, p.games - p.wins)}</div></div>`;
+}
+
 function viewMafia() {
   const th = theme(S.setup.theme);
   return `<div class="fade-in">
@@ -333,9 +357,9 @@ function viewMafia() {
       <div class="muted small">Ведущий автоматический — играют все</div></div></div>
     <div class="section-title">Выбери сценарий</div>
     <div class="themes">${S.catalog.themes.map((t) => `<button class="theme ${t.key === th.key ? "sel" : ""}" data-a="theme" data-v="${t.key}"
-      style="background:linear-gradient(150deg, ${t.accent}, ${t.accent2})"><div class="e">${t.emoji}</div><b>${esc(t.title)}</b>
+      style="${themeBg(t)}"><div class="e">${emo(t.emoji)}</div><b>${esc(t.title)}</b>
       <span>${esc(t.tagline)}</span></button>`).join("")}</div>
-    <div class="card mt"><div class="row"><div style="font-size:30px">${th.emoji}</div><div class="grow"><b>${esc(th.title)}</b>
+    <div class="card mt"><div class="row"><div style="font-size:30px">${emo(th.emoji, 16)}</div><div class="grow"><b>${esc(th.title)}</b>
       <div class="muted small">${esc(th.twist)}</div></div></div>
       <button class="btn ghost small mt" data-a="roles" data-v="${th.key}">👥 Все роли сценария</button></div>
     <button class="btn mt2" data-a="create">Создать комнату</button>
@@ -381,7 +405,7 @@ function playerTiles(list, opts = {}) {
     const sel = opts.sel === p.id;
     const voters = opts.voters ? (opts.voters[p.id] || []) : [];
     const count = opts.counts ? opts.counts[p.id] : 0;
-    const role = p.role ? `<div class="role-mini ${"team-" + p.role.team}">${p.role.emoji} ${esc(p.role.name)}</div>` : "";
+    const role = p.role ? `<div class="role-mini ${"team-" + p.role.team}">${emo(p.role.emoji, 12)} ${esc(p.role.name)}</div>` : "";
     const nopick = opts.pick && !pick && p.alive !== false;
     return `<div class="player ${p.alive === false ? "dead" : ""} ${p.online ? "" : "off"} ${pick ? "pick" : ""} ${nopick ? "nopick" : ""} ${sel ? "sel" : ""}"
       ${pick ? `data-a="${opts.action}" data-v="${p.id}"` : ""}>
@@ -398,7 +422,7 @@ function viewRoom() {
   const r = S.room;
   const views = { lobby: viewLobby, reveal: viewReveal, night: viewNight, day: viewDay, vote: viewVote, verdict: viewVerdict, end: viewEnd };
   return `${netBanner()}${r.phase === "night" ? '<div class="night-sky"></div><div class="stars"></div>' : ""}
-    <div class="fade-in" key="${r.phase}">${(views[r.phase] || viewLobby)()}</div>
+    <div class="fade-in" key="${r.phase}">${PX() ? `<div class="pxscene ${r.phase === "lobby" ? "big" : ""}" style="background-image:url(${Pixel.scene(r.settings.theme)})"></div>` : ""}${(views[r.phase] || viewLobby)()}</div>
     ${r.phase !== "lobby" || r.players.length > 1 ? `<button class="chat-fab" data-a="chat">💬<span id="chat-badge"></span></button>` : ""}`;
 }
 
@@ -415,12 +439,12 @@ function viewLobby() {
     <div class="section-title">Игроки</div>
     ${playerTiles(r.players, { kick: isHost() })}
     <div class="section-title">Сценарий</div>
-    <div class="card" style="background:linear-gradient(150deg, ${th.accent}33, ${th.accent2}66)">
-      <div class="row"><div style="font-size:40px">${th.emoji}</div><div class="grow"><b class="display">${esc(th.title)}</b>
+    <div class="card lobby-theme" style="${PX() ? "" : `background:linear-gradient(150deg, ${th.accent}33, ${th.accent2}66)`}">
+      <div class="row"><div style="font-size:40px">${emo(th.emoji, 16)}</div><div class="grow"><b class="display">${esc(th.title)}</b>
         <div class="small" style="opacity:.85">${esc(th.tagline)}</div></div>
         ${isHost() ? `<button class="btn ghost small" data-a="settings">⚙️</button>` : ""}</div>
       <div class="small mt" style="opacity:.85">✨ ${esc(th.twist)}</div>
-      <div class="chips mt">${r.plan.map((x) => `<span class="pill" title="${esc(x.desc)}">${x.emoji} ${esc(x.name)}${x.count > 1 ? " ×" + x.count : ""}</span>`).join("")}</div>
+      <div class="chips mt">${r.plan.map((x) => `<span class="pill" title="${esc(x.desc)}">${emo(x.emoji, 12)} ${esc(x.name)}${x.count > 1 ? " ×" + x.count : ""}</span>`).join("")}</div>
       <div class="chips mt"><span class="pill">${r.mode.emoji} ${esc(r.mode.title)}</span>
         <span class="pill">${r.settings.reveal ? "👁 Роли умерших видны" : "🙈 Роли скрыты"}</span>
         <span class="pill">${r.settings.anonymous ? "🗳 Тайное голосование" : "🗳 Открытое голосование"}</span></div>
@@ -463,8 +487,9 @@ function cardBack(skin, my) {
   const num = th.roles.findIndex((x) => x.key === r.key) + 1;
   const me = player(S.me) || {};
   const team = (SKINS[skin] || SKINS.classic).team[r.team] || "";
-  const glyph = `<div class="glyph"><span>${r.emoji}</span></div>`;
-  const portrait = me.photo ? `<div class="portrait"><img src="${esc(me.photo)}" alt="" referrerpolicy="no-referrer"></div>` : glyph;
+  const glyph = PX() ? `<div class="glyph">${Pixel.emoji(r.emoji, 40)}</div>` : `<div class="glyph"><span>${r.emoji}</span></div>`;
+  const portrait = !me.photo ? glyph : PX() ? `<div class="portrait">${Pixel.photo(me.photo, 64)}</div>`
+    : `<div class="portrait"><img src="${esc(me.photo)}" alt="" referrerpolicy="no-referrer"></div>`;
   const motto = r.motto ? `<div class="rc-motto">«${esc(r.motto)}»</div>` : "";
   const desc = `<div class="rc-desc">${esc(r.desc)}</div>`;
   const evil = r.team !== "town";
@@ -661,7 +686,7 @@ function renderOverlay() {
     body = `<h2>⚙️ Настройки игры</h2>
       <div class="section-title">Сценарий</div>
       <div class="themes">${S.catalog.themes.map((t) => `<button class="theme ${t.key === th.key ? "sel" : ""}" data-a="set-theme" data-v="${t.key}"
-        style="background:linear-gradient(150deg, ${t.accent}, ${t.accent2})"><div class="e">${t.emoji}</div><b>${esc(t.title)}</b></button>`).join("")}</div>
+        style="${themeBg(t)}"><div class="e">${emo(t.emoji)}</div><b>${esc(t.title)}</b></button>`).join("")}</div>
       <div class="section-title">Темп</div>
       ${S.catalog.modes.map((m) => `<button class="card" style="width:100%;text-align:left;${r.settings.mode === m.key ? "border-color:var(--accent)" : ""}" data-a="set-mode" data-v="${m.key}">
         <b>${m.emoji} ${esc(m.title)}</b>${r.settings.mode === m.key ? " ✓" : ""}<div class="small muted">${esc(m.desc)}</div></button>`).join("")}
@@ -679,6 +704,7 @@ function renderOverlay() {
   }
   $overlay.innerHTML = `<div class="sheet" data-a="close-sheet"><div class="sheet-body" data-stop="1" style="overflow-y:auto">
     ${body}<button class="btn ghost mt" data-a="close-sheet">Готово</button></div></div>`;
+  if (PX()) Pixel.apply($overlay);
 }
 
 const CHANNELS = { all: "💬 Общий", mafia: "🩸 Команда", dead: "👻 Морг" };
@@ -713,6 +739,7 @@ function renderChat() {
     <div class="b">${m.from === S.me ? "" : `<div class="who">${esc(m.name)}</div>`}${esc(m.text)}</div></div>`).join("")
     : `<div class="muted center mt2">Пока тихо…</div>`;
   box.scrollTop = box.scrollHeight;
+  if (PX()) Pixel.apply(box);
   const form = document.getElementById("chat-form");
   const want = canWrite ? "write" : "closed";
   if (form.dataset.mode !== want || form.dataset.ch !== S.chatTab) {
@@ -728,6 +755,7 @@ function renderChat() {
 /* ---------------------------------------------------------------- действия */
 const actions = {
   avatar: (v) => { S.regAvatar = v; haptic(); render(); },
+  "pixel-toggle": () => { store.pixel = !S.pixel; S.pixel = store.pixel; saveProfile(); render(); },
   "photo-toggle": () => { store.use_photo = !(store.use_photo !== false); saveProfile(); syncProfile(); render(); },
   register: () => {
     const name = (document.getElementById("reg-name").value || "").trim();

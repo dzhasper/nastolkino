@@ -1,0 +1,2 @@
+Шрифты Press Start 2P, Pixelify Sans, Tiny5, Handjet — лицензия SIL Open Font License 1.1 (https://openfontlicense.org).
+Загружены с Google Fonts и лежат здесь, чтобы приложение не зависело от внешних сервисов.
