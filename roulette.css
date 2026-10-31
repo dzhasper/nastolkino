@@ -1,0 +1,118 @@
+/* =====================================================================
+   «ПОСЛЕДНИЙ ЗАРЯД»: подвал, кровь, грубый пиксель старых шутеров
+   ===================================================================== */
+body[data-skin="roulette"], body[data-skin="roulette"].night {
+  --bg: #070403; --card: #170d0a; --card2: #2a1510; --bd: #000; --accent: #b0101a; --accent2: #5a0008; --text: #e8d8c4; --muted: #8a6e5a; --btn-ink: #f4e4d0;
+  background: #070403 !important;
+}
+body[data-skin="roulette"]::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 70;
+  background: radial-gradient(ellipse at 50% 30%, transparent 40%, rgba(40, 0, 0, .45) 100%), repeating-linear-gradient(0deg, rgba(0, 0, 0, .18) 0 1px, transparent 1px 3px); }
+body[data-skin="roulette"] .section-title { color: #b0101a; }
+body[data-skin="roulette"] h1, body[data-skin="roulette"] h2 { color: #e8d8c4; text-shadow: 2px 2px 0 #5a0008; }
+body[data-skin="roulette"] .code { -webkit-text-fill-color: #c0141f !important; text-shadow: 3px 3px 0 #000 !important; }
+body[data-skin="roulette"] .chat-fab { background: #2a1510; }
+body.pixel[data-skin="roulette"] .card, body.pixel[data-skin="roulette"] .player { background: #170d0a; }
+.rou-hero { background-size: cover !important; background-position: center bottom !important; }
+body.pixel .rou-hero h2 { color: #e8d8c4; text-shadow: 3px 3px 0 #5a0008; }
+body.pixel .rou-hero .btn { background: #b0101a !important; color: #fff !important; }
+body.pixel .rou-hero p { background: rgba(0, 0, 0, .75) !important; }
+
+/* правила и предметы в меню */
+.rou-rules p { margin: 0 0 8px; line-height: 1.45; } .rou-rules p:last-child { margin: 0; }
+.rou-items { display: grid; gap: 8px; }
+.ri { display: flex; gap: 10px; align-items: flex-start; background: var(--card); padding: 10px; margin: 0 3px; box-shadow: 0 0 0 3px #000; }
+.ri canvas.pix { width: 28px !important; height: 28px !important; flex: none; }
+
+/* 3D-сцена */
+.stage { position: relative; margin: calc(-14px - var(--safe-top, 0px)) -16px 0; aspect-ratio: 4 / 3.4; background: #000; overflow: hidden; border-bottom: 3px solid #000; }
+.cellar-canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+.stage-hud { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; gap: 8px; padding: calc(10px + var(--safe-top, 0px)) 12px 0; z-index: 3;
+  font-family: "Press Start 2P", monospace; font-size: 9px; color: #e8c8a0; text-shadow: 2px 2px 0 #000; pointer-events: none; }
+.stage-hud .drum { flex: 1; letter-spacing: 1px; color: #d0a070; overflow: hidden; white-space: nowrap; }
+.stage-timer { font-size: 14px; color: #ff3040; min-width: 40px; text-align: right; }
+.stage-hud .snd { pointer-events: auto; font-size: 16px; background: rgba(0, 0, 0, .5); padding: 4px 6px; }
+.stage-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #8a6e5a; font-family: "Press Start 2P", monospace; font-size: 9px; }
+.stage-msg { position: absolute; left: 0; right: 0; top: 38%; text-align: center; z-index: 4; pointer-events: none; opacity: 0;
+  font-family: "Press Start 2P", monospace; font-size: 34px; color: #ff1020; text-shadow: 4px 4px 0 #000, -2px 0 #000; }
+.stage-msg.show { animation: smsg 1.6s steps(8) forwards; }
+.stage-msg.blank { color: #c8b8a0; font-size: 22px; }
+.stage-msg.load { color: #d0a070; font-size: 14px; }
+@keyframes smsg { 0% { opacity: 1; transform: scale(1.6); } 15% { transform: scale(1); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px); } }
+
+/* строка состояния */
+.dbar { display: grid; grid-template-columns: 1fr 1fr 64px 1fr 1fr; gap: 3px; margin: 0 -16px; padding: 4px; background: #3a342c;
+  background-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, .15) 0 2px, transparent 2px 7px), repeating-linear-gradient(0deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 5px);
+  border-bottom: 3px solid #000; }
+.dcell { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 0; background: #241e18; box-shadow: inset 2px 2px 0 #14100c, inset -2px -2px 0 #4a4238; min-width: 0; }
+.dcell .big { font-family: "Press Start 2P", monospace; font-size: 18px; color: #d0101a; text-shadow: 2px 2px 0 #3a0004; }
+.dcell span { font-family: "Press Start 2P", monospace; font-size: 6px; color: #b8a888; margin-top: 6px; letter-spacing: .5px; }
+.dface { display: grid; place-items: center; background: #241e18; box-shadow: inset 2px 2px 0 #14100c, inset -2px -2px 0 #4a4238; }
+.dface canvas { width: 52px; height: 52px; image-rendering: pixelated; }
+
+/* места за столом */
+.seats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 14px 3px 0; }
+.seat { display: flex; gap: 8px; align-items: center; background: var(--card); padding: 8px; box-shadow: 0 0 0 3px #000; min-width: 0; }
+.seat .grow { min-width: 0; }
+.seat b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; }
+.seat.turn { box-shadow: 0 0 0 3px #b0101a; background: #2a0c0a; }
+.seat.dead { opacity: .45; filter: grayscale(.7); }
+.seat .st { font-size: 11px; color: var(--muted); min-height: 14px; }
+.hearts { display: flex; gap: 3px; margin-top: 3px; }
+.hrt { width: 10px; height: 9px; background: #2a1414; clip-path: polygon(0 20%, 20% 0, 40% 0, 50% 20%, 60% 0, 80% 0, 100% 20%, 100% 50%, 50% 100%, 0 50%); }
+.hrt.on { background: #d0101a; }
+
+/* ход, прицел, предметы */
+.your-turn { text-align: center; font-family: "Press Start 2P", monospace; font-size: 14px; color: #ff2030; margin: 16px 0 10px; animation: blink 1s steps(2) infinite; }
+.aim { display: grid; gap: 10px; }
+body.pixel .shoot-self { background: #4a1410 !important; }
+body.pixel .shoot-opp { background: #b0101a !important; }
+.turn-wait { margin-top: 14px; }
+.my-items { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 3px; }
+.mi { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 4px; background: var(--card); box-shadow: 0 0 0 3px #000; color: var(--text); min-width: 0; }
+.mi span { font-size: 12px; }
+.mi.on { box-shadow: 0 0 0 3px #b0101a; }
+.mi canvas.pix { width: 30px !important; height: 30px !important; }
+.load-btns { gap: 12px; }
+body.pixel .shell-live { background: #b0101a !important; }
+body.pixel .shell-blank { background: #8a8070 !important; color: #140c08 !important; }
+.load-done .live { color: #ff2030; } .load-done .blank { color: #c8b8a0; }
+.notes .n { padding: 4px 0; border-bottom: 1px dashed rgba(255, 255, 255, .08); }
+.tiny { font-size: 11px; }
+.rou-log .ev { padding: 5px 0; font-size: 13px; color: var(--muted); border-bottom: 1px dashed rgba(255, 255, 255, .06); }
+.rou-log .ev.new { color: var(--text); }
+.rou-log .ev.shot.new { color: #ff5060; }
+.rou-win { background: #170d0a !important; color: #e8d8c4 !important; }
+.rou-win .avatar { margin: 0 auto; }
+
+/* выбор цели */
+.targets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 3px; }
+body.pixel .targets .btn.on { background: #b0101a !important; color: #fff !important; }
+body.pixel .btn.fire { background: #d0101a !important; font-size: 14px !important; padding: 18px 10px; }
+body.pixel .btn.fire[disabled] { background: #3a1a16 !important; color: #7a5a4a !important; }
+.seat[data-a] { cursor: crosshair; }
+.seat.aimed { box-shadow: 0 0 0 3px #ff2030; }
+.seat.aimed::after { content: "🎯"; margin-left: auto; }
+.sawed { text-align: center; color: #ffb040; font-size: 13px; margin-top: 12px; background: #2a1408; padding: 8px; box-shadow: 0 0 0 3px #000; }
+
+/* инвентарь у игроков, осмотр стола */
+.seat .inv { font-size: 13px; line-height: 1.2; margin-top: 3px; letter-spacing: 1px; min-height: 16px; word-break: break-all; }
+.inspect { margin-top: 14px; box-shadow: 0 0 0 3px #b0101a !important; }
+.inspect canvas.pix { width: 36px !important; height: 36px !important; }
+.stage-hud .snd + .snd { margin-left: 4px; }
+.stage-msg.long { font-size: 20px; }
+
+/* подписи поверх 3D: чёткий белый шрифт */
+.c3-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.c3-label { position: absolute; left: 0; top: 0; display: none; white-space: nowrap; pointer-events: none; will-change: transform;
+  font-family: "Pixelify Sans", sans-serif; font-size: 11px; line-height: 1.2; color: #fff; text-shadow: 1px 1px 0 #000;
+  background: rgba(0, 0, 0, .78); padding: 2px 5px 1px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .28); }
+.c3-label.item.big { pointer-events: auto; cursor: pointer; }
+.c3-label.item.mine { background: rgba(90, 6, 12, .88); box-shadow: 0 0 0 1px #ff4a58; }
+.c3-label.item.big { font-size: 13px; padding: 3px 6px 2px; }
+.c3-label.item:not(.big) { font-size: 13px; letter-spacing: 1px; padding: 1px 4px; }
+.c3-label.name { font-family: "Press Start 2P", monospace; font-size: 8px; padding: 3px 5px; background: rgba(0, 0, 0, .6); box-shadow: none; text-shadow: 1px 1px 0 #000; }
+.c3-label.name.turn { color: #ffd23f; box-shadow: 0 0 0 1px #ffd23f; }
+.c3-label.name.dead { color: #9a8a80; text-decoration: line-through; }
+.turn-tag { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 4; pointer-events: none; white-space: nowrap;
+  font-family: "Press Start 2P", monospace; font-size: 9px; color: #e8d8c4; background: rgba(0, 0, 0, .7); padding: 6px 9px; box-shadow: 0 0 0 2px #2a1510; }
+.turn-tag.me { color: #ff3040; box-shadow: 0 0 0 2px #b0101a; animation: blink 1s steps(2) infinite; }

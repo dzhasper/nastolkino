@@ -8,6 +8,10 @@ const Net = (() => {
   let peer = null, hub = null, conn = null, role = null, code = null, ticker = null, retryTimer = null;
   let wanted = false, everConnected = false;
   const conns = new Map();                     // pid -> соединение (у хоста)
+  const keys = new Map();                      // pid -> секрет устройства: чужой не займёт твоё место
+  const deviceKey = (() => { let k = null; try { k = localStorage.getItem("nk_device"); } catch (e) { /* нет */ }
+    if (!k) { k = Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join(""); try { localStorage.setItem("nk_device", k); } catch (e) { /* нет */ } }
+    return k; })();
   const h = { onMessage: () => {}, onStatus: () => {}, me: null, profile: () => ({}) };
 
   function options() {
@@ -97,13 +101,16 @@ const Net = (() => {
     if (typeof d === "string") { try { d = JSON.parse(d); } catch (e) { return; } }
     if (!d || typeof d !== "object") return;
     if (d.t === "hello") {
-      if (!PID.test(String(d.pid || ""))) return c.close();
+      if (!PID.test(String(d.pid || "")) || d.pid === h.me || (c.pid && c.pid !== d.pid)) return c.close();
+      const k = String(d.key || "");
+      if (keys.has(d.pid) && keys.get(d.pid) !== k) return c.close();
+      keys.set(d.pid, k);
       c.pid = d.pid;
       const old = conns.get(d.pid);
       if (old && old !== c) old.close();
       conns.set(d.pid, c);
     }
-    if (c.pid && hub) hub.handle(c.pid, d);
+    if (c.pid && conns.get(c.pid) === c && hub) hub.handle(c.pid, d);
   }
 
   function closeRoom() {
@@ -138,7 +145,7 @@ const Net = (() => {
       clearTimeout(timeout);
       everConnected = true;
       status("ok");
-      conn.send({ t: "hello", pid: h.me, profile: h.profile() });
+      conn.send({ t: "hello", pid: h.me, profile: h.profile(), key: deviceKey });
     });
     conn.on("data", (d) => {
       if (d && (d.t === "closed" || d.t === "kicked" || d.t === "left")) { wanted = false; setTimeout(stop, 100); }
@@ -193,5 +200,5 @@ const Net = (() => {
     hiddenAt = null;
   });
 
-  return Object.assign(h, { host, join, send, stop, loadSnapshot, isHost: () => role === "host", code: () => code });
+  return Object.assign(h, { host, join, send, stop, loadSnapshot, isHost: () => role === "host", code: () => code, _hub: () => hub });
 })();

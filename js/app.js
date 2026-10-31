@@ -46,8 +46,8 @@ const SKINS = {
     verdict: "Решение руководства", lobby: "Переговорка", discuss: "Обсуждение в общем чате", nightSub: "Офис пуст",
     team: { mafia: "Конкуренты", town: "Команда", solo: "Фрилансер", bounty: "Фрилансер" } },
 };
-const skinKey = () => (S.screen === "room" && S.room ? (S.room.game === "draw" ? "draw" : S.room.settings.theme)
-  : S.screen === "mafia" ? S.setup.theme : S.screen === "draw" ? "draw" : "app");
+const skinKey = () => (S.screen === "room" && S.room ? (["draw", "roulette"].includes(S.room.game) ? S.room.game : S.room.settings.theme)
+  : S.screen === "mafia" ? S.setup.theme : ["draw", "roulette"].includes(S.screen) ? S.screen : "app");
 const SK = () => SKINS[skinKey()] || SKINS.classic;
 
 const ICON_PATHS = {
@@ -182,6 +182,7 @@ function boot() {
   Net.onStatus = (s) => { S.net = s; const el = document.getElementById("net-banner"); if (el) el.outerHTML = netBanner(); else if (S.screen === "room") render(); };
   loadProfile(() => {
     S.pixel = store.pixel !== false;
+    S.sound = store.sound !== false;
     S.registered = !!store.name;
     const startParam = tg && tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
     if (startParam && /^[A-Z0-9]{4}$/i.test(startParam)) S.pendingRoom = startParam;
@@ -214,6 +215,7 @@ function onMessage(m) {
   if (m.t === "state") {
     const prev = S.room;
     if (m.room.game === "draw") drawOnState(m.room);
+    if (m.room.game === "roulette") { S.room = m.room; rouTurnReset(); }
     const keep = m.room.game === "draw" && S.screen === "room" && (drawKeepScreen(m.room, prev)
       || (m.room.phase === "guess" && prev && prev.phase === "guess" && document.activeElement && document.activeElement.id === "guess-input"));
     S.room = m.room;
@@ -226,14 +228,15 @@ function onMessage(m) {
       S.sel = { ability: 0, target: null, duel: false };
       if (m.room.phase === "reveal") S.flipOpen = false;
       if (prev && prev.phase !== m.room.phase) notify(m.room.phase === "end" ? "success" : "warning");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (m.room.game !== "roulette") window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    if (m.room.phase === "end") (m.room.game === "draw" ? recordDraw : recordGame)(m.room);
+    if (m.room.phase === "end") (m.room.game === "draw" ? recordDraw : m.room.game === "roulette" ? recordRoulette : recordGame)(m.room);
     render();
     renderChat();
   } else if (m.t === "ink") {
     drawOnInk(m);
-  } else if (m.t === "closed") {
+  } else if (m.t === "closed" || m.t === "left" || m.t === "kicked") S.sheet = null;
+  if (m.t === "closed") {
     toast("Хост закрыл комнату");
     S.room = null; S.screen = "home"; S.chatOpen = false; render(); renderChat();
   } else if (m.t === "error") {
@@ -255,11 +258,12 @@ function render() {
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
-  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, mafia: viewMafia, draw: viewDrawMenu, room: viewRoom };
+  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, room: viewRoom };
   $app.innerHTML = (screens[S.screen] || viewLoading)();
   renderOverlay();
   if (PX()) Pixel.apply();
   drawMount();
+  rouMount();
   updateBack();
   if (tg) {
     const bg = getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#0b0b14";
@@ -269,7 +273,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "profile" || S.screen === "shop" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
+  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "profile" || S.screen === "shop" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -332,6 +336,12 @@ function viewHome() {
       <h2 class="mt">Рисовалка</h2>
       <p>Один рисует слово — остальные угадывают. Художник раздаёт баллы</p>
       <button class="btn">Рисовать ▶</button>
+    </div>
+    <div class="game-hero rou-hero mt2" data-a="go" data-v="roulette" ${PX() ? `style="background-image:url(${Pixel.scene("cellar")})"` : ""}>
+      <div class="pill" style="background:rgba(120,0,10,.55)">🩸 3D · ${Roulette.MIN_PLAYERS}–${Roulette.MAX_PLAYERS} игрока</div>
+      <h2 class="mt">Последний заряд</h2>
+      <p>Подвал, стол и один дробовик. Каждый тайно заряжает свой патрон</p>
+      <button class="btn">Спуститься ▶</button>
     </div>
     <div class="section-title">Есть код комнаты?</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
@@ -482,6 +492,7 @@ function playerTiles(list, opts = {}) {
 function viewRoom() {
   const r = S.room;
   if (r.game === "draw") return viewDrawRoom();
+  if (r.game === "roulette") return viewRouletteRoom();
   const views = { lobby: viewLobby, reveal: viewReveal, night: viewNight, day: viewDay, vote: viewVote, verdict: viewVerdict, end: viewEnd };
   return `${netBanner()}${r.phase === "night" ? '<div class="night-sky"></div><div class="stars"></div>' : ""}
     <div class="fade-in" key="${r.phase}">${PX() ? `<div class="pxscene ${r.phase === "lobby" ? "big" : ""}" style="background-image:url(${Pixel.scene(r.settings.theme)})"></div>` : ""}${(views[r.phase] || viewLobby)()}</div>
@@ -756,6 +767,8 @@ function renderOverlay() {
           <span class="small team-${r.team}"> · ${r.team === "mafia" ? "мафия" : r.team === "town" ? "город" : "сам за себя"}</span>
           <div class="small muted">${esc(r.desc)}</div>${sp ? `<div class="small muted">появляется от ${sp.from} игроков</div>` : ""}</div></div>`;
       }).join("")}</div>`;
+  } else if (S.sheet.type === "rou-settings") {
+    body = rouSettingsSheet();
   } else if (S.sheet.type === "draw-settings") {
     body = drawSettingsSheet();
   } else if (S.sheet.type === "peek") {
@@ -898,9 +911,10 @@ const actions = {
     const code = S.room.code;
     const link = S.bot ? (S.miniapp ? `https://t.me/${S.bot}/${S.miniapp}?startapp=${code}` : `https://t.me/${S.bot}?start=${code}`)
       : `${location.origin}${location.pathname}?room=${code}`;
-    const text = `Го в мафию! ${S.room.theme.emoji} «${S.room.theme.title}». Код комнаты: ${code}`;
+    const game = { draw: "Го в рисовалку!", roulette: "Спускайся в подвал. Один дробовик, один стол." }[S.room.game] || "Го в мафию!";
+    const text = `${game} ${S.room.theme.emoji} «${S.room.theme.title}». Код комнаты: ${code}`;
     if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
-    else if (navigator.share) navigator.share({ title: "Мафия", text, url: link }).catch(() => {});
+    else if (navigator.share) navigator.share({ title: S.room.theme.title, text, url: link }).catch(() => {});
     else { navigator.clipboard && navigator.clipboard.writeText(`${text}\n${link}`); toast("Приглашение скопировано"); }
   },
   kick: (v) => send({ t: "kick", id: v }),
@@ -941,7 +955,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, DRAW_ACTIONS);
+Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");
@@ -974,6 +988,7 @@ setInterval(() => {
   if (!num || !S.room || !S.room.deadline) return;
   const left = remaining();
   num.textContent = fmtTime(left);
+  if (!arc) { num.parentNode.classList.toggle("low", left <= 5); return; }
   const c = 2 * Math.PI * 25;
   arc.setAttribute("stroke-dashoffset", c * (1 - Math.max(0, Math.min(1, left / Number(box.dataset.total)))));
   if (left <= 5) arc.setAttribute("stroke", "var(--bad)");
@@ -984,6 +999,7 @@ if (tg) {
   tg.expand();
   try { tg.disableVerticalSwipes(); } catch (e) { /* старый клиент */ }
   tg.BackButton.onClick(() => {
+    if (S.sheet || S.chatOpen) { S.sheet = null; S.chatOpen = false; $overlay.innerHTML = ""; renderChat(); return; }   // сначала закрыть шторку
     if (S.screen === "room") actions.leave();
     else { S.screen = "home"; render(); }
   });

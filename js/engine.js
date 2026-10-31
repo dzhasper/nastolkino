@@ -528,7 +528,8 @@
     /* send(pid, data) — доставить сообщение игроку (себе — локально, остальным — по сети) */
     constructor(send, hostProfile, settings, code, restore) {
       this.send = send;
-      const Kind = (restore ? restore.kind : settings && settings.game) === "draw" ? api.DrawRoom : Room;   // мафия или рисовалка
+      const kind = restore ? restore.kind : settings && settings.game;
+      const Kind = kind === "draw" ? api.DrawRoom : kind === "roulette" ? api.RouletteRoom : Room;   // мафия, рисовалка или рулетка
       this.room = restore ? new Kind(null, null, null, restore) : new Kind(code, member(hostProfile), settings);
       this.listeners = [];
     }
@@ -567,7 +568,10 @@
     }
 
     offline(pid) { this.room.setOnline(pid, false); this.push(); }
-    tick() { if (this.room.tick()) this.push(); }
+    tick() {
+      try { if (this.room.tick()) this.push(); }
+      catch (e) { console.error(e); this.room.deadline = null; this.push(); }   // одна ошибка не должна вешать стол навсегда
+    }
 
     push() {
       this.room.order.forEach((pid) => { if (this.room.members[pid].online) this.send(pid, { t: "state", room: this.room.view(pid) }); });
