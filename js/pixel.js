@@ -119,14 +119,18 @@ const Pixel = (() => {
       for (;;) { px(x0, y0, c); if (x0 === x1 && y0 === y1) break; const e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } }
     };
     // гряда гор/холмов: высоты из суммы синусов + шум, со светлой кромкой
-    const ridge = (base, amp, f, col, rim, rough = 1) => {
+    const ridge = (base, amp, f, col, rim, rough = 1, flats = []) => {
       const ph = R() * 100, ph2 = R() * 100;
       const hs = [];
-      for (let x = 0; x < W; x++) {
-        const h = Math.round(base - amp * (.6 * Math.sin(x * f + ph) + .3 * Math.sin(x * f * 2.7 + ph2) + .1 * rough * (R() - .5)));
-        hs.push(h); rect(x, h, 1, H - h, col);
-        if (rim) px(x, h, rim);
-      }
+      for (let x = 0; x < W; x++) hs.push(Math.round(base - amp * (.6 * Math.sin(x * f + ph) + .3 * Math.sin(x * f * 2.7 + ph2) + .1 * rough * (R() - .5))));
+      flats.forEach(([x0, x1]) => {                         // ровная площадка, чтобы здание стояло на земле, а не висело
+        const lvl = Math.round(hs.slice(Math.max(0, x0), Math.min(W, x1)).reduce((a, b) => a + b, 0) / Math.max(1, Math.min(W, x1) - Math.max(0, x0)));
+        for (let x = Math.max(0, x0 - 14); x < Math.min(W, x1 + 14); x++) {
+          const k = x < x0 ? (x0 - x) / 14 : x >= x1 ? (x - x1 + 1) / 14 : 0;
+          hs[x] = Math.round(lvl * (1 - k) + hs[x] * k);
+        }
+      });
+      for (let x = 0; x < W; x++) { rect(x, hs[x], 1, H - hs[x], col); if (rim) px(x, hs[x], rim); }
       return hs;
     };
     const stars = (n, yMax) => {
@@ -137,8 +141,10 @@ const Pixel = (() => {
       }
     };
     const dither = (x0, y0, w, h, c, d = .5) => { for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) if (BAYER[y & 3][x & 3] < d * 16) px(x, y, c); };
+    // мягкая тень под предметом — чтобы он стоял на земле
+    const shadow = (cx, y, w, c = "#00000066") => { for (let dy = -1; dy <= 1; dy++) { const ww = w * (1 - Math.abs(dy) * .35); for (let x = -ww / 2; x < ww / 2; x++) if (BAYER[(y + dy) & 3][(Math.round(cx + x)) & 3] < 11 - Math.abs(x) / ww * 10) px(cx + x, y + dy, c); } };
     const glow = (cx, cy, r, c) => { for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) { const d = Math.hypot(x, y) / r; if (d < 1 && BAYER[(cy + y) & 3][(cx + x) & 3] < (1 - d) * 9) px(cx + x, cy + y, c); } };
-    return { rect, px, grad, disc, ball, line, ridge, stars, dither, glow };
+    return { rect, px, grad, disc, ball, line, ridge, stars, dither, glow, shadow };
   }
 
   // дом/небоскрёб с окнами, карнизами и крышей
@@ -198,12 +204,13 @@ const Pixel = (() => {
         for (let k = 0; k < n; k++) t.disc(cx + k * 9, cy - 2 + (k % 2) * 2, 5 + (k % 2) * 2, "#ffffff");
       }
       const far = t.ridge(70, 22, .025, "#5a6cb8", "#8090d0");
-      far.forEach((h, x) => { if (h < 58) for (let y = h; y < h + 6 - (x % 3); y++) t.px(x, y, "#f4f8ff"); });
+      far.forEach((h, x) => { for (let y = h; y < 58; y++) if (y < 56 || BAYER[y & 3][x & 3] < 8) t.px(x, y, y === h ? "#ffffff" : x % 7 < 2 ? "#d8e2ff" : "#f4f8ff"); });
       t.ridge(92, 10, .04, "#3c8c48", "#5cb85c");
       for (let i = 0; i < 40; i++) { const x = R() * W, y = 84 + R() * 12; t.disc(x, y, 3, "#2a6e36"); t.px(x - 1, y - 2, "#4caa58"); }
-      const hill = t.ridge(122, 8, .03, "#2f9e44", "#6ed46e");
+      const hill = t.ridge(122, 8, .03, "#2f9e44", "#6ed46e", 1, [[190, 280]]);
       t.dither(0, 126, W, 34, "#268a3a", .35);
-      const cx = 205, cy = hill[220] - 2;                   // замок
+      const cx = 205, cy = hill[235] + 1;                   // замок стоит на ровной площадке холма
+      t.shadow(cx + 28, cy, 84, "#1e6e30");
       t.rect(cx, cy - 34, 56, 34, "#9a9ab8");
       for (let y = cy - 34; y < cy; y += 4) for (let x = cx + ((y / 4) % 2) * 3; x < cx + 56; x += 6) t.rect(x, y, 5, 1, "#8484a4");
       for (let x = cx; x < cx + 56; x += 6) t.rect(x, cy - 38, 4, 4, "#9a9ab8");
@@ -227,7 +234,7 @@ const Pixel = (() => {
       [[244, 28, 3], [256, 40, 4], [252, 24, 2]].forEach(([x, y, r]) => t.disc(x, y, r, "#7a0a12"));
       for (let x = 0; x < W;) {                              // дальний ряд
         const w = 14 + Math.floor(R() * 20), h = 50 + Math.floor(R() * 50);
-        t.rect(x, H - 30 - h, w, h, "#0c0c0c");
+        t.rect(x, H - 30 - h, w, h + 8, "#0c0c0c");
         for (let wy = H - 28 - h; wy < H - 32; wy += 4) for (let wx = x + 2; wx < x + w - 2; wx += 4) if (R() < .08) t.px(wx, wy, "#8a7a3a");
         x += w;
       }
@@ -243,11 +250,19 @@ const Pixel = (() => {
       t.rect(0, H - 22, W, 1, "#2a2a2a");
       [40, 150, 270].forEach((lx) => {                       // фонари со светом
         t.rect(lx, H - 60, 2, 38, "#2a2a2a"); t.rect(lx - 6, H - 61, 12, 2, "#2a2a2a"); t.rect(lx - 5, H - 59, 10, 2, "#ffe8a0");
-        for (let y = 0; y < 36; y++) for (let x = -y * .45; x < y * .45; x++) if (BAYER[(H - 57 + y) & 3][(lx + Math.round(x)) & 3] < 4) t.px(lx + x, H - 57 + y, "#4a3c18");
+        for (let y = 0; y < 36; y++) for (let x = Math.round(-y * .5); x <= y * .5; x++) {
+          const k = (1 - Math.abs(x) / (y * .5 + 1)) * (1 - y / 60);
+          if (BAYER[(H - 57 + y) & 3][(lx + x) & 3] < k * 9) t.px(lx + x, H - 57 + y, y > 30 ? "#6a5420" : "#4a3c18");
+        }
+        t.shadow(lx + 1, H - 21, 22, "#5a4a2066");
       });
-      t.rect(196, H - 16, 40, 8, "#101010"); t.rect(204, H - 22, 22, 6, "#101010"); t.disc(204, H - 8, 3, "#000"); t.disc(228, H - 8, 3, "#000");
-      t.rect(234, H - 14, 3, 2, "#fff4c0"); t.glow(240, H - 13, 10, "#5a4a20");
-      t.disc(250, H - 6, 4, "#3a0408");                      // отражение луны в луже
+      t.shadow(216, H - 4, 50, "#000000aa");                 // машина стоит на мостовой
+      t.rect(194, H - 15, 44, 9, "#161616"); t.rect(202, H - 22, 26, 7, "#161616"); t.rect(194, H - 15, 44, 1, "#3a3a3a"); t.rect(202, H - 22, 26, 1, "#3a3a3a");
+      t.rect(205, H - 20, 9, 4, "#2a2a2a"); t.rect(216, H - 20, 9, 4, "#2a2a2a");
+      t.disc(204, H - 6, 3, "#000"); t.disc(228, H - 6, 3, "#000"); t.px(204, H - 6, "#444"); t.px(228, H - 6, "#444");
+      t.rect(236, H - 13, 2, 2, "#fff4c0"); t.glow(242, H - 12, 9, "#5a4a20");
+      for (let x = 0; x < 44; x++) { const w = Math.round(Math.sqrt(1 - ((x - 22) / 22) ** 2) * 3); t.rect(258 + x, H - 9 - w / 2, 1, w, "#141418"); }   // лужа с отражением луны
+      t.rect(270, H - 9, 10, 1, "#7a0a12"); t.rect(273, H - 8, 5, 1, "#5a0610");
       for (let i = 0; i < 260; i++) { const rx = R() * W, ry = R() * (H - 20); t.line(rx, ry, rx - 2, ry + 4, i % 3 ? "#262626" : "#3a3a3a"); }
       for (let i = 0; i < 40; i++) { const sx = R() * W; t.rect(sx, H - 4 - R() * 14, 3, 1, "#2a2a2a"); }
     },
@@ -271,15 +286,22 @@ const Pixel = (() => {
       t.rect(0, 112, W, 48, "#0a0212");
       for (let k = 1; k < 10; k++) { const y = 112 + Math.round(k * k * .48); t.rect(0, y, W, 1, "#00e5ff"); }
       for (let k = -16; k <= 16; k++) t.line(150 + k * 6, 112, 150 + k * 30, H, "#0090b0");
-      const kx = 120;                                        // ларёк
-      t.rect(kx, 116, 64, 30, "#2a0a3a"); t.rect(kx - 2, 112, 68, 5, "#ff2bd6"); t.rect(kx + 4, 120, 56, 14, "#ffd400");
-      for (let i = 0; i < 7; i++) t.rect(kx + 6 + i * 8, 122, 5, 9, ["#ff4a4a", "#4aff7a", "#4ab0ff", "#ffffff", "#ff9a3a", "#c84aff", "#ffea4a"][i]);
-      for (let i = 0; i < 8; i++) t.rect(kx + 4 + i * 7, 120, 1, 14, "#2a0a3a");
-      t.glow(kx + 32, 128, 30, "#5a1a4a");
-      const cx = 230;                                        // «девятка»
-      t.rect(cx, 134, 54, 10, "#3a2a5a"); t.rect(cx + 10, 126, 30, 9, "#3a2a5a"); t.rect(cx + 12, 128, 12, 6, "#5ab0ff"); t.rect(cx + 26, 128, 12, 6, "#5ab0ff");
-      t.disc(cx + 12, 145, 5, "#0a0212"); t.disc(cx + 42, 145, 5, "#0a0212"); t.disc(cx + 12, 145, 2, "#7a7a8a"); t.disc(cx + 42, 145, 2, "#7a7a8a");
-      t.rect(cx + 51, 136, 3, 3, "#fff4c0"); t.rect(cx, 136, 2, 3, "#ff2a2a");
+      t.rect(0, 140, W, 20, "#14061e"); t.rect(0, 140, W, 1, "#ff2bd6"); t.rect(0, 141, W, 1, "#5a1a5a");   // тротуар
+      for (let x = 6; x < W; x += 22) t.rect(x, 152, 10, 1, "#3a1a4a");
+      const kx = 112;                                        // ларёк стоит на тротуаре
+      for (let y = 0; y < 10; y++) for (let x = -y * 2; x < 64 + y * 2; x++) if (BAYER[(150 + y) & 3][(kx + x) & 3] < 6 - y * .5) t.px(kx + x, 150 + y, "#7a5a1a");   // свет витрины на асфальте
+      t.shadow(kx + 32, 150, 76, "#000000aa");
+      t.rect(kx, 116, 64, 34, "#2a0a3a"); t.rect(kx + 62, 116, 2, 34, "#1a0428"); t.rect(kx - 3, 111, 70, 6, "#ff2bd6"); t.rect(kx - 3, 111, 70, 1, "#ff9af0");
+      t.rect(kx + 4, 120, 56, 15, "#ffd400"); t.rect(kx + 4, 135, 56, 3, "#c89a00");
+      for (let i = 0; i < 7; i++) t.rect(kx + 6 + i * 8, 122, 5, 10, ["#ff4a4a", "#4aff7a", "#4ab0ff", "#ffffff", "#ff9a3a", "#c84aff", "#ffea4a"][i]);
+      for (let i = 0; i < 8; i++) t.rect(kx + 4 + i * 7, 120, 1, 15, "#2a0a3a");
+      t.rect(kx + 22, 140, 20, 10, "#14061e"); t.rect(kx + 24, 142, 16, 8, "#ffd400");   // окошко «24 часа»
+      const cx = 226;                                        // «девятка» у тротуара
+      t.shadow(cx + 28, 151, 62, "#000000aa");
+      t.rect(cx, 136, 56, 11, "#3a2a5a"); t.rect(cx, 136, 56, 1, "#7a6aa8"); t.rect(cx + 10, 127, 32, 10, "#3a2a5a"); t.rect(cx + 10, 127, 32, 1, "#7a6aa8");
+      t.rect(cx + 12, 129, 13, 7, "#5ab0ff"); t.rect(cx + 27, 129, 13, 7, "#5ab0ff"); t.px(cx + 13, 130, "#c8e8ff"); t.px(cx + 28, 130, "#c8e8ff");
+      t.disc(cx + 12, 147, 4, "#0a0212"); t.disc(cx + 44, 147, 4, "#0a0212"); t.disc(cx + 12, 147, 1, "#7a7a8a"); t.disc(cx + 44, 147, 1, "#7a7a8a");
+      t.rect(cx + 53, 139, 3, 3, "#fff4c0"); t.rect(cx, 139, 2, 3, "#ff2a2a");
     },
     halloween(ctx, R, t) {                                  // ХЭЛЛОУИН: кладбище, особняк, луна, летучие мыши
       t.grad(0, H, ["#05020a", "#0e0518", "#1a0a2e", "#2a1048", "#3a1660", "#4a1e70"]);
@@ -287,14 +309,14 @@ const Pixel = (() => {
       t.glow(232, 40, 52, "#5a3a7a");
       t.ball(232, 40, 28, "#fff6d8", "#f0deaa", "#c8b07a");
       [[222, 32, 5], [242, 50, 6], [238, 28, 3], [218, 50, 3]].forEach(([x, y, r]) => { t.disc(x, y, r, "#d8c48e"); t.disc(x - 1, y - 1, r - 1, "#e8d4a0"); });
-      [[176, 34, 70], [214, 52, 64]].forEach(([cx, cy, cw]) => t.dither(cx, cy, cw, 4, "#3a1e58", .35));   // дымка облаков
+      [[150, 74, 40], [270, 80, 46], [190, 86, 50]].forEach(([cx, cy, cw]) => { for (let k = 0; k < cw; k += 6) t.glow(cx + k, cy, 6, "#3a1e58"); });   // облака ниже луны
       const bat = (bx, by, s) => {
         t.rect(bx - 1, by, 3, 3, "#000"); t.px(bx - 1, by - 1, "#000"); t.px(bx + 1, by - 1, "#000");
         for (let i = 1; i <= 5 * s; i++) { const yy = by + Math.round(Math.sin(i / s) * 2) - 1; t.rect(bx + 1 + i, yy, 1, 2, "#000"); t.rect(bx - 1 - i, yy, 1, 2, "#000"); }
       };
       bat(200, 30, 1); bat(260, 66, 1.4); bat(150, 22, 1); bat(220, 56, 1);
-      const hill = t.ridge(96, 14, .02, "#0c0614", "#2a1640");
-      const hx = 60, hy = hill[80];                         // особняк на холме
+      const hill = t.ridge(96, 14, .02, "#0c0614", "#2a1640", 1, [[50, 122]]);
+      const hx = 60, hy = hill[86] + 1;                     // особняк стоит на ровной вершине холма
       t.rect(hx, hy - 34, 50, 34, "#100818"); t.rect(hx + 8, hy - 50, 14, 16, "#100818");
       for (let i = 0; i < 30; i++) t.rect(hx + 25 - i, hy - 34 - 14 + i * .9, i * 2, 1, "#0a0410");
       for (let i = 0; i < 9; i++) t.rect(hx + 15 - i, hy - 62 + i * 1.4, i * 2, 1, "#0a0410");
@@ -320,7 +342,7 @@ const Pixel = (() => {
         t.dither(gx, gy + gh - 4, 14, 4, "#3a6a3a", .4);
       });
       [[90, 146, 7], [200, 150, 6], [298, 148, 5]].forEach(([qx, qy, r]) => {   // тыквы-фонари
-        t.glow(qx, qy, r * 3, "#5a2a10");
+        t.glow(qx, qy, r * 3, "#5a2a10"); t.shadow(qx, qy + r, r * 3, "#00000099");
         t.ball(qx, qy, r, "#ffa040", "#f2711c", "#b84a10");
         t.rect(qx - 1, qy - r - 3, 3, 3, "#2f7a3a");
         t.rect(qx - r / 2 - 1, qy - 2, 2, 2, "#ffe066"); t.rect(qx + r / 2 - 1, qy - 2, 2, 2, "#ffe066"); t.rect(qx - r / 2, qy + 2, r, 1, "#ffe066");
@@ -356,7 +378,12 @@ const Pixel = (() => {
         t.glow(mx + 33, my + 23, 40, "#0e2a12");
         t.rect(mx + 28, my + 46, 10, 4, "#0e1c10");
       });
-      [[96, 112], [104, 120], [210, 116]].forEach(([cx, cy]) => { t.rect(cx, cy, 20, 20, "#3a3420"); t.rect(cx, cy, 20, 2, "#5a5030"); t.line(cx, cy + 2, cx + 19, cy + 19, "#2a2416"); t.line(cx + 19, cy + 2, cx, cy + 19, "#2a2416"); });
+      [[90, 112, 20], [111, 118, 14], [95, 96, 16], [206, 114, 18]].forEach(([cx, cy, s]) => {   // ящики стоят на полу или друг на друге
+        t.rect(cx, cy, s, s, "#3a3420"); t.rect(cx, cy, s, 2, "#5a5030"); t.rect(cx + s - 2, cy, 2, s, "#2a2416");
+        t.line(cx, cy + 2, cx + s - 1, cy + s - 1, "#2a2416"); t.line(cx + s - 1, cy + 2, cx, cy + s - 1, "#2a2416");
+        t.rect(cx + 2, cy + s / 2 - 1, 5, 2, "#f5c400");
+      });
+      t.shadow(110, 133, 50, "#000000aa"); t.shadow(215, 133, 26, "#000000aa");
       t.rect(0, 132, W, 8, "#111"); for (let x = 0; x < W; x += 12) t.rect(x, 132, 6, 8, "#f5c400");
       t.rect(0, 140, W, 20, "#0a0e0a"); for (let x = 0; x < W; x += 4) t.rect(x, 140, 1, 20, "#141c14"); for (let y = 142; y < H; y += 4) t.rect(0, y, W, 1, "#141c14");
     },
@@ -386,6 +413,7 @@ const Pixel = (() => {
       for (let y = sy - 52; y < sy - 28; y += 4) t.rect(sx + 80, y, 32, 1, "#5a3418");
       const cactus = (cx, by, h, s) => {                      // кактус-сагуаро с рёбрами
         const w = 5 * s;
+        t.shadow(cx + w / 2 + 3, by, w * 4, "#8a5a2a99");
         t.rect(cx, by - h, w, h, "#2f7a3a"); t.rect(cx, by - h, 1, h, "#5aa85a"); t.rect(cx + w - 1, by - h, 1, h, "#1e5a28");
         for (let y = by - h + 2; y < by; y += 3) t.px(cx + 2, y, "#1e5a28");
         t.rect(cx - 6 * s, by - h * .55, 6 * s, 4, "#2f7a3a"); t.rect(cx - 6 * s, by - h * .85, 4, h * .32, "#2f7a3a");
@@ -394,7 +422,7 @@ const Pixel = (() => {
         for (let i = 0; i < 8; i++) t.px(cx - 1 + R() * (w + 2), by - h + R() * h, "#d8f0b0");
       };
       cactus(30, 146, 40, 1.4); cactus(276, 152, 34, 1.2); cactus(226, 122, 18, .8);
-      t.disc(190, 144, 5, "#b07a3a"); for (let i = 0; i < 10; i++) t.line(190, 144, 190 + (R() - .5) * 12, 144 + (R() - .5) * 12, "#8a5a2a");
+      t.shadow(191, 149, 14, "#8a5a2a99"); t.disc(190, 144, 5, "#b07a3a"); for (let i = 0; i < 10; i++) t.line(190, 144, 190 + (R() - .5) * 12, 144 + (R() - .5) * 12, "#8a5a2a");
       for (let x = 0; x < 80; x += 10) { t.rect(x, 130, 2, 14, "#6a4424"); } t.rect(0, 134, 80, 1, "#6a4424"); t.rect(0, 139, 80, 1, "#6a4424");
     },
     office(ctx, R, t) {                                     // КОРПОРАТИВ: стеклянные башни и рабочий стол
@@ -421,6 +449,216 @@ const Pixel = (() => {
       t.rect(40, 120, 14, 16, "#b4643a"); t.rect(40, 120, 14, 2, "#d07a4a");                   // растение
       for (let i = 0; i < 9; i++) { const a = -Math.PI / 2 + (i - 4) * .35; t.line(47, 120, 47 + Math.cos(a) * 20, 120 + Math.sin(a) * 20, i % 2 ? "#3a9a4a" : "#2e7e3c"); }
       t.rect(100, 136, 30, 10, "#ffffff"); t.rect(104, 134, 30, 10, "#f4f4f4"); for (let y = 136; y < 143; y += 2) t.rect(108, y, 20, 1, "#c0c0d0");
+    },
+    space(ctx, R, t) {                                      // КОСМОС: туманность, планета с кольцом, ракета
+      t.grad(0, H, ["#02010a", "#070320", "#0e0632", "#160a3e", "#0a0526"]);
+      for (let i = 0; i < 9; i++) { const nx = 30 + R() * 260, ny = 20 + R() * 120; t.glow(nx, ny, 22 + R() * 18, ["#3a1468", "#122a6a", "#5a1450"][i % 3]); }
+      t.stars(230, H);
+      t.glow(92, 70, 46, "#1a3a8a");
+      t.ball(92, 70, 30, "#7ac8ff", "#3a7ad0", "#16307a");
+      for (let i = 0; i < 6; i++) { const y = 52 + i * 6; for (let x = 66; x < 120; x++) if (Math.hypot(x - 92, y - 70) < 29 && BAYER[y & 3][x & 3] < 5) t.px(x, y, "#5aa0e8"); }
+      for (let a = 0; a < Math.PI * 2; a += .004) {          // кольцо: задняя половина закрыта планетой
+        const x = 92 + Math.cos(a) * 52, y = 70 + Math.sin(a) * 11 - Math.cos(a) * 6;
+        if (Math.sin(a) < 0 && Math.hypot(x - 92, (y - 70)) < 30) continue;
+        t.px(x, y, Math.sin(a * 3) > 0 ? "#ffd8a0" : "#c89a6a"); t.px(x, y + 1, "#7a5a3a");
+      }
+      t.ball(250, 34, 9, "#e8e0d8", "#a8a098", "#5a5650");
+      t.px(247, 31, "#8a8278"); t.px(253, 37, "#8a8278");
+      for (let i = 0; i < 7; i++) { const ax = 170 + R() * 130, ay = 90 + R() * 60, r = 2 + R() * 4; t.ball(ax, ay, r, "#8a7a6a", "#5a4a3a", "#2a2018"); }
+      const rx = 200, ry = 96;                                // ракета летит вверх вправо
+      for (let i = 0; i < 26; i++) t.glow(rx - 8 - i * 1.6, ry + 10 + i * 1.6, 4 - i / 9, i < 8 ? "#ffd166" : "#ff6a3a");
+      for (let k = 0; k < 18; k++) for (let w = -4; w <= 4; w++) {
+        const x = rx + k * .8 + w * .8, y = ry - k * .8 + w * .8;
+        t.px(x, y, w < -2 ? "#c8c8d8" : w > 2 ? "#7a7a90" : "#f4f4ff");
+      }
+      t.disc(rx + 7, ry - 7, 2, "#3ab0ff"); t.px(rx + 6, ry - 8, "#c8ecff");
+      t.line(rx - 4, ry + 1, rx - 8, ry + 5, "#d0263a"); t.line(rx + 1, ry + 5, rx - 3, ry + 9, "#d0263a");
+      t.line(rx + 14, ry - 14, rx + 17, ry - 17, "#d0263a");
+    },
+    winter(ctx, R, t) {                                     // ЗИМНИЙ ЛЕС: закат, ели в снегу, избушка с дымом
+      t.grad(0, 110, ["#1a2050", "#2e3a7a", "#5a5aa0", "#a07ab0", "#f0a0a0", "#ffd0a8"]);
+      t.stars(50, 30);
+      const far = t.ridge(78, 18, .02, "#8a96c8", "#c8d4f4");
+      far.forEach((h, x) => { for (let y = h; y < h + 5; y++) if (BAYER[y & 3][x & 3] < 10) t.px(x, y, "#e8eeff"); });
+      const pine = (x, by, h, c1, c2, snow) => {               // ель стоит основанием на снегу
+        t.rect(x - 1, by - 4, 3, 4, "#3a2418");
+        for (let i = 0; i < h; i++) { const w = Math.round((i / h) * h * .42 * (1 + .25 * ((i % 6) / 6))); t.rect(x - w, by - 4 - h + i, w * 2 + 1, 1, (i % 6) < 2 ? c2 : c1); if ((i % 6) === 0 && i > 2) t.rect(x - w, by - 4 - h + i, w * 2 + 1, 1, snow); }
+        t.shadow(x, by, h * .8, "#8a9ac866");
+      };
+      const mid = t.ridge(112, 6, .03, "#c8d4f0", "#ffffff");
+      for (let i = 0; i < 16; i++) { const x = 6 + i * 20 + R() * 8; pine(x, mid[Math.min(W - 1, Math.round(x))] + 2, 18 + R() * 10, "#2a4a5a", "#3a5e6a", "#dfe8ff"); }
+      const near = t.ridge(140, 5, .025, "#e8eeff", "#ffffff", 1, [[188, 262]]);
+      t.dither(0, 146, W, 14, "#c8d4f0", .3);
+      const hx = 196, hy = near[220] + 1;                     // избушка на ровном месте
+      t.shadow(hx + 28, hy, 70, "#8a9ac899");
+      t.rect(hx, hy - 24, 56, 24, "#6a3a22"); for (let y = hy - 24; y < hy; y += 4) t.rect(hx, y, 56, 1, "#4a2614");
+      for (let i = 0; i < 18; i++) t.rect(hx - 4 + i * 1.8, hy - 24 - i, 64 - i * 3.6, 1, i < 3 ? "#ffffff" : "#e8eeff");
+      t.rect(hx + 40, hy - 46, 7, 14, "#5a3a2a");
+      for (let i = 0; i < 14; i++) t.glow(hx + 44 + Math.sin(i / 2) * 4 + i * .6, hy - 50 - i * 3, 3 + i / 5, "#c8c8e0");
+      [[hx + 8, hy - 17], [hx + 38, hy - 17]].forEach(([wx, wy]) => { t.glow(wx + 5, wy + 4, 10, "#ffcc6a"); t.rect(wx, wy, 10, 8, "#ffd27a"); t.rect(wx + 4, wy, 2, 8, "#4a2614"); t.rect(wx, wy + 3, 10, 1, "#4a2614"); });
+      t.rect(hx + 22, hy - 14, 10, 14, "#3a1e10");
+      pine(40, near[40] + 2, 40, "#1e3a48", "#2a4e5a", "#ffffff"); pine(290, near[290] + 2, 46, "#1e3a48", "#2a4e5a", "#ffffff"); pine(150, near[150] + 2, 30, "#1e3a48", "#2a4e5a", "#ffffff");
+      for (let i = 0; i < 12; i++) { const fx = 100 + i * 8, fy = 150 + (i % 2) * 2; t.rect(fx, fy, 2, 1, "#a8b4d8"); }
+      for (let i = 0; i < 160; i++) { const x = R() * W, y = R() * H; t.px(x, y, "#ffffff"); if (R() < .2) t.px(x + 1, y, "#ffffffaa"); }
+    },
+    sakura(ctx, R, t) {                                     // САКУРА: Фудзи, пагода, тории, лепестки
+      t.grad(0, 112, ["#ffd8e8", "#ffe4ec", "#fff0e8", "#fff8ec"]);
+      t.ball(250, 34, 16, "#ff6a5a", "#ff5a4a", "#e84a3a");
+      for (let x = 60; x < 260; x++) {                        // Фудзи со снежной шапкой
+        const h = Math.round(46 + Math.abs(x - 160) * .62 - Math.max(0, 22 - Math.abs(x - 160)) * .3);
+        for (let y = h; y < 112; y++) t.px(x, y, y < 58 + Math.sin(x / 3) * 2 ? "#ffffff" : x > 160 ? "#7a7ab8" : "#8e8ec8");
+      }
+      t.ridge(104, 6, .03, "#a8c89a", "#c8e0b8");
+      t.rect(0, 112, W, 48, "#8ac0d8");                        // озеро с отражением
+      for (let y = 114; y < 132; y += 3) for (let x = 0; x < W; x += 1) if (BAYER[y & 3][x & 3] < 3) t.px(x, y, "#c8e8f4");
+      t.dither(80, 114, 160, 10, "#9898c8", .3);
+      t.rect(0, 132, W, 28, "#6aa85a"); t.rect(0, 132, W, 1, "#8ac87a"); t.dither(0, 140, W, 20, "#5a984a", .3);
+      const px0 = 34, py = 132;                               // пагода стоит на берегу
+      t.shadow(px0 + 14, py, 46, "#3a6a3a99");
+      for (let k = 0; k < 4; k++) {
+        const y = py - 12 - k * 14, w = 30 - k * 5;
+        t.rect(px0 + 14 - w / 2 + 3, y, w - 6, 12, "#b8302a"); t.rect(px0 + 14 - w / 2 + 6, y + 3, 3, 6, "#ffd27a");
+        for (let i = 0; i < 5; i++) t.rect(px0 + 14 - w / 2 - i, y - 4 + i, w + i * 2, 1, "#3a2a3a");
+      }
+      t.rect(px0 + 13, py - 74, 2, 10, "#3a2a3a");
+      const tx = 252;                                         // тории
+      t.shadow(tx + 18, py, 52, "#3a6a3a99");
+      t.rect(tx, py - 36, 4, 36, "#d0302a"); t.rect(tx + 32, py - 36, 4, 36, "#d0302a");
+      t.rect(tx - 6, py - 40, 48, 4, "#d0302a"); t.rect(tx - 8, py - 43, 52, 3, "#2a1a1a"); t.rect(tx - 2, py - 30, 40, 3, "#d0302a");
+      const tree = (x, by, h) => {                            // сакура: ствол стоит на земле, крона облаком
+        t.shadow(x, by, 30, "#3a6a3a99");
+        t.line(x, by, x - 3, by - h, "#4a2a2a"); t.line(x + 1, by, x - 2, by - h, "#4a2a2a"); t.line(x - 2, by - h * .6, x + 10, by - h - 4, "#4a2a2a");
+        for (let i = 0; i < 16; i++) t.disc(x - 4 + (R() - .5) * 34, by - h - 2 + (R() - .5) * 16, 4 + R() * 4, i % 3 ? "#ffb0c8" : "#ff8ab0");
+        for (let i = 0; i < 30; i++) t.px(x - 4 + (R() - .5) * 36, by - h + (R() - .5) * 18, "#ffe4ee");
+      };
+      tree(120, 146, 34); tree(206, 150, 28);
+      for (let i = 0; i < 70; i++) { const x = R() * W, y = R() * H; t.px(x, y, "#ff9ab8"); t.px(x + 1, y + 1, "#ffc8d8"); }
+    },
+    ocean(ctx, R, t) {                                      // ПОДВОДНЫЙ МИР: лучи, кораллы, сундук
+      t.grad(0, H, ["#4ad0f0", "#1a9ad8", "#0a6ab8", "#08488a", "#062a5a"]);
+      for (let i = 0; i < 6; i++) { const x0 = 20 + i * 55; for (let y = 0; y < 120; y++) for (let x = 0; x < 10; x++) if (BAYER[y & 3][(x0 + x + y / 3) & 3] < 4 - y / 40) t.px(x0 + x + y / 3, y, "#9ae8ff"); }
+      const floor = t.ridge(142, 5, .03, "#e8c88a", "#fff0c0", 1, [[130, 186]]);
+      t.dither(0, 148, W, 12, "#c8a86a", .35);
+      const weed = (x, by, h, c) => { for (let y = 0; y < h; y++) { const xx = x + Math.sin(y / 5) * 3; t.rect(xx, by - y, 2, 1, c); if (y % 6 === 0) t.rect(xx + 2, by - y, 3, 1, c); } };
+      [10, 26, 74, 214, 290, 306].forEach((x, i) => weed(x, floor[x], 30 + (i * 13) % 26, i % 2 ? "#2a9a5a" : "#3ab86a"));
+      const coral = (x, by, c, c2) => {                        // коралл растёт от дна
+        const br = (x0, y0, len, ang, d) => { if (d === 0) return; const x1 = x0 + Math.cos(ang) * len, y1 = y0 - Math.sin(ang) * len; t.line(x0, y0, x1, y1, c); t.line(x0 + 1, y0, x1 + 1, y1, c2); br(x1, y1, len * .7, ang + .5, d - 1); br(x1, y1, len * .7, ang - .5, d - 1); };
+        br(x, by, 10, Math.PI / 2, 4);
+      };
+      coral(50, floor[50], "#ff6a8a", "#d04a6a"); coral(250, floor[250], "#ff9a4a", "#d0702a"); coral(104, floor[104], "#c86aff", "#9a4ad0");
+      const cx = 140, cy = floor[158] + 1;                    // сундук на дне
+      t.glow(cx + 18, cy - 10, 26, "#ffe08a");
+      t.shadow(cx + 18, cy, 46, "#8a6a3a99");
+      t.rect(cx, cy - 16, 36, 16, "#8a4a1a"); t.rect(cx, cy - 16, 36, 2, "#b86a2a"); t.rect(cx, cy - 9, 36, 2, "#d8a020");
+      t.rect(cx + 2, cy - 26, 32, 10, "#9a5420"); t.rect(cx, cy - 22, 36, 1, "#d8a020"); t.rect(cx + 16, cy - 12, 4, 5, "#ffd23f");
+      for (let i = 0; i < 9; i++) t.disc(cx + 6 + i * 3, cy - 17 - (i % 3), 2, i % 2 ? "#ffd23f" : "#ffe680");
+      const fish = (x, y, c, c2, dir) => { t.disc(x, y, 4, c); t.rect(x - 2, y - 1, 4, 1, c2); for (let i = 0; i < 4; i++) t.rect(x - dir * (5 + i), y - i, 1, i * 2 + 1, c); t.px(x + dir * 2, y - 1, "#000"); };
+      fish(70, 60, "#ffb020", "#fff", 1); fish(230, 44, "#ff5a5a", "#fff", -1); fish(196, 80, "#ffd23f", "#2a6aff", 1); fish(40, 96, "#7af0ff", "#2a8aff", -1); fish(290, 100, "#ff8ac8", "#fff", -1);
+      for (let i = 0; i < 30; i++) { const x = R() * W, y = R() * 130, r = R() < .3 ? 2 : 1; if (r === 2) { t.px(x - 1, y, "#c8f4ff"); t.px(x + 1, y, "#c8f4ff"); t.px(x, y - 1, "#c8f4ff"); t.px(x, y + 1, "#c8f4ff"); } else t.px(x, y, "#e8fcff"); }
+    },
+    dungeon(ctx, R, t) {                                    // ПОДЗЕМЕЛЬЕ: кладка, факелы, решётка, сундук
+      t.rect(0, 0, W, H, "#16121e");
+      for (let y = 0; y < 128; y += 8) for (let x = -((y / 8) % 2) * 8; x < W; x += 16) {
+        const c = ["#2a2434", "#2e2838", "#26202e"][Math.floor(R() * 3)];
+        t.rect(x + 1, y + 1, 15, 7, c); t.rect(x + 1, y + 1, 15, 1, "#3a3446"); if (R() < .15) t.px(x + 4 + R() * 8, y + 3 + R() * 3, "#1a1622");
+        if (R() < .06) t.rect(x + 2, y + 6, 6, 2, "#2a4a2a");
+      }
+      t.rect(0, 128, W, 32, "#1e1a26");                        // пол из плит
+      for (let y = 128; y < H; y += 8) { t.rect(0, y, W, 1, "#100c16"); for (let x = (y / 8) % 2 * 12; x < W; x += 24) t.rect(x, y, 1, 8, "#100c16"); }
+      t.rect(0, 128, W, 2, "#3a3446");
+      const torch = (x, y) => { t.glow(x, y - 4, 34, "#5a2a10"); t.glow(x, y - 4, 18, "#8a4a14"); t.rect(x - 1, y, 3, 10, "#5a3a1a"); t.rect(x - 3, y + 8, 7, 2, "#3a3a44");
+        t.disc(x, y - 3, 3, "#ff8a1a"); t.disc(x, y - 4, 2, "#ffd23f"); t.px(x, y - 7, "#ff5a1a"); };
+      torch(60, 54); torch(260, 54);
+      const dx = 128;                                          // решётчатая дверь в арке
+      for (let y = 0; y < 34; y++) { const w = y < 32 ? Math.round(Math.sqrt(1 - ((32 - y) / 32) ** 2) * 32) : 32; t.rect(dx + 32 - w, 50 + y, w * 2, 1, "#08060c"); }
+      t.rect(dx, 82, 64, 46, "#08060c");
+      for (let x = dx + 4; x < dx + 64; x += 8) t.rect(x, 52, 2, 76, "#5a5a68");
+      for (let y = 70; y < 128; y += 14) t.rect(dx, y, 64, 2, "#5a5a68");
+      for (let i = 0; i < 18; i++) { const a = Math.PI * (i / 17); t.rect(dx + 32 - Math.cos(a) * 36 - 2, 84 - Math.sin(a) * 36 - 2, 5, 5, "#3a3446"); }
+      const chain = (x, y0, n) => { for (let i = 0; i < n; i++) t.rect(x, y0 + i * 3, 2, 2, i % 2 ? "#6a6a78" : "#4a4a58"); };
+      chain(24, 0, 20); chain(296, 0, 16);
+      const sx = 222, sy = 128;                                // скелет сидит у стены
+      t.shadow(sx + 8, sy, 26, "#00000099");
+      t.disc(sx + 6, sy - 26, 5, "#e8e4d8"); t.px(sx + 4, sy - 27, "#16121e"); t.px(sx + 8, sy - 27, "#16121e");
+      for (let i = 0; i < 4; i++) t.rect(sx + 2, sy - 19 + i * 3, 9, 1, "#d8d4c8");
+      t.rect(sx + 6, sy - 20, 1, 12, "#d8d4c8"); t.line(sx + 2, sy - 18, sx - 4, sy - 8, "#d8d4c8"); t.rect(sx + 3, sy - 8, 14, 2, "#d8d4c8"); t.rect(sx + 15, sy - 6, 2, 6, "#d8d4c8");
+      const cx = 66, cy = 128;                                 // сундук с монетами
+      t.shadow(cx + 14, cy, 36, "#00000099");
+      t.rect(cx, cy - 14, 28, 14, "#6a3a1a"); t.rect(cx, cy - 14, 28, 2, "#8a5a2a"); t.rect(cx, cy - 8, 28, 2, "#9a9aa8");
+      t.rect(cx + 12, cy - 10, 4, 5, "#ffd23f"); for (let i = 0; i < 6; i++) t.disc(cx + 4 + i * 4, cy - 15, 2, i % 2 ? "#ffd23f" : "#ffe680");
+      t.disc(cx + 36, cy - 2, 2, "#ffd23f"); t.disc(cx + 41, cy - 1, 2, "#ffe680");
+    },
+    shop(ctx, R, t) {                                       // ЛАВКА ПРИКОЛОВ: полки с товаром, прилавок, вывеска
+      t.rect(0, 0, W, H, "#3a2014");
+      for (let x = 0; x < W; x += 14) { t.rect(x, 0, 13, 120, ["#4a2a18", "#52301c", "#462816"][Math.floor(R() * 3)]); t.rect(x + 13, 0, 1, 120, "#2a140a"); if (R() < .5) t.px(x + 4, 10 + R() * 100, "#2a140a"); }
+      t.glow(160, 40, 70, "#6a3a14");
+      const shelf = (y) => { t.rect(8, y, 304, 4, "#7a4a24"); t.rect(8, y, 304, 1, "#a8703a"); t.rect(8, y + 4, 304, 2, "#2a140a"); };
+      [46, 84].forEach(shelf);
+      const items = (y) => {                                    // товар стоит на полке
+        for (let x = 14; x < 300;) {
+          const k = Math.floor(R() * 5), c = ["#ff4a8a", "#4ad0ff", "#7aff6a", "#ffd23f", "#c86aff", "#ff8a3a"][Math.floor(R() * 6)];
+          if (k === 0) { t.rect(x, y - 12, 8, 12, c); t.rect(x + 2, y - 15, 4, 3, "#e8e0d0"); t.rect(x + 1, y - 10, 2, 6, "#ffffff88"); x += 12; }
+          else if (k === 1) { t.ball(x + 5, y - 6, 5, "#ffffff", c, "#00000066"); t.rect(x + 4, y - 14, 3, 3, "#8a5a2a"); x += 13; }
+          else if (k === 2) { t.rect(x, y - 9, 12, 9, c); t.rect(x, y - 9, 12, 2, "#ffffff55"); t.rect(x + 5, y - 9, 2, 9, "#ffd23f"); x += 16; }
+          else if (k === 3) { t.rect(x, y - 16, 10, 16, "#e8e0d0"); t.rect(x + 1, y - 15, 8, 14, c); t.rect(x + 3, y - 12, 4, 4, "#ffffff"); x += 14; }
+          else { for (let i = 0; i < 3; i++) t.rect(x + i, y - 3 - i * 3, 9 - i * 2 + 2, 3, "#ffd23f"); t.rect(x, y - 3, 11, 1, "#c8900a"); x += 15; }
+        }
+      };
+      items(46); items(84);
+      t.rect(100, 4, 120, 22, "#2a140a"); t.rect(102, 6, 116, 18, "#ffd23f"); t.rect(104, 8, 112, 14, "#c8302a");   // вывеска
+      t.rect(124, 0, 2, 4, "#1a0a04"); t.rect(194, 0, 2, 4, "#1a0a04");
+      [[112, 11], [196, 11]].forEach(([x, y]) => { t.disc(x, y + 4, 4, "#ffd23f"); t.disc(x, y + 4, 2, "#c8900a"); });
+      for (let i = 0; i < 9; i++) t.rect(124 + i * 8, 12, 5, 6, "#ffe8a0");
+      const lamp = (x) => { t.rect(x, 0, 1, 18, "#1a0a04"); t.rect(x - 4, 18, 9, 7, "#2a140a"); t.rect(x - 3, 19, 7, 5, "#ffd27a"); t.glow(x, 22, 26, "#8a5a1a"); };
+      lamp(40); lamp(280);
+      t.rect(0, 120, W, 40, "#5a3018"); t.rect(0, 120, W, 3, "#b8783a"); t.rect(0, 123, W, 2, "#2a140a");   // прилавок
+      for (let x = 0; x < W; x += 40) t.rect(x, 125, 1, 35, "#3a1e0e");
+      t.dither(0, 140, W, 20, "#4a2612", .4);
+      for (let i = 0; i < 14; i++) { const x = 130 + (i % 5) * 7 + Math.floor(i / 5) * 3, y = 118 - Math.floor(i / 5) * 3; t.disc(x, y, 3, i % 2 ? "#ffd23f" : "#ffe680"); t.px(x - 1, y - 1, "#fff8c0"); }
+      t.rect(220, 104, 26, 16, "#c8c8d0"); t.rect(220, 104, 26, 3, "#e8e8f0"); t.rect(224, 109, 18, 6, "#2a8a4a"); t.rect(228, 98, 8, 6, "#c8c8d0");   // касса
+      t.rect(60, 108, 18, 12, "#8a4a1a"); t.rect(60, 108, 18, 2, "#ffd23f"); t.rect(67, 112, 4, 4, "#ffd23f");
+    },
+    studio(ctx, R, t) {                                     // МАСТЕРСКАЯ ХУДОЖНИКА: мольберт, окно, краски
+      t.rect(0, 0, W, 118, "#f2d9b0");
+      for (let x = 0; x < W; x += 16) { t.rect(x, 0, 8, 118, "#eccf9f"); }
+      t.rect(0, 110, W, 8, "#c8946a"); t.rect(0, 110, W, 1, "#e8b88a");
+      const wx = 22;                                          // окно с видом на город
+      t.rect(wx - 4, 14, 84, 70, "#8a5a3a"); t.grad(18, 80, ["#7ac8ff", "#a8dcff", "#ffe0b0"], wx, wx + 76);
+      t.disc(wx + 58, 34, 7, "#fff4b0");
+      for (let i = 0; i < 6; i++) { const bx = wx + i * 13, bh = 12 + (i * 7) % 18; t.rect(bx, 80 - bh, 11, bh, ["#8a9ac8", "#7a8ab8", "#9aaad0"][i % 3]); for (let y = 80 - bh + 3; y < 78; y += 4) t.px(bx + 3, y, "#ffe8a0"); }
+      t.rect(wx + 36, 18, 4, 62, "#8a5a3a"); t.rect(wx, 46, 76, 3, "#8a5a3a"); t.rect(wx - 6, 82, 88, 4, "#6a4028");
+      t.rect(wx + 4, 76, 10, 6, "#c8562a"); for (let i = 0; i < 5; i++) t.line(wx + 9, 76, wx + 4 + i * 3, 66, "#3a9a4a");   // цветок на подоконнике
+      [[124, 18, 30, 22, "#ff77a8"], [160, 26, 22, 28, "#29adff"], [290, 16, 22, 30, "#ffec27"]].forEach(([x, y, w, h, c]) => {   // картины на стене
+        t.rect(x - 2, y - 2, w + 4, h + 4, "#6a4028"); t.rect(x, y, w, h, "#fff1e8"); t.disc(x + w / 2, y + h / 2, Math.min(w, h) / 3, c); t.rect(x + 2, y + h - 6, w - 4, 3, "#00e436");
+      });
+      t.rect(0, 118, W, 42, "#a8703a");                        // деревянный пол
+      for (let y = 118; y < H; y += 7) { t.rect(0, y, W, 1, "#8a5a2a"); for (let x = (y * 13) % 40; x < W; x += 40) t.rect(x, y, 1, 7, "#8a5a2a"); }
+      t.dither(0, 140, W, 20, "#9a6432", .3);
+      const ex = 196;                                         // мольберт с холстом стоит на полу
+      t.shadow(ex + 30, 150, 74, "#5a3a1a99");
+      t.line(ex + 6, 150, ex + 24, 40, "#6a4028"); t.line(ex + 7, 150, ex + 25, 40, "#6a4028");
+      t.line(ex + 54, 150, ex + 36, 40, "#6a4028"); t.line(ex + 55, 150, ex + 37, 40, "#6a4028");
+      t.line(ex + 30, 40, ex + 30, 146, "#5a3420");
+      t.rect(ex + 4, 104, 52, 4, "#7a4a2a");
+      t.rect(ex - 2, 44, 64, 60, "#fff8ec"); t.rect(ex - 2, 44, 64, 1, "#d8c8b0"); t.rect(ex + 61, 44, 1, 60, "#d8c8b0");
+      const cx = ex + 30, cy = 78;                              // на холсте — котик (как будто нарисован в игре)
+      t.disc(cx, cy, 14, "#ffa300"); t.disc(cx, cy, 12, "#ffb83a");
+      for (let i = 0; i < 6; i++) { t.px(cx - 9 + i, cy - 16 + i, "#ffa300"); t.px(cx + 9 - i, cy - 16 + i, "#ffa300"); t.rect(cx - 10, cy - 15 + i, i + 1, 1, "#ffa300"); t.rect(cx + 10 - i, cy - 15 + i, i + 1, 1, "#ffa300"); }
+      t.rect(cx - 6, cy - 3, 3, 4, "#000"); t.rect(cx + 4, cy - 3, 3, 4, "#000"); t.px(cx - 5, cy - 3, "#fff"); t.px(cx + 5, cy - 3, "#fff");
+      t.rect(cx - 1, cy + 2, 3, 2, "#ff004d"); t.line(cx - 4, cy + 6, cx, cy + 5, "#000"); t.line(cx, cy + 5, cx + 4, cy + 6, "#000");
+      [[-16, 1], [-16, 4], [16, 1], [16, 4]].forEach(([dx, dy]) => t.line(cx + dx * .6, cy + dy, cx + dx * 1.2, cy + dy - 1 + (dy > 2 ? 2 : 0), "#000"));
+      t.rect(ex + 2, 48, 6, 3, "#29adff"); t.rect(ex + 50, 96, 8, 3, "#00e436");
+      const px0 = 122, py = 150;                              // палитра и банки с краской на полу
+      t.shadow(px0 + 16, py, 40, "#5a3a1a99");
+      for (let y = -8; y <= 0; y++) { const w = Math.round(Math.sqrt(1 - (y / 9) ** 2) * 18); t.rect(px0 + 16 - w, py - 4 + y, w * 2, 1, "#e8c890"); }
+      [["#ff004d", -10], ["#29adff", -3], ["#ffec27", 4], ["#00e436", 11]].forEach(([c, dx]) => t.disc(px0 + 16 + dx, py - 8, 2, c));
+      [[92, "#ff77a8"], [272, "#29adff"], [288, "#ffec27"]].forEach(([x, c]) => {
+        t.shadow(x + 7, 151, 20, "#5a3a1a99");
+        t.rect(x, 136, 14, 15, "#c2c3c7"); t.rect(x, 136, 14, 2, "#e8e8ee"); t.rect(x, 136, 14, 4, c); t.rect(x + 1, 140, 2, 10, "#ffffff88");
+        t.rect(x + 3, 151, 4, 1, c);
+      });
+      t.rect(70, 132, 12, 18, "#7ac8ff"); t.rect(70, 132, 12, 2, "#c8ecff"); t.shadow(76, 151, 18, "#5a3a1a99");     // стакан с кистями
+      [[72, "#ff004d"], [75, "#ffa300"], [79, "#29adff"]].forEach(([x, c], i) => { t.rect(x, 116 - i * 3, 2, 18 + i * 3, "#8a5a2a"); t.rect(x, 113 - i * 3, 2, 4, c); });
     },
   };
   SCENES.mafia = SCENES.classic;

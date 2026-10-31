@@ -46,7 +46,8 @@ const SKINS = {
     verdict: "Решение руководства", lobby: "Переговорка", discuss: "Обсуждение в общем чате", nightSub: "Офис пуст",
     team: { mafia: "Конкуренты", town: "Команда", solo: "Фрилансер", bounty: "Фрилансер" } },
 };
-const skinKey = () => (S.screen === "room" && S.room ? S.room.settings.theme : S.screen === "mafia" ? S.setup.theme : "app");
+const skinKey = () => (S.screen === "room" && S.room ? (S.room.game === "draw" ? "draw" : S.room.settings.theme)
+  : S.screen === "mafia" ? S.setup.theme : S.screen === "draw" ? "draw" : "app");
 const SK = () => SKINS[skinKey()] || SKINS.classic;
 
 const ICON_PATHS = {
@@ -66,10 +67,14 @@ const emo = (e, res = 28) => (PX() ? Pixel.emoji(e, Math.max(res, 24)) : e);
 
 function av(p, cls = "") {
   if (!p) return `<div class="avatar ${cls}"></div>`;
-  if (PX()) return `<div class="avatar pxav ${cls}">${p.photo ? Pixel.photo(p.photo, 32) : Pixel.emoji(p.avatar, 24)}</div>`;
-  return p.photo ? `<div class="avatar photo ${cls}"><img src="${esc(p.photo)}" alt="" referrerpolicy="no-referrer" loading="lazy"></div>`
-    : `<div class="avatar ${cls}">${esc(p.avatar)}</div>`;
+  const big = /\b(big|huge)\b/.test(cls);
+  const frame = cls.includes("mini") ? "" : Shop.frameImg(p.look && p.look.frame);
+  const inner = PX() ? (p.photo ? Pixel.photo(p.photo, big ? 64 : 32) : Pixel.emoji(p.avatar, big ? 40 : 24))
+    : p.photo ? `<img src="${esc(p.photo)}" alt="" referrerpolicy="no-referrer" loading="lazy">` : esc(p.avatar);
+  const kind = PX() ? "pxav" : p.photo ? "photo" : "";
+  return `<div class="avatar ${kind} ${cls} ${frame ? "framed" : ""}">${frame ? `<div class="av-in">${inner}</div>${frame}` : inner}</div>`;
 }
+const nm = (p) => Shop.nameFx(p.name, p.look && p.look.fx);
 
 function toast(text) {
   const el = document.createElement("div");
@@ -113,7 +118,8 @@ function profileView() {
   const fav = Object.entries(store.roles || {}).sort((a, b) => b[1] - a[1])[0];
   return { name: store.name, avatar: store.avatar || "🙂", photo: store.use_photo !== false && store.tg_photo ? store.tg_photo : null,
     has_tg_photo: !!store.tg_photo, use_photo: store.use_photo !== false, games: store.games || 0, wins: store.wins || 0,
-    favorite_role: fav ? fav[0] : null };
+    favorite_role: fav ? fav[0] : null, coins: store.coins || 0,
+    look: Object.assign(Shop.look(), { lv: String(Shop.level(store.games)), g: String(store.games || 0), w: String(store.wins || 0) }) };
 }
 
 function saveProfile() {
@@ -132,6 +138,7 @@ function loadProfile(done) {
       if (!store.avatar) store.avatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
       if (user.photo_url) store.tg_photo = user.photo_url;
     }
+    Shop.attach(store);
     saveProfile();
     done();
   };
@@ -155,7 +162,9 @@ function recordGame(room) {
   if ((room.winners || []).includes(S.me)) store.wins = (store.wins || 0) + 1;
   store.roles = store.roles || {};
   store.roles[room.my.role.name] = (store.roles[room.my.role.name] || 0) + 1;
+  S.reward = { key: store.lastGame, sum: Shop.reward((room.winners || []).includes(S.me), !!room.my.alive) };
   saveProfile();
+  syncProfile();
   return key;
 }
 
@@ -168,7 +177,7 @@ function boot() {
   const cfg = window.APP_CONFIG || {};
   S.bot = cfg.bot || ""; S.miniapp = cfg.miniapp || "";
   Net.me = S.me;
-  Net.profile = () => ({ name: S.profile.name, avatar: S.profile.avatar, photo: S.profile.photo });
+  Net.profile = () => ({ name: S.profile.name, avatar: S.profile.avatar, photo: S.profile.photo, look: S.profile.look });
   Net.onMessage = onMessage;
   Net.onStatus = (s) => { S.net = s; const el = document.getElementById("net-banner"); if (el) el.outerHTML = netBanner(); else if (S.screen === "room") render(); };
   loadProfile(() => {
@@ -204,10 +213,14 @@ function netBanner() {
 function onMessage(m) {
   if (m.t === "state") {
     const prev = S.room;
+    if (m.room.game === "draw") drawOnState(m.room);
+    const keep = m.room.game === "draw" && S.screen === "room" && (drawKeepScreen(m.room, prev)
+      || (m.room.phase === "guess" && prev && prev.phase === "guess" && document.activeElement && document.activeElement.id === "guess-input"));
     S.room = m.room;
     S.offset = m.room.now - Date.now();
     S.screen = "room";
-    const key = m.room.phase + ":" + (m.room.night || 0) + ":" + (m.room.day || 0);
+    if (keep) return;
+    const key = m.room.phase + ":" + (m.room.night || m.room.turn || 0) + ":" + (m.room.day || 0);
     if (key !== S.lastPhaseKey) {
       S.lastPhaseKey = key;
       S.sel = { ability: 0, target: null, duel: false };
@@ -215,9 +228,11 @@ function onMessage(m) {
       if (prev && prev.phase !== m.room.phase) notify(m.room.phase === "end" ? "success" : "warning");
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    if (m.room.phase === "end") recordGame(m.room);
+    if (m.room.phase === "end") (m.room.game === "draw" ? recordDraw : recordGame)(m.room);
     render();
     renderChat();
+  } else if (m.t === "ink") {
+    drawOnInk(m);
   } else if (m.t === "closed") {
     toast("Хост закрыл комнату");
     S.room = null; S.screen = "home"; S.chatOpen = false; render(); renderChat();
@@ -234,15 +249,17 @@ function onMessage(m) {
 function render() {
   document.body.dataset.skin = skinKey();
   document.body.dataset.screen = S.screen;
+  document.body.dataset.pstyle = S.profile ? S.profile.look.style : "rpg";
   document.body.classList.toggle("pixel", !!S.pixel);
   document.body.classList.toggle("night", S.screen === "room" && !!S.room && S.room.phase === "night");
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
-  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, mafia: viewMafia, room: viewRoom };
+  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, mafia: viewMafia, draw: viewDrawMenu, room: viewRoom };
   $app.innerHTML = (screens[S.screen] || viewLoading)();
   renderOverlay();
   if (PX()) Pixel.apply();
+  drawMount();
   updateBack();
   if (tg) {
     const bg = getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#0b0b14";
@@ -252,7 +269,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "profile" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
+  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "profile" || S.screen === "shop" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -268,7 +285,8 @@ function viewLoading() {
 }
 
 function avatarGrid(selected) {
-  return `<div class="avatars">${S.catalog.avatars.map((a) =>
+  const list = S.catalog.avatars.concat(S.registered ? Shop.ownedAvatars() : []);
+  return `<div class="avatars">${list.map((a) =>
     `<button data-a="avatar" data-v="${a}" class="${a === selected ? "sel" : ""}">${emo(a, 24)}</button>`).join("")}</div>`;
 }
 
@@ -288,25 +306,32 @@ function viewRegister() {
 }
 
 function tabs() {
-  return `<div class="tabs"><button class="${S.screen === "home" ? "on" : ""}" data-a="tab" data-v="home">🎲 Игры</button>
-    <button class="${S.screen === "profile" ? "on" : ""}" data-a="tab" data-v="profile">${S.profile.photo ? "👤" : esc(S.profile.avatar)} Профиль</button></div>`;
+  const b = (k, label) => `<button class="${S.screen === k ? "on" : ""}" data-a="tab" data-v="${k}">${label}</button>`;
+  return `<div class="tabs">${b("home", "🎲 Игры")}${b("shop", `🛒 Магазин${Shop.chestReady() ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤 Профиль")}</div>`;
 }
+const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 
 const SOON = [["🐊", "Крокодил", "Покажи слово без слов"], ["🎩", "Шляпа", "Объясни как можно больше слов"],
   ["🤔", "Кто я?", "Угадай, кто написан у тебя на лбу"], ["🔥", "Правда или действие", "Классика вечеринок"],
-  ["💡", "Ассоциации", "Найди общее у разных слов"], ["🎨", "Рисовалка", "Рисуй и угадывай"]];
+  ["💡", "Ассоциации", "Найди общее у разных слов"]];
 
 function viewHome() {
   const p = S.profile;
   return `<div class="fade-in">
     <div class="top"><div class="logo">${PX() ? Pixel.sprite("dice", 3) : "🎲"}</div><div class="grow"><h1>${esc(S.catalog.app)}</h1>
-      <div class="muted small">Привет, ${esc(p.name)}!</div></div>${av(p)}</div>
+      <div class="muted small">Привет, ${esc(p.name)}!</div></div>${coinPill()}</div>
     <div class="game-hero" data-a="go" data-v="mafia" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
       ${PX() ? `<div class="big-emoji">${Pixel.emoji("🕴️", 40)}</div>` : '<div class="big-emoji">🕴️</div>'}
       <div class="pill" style="background:rgba(255,255,255,.15)">🔥 ${S.catalog.min}–${S.catalog.max} игроков</div>
       <h2 class="mt">Мафия</h2>
       <p>6 сценариев: Классика, 90-е, Хэллоуин, Бункер, Дикий Запад, Корпоратив</p>
       <button class="btn">Играть ▶</button>
+    </div>
+    <div class="game-hero draw-hero mt2" data-a="go" data-v="draw" ${PX() ? `style="background-image:url(${Pixel.scene("studio")})"` : ""}>
+      <div class="pill" style="background:rgba(255,255,255,.15)">✨ Новинка · ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS} игроков</div>
+      <h2 class="mt">Рисовалка</h2>
+      <p>Один рисует слово — остальные угадывают. Художник раздаёт баллы</p>
+      <button class="btn">Рисовать ▶</button>
     </div>
     <div class="section-title">Есть код комнаты?</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
@@ -317,37 +342,73 @@ function viewHome() {
   </div>${tabs()}`;
 }
 
+function myCard(lookOverride) {
+  const p = S.profile;
+  return Shop.card({ name: p.name, games: p.games, wins: p.wins, avatarHtml: av(Object.assign({}, p, { look: lookOverride || p.look }), "huge") },
+    lookOverride || p.look);
+}
+
 function viewProfile() {
   const p = S.profile;
-  const rate = p.games ? Math.round((p.wins / p.games) * 100) : 0;
   return `<div class="fade-in">
-    <div class="center mt2"><div style="display:inline-block">${av(p, "big")}</div>
-      <h2 class="mt">${esc(p.name)}</h2><div class="muted small">${S.me.startsWith("tg") ? "Вход через Telegram" : "Гостевой профиль"}</div></div>
-    <div class="stats mt2"><div class="card stat"><b>${p.games}</b><span class="muted small">игр</span></div>
-      <div class="card stat"><b>${p.wins}</b><span class="muted small">побед</span></div>
-      <div class="card stat"><b>${rate}%</b><span class="muted small">винрейт</span></div></div>
-    ${PX() ? rpgSheet(p, rate) : ""}
+    <div class="top"><div class="grow"><h1>Профиль</h1><div class="muted small">${S.me.startsWith("tg") ? "Вход через Telegram" : "Гостевой профиль"}</div></div>${coinPill()}</div>
+    ${myCard()}
+    <div class="row mt2"><button class="btn grow" data-a="tab" data-v="shop">🛒 Магазин приколов</button></div>
+    ${Shop.chestReady() ? `<button class="card chest mt" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Открой и забери монеты</div></div><span class="pill on">Открыть</span></button>` : ""}
     ${p.favorite_role ? `<div class="card mt"><span class="muted small">Чаще всего играешь</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
-    <div class="card mt"><div class="toggle"><span>👾 Пиксельный стиль</span><button class="switch ${S.pixel ? "on" : ""}" data-a="pixel-toggle"></button></div></div>
     <div class="section-title">Изменить профиль</div>
     <input class="input" id="reg-name" maxlength="20" value="${esc(S.regName || p.name)}">
     ${p.has_tg_photo ? `<div class="card mt"><div class="toggle"><span>Фото из Telegram</span>
       <button class="switch ${p.use_photo ? "on" : ""}" data-a="photo-toggle"></button></div></div>` : ""}
     <div class="mt">${avatarGrid(S.regAvatar || p.avatar)}</div>
     <button class="btn mt" data-a="register">Сохранить</button>
+    <div class="card mt2"><div class="toggle"><span>👾 Пиксельный стиль</span><button class="switch ${S.pixel ? "on" : ""}" data-a="pixel-toggle"></button></div></div>
   </div>${tabs()}`;
 }
 
-const RANKS = ["Новичок", "Свидетель", "Завсегдатай", "Детектив", "Шулер", "Консильери", "Капо", "Крёстный отец"];
-function rpgSheet(p, rate) {
-  const lvl = Math.floor(p.games / 5) + 1;
-  const xp = Math.round(((p.games % 5) / 5) * 100);
-  return `<div class="pxscene rpg-banner" style="background-image:url(${Pixel.scene("rpg")})"></div>
-    <div class="card rpg mt"><div class="row"><div class="grow"><span class="kicker">Класс</span><b class="display">${RANKS[Math.min(lvl - 1, RANKS.length - 1)]}</b></div>
-      <div class="lvl">LV ${lvl}</div></div>
-      <div class="bar-label mt">${Pixel.sprite("heart", 2)} Сила · побед ${rate}%</div><div class="bar hp"><i style="width:${Math.max(rate, 3)}%"></i></div>
-      <div class="bar-label">${Pixel.sprite("star", 2)} Опыт · до LV ${lvl + 1}: ${5 - (p.games % 5)} игр</div><div class="bar xp"><i style="width:${Math.max(xp, 3)}%"></i></div>
-      <div class="loot mt">${Pixel.sprite("end", 2)} ×${p.wins}&nbsp;&nbsp;${Pixel.sprite("coin", 3)} ×${p.games * 10}&nbsp;&nbsp;${Pixel.sprite("skull", 2)} ×${Math.max(0, p.games - p.wins)}</div></div>`;
+/* ---------------------------------------------------------------- магазин приколов */
+function shopPreview(it) {
+  const p = S.profile;
+  if (it.cat === "frame") return `<div class="sp-av">${av(Object.assign({}, p, { look: { frame: it.id } }), "big")}</div>`;
+  if (it.cat === "bg") return `<div class="sp-bg" style="background-image:url(${Pixel.scene(it.id)})"></div>`;
+  if (it.cat === "style") return `<div class="sp-style">${Shop.card({ name: p.name, games: p.games, wins: p.wins, avatarHtml: av(p, "sm") }, Object.assign({}, p.look, { style: it.id }), { mini: true })}</div>`;
+  if (it.cat === "title") return `<div class="sp-title">${it.text ? esc(it.text) : "—"}</div>`;
+  if (it.cat === "fx") return `<div class="sp-fx">${Shop.nameFx(p.name, it.id)}</div>`;
+  return `<div class="sp-ava">${emo(it.emoji, 32)}</div>`;
+}
+
+function viewShop() {
+  const p = S.profile;
+  const cat = S.shopCat || "frame";
+  const items = Shop.ITEMS.filter((x) => x.cat === cat);
+  const tryIt = S.shopTry && S.shopTry.cat === cat ? Shop.byId(cat, S.shopTry.id) : null;
+  const lookNow = Object.assign({}, p.look, tryIt && tryIt.cat !== "ava" ? { [cat]: tryIt.id } : {});
+  const worn = (it) => it.cat === "ava" ? p.avatar === it.emoji : p.look[it.cat] === it.id;
+  let bar = "";
+  if (tryIt) {
+    const own = Shop.owns(tryIt);
+    bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${own ? (worn(tryIt) ? "Уже надето" : "Есть у тебя") : `Цена: ${tryIt.price} монет`}</div></div>
+      ${worn(tryIt) ? `<button class="btn small" disabled>Надето ✓</button>`
+        : own ? `<button class="btn small" data-a="shop-equip">Надеть</button>`
+        : `<button class="btn small" data-a="shop-buy" ${p.coins < tryIt.price ? "disabled" : ""}>${p.coins < tryIt.price ? `Не хватает ${tryIt.price - p.coins}` : `Купить · ${tryIt.price}`}</button>`}</div>`;
+  }
+  return `<div class="fade-in">
+    <div class="pxscene shop-scene" style="background-image:url(${Pixel.scene("shop")})"><div class="shop-sign">Лавка приколов</div></div>
+    <div class="top"><div class="grow"><h1>Магазин</h1><div class="muted small">Трать монеты на оформление профиля</div></div>${coinPill()}</div>
+    ${Shop.chestReady() ? `<button class="card chest" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Раз в день: от 15 до 60 монет</div></div><span class="pill on">Открыть</span></button>`
+      : `<div class="card small muted earn">${PX() ? Pixel.sprite("coin", 2) : "🪙"} Монеты: +${Shop.REWARD.game} за партию, +${Shop.REWARD.win} за победу, +${Shop.REWARD.alive} если дожил(а) до конца. Сундук — снова завтра.</div>`}
+    <div class="shop-preview">${cat === "ava" ? `<div class="sp-big">${av(Object.assign({}, p, tryIt ? { avatar: tryIt.emoji, photo: null } : {}), "huge")}</div>` : myCard(lookNow)}</div>
+    <div class="cats">${Shop.CATS.map((c) => `<button class="pill ${c.key === cat ? "on" : ""}" data-a="shop-cat" data-v="${c.key}">${c.icon} ${c.name}</button>`).join("")}</div>
+    <div class="shop-grid ${cat}">${items.map((it) => `<button class="shop-item ${tryIt === it ? "sel" : ""} ${worn(it) ? "worn" : ""}" data-a="shop-try" data-v="${it.id}">
+      ${shopPreview(it)}<b>${esc(it.name)}</b>
+      <span class="price">${worn(it) ? "✓ надето" : Shop.owns(it) ? "есть" : `${PX() ? Pixel.sprite("coin", 1) : "🪙"} ${it.price}`}</span></button>`).join("")}</div>
+    ${bar}
+  </div>${tabs()}`;
+}
+
+function peekSheet(pl) {
+  const lk = pl.look || {};
+  return `${Shop.card({ name: pl.name, games: Number(lk.g || 0), wins: Number(lk.w || 0), avatarHtml: av(pl, "huge") }, lk)}`;
 }
 
 function viewMafia() {
@@ -378,7 +439,7 @@ function remaining() {
 function timerSvg() {
   const r = S.room;
   if (!r.deadline) return "";
-  const total = { night: r.mode.night, day: r.mode.discussion, vote: r.mode.vote, reveal: 25, verdict: 7 }[r.phase] || 30;
+  const total = r.total || ({ night: r.mode.night, day: r.mode.discussion, vote: r.mode.vote, reveal: 25, verdict: 7 }[r.phase]) || 30;
   const left = remaining();
   const frac = Math.max(0, Math.min(1, left / total));
   const c = 2 * Math.PI * 25;
@@ -407,12 +468,12 @@ function playerTiles(list, opts = {}) {
     const count = opts.counts ? opts.counts[p.id] : 0;
     const role = p.role ? `<div class="role-mini ${"team-" + p.role.team}">${emo(p.role.emoji, 12)} ${esc(p.role.name)}</div>` : "";
     const nopick = opts.pick && !pick && p.alive !== false;
-    return `<div class="player ${p.alive === false ? "dead" : ""} ${p.online ? "" : "off"} ${pick ? "pick" : ""} ${nopick ? "nopick" : ""} ${sel ? "sel" : ""}"
-      ${pick ? `data-a="${opts.action}" data-v="${p.id}"` : ""}>
+    return `<div class="player ${p.alive === false ? "dead" : ""} ${p.online ? "" : "off"} ${pick ? "pick" : ""} ${nopick ? "nopick" : ""} ${sel ? "sel" : ""} ${opts.peek ? "pick" : ""}"
+      ${pick ? `data-a="${opts.action}" data-v="${p.id}"` : opts.peek ? `data-a="peek" data-v="${p.id}"` : ""}>
       ${p.host ? `<span class="tag">👑</span>` : ""}${p.silenced ? `<span class="tagl">🤐</span>` : ""}${p.ready ? `<span class="tagb">✋</span>` : ""}
       ${count ? `<span class="count">${count}</span>` : ""}
       ${opts.kick && !p.host && p.id !== S.me ? `<button class="kick" data-a="kick" data-v="${p.id}">✕</button>` : ""}
-      ${av(p)}<div class="nm">${p.id === S.me ? "Вы" : esc(p.name)}</div>${role}
+      ${av(p)}<div class="nm">${p.id === S.me ? "Вы" : nm(p)}</div>${role}
       ${voters.length ? `<div class="votes">${voters.map((v) => av(player(v), "mini")).join("")}</div>` : ""}
     </div>`;
   }).join("")}</div>`;
@@ -420,6 +481,7 @@ function playerTiles(list, opts = {}) {
 
 function viewRoom() {
   const r = S.room;
+  if (r.game === "draw") return viewDrawRoom();
   const views = { lobby: viewLobby, reveal: viewReveal, night: viewNight, day: viewDay, vote: viewVote, verdict: viewVerdict, end: viewEnd };
   return `${netBanner()}${r.phase === "night" ? '<div class="night-sky"></div><div class="stars"></div>' : ""}
     <div class="fade-in" key="${r.phase}">${PX() ? `<div class="pxscene ${r.phase === "lobby" ? "big" : ""}" style="background-image:url(${Pixel.scene(r.settings.theme)})"></div>` : ""}${(views[r.phase] || viewLobby)()}</div>
@@ -437,7 +499,7 @@ function viewLobby() {
       <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
       <button class="btn small grow" data-a="share">📨 Позвать друзей</button></div></div>
     <div class="section-title">Игроки</div>
-    ${playerTiles(r.players, { kick: isHost() })}
+    ${playerTiles(r.players, { kick: isHost(), peek: true })}
     <div class="section-title">Сценарий</div>
     <div class="card lobby-theme" style="${PX() ? "" : `background:linear-gradient(150deg, ${th.accent}33, ${th.accent2}66)`}">
       <div class="row"><div style="font-size:40px">${emo(th.emoji, 16)}</div><div class="grow"><b class="display">${esc(th.title)}</b>
@@ -634,17 +696,32 @@ function viewEnd() {
   const title = { town: r.theme.town_team, mafia: r.theme.mafia_team, solo: "Одиночка" }[r.winner];
   const endText = (r.log || []).filter((e) => e.kind === "end").map((e) => esc(e.text)).join("");
   setTimeout(confetti, 50);
+  const rw = S.reward && S.reward.key === store.lastGame ? S.reward.sum : 0;
   return `<div class="win mt"><div class="ph-icon">${icon("end", 64)}</div><div class="small kicker">ПОБЕДА</div>
-      <h2>${esc(title)}</h2><p>${endText}</p><p class="mt"><b>${iWon ? "Ты победил(а)!" : "В этот раз не повезло"}</b></p></div>
+      <h2>${esc(title)}</h2><p>${endText}</p><p class="mt"><b>${iWon ? "Ты победил(а)!" : "В этот раз не повезло"}</b></p>
+      ${rw ? `<div class="reward-coins">${PX() ? Pixel.sprite("coin", 3) : "🪙"} +${rw} монет</div>` : ""}</div>
     <div class="section-title">Кто был кем</div>
     <div class="card final-list">${r.players.map((p) => `<div class="r ${r.winners.includes(p.id) ? "winner" : ""} ${p.alive ? "" : "deadp"}">
       ${av(p, "sm")}
-      <div class="grow"><b>${esc(p.name)}</b><div class="small ${p.role ? "team-" + p.role.team : ""}">${p.role ? `${p.role.emoji} ${esc(p.role.name)}${p.role.converted ? " (обращён)" : ""}` : ""}</div></div>
+      <div class="grow"><b>${nm(p)}</b>${p.look && Shop.titleText(p.look) ? `<div class="small muted">${esc(Shop.titleText(p.look))}</div>` : ""}<div class="small ${p.role ? "team-" + p.role.team : ""}">${p.role ? `${p.role.emoji} ${esc(p.role.name)}${p.role.converted ? " (обращён)" : ""}` : ""}</div></div>
       <span class="small muted">${p.alive ? "жив" : "✝"}</span></div>`).join("")}</div>
     <div class="section-title">Летопись партии</div>
     <div class="card">${(r.log || []).filter((e) => e.kind !== "night").map((e) => `<div class="story ${e.kind} small">${esc(e.text)}</div>`).join("")}</div>
     ${isHost() ? `<button class="btn mt2" data-a="again">🔁 Ещё партия</button>` : `<div class="card center mt2 muted">Хост может начать новую партию</div>`}
     <button class="btn ghost mt" data-a="leave">Выйти в меню</button>`;
+}
+
+function coinRain() {
+  for (let i = 0; i < 24; i++) {
+    const el = document.createElement("div");
+    el.className = "confetti";
+    el.innerHTML = PX() ? Pixel.sprite("coin", 3) : "🪙";
+    el.style.left = Math.random() * 100 + "vw";
+    el.style.animationDuration = 1.6 + Math.random() * 1.6 + "s";
+    el.style.animationDelay = Math.random() * 0.5 + "s";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
 }
 
 let confettiShown = "";
@@ -679,6 +756,11 @@ function renderOverlay() {
           <span class="small team-${r.team}"> · ${r.team === "mafia" ? "мафия" : r.team === "town" ? "город" : "сам за себя"}</span>
           <div class="small muted">${esc(r.desc)}</div>${sp ? `<div class="small muted">появляется от ${sp.from} игроков</div>` : ""}</div></div>`;
       }).join("")}</div>`;
+  } else if (S.sheet.type === "draw-settings") {
+    body = drawSettingsSheet();
+  } else if (S.sheet.type === "peek") {
+    const pl = player(S.sheet.id);
+    body = pl ? peekSheet(pl) : "";
   } else if (S.sheet.type === "settings") {
     const r = S.room;
     const th = theme(r.settings.theme);
@@ -773,8 +855,25 @@ const actions = {
     }
     haptic("medium");
   },
+  shop: () => { S.screen = "shop"; render(); },
+  "shop-cat": (v) => { S.shopCat = v; S.shopTry = null; haptic(); render(); },
+  "shop-try": (v) => { S.shopTry = { cat: S.shopCat || "frame", id: v }; haptic(); render(); },
+  "shop-buy": () => {
+    const it = Shop.byId(S.shopTry.cat, S.shopTry.id);
+    const r = Shop.buy(it);
+    if (!r.ok) { notify("error"); return toast(`Не хватает ${r.need} монет`); }
+    Shop.equip(it); saveProfile(); syncProfile(); notify("success"); toast(`Куплено: ${it.name} ✓`); render();
+  },
+  "shop-equip": () => { const it = Shop.byId(S.shopTry.cat, S.shopTry.id); if (Shop.equip(it)) { saveProfile(); syncProfile(); haptic("medium"); toast("Надето ✓"); render(); } },
+  chest: () => {
+    const sum = Shop.openChest();
+    if (!sum) return;
+    saveProfile(); notify("success"); toast(`Сундук: +${sum} монет!`);
+    coinRain(); render();
+  },
+  peek: (v) => { S.sheet = { type: "peek", id: v }; haptic(); renderOverlay(); },
   "cancel-join": () => { Net.stop(); S.screen = "home"; render(); },
-  tab: (v) => { S.screen = v; S.regName = ""; S.regAvatar = null; render(); },
+  tab: (v) => { S.screen = v; S.regName = ""; S.regAvatar = null; if (v === "shop") S.shopTry = null; render(); window.scrollTo(0, 0); },
   go: (v) => { S.screen = v; render(); },
   theme: (v) => { S.setup.theme = v; haptic(); render(); },
   roles: (v) => { S.sheet = { type: "roles", theme: v }; renderOverlay(); },
@@ -841,6 +940,8 @@ const actions = {
   "chat-close": () => { S.chatOpen = false; $overlay.innerHTML = ""; renderChat(); },
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
+
+Object.assign(actions, DRAW_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");

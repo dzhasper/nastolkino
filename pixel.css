@@ -28,7 +28,8 @@ body.pixel .msg .b, body.pixel .switch, body.pixel .face, body.pixel .kick, body
   box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--bd), 0 var(--px) 0 0 var(--bd), calc(-1 * var(--px)) 0 0 0 var(--bd), var(--px) 0 0 0 var(--bd) !important;
 }
 body.pixel .card { background: var(--card); margin-left: var(--px); margin-right: var(--px); }
-body.pixel .btn { font-family: var(--font-head) !important; font-size: 11px !important; line-height: 1.5; letter-spacing: 0 !important; text-transform: uppercase;
+body.pixel .btn { font-family: var(--font-head) !important; font-size: 11px !important; line-height: 1.6; letter-spacing: 0 !important; text-transform: uppercase;
+  white-space: normal; overflow-wrap: anywhere; min-width: 0; text-align: center;
   background: var(--accent) !important; color: var(--btn-ink, #fff) !important; padding: 16px 12px;
   box-shadow: 0 calc(-1 * var(--px)) 0 0 var(--bd), 0 var(--px) 0 0 var(--bd), calc(-1 * var(--px)) 0 0 0 var(--bd), var(--px) 0 0 0 var(--bd),
     inset 0 -5px 0 0 rgba(0, 0, 0, .35), inset 0 3px 0 0 rgba(255, 255, 255, .3) !important; }
@@ -49,13 +50,13 @@ body.pixel .switch.on { background: var(--accent); }
 body.pixel .avatar { border-radius: 0 !important; filter: none !important; }
 body.pixel .avatar.pxav { padding: 0; overflow: hidden; background: var(--card2); }
 body.pixel .avatar.pxav canvas { width: 100%; height: 100%; display: block; }
-body.pixel .player { background: var(--card); margin: var(--px); transform: none !important; }
+body.pixel .player { background: var(--card); margin: 0; min-width: 0; transform: none !important; }
 body.pixel .player.sel { background: var(--accent) !important; color: var(--btn-ink, #fff); }
 body.pixel .player.sel .nm, body.pixel .player.sel .role-mini { color: var(--btn-ink, #fff); }
 body.pixel .player .nm { font-family: var(--font-body) !important; font-size: 13px; text-transform: none !important; letter-spacing: 0 !important; }
 body.pixel .player .role-mini canvas.pix { width: 12px; height: 12px; vertical-align: -2px; }
 body.pixel .player .votes .avatar.mini { width: 16px; height: 16px; }
-body.pixel .players { gap: 12px; }
+body.pixel .players { gap: 12px; padding: 3px; }
 body.pixel .kick { background: var(--card2); color: var(--text); }
 
 /* пиксельная сцена сверху экранов */
@@ -72,8 +73,8 @@ body.pixel .story::before { content: "▸ "; color: var(--accent); }
 body.pixel .timer circle:last-child { stroke-linecap: butt; }
 body.pixel .timer span { font-family: var(--font-head); font-size: 11px; }
 body.pixel .chat-fab { background: var(--accent); }
-body.pixel .tabs { background: var(--card); }
-body.pixel .tabs button { border-radius: 0; font-family: var(--font-head); font-size: 10px; }
+body.pixel .tabs { background: var(--card); left: 12px; right: 12px; transform: none; max-width: 536px; margin: 0 auto; gap: 0; padding: 4px; }
+body.pixel .tabs button { border-radius: 0; font-family: var(--font-head); font-size: 9px; flex: 1; justify-content: center; padding: 11px 2px; white-space: nowrap; min-width: 0; }
 body.pixel .tabs button.on { background: var(--accent); color: var(--btn-ink, #fff); }
 body.pixel .logo { background: none !important; box-shadow: none !important; width: auto; height: auto; }
 body.pixel .net-banner { font-family: var(--font-body); }
@@ -81,10 +82,12 @@ body.pixel .game-tile canvas.pix { width: 40px; height: 40px; }
 body.pixel .theme canvas.pix, body.pixel .lobby-theme canvas.pix, body.pixel .card .row > div > canvas.pix { width: 40px; height: 40px; }
 
 /* сценарии — как картриджи: пиксельная сцена на ярлыке */
-body.pixel .theme { background-size: cover !important; background-position: center bottom !important; min-height: 120px; filter: none !important; margin: var(--px);
-  display: flex; flex-direction: column; justify-content: flex-end; }
-body.pixel .theme b, body.pixel .theme span { background: rgba(0, 0, 0, .72); color: #fff; padding: 2px 6px; align-self: flex-start; }
-body.pixel .theme b { font-family: var(--font-head); font-size: 9px; line-height: 1.6; margin-top: 4px; }
+body.pixel .themes { gap: 14px; padding: 3px; }
+body.pixel .theme { background-size: cover !important; background-position: center bottom !important; min-height: 150px; filter: none !important; margin: 0; min-width: 0;
+  display: flex; flex-direction: column; justify-content: flex-end; padding: 46px 0 0 !important; }
+body.pixel .theme b, body.pixel .theme span { background: rgba(0, 0, 0, .78); color: #fff; padding: 3px 8px; margin: 0; width: 100%; }
+body.pixel .theme b { font-family: var(--font-head); font-size: 9px; line-height: 1.6; padding-top: 6px; }
+body.pixel .theme span { font-size: 12px; line-height: 1.25; padding-bottom: 7px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 body.pixel .theme .e { position: absolute; top: 8px; left: 8px; }
 body.pixel .theme.sel { transform: translateY(-3px); box-shadow: 0 -3px 0 0 #fff, 0 3px 0 0 #fff, -3px 0 0 0 #fff, 3px 0 0 0 #fff, 0 6px 0 0 #000 !important; }
 body.pixel .theme.sel::after { border-radius: 0; }
@@ -116,7 +119,8 @@ body.pixel .loot { display: flex; align-items: center; gap: 4px; font-family: "P
 body.pixel .press-start { font-family: "Press Start 2P", monospace; font-size: 11px; color: var(--accent); margin-top: 14px; animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 body.pixel .hero { position: relative; }
-body.pixel .avatars button { border-radius: 0; box-shadow: 0 -3px 0 0 var(--bd), 0 3px 0 0 var(--bd), -3px 0 0 0 var(--bd), 3px 0 0 0 var(--bd); margin: 3px; }
+body.pixel .avatars { gap: 12px; padding: 3px; }
+body.pixel .avatars button { border-radius: 0; box-shadow: 0 -3px 0 0 var(--bd), 0 3px 0 0 var(--bd), -3px 0 0 0 var(--bd), 3px 0 0 0 var(--bd); margin: 0; min-width: 0; display: grid; place-items: center; }
 body.pixel .avatars button.sel { background: var(--accent); transform: none; }
 
 /* =================================================================== вкладки приложения */
@@ -145,7 +149,7 @@ body.pixel[data-screen="profile"] {
   --bg: #0c1030; --card: linear-gradient(180deg, #2c4ad0, #121e78); --card2: #1a2a90; --bd: #f2f4ff; --accent: #ffd23f; --text: #ffffff; --muted: #c8d0ff;
   --btn-ink: #1a1030; background: #0c1030 !important;
 }
-body.pixel[data-screen="profile"] .card { background: linear-gradient(180deg, #2c4ad0, #121e78) !important; }
+body.pixel[data-screen="profile"][data-pstyle="rpg"] .card:not(.pcard) { background: linear-gradient(180deg, #2c4ad0, #121e78) !important; }
 body.pixel[data-screen="profile"] .stat b { font-family: "Press Start 2P"; font-size: 18px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
 body.pixel[data-screen="profile"] h2 { font-size: 14px; }
 
@@ -244,4 +248,27 @@ body.pixel[data-skin="office"] .chat-fab { background: #c0c0c0; }
 
 /* иконки ролей на «таблетках» — маленькие */
 body.pixel .pill canvas.pix, body.pixel .lobby-theme .pill canvas.pix { width: 20px !important; height: 20px !important; vertical-align: -5px; }
-body.pixel .avatars button canvas.pix { width: 34px; height: 34px; pointer-events: none; }
+body.pixel .avatars button canvas.pix { width: 72%; height: auto; aspect-ratio: 1; pointer-events: none; }
+
+/* узкие телефоны (360 px и меньше): всё помещается в экран */
+body.pixel .row:has(> .btn.grow) { flex-wrap: wrap; }
+body.pixel .row > .btn.grow { flex: 1 1 130px; }
+body.pixel[data-screen="home"] .top h1 { font-size: 13px; white-space: nowrap; }
+body.pixel[data-screen="home"] .top .grow { min-width: 0; }
+body.pixel .hostbar .btn { flex: 1 1 auto; }
+body.pixel .join-box .input { min-width: 0; flex: 1; letter-spacing: .2em; }
+body.pixel .join-box .btn { flex: none; padding: 0 16px; }
+body.pixel .top { gap: 10px; }
+body.pixel .top h1 { overflow-wrap: anywhere; }
+body.pixel .gamebar .title { min-width: 0; }
+body.pixel .ability-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+body.pixel .game-hero p { max-width: 58%; font-size: 14px; line-height: 1.35; }
+body.pixel .stats { gap: 14px; padding: 0 3px; }
+body.pixel .stat { margin: 0 !important; min-width: 0; }
+@media (max-width: 380px) {
+  body.pixel .btn { font-size: 10px !important; padding: 14px 8px; }
+  body.pixel h1 { font-size: 13px; }
+  body.pixel .code { font-size: 28px; }
+  body.pixel .players { gap: 10px; }
+  body.pixel .player .nm { font-size: 12px; }
+}

@@ -336,7 +336,7 @@
     }
 
     join(m) {
-      if (this.members[m.id]) { Object.assign(this.members[m.id], { online: true, name: m.name, avatar: m.avatar, photo: m.photo }); this.touch(); return; }
+      if (this.members[m.id]) { Object.assign(this.members[m.id], { online: true, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); this.touch(); return; }
       if (this.phase !== "lobby") throw new GameError("Игра уже идёт — дождитесь следующей партии");
       if (this.order.length >= MAX_PLAYERS) throw new GameError(`Комната заполнена (${MAX_PLAYERS} игроков)`);
       this.members[m.id] = m; this.order.push(m.id); this.touch();
@@ -435,7 +435,7 @@
       if (!text) return;
       if (!this.channelsFor(pid)[channel]) throw new GameError("Сейчас писать в этот чат нельзя");
       const m = this.members[pid];
-      this.chat[channel].push({ from: pid, name: m.name, avatar: m.avatar, photo: m.photo, text, ts: Math.round(this.clock() * 1000) });
+      this.chat[channel].push({ from: pid, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look || {}, text, ts: Math.round(this.clock() * 1000) });
       this.chat[channel] = this.chat[channel].slice(-CHAT_LIMIT);
       this.touch();
     }
@@ -461,7 +461,7 @@
       const ended = this.phase === "end";
       const players = this.order.map((id) => {
         const m = this.members[id];
-        const row = { id, name: m.name, avatar: m.avatar, photo: m.photo || null, online: m.online, host: id === this.host };
+        const row = { id, name: m.name, avatar: m.avatar, photo: m.photo || null, look: m.look || {}, online: m.online, host: id === this.host };
         if (g && g.players[id]) {
           const gp = g.players[id];
           row.alive = gp.alive;
@@ -528,7 +528,8 @@
     /* send(pid, data) — доставить сообщение игроку (себе — локально, остальным — по сети) */
     constructor(send, hostProfile, settings, code, restore) {
       this.send = send;
-      this.room = restore ? new Room(null, null, null, restore) : new Room(code, member(hostProfile), settings);
+      const Kind = (restore ? restore.kind : settings && settings.game) === "draw" ? api.DrawRoom : Room;   // мафия или рисовалка
+      this.room = restore ? new Kind(null, null, null, restore) : new Kind(code, member(hostProfile), settings);
       this.listeners = [];
     }
 
@@ -536,10 +537,14 @@
       const room = this.room;
       try {
         const t = msg.t;
+        if (t === "ink") {                                  // штрих рисовалки — сразу всем, без пересылки всего состояния
+          if (room.inkOp && room.inkOp(pid, msg.op)) room.order.forEach((p) => { if (p !== pid && room.members[p].online) this.send(p, { t: "ink", op: msg.op }); });
+          return;
+        }
         if (t === "hello" || t === "profile") {
           const m = member(Object.assign({}, msg.profile || {}, { id: pid }));
           if (t === "hello") room.join(m);
-          else if (room.members[pid]) { Object.assign(room.members[pid], { name: m.name, avatar: m.avatar, photo: m.photo }); room.touch(); }
+          else if (room.members[pid]) { Object.assign(room.members[pid], { name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); room.touch(); }
         } else if (t === "settings") {
           if (pid !== room.host || room.phase !== "lobby") throw new GameError("Настройки меняет хост в лобби");
           room.updateSettings(msg.settings || {});
@@ -558,6 +563,7 @@
         return;
       }
       this.push();
+      if (msg.t === "hello" && room.phase === "draw" && room.ink) this.send(pid, { t: "ink", all: room.ink });   // вернулся во время рисования
     }
 
     offline(pid) { this.room.setOnline(pid, false); this.push(); }
@@ -571,7 +577,14 @@
 
   function member(p) {
     return { id: p.id, name: String(p.name || "Игрок").slice(0, 20), avatar: String(p.avatar || "🙂").slice(0, 4),
-      photo: typeof p.photo === "string" && /^https?:\/\//.test(p.photo) ? p.photo : null, online: true };
+      photo: typeof p.photo === "string" && /^https?:\/\//.test(p.photo) ? p.photo : null, look: lookOf(p.look), online: true };
+  }
+
+  // оформление профиля из магазина (рамка, фон, вид карточки, титул, эффект имени): только короткие ключи
+  function lookOf(l) {
+    const out = {};
+    if (l && typeof l === "object") ["frame", "bg", "style", "title", "fx", "lv", "g", "w"].forEach((k) => { if (typeof l[k] === "string" && /^[a-z0-9_-]{1,24}$/.test(l[k])) out[k] = l[k]; });
+    return out;
   }
 
   const api = { Mafia, Room, Hub, GameError, rolePlan, newCode, member, THEMES, MODES, MIN_PLAYERS, MAX_PLAYERS };
