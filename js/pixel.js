@@ -691,6 +691,30 @@ const Pixel = (() => {
       fig(70, 1); fig(250, -1);
       t.dither(0, 0, W, H, "#00000066", .15);
     },
+    casino(ctx, R, t) {                                     // ПОДПОЛЬНОЕ КАЗИНО: сукно, карты, фишки, лампа
+      t.rect(0, 0, W, H, "#0c0806");
+      for (let x = 0; x < W; x += 10) { t.rect(x, 0, 6, 92, x % 20 ? "#3a0a10" : "#4a0e14"); t.rect(x + 6, 0, 4, 92, "#22060a"); }   // бархатные шторы
+      t.rect(0, 88, W, 6, "#6a4a1a"); t.rect(0, 88, W, 1, "#c8a040");
+      t.rect(159, 0, 2, 22, "#0a0a0a");
+      for (let i = 0; i < 10; i++) t.rect(160 - 6 - i * 1.6, 22 + i, 12 + i * 3.2, 1, "#1e3a1e");
+      t.rect(156, 32, 8, 3, "#ffe8a0"); t.glow(160, 36, 24, "#6a5a20");
+      for (let y = 36; y < 128; y++) { const w = (y - 36) * 1.15; for (let x = -w; x <= w; x++) { const k = (1 - Math.abs(x) / (w + 1)) * (1 - (y - 36) / 140); if (BAYER[y & 3][(160 + Math.round(x)) & 3] < k * 5) t.px(160 + x, y, "#3a3418"); } }
+      t.shadow(160, 152, 260, "#00000099");
+      for (let y = 0; y < 44; y++) {                              // стол с сукном, видим сверху-сбоку
+        const w = 150 - Math.pow(Math.abs(y - 22) / 22, 2) * 30;
+        t.rect(160 - w, 102 + y, w * 2, 1, y < 3 || y > 40 ? "#5a3418" : (y + (y >> 2)) % 7 ? "#14602e" : "#106028");
+      }
+      t.dither(20, 106, 280, 36, "#1a7036", .25);
+      for (let x = 30; x < 290; x += 3) t.px(x, 104, "#c8a040");
+      const card = (x, y, red, back) => { t.rect(x, y, 14, 19, "#1a1a1a"); t.rect(x + 1, y + 1, 12, 17, back ? "#8a1a1a" : "#f4f0e4");
+        if (back) { for (let i = 0; i < 6; i++) t.rect(x + 3, y + 3 + i * 2, 8, 1, "#c84040"); } else { t.rect(x + 3, y + 3, 3, 4, red ? "#d0101a" : "#1a1a1a"); t.rect(x + 6, y + 9, 3, 3, red ? "#d0101a" : "#1a1a1a"); } };
+      card(118, 110, true); card(134, 112, false); card(180, 110, false, true); card(196, 113, true);
+      card(60, 118, false); card(76, 119, true, true); card(236, 118, true); card(252, 120, false, true);
+      const stack = (x, y, n, c) => { for (let i = 0; i < n; i++) { t.rect(x, y - i * 2, 12, 3, c); t.rect(x, y - i * 2, 12, 1, "#ffffff55"); t.px(x + 3, y - i * 2 + 1, "#ffffff"); t.px(x + 8, y - i * 2 + 1, "#ffffff"); } };
+      stack(150, 134, 6, "#d0101a"); stack(164, 136, 4, "#1a5ad0"); stack(156, 140, 8, "#e8c040"); stack(100, 132, 3, "#1a1a1a"); stack(214, 134, 5, "#2a8a3a");
+      [[40, 64], [280, 64]].forEach(([x, y]) => { t.rect(x - 9, y, 18, 28, "#0c0908"); t.rect(x - 6, y - 14, 12, 14, "#0e0b0a"); t.rect(x - 8, y - 16, 16, 3, "#060504"); t.rect(x - 3, y - 8, 2, 1, "#c8a040"); t.rect(x + 1, y - 8, 2, 1, "#c8a040"); });
+      for (let i = 0; i < 20; i++) t.px(R() * W, 96 + R() * 4, "#c8a04066");
+    },
   };
   SCENES.mafia = SCENES.classic;
 

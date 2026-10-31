@@ -9,7 +9,7 @@
 
   const MIN_PLAYERS = 2, MAX_PLAYERS = 4, MAX_ITEMS = 6, CHAT_LIMIT = 80;
   const LOAD_SECONDS = 20, SHOT_PAUSE = 2.2;
-  const HP_OPTIONS = [2, 3, 4, 5], TURN_TIMES = [20, 30, 45, 60], ITEM_OPTIONS = [0, 1, 2, 3];
+  const HP_OPTIONS = [2, 3, 4, 5], TURN_TIMES = [20, 30, 45, 60], ITEM_OPTIONS = [0, 1, 2, 3], STAKES = [0, 10, 25, 50, 100, 250];
   const ITEMS = {
     flashlight: { name: "Фонарик", emoji: "🔦", desc: "Подсветить один случайный патрон в магазине — узнаешь, боевой ли он" },
     spin: { name: "Встряска", emoji: "🔄", desc: "Встряхнуть дробовик: оставшиеся патроны перемешаются" },
@@ -35,7 +35,7 @@
       this.code = code; this.host = host.id;
       this.members = { [host.id]: host }; this.order = [host.id];
       this.version = 0;
-      this.settings = { game: "roulette", hp: 3, turnTime: 30, items: 2 };
+      this.settings = { game: "roulette", hp: 3, turnTime: 30, items: 2, stake: 0 };
       this.updateSettings(settings || {});
       this.phase = "lobby"; this.deadline = null; this.total = null;
       this.chat = { all: [] };
@@ -61,6 +61,7 @@
       if (HP_OPTIONS.includes(Number(s.hp))) this.settings.hp = Number(s.hp);
       if (TURN_TIMES.includes(Number(s.turnTime))) this.settings.turnTime = Number(s.turnTime);
       if (ITEM_OPTIONS.includes(Number(s.items))) this.settings.items = Number(s.items);
+      if (STAKES.includes(Number(s.stake))) this.settings.stake = Number(s.stake);
       this.touch();
     }
 
@@ -100,6 +101,8 @@
       if (!["lobby", "end"].includes(this.phase)) throw new GameError("Игра уже идёт");
       const online = this.order.filter((p) => this.members[p].online);
       if (online.length < MIN_PLAYERS) throw new GameError(`Нужно минимум ${MIN_PLAYERS} игрока`);
+      const poor = online.slice(0, MAX_PLAYERS).filter((p) => this.settings.stake && Number((this.members[p].look || {}).c || 0) < this.settings.stake);
+      if (poor.length) throw new GameError(`Не хватает монет на ставку ${this.settings.stake}: ${poor.map((p) => this.name(p)).join(", ")}`);
       this.resetGame();
       this.gameNo = (this.gameNo || 0) + 1;                       // номер партии — чтобы телефоны поняли, что стол новый
       this.seats = online.slice(0, MAX_PLAYERS);
@@ -324,7 +327,7 @@
         game: "roulette", game_no: this.gameNo || 0, code: this.code, host: this.host, version: this.version, now: Math.round(this.clock() * 1000),
         theme: { key: "roulette", title: "Последний заряд", emoji: "🎯", accent: "#c0141f", accent2: "#3a0a0a" },
         settings: this.settings, phase: this.phase, deadline: this.deadline ? Math.round(this.deadline * 1000) : null, total: this.total,
-        players, seats: this.seats, sawed: !!this.sawed, turn: this.turn, aim: this.phase === "play" ? this.aim || null : null, winner: this.winner, maxHp: this.settings.hp,
+        players, seats: this.seats, sawed: !!this.sawed, stake: this.settings.stake || 0, pot: (this.settings.stake || 0) * this.seats.length, turn: this.turn, aim: this.phase === "play" ? this.aim || null : null, winner: this.winner, maxHp: this.settings.hp,
         drum: { left: this.drum.length, total: this.loadTotal, house: this.house },
         my_load: this.contrib[pid] || null, notes: (this.notes[pid] || []).slice(), events: this.events.slice(-12),
         chat: { all: this.chat.all.slice(-40) }, can_write: ["all"],
@@ -332,7 +335,7 @@
     }
   }
 
-  const api = { RouletteRoom, ITEMS, KEYS, HP_OPTIONS, TURN_TIMES, ITEM_OPTIONS, MIN_PLAYERS, MAX_PLAYERS };
+  const api = { RouletteRoom, ITEMS, KEYS, HP_OPTIONS, TURN_TIMES, ITEM_OPTIONS, STAKES, MIN_PLAYERS, MAX_PLAYERS };
   root.Roulette = api;
   Engine.RouletteRoom = RouletteRoom;
   if (typeof module !== "undefined") module.exports = api;

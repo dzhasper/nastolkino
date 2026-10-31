@@ -218,3 +218,43 @@ body[data-screen="profile"][data-pstyle="badge"] .top h1, body[data-screen="prof
 
 /* шторка с карточкой другого игрока */
 .sheet-body .pcard { margin-top: 6px; }
+
+/* покадрово анимированные рамки: лента кадров, показываем по одному */
+.avatar i.frame.strip { display: block; background-repeat: no-repeat; background-position: 0 0; image-rendering: pixelated; }
+.avatar i.frame.s4 { background-size: 400% 100%; animation: strip4 1s steps(4, jump-none) infinite; }
+.avatar i.frame.s6 { background-size: 600% 100%; animation: strip6 1s steps(6, jump-none) infinite; }
+@keyframes strip4 { from { background-position: 0 0; } to { background-position: 100% 0; } }
+@keyframes strip6 { from { background-position: 0 0; } to { background-position: 100% 0; } }
+
+/* новые эффекты имени */
+.fx-frost { color: #d8f4ff !important; text-shadow: 0 0 4px #7ad8ff, 1px 1px 0 #2a6a8a !important; animation: fx-frost 2.4s steps(6) infinite; }
+@keyframes fx-frost { 50% { text-shadow: 0 0 8px #bfeaff, 1px 1px 0 #2a6a8a; color: #ffffff; } }
+.fx-bloody { color: #ff2a3a !important; text-shadow: 0 2px 0 #6a0008, 0 3px 0 #4a0006 !important; animation: fx-bloody 1.8s steps(3) infinite; }
+@keyframes fx-bloody { 50% { text-shadow: 0 2px 0 #6a0008, 0 5px 0 #4a0006, 1px 6px 0 #3a0004; } }
+.fx-royal { background: linear-gradient(100deg, #b87a10 0%, #ffd23f 30%, #ffffff 45%, #ffd23f 60%, #b87a10 100%); background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent !important; -webkit-text-fill-color: transparent; animation: fx-royal 2s linear infinite; text-shadow: none !important; }
+@keyframes fx-royal { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* значок новинки и дорогие товары */
+.new-tag { position: absolute; top: 4px; left: 4px; z-index: 3; background: #ff2a5a; color: #fff; font-family: "Press Start 2P", monospace; font-size: 7px; padding: 3px 4px; animation: blink 1.2s steps(2) infinite; }
+.cats .pill.has-new::after { content: ""; display: inline-block; width: 6px; height: 6px; background: #ff2a5a; margin-left: 4px; vertical-align: 2px; }
+.shop-item.lux { background: linear-gradient(160deg, #3a2a08, #1a1206) !important; box-shadow: 0 0 0 3px #d8b040 !important; }
+.shop-item.lux .price { color: #ffd23f; }
+
+/* VIP-карта: чёрная с золотом, по ней бежит блик */
+.pc-vip { background: #0c0c0e; color: #e8d8a8; padding: 16px 16px 14px; box-shadow: inset 0 0 0 2px #d8b040, inset 0 0 0 5px #0c0c0e, inset 0 0 0 6px #6a5420; overflow: hidden; }
+.pc-vip > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .16; filter: grayscale(1) sepia(1) saturate(2); z-index: 0; }
+.pc-vip > *:not(.pc-scene) { position: relative; z-index: 1; }
+.pc-vip .pc-shine { position: absolute; top: -40%; left: -60%; width: 40%; height: 180%; background: linear-gradient(90deg, transparent, rgba(255, 240, 180, .28), transparent); transform: rotate(20deg); animation: vip-shine 3.2s linear infinite; z-index: 2; pointer-events: none; }
+@keyframes vip-shine { to { left: 130%; } }
+.pc-vip .pc-top { display: flex; justify-content: space-between; align-items: baseline; }
+.pc-vip .pc-top b { font-family: "Press Start 2P", monospace; font-size: 18px; color: #ffd23f; text-shadow: 2px 2px 0 #5a4010; }
+.pc-vip .pc-top span { font-family: "Press Start 2P", monospace; font-size: 7px; color: #b8a060; }
+.pc-vip .pc-chipx { width: 40px; height: 30px; margin: 12px 0 10px; background: linear-gradient(135deg, #f0d070, #a87a20); box-shadow: inset 0 0 0 2px #6a4a10, inset 13px 0 0 -11px #6a4a10, inset -13px 0 0 -11px #6a4a10; }
+.pc-vip .pc-body { padding: 0; }
+.pc-vip .pc-av .avatar { box-shadow: 0 0 0 2px #d8b040; border-radius: 0; }
+.pc-vip .pc-name { color: #ffd23f; }
+.pc-vip .pc-sub { color: #c8b880; }
+.pc-vip .pc-num { font-family: "Press Start 2P", monospace; font-size: 10px; letter-spacing: 2px; color: #e8d8a8; margin-top: 14px; text-shadow: 1px 1px 0 #000; }
+.pc-vip .pc-foot { display: flex; justify-content: space-between; margin-top: 10px; font-family: "Press Start 2P", monospace; font-size: 8px; color: #b8a060; }
+body[data-screen="profile"][data-pstyle="vip"] { --bg: #070707; --card: #141414; --card2: #1e1e1e; --bd: #d8b040; --accent: #d8b040; --text: #f0e6c8; --muted: #a89a70; --btn-ink: #1a1206; background: #070707 !important; }

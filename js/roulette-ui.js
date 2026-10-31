@@ -63,11 +63,12 @@ function viewRouletteMenu() {
 /* ---------------------------------------------------------------- комната */
 function viewRouletteRoom() {
   const r = S.room;
+  rouStake(r);
   const panels = { lobby: rouLobby, load: rouLoad, play: () => rouInspect() + rouPlay(), shot: () => rouInspect() + rouPlay(), end: rouEnd };
   const fade = S.rouFade !== r.code + r.phase; S.rouFade = r.code + r.phase;
   return `${netBanner()}<div class="${fade ? "fade-in" : ""}">
     <div class="stage" id="stage"><div class="stage-hud">
-      <div class="drum">${r.phase === "lobby" ? "ПОДВАЛ" : r.phase === "load" ? "ЗАРЯДКА…" : `ПАТРОНЫ ${"■".repeat(r.drum.left)}${"□".repeat(Math.max(0, r.drum.total - r.drum.left))}`}</div>
+      <div class="drum">${r.pot ? `<span class="pot">🪙${r.pot}</span> ` : ""}${r.phase === "lobby" ? "ПОДВАЛ" : r.phase === "load" ? "ЗАРЯДКА…" : `ПАТРОНЫ ${"■".repeat(r.drum.left)}${"□".repeat(Math.max(0, r.drum.total - r.drum.left))}`}</div>
       ${r.deadline && ["play", "load"].includes(r.phase) ? `<div class="stage-timer" id="timer" data-total="${r.total}"><span id="timer-num">${fmtTime(remaining())}</span></div>` : ""}
       ${["play", "shot", "load"].includes(r.phase) ? `<button class="snd" data-a="rou-view">${S.rouView === "table" ? "↩" : "🔍"}</button>` : ""}
       <button class="snd" data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button>
@@ -103,7 +104,7 @@ function rouLobby() {
       <button class="btn small grow" data-a="share">📨 Позвать</button></div></div>
     <div class="section-title">За столом</div>${playerTiles(r.players, { kick: isHost(), peek: true })}
     <div class="section-title">Правила стола</div>
-    <div class="card"><div class="row"><div class="grow small">❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🎒 Предметов за зарядку: <b>${s.items}</b></div>
+    <div class="card"><div class="row"><div class="grow small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, выживший забирает банк ${s.stake * Math.min(r.players.length, Roulette.MAX_PLAYERS)}<br>` : "🎲 На интерес<br>"}❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🎒 Предметов за зарядку: <b>${s.items}</b></div>
       ${isHost() ? `<button class="btn ghost small" data-a="rou-settings">⚙️</button>` : ""}</div></div>
     ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Закрыть дверь и начать" : `Ждём игроков (минимум ${Roulette.MIN_PLAYERS})`}</button>`
       : `<div class="card center mt2 muted">⏳ Ждём, когда хост закроет дверь…</div>`}`;
@@ -189,7 +190,9 @@ function rouSettingsSheet() {
   return `<h2>⚙️ Правила стола</h2>
     <div class="section-title">Сердец у каждого</div>${opt("hp", Roulette.HP_OPTIONS, (v) => "❤️".repeat(v))}
     <div class="section-title">Время на ход</div>${opt("turnTime", Roulette.TURN_TIMES, (v) => `${v} с`)}
-    <div class="section-title">Предметов за каждую зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметов"))}`;
+    <div class="section-title">Предметов за каждую зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметов"))}
+    <div class="section-title">Ставка (монеты, которые ты нафармил)</div>${opt("stake", Roulette.STAKES, (v) => (v ? `🪙 ${v}` : "на интерес"))}
+    <div class="small muted mt">Каждый за столом ставит одинаково. Выживший забирает весь банк.</div>`;
 }
 
 /* ---------------------------------------------------------------- строка состояния, как в старых шутерах */
@@ -278,6 +281,15 @@ function rouEvents() {
   S.rouSeen = top;
 }
 
+// ставка списывается один раз, когда партия началась и ты сидишь за столом
+function rouStake(room) {
+  if (!room.stake || !room.seats.includes(S.me) || room.phase === "lobby") return;
+  const key = "rs:" + room.code + ":" + room.game_no;
+  if (store.lastRouStake === key) return;
+  store.lastRouStake = key; store.coins = Math.max(0, (store.coins || 0) - room.stake);
+  saveProfile(); syncProfile(); toast(`Ставка ${room.stake} монет в банке`);
+}
+
 function recordRoulette(room) {
   const key = "rou:" + room.code + ":" + (room.game_no || 0) + ":" + room.events.slice(-1)[0].n;
   const me = room.players.find((p) => p.id === S.me);
@@ -287,6 +299,7 @@ function recordRoulette(room) {
   const won = room.winner === S.me;
   if (won) store.wins = (store.wins || 0) + 1;
   let sum = Shop.reward(won, me.alive);
+  if (won && room.pot) { store.coins += room.pot; sum += room.pot; }                 // банк выжившему
   if (won && me.stakes) { store.coins += me.stakes * 15; sum += me.stakes * 15; }
   store.lastGame = key; S.reward = { key, sum };
   saveProfile(); syncProfile();

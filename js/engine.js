@@ -529,7 +529,7 @@
     constructor(send, hostProfile, settings, code, restore) {
       this.send = send;
       const kind = restore ? restore.kind : settings && settings.game;
-      const Kind = kind === "draw" ? api.DrawRoom : kind === "roulette" ? api.RouletteRoom : Room;   // мафия, рисовалка или рулетка
+      const Kind = { draw: api.DrawRoom, roulette: api.RouletteRoom, blackjack: api.BlackjackRoom }[kind] || Room;   // мафия, рисовалка, рулетка или блэкджек
       this.room = restore ? new Kind(null, null, null, restore) : new Kind(code, member(hostProfile), settings);
       this.listeners = [];
     }
@@ -555,6 +555,7 @@
         else if (t === "skip") room.skip(pid);
         else if (t === "kick") { room.kick(pid, msg.id); this.send(msg.id, { t: "kicked" }); }
         else if (t === "again") room.backToLobby(pid);
+        else if (t === "finish" && room.kind === "blackjack") room.finish(pid);
         else if (t === "chat") room.say(pid, msg.channel || "all", msg.text);
         else if (t === "leave") { room.leave(pid); this.send(pid, { t: "left" }); }
         else throw new GameError("Неизвестная команда");
@@ -587,7 +588,7 @@
   // оформление профиля из магазина (рамка, фон, вид карточки, титул, эффект имени): только короткие ключи
   function lookOf(l) {
     const out = {};
-    if (l && typeof l === "object") ["frame", "bg", "style", "title", "fx", "lv", "g", "w"].forEach((k) => { if (typeof l[k] === "string" && /^[a-z0-9_-]{1,24}$/.test(l[k])) out[k] = l[k]; });
+    if (l && typeof l === "object") ["frame", "bg", "style", "title", "fx", "lv", "g", "w", "c"].forEach((k) => { if (typeof l[k] === "string" && /^[a-z0-9_-]{1,24}$/.test(l[k])) out[k] = l[k]; });
     return out;
   }
 

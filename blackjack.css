@@ -1,0 +1,60 @@
+/* =====================================================================
+   БЛЭКДЖЕК: подпольное казино — зелёное сукно, золото, пиксельные карты
+   ===================================================================== */
+body[data-skin="blackjack"], body[data-skin="blackjack"].night {
+  --bg: #07130c; --card: #0f2418; --card2: #173622; --bd: #000; --accent: #d8b040; --accent2: #0a3a1e; --text: #f0ead8; --muted: #9ab8a0; --btn-ink: #1a1206;
+  background: #07130c !important;
+}
+body[data-skin="blackjack"] .section-title { color: #d8b040; }
+body[data-skin="blackjack"] .code { -webkit-text-fill-color: #d8b040 !important; text-shadow: 3px 3px 0 #000 !important; }
+.bj-hero { background-size: cover !important; background-position: center bottom !important; }
+body.pixel .bj-hero .btn { background: #d8b040 !important; color: #1a1206 !important; }
+body.pixel .bj-hero h2 { color: #f0ead8; text-shadow: 3px 3px 0 #0a3a1e; }
+body.pixel .bj-hero p { background: rgba(0, 0, 0, .72) !important; }
+.bj-rules p { margin: 0 0 8px; line-height: 1.45; } .bj-rules p:last-child { margin: 0; }
+.bj-fair { margin-top: 12px; line-height: 1.45; font-size: 14px; }
+
+.bj-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.bj-head .small { color: var(--muted); }
+.bj-pot { font-family: "Press Start 2P", monospace; font-size: 8px; text-align: center; color: #d8b040; line-height: 1.8; }
+.bj-chip { display: inline-block; background: #1a1206; color: #ffd23f; padding: 2px 6px; font-family: "Press Start 2P", monospace; font-size: 9px; box-shadow: 0 0 0 2px #d8b040; white-space: nowrap; }
+.bj-timer { font-family: "Press Start 2P", monospace; font-size: 14px; color: #ff5050; min-width: 36px; text-align: right; }
+.bj-felt { background: #106028; background-image: radial-gradient(ellipse at 50% 40%, #1a7a3a, #0c4a20 75%); padding: 12px 10px; margin: 0 3px;
+  box-shadow: 0 0 0 4px #5a3418, 0 0 0 6px #c8a040, 0 0 0 9px #2a1608; display: grid; gap: 10px; }
+.bj-seal { text-align: center; color: #f0ead8; font-size: 13px; line-height: 1.6; padding: 10px; background: rgba(0, 0, 0, .3); }
+.bj-seal code { font-size: 12px; color: #ffd23f; }
+.bj-seat { background: rgba(0, 0, 0, .28); padding: 8px; box-shadow: 0 0 0 2px rgba(0, 0, 0, .35); }
+.bj-seat.turn { box-shadow: 0 0 0 3px #ffd23f; background: rgba(60, 50, 0, .35); }
+.bj-seat.win { box-shadow: 0 0 0 3px #7aff6a; background: rgba(20, 80, 20, .45); }
+.bj-seat.bust { opacity: .65; }
+.bj-who { display: flex; align-items: center; gap: 8px; }
+.bj-who .grow { min-width: 0; } .bj-who b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f0ead8; }
+.bj-who .small { color: #c8dcc8; }
+.bj-tag { font-family: "Press Start 2P", monospace; font-size: 7px; padding: 4px 5px; background: #000; color: #f0ead8; flex: none; }
+.bj-tag.bad { color: #ff5050; } .bj-tag.gold { color: #ffd23f; }
+.bj-pay { font-family: "Press Start 2P", monospace; font-size: 10px; color: #7aff6a; flex: none; }
+.plus { color: #7aff6a; } .minus { color: #ff6060; }
+.bj-cards { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pcard-x { position: relative; width: 38px; height: 54px; background: #f4f0e4; color: #1a1a1a; box-shadow: 0 0 0 2px #1a1a1a, 3px 3px 0 0 rgba(0, 0, 0, .35); flex: none; animation: deal .3s steps(3) both; }
+.pcard-x b { position: absolute; left: 4px; top: 3px; font-family: "Press Start 2P", monospace; font-size: 10px; }
+.pcard-x span { position: absolute; left: 4px; top: 16px; font-size: 11px; }
+.pcard-x em { position: absolute; right: 4px; bottom: 2px; font-style: normal; font-size: 20px; line-height: 1; }
+.pcard-x.red { color: #c8101a; }
+.pcard-x.back { background: #8a1a1a; background-image: repeating-linear-gradient(45deg, #a82a2a 0 3px, #7a1414 3px 6px); }
+.pcard-x.back i { position: absolute; inset: 5px; box-shadow: inset 0 0 0 2px #e8c860; }
+@keyframes deal { from { transform: translateY(-14px) rotate(-8deg); opacity: 0; } }
+.bj-act { gap: 10px; }
+.bj-act3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; padding: 3px; }
+.bj-act3 .btn { padding: 16px 4px !important; font-size: 10px !important; }
+body.pixel .btn.gold { background: #d8b040 !important; color: #1a1206 !important; }
+.your-turn.bj { color: #ffd23f; text-align: center; font-family: "Press Start 2P", monospace; font-size: 12px; margin-top: 14px; animation: blink 1s steps(2) infinite; }
+.bj-result { margin-top: 12px; line-height: 1.7; }
+.bj-myp { font-family: "Press Start 2P", monospace; font-size: 12px; color: #7aff6a; margin-top: 6px; }
+.bj-check { margin-top: 10px; font-size: 13px; line-height: 1.45; }
+.bj-check.ok { box-shadow: 0 0 0 3px #2a8a3a !important; } .bj-check.bad { box-shadow: 0 0 0 3px #d0101a !important; }
+.bj-check details { margin-top: 6px; } .bj-check summary { cursor: pointer; color: var(--muted); }
+.bj-check .tiny { font-size: 10px; word-break: break-all; line-height: 1.5; color: var(--muted); margin-top: 6px; }
+.bj-log .ev { padding: 5px 0; font-size: 13px; color: var(--muted); border-bottom: 1px dashed rgba(255, 255, 255, .06); }
+.bj-log .ev.new { color: var(--text); }
+.bj-sum { padding: 6px 0; }
+.bj-end { background: #0f2418 !important; color: #f0ead8 !important; }

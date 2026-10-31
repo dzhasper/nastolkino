@@ -116,3 +116,4 @@ body.pixel .btn.fire[disabled] { background: #3a1a16 !important; color: #7a5a4a 
 .turn-tag { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 4; pointer-events: none; white-space: nowrap;
   font-family: "Press Start 2P", monospace; font-size: 9px; color: #e8d8c4; background: rgba(0, 0, 0, .7); padding: 6px 9px; box-shadow: 0 0 0 2px #2a1510; }
 .turn-tag.me { color: #ff3040; box-shadow: 0 0 0 2px #b0101a; animation: blink 1s steps(2) infinite; }
+.stage-hud .pot { color: #ffd23f; }
