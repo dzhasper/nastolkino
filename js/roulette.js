@@ -15,7 +15,7 @@
     spin: { name: "Встряска", emoji: "🔄", desc: "Встряхнуть дробовик: оставшиеся патроны перемешаются" },
     mirror: { name: "Зеркальце", emoji: "🪞", desc: "Следующий боевой выстрел в тебя от соперника уйдёт обратно в стрелка" },
     vest: { name: "Жилет", emoji: "🦺", desc: "Поглотит одно попадание" },
-    freeze: { name: "Заморозка", emoji: "🧊", desc: "Выбранный соперник пропустит свой следующий ход", target: true },
+    freeze: { name: "Бутылка", emoji: "🍾", desc: "Швырнуть бутылку сопернику в голову: над ним закружатся звёздочки, и он пропустит свой следующий ход", target: true },
     medkit: { name: "Аптечка", emoji: "💉", desc: "Вернуть одно сердце" },
     ear: { name: "Подслушка", emoji: "👂", desc: "Подслушать соперника: узнаешь всё, что он знает про патроны (что ему показали фонарик и шкатулка)", target: true },
     box: { name: "Шкатулка", emoji: "📦", desc: "Внутри записка: какой патрон следующий. Видишь только ты" },
@@ -168,7 +168,7 @@
       let guard = 0;
       while (this.status[this.turn] && this.status[this.turn].frozen && guard++ < 8) {
         this.status[this.turn].frozen = false;
-        this.event({ kind: "skip", who: this.turn, text: `${this.name(this.turn)} заморожен(а) и пропускает ход` });
+        this.event({ kind: "skip", who: this.turn, text: `${this.name(this.turn)} ещё видит звёздочки после бутылки и пропускает ход 💫` });
         this.turn = this.nextAfter(this.turn);
       }
       this.aim = null;
@@ -206,7 +206,7 @@
         st.vest = true; this.event({ kind: "item", item: key, who: pid, text: `${nm} надевает жилет` });
       } else if (key === "freeze") {
         this.status[target].frozen = true;
-        this.event({ kind: "item", item: key, who: pid, target, text: `${nm} замораживает ${this.name(target)} — пропустит ход` });
+        this.event({ kind: "item", item: key, who: pid, target, text: `${nm} швыряет бутылку в ${this.name(target)} — БАЦ! Звёздочки над головой, пропустит ход 🍾💫` });
       } else if (key === "medkit") {
         if (this.hp[pid] >= this.settings.hp) throw new GameError("Сердца и так полные");
         this.hp[pid] += 1; this.event({ kind: "item", item: key, who: pid, text: `${nm} колет аптечку и возвращает сердце` });

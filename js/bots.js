@@ -476,16 +476,16 @@ const Bots = (() => {
 
     if (!selfShot && m.acts < 6 && !aiming) {
       if (!goodT && has("spin") && p >= .6) { line("Нет, так не пойдёт. Перемешаем"); return useItem("spin"); }   // все за зеркалами
-      if (has("freeze") && others.length >= 1 && p >= .5) {             // заморозить того, кто ходит после меня (вдвоём — это лишний ход мне)
+      if (has("freeze") && others.length >= 1 && p >= .5) {             // бутылкой по голове тому, кто ходит после меня (вдвоём — это лишний ход мне)
         const nx = room.nextAfter(id), tgt = others.length === 1 ? others[0] : (list.find((t) => t.id === nx && t.s > 2) ? nx : others.slice().sort((a, b) => ((m.grudge[b] || 0) + (room.items[b] || []).length) - ((m.grudge[a] || 0) + (room.items[a] || []).length))[0]);
-        if (tgt && !(room.status[tgt] || {}).frozen) return useItem("freeze", tgt);
+        if (tgt && !(room.status[tgt] || {}).frozen) { line(chance(.5) ? pick(["Лови!", `${name(tgt)}, поймай-ка`, "Посиди, отдохни"]) : ""); return useItem("freeze", tgt); }
       }
       if (has("saw") && !room.sawed && p >= .75) {                      // обрез — только когда боевой почти наверняка
         const top = list.filter((t) => t.s > -5).sort((a, b) => b.s - a.s)[0];
         if (top && !(room.status[top.id] || {}).vest && (room.hp[top.id] >= 2 || p === 1)) { line(chance(.5) ? "Сейчас будет больно" : ""); return useItem("saw"); }
       }
     } else if (selfShot && m.acts < 6 && !aiming && has("freeze") && others.length > 1 && chance(.35)) {
-      const nx = room.nextAfter(id); if (!(room.status[nx] || {}).frozen) return useItem("freeze", nx);
+      const nx = room.nextAfter(id); if (!(room.status[nx] || {}).frozen) { line(chance(.4) ? "Лови!" : ""); return useItem("freeze", nx); }
     }
 
     let target;

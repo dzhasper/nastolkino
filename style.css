@@ -267,3 +267,9 @@ input { font: inherit; color: inherit; }
 .player .count, .player .kick { z-index: 2; }
 .net-banner { position: sticky; top: calc(6px + var(--safe-top)); z-index: 40; margin-bottom: 12px; padding: 10px 14px; border-radius: 12px;
   background: #f59e0b; color: #1a1205; font-weight: 700; font-size: 13px; text-align: center; animation: fade .3s both; }
+
+/* выйти из игры — в любой партии */
+.leave-fab { position: fixed; left: max(12px, calc(50% - 268px)); bottom: calc(18px + var(--safe-bottom)); z-index: 30; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 52px; height: 52px; border-radius: 50%; background: rgba(20, 16, 24, .85); color: var(--text); font-size: 20px; line-height: 1; box-shadow: 0 0 0 1px var(--line), 0 10px 26px -8px #000; }
+.leave-fab span { font-size: 8.5px; margin-top: 2px; opacity: .8; }
+body.pixel .leave-fab { border-radius: 0; box-shadow: 0 0 0 3px #000, inset 0 0 0 2px var(--line); }

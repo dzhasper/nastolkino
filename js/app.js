@@ -295,7 +295,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
+  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || (S.screen === "room" && !!S.room);   // во время партии «Назад» = выйти из игры (с подтверждением)
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -539,7 +539,13 @@ function playerTiles(list, opts = {}) {
   }).join("")}</div>`;
 }
 
+// во время партии в любой игре — кнопка «выйти» (в лобби и в конце есть своя)
+const leaveFab = () => (S.room && !["lobby", "end"].includes(S.room.phase) ? `<button class="leave-fab" data-a="leave" title="Выйти из игры">🚪<span>Выйти</span></button>` : "");
 function viewRoom() {
+  const r = S.room;
+  return viewRoomInner() + (MChat.active() ? "" : leaveFab());
+}
+function viewRoomInner() {
   const r = S.room;
   if (r.game === "draw") return viewDrawRoom();
   if (r.game === "roulette") return viewRouletteRoom();
@@ -980,9 +986,10 @@ const actions = {
     joinRoom(code);
   },
   leave: () => {
-    const go = () => send({ t: "leave" });
+    const go = () => { haptic("medium"); send({ t: "leave" }); };
     if (S.room && !["lobby", "end"].includes(S.room.phase)) {
-      if (tg) tg.showConfirm("Выйти из игры?", (ok) => ok && go()); else if (confirm("Выйти из игры?")) go();
+      const q = isHost() ? "Ты хост: если выйдешь, игра закончится у всех. Выйти?" : S.room.game === "roulette" ? "Выйти из игры? Ты встанешь из-за стола и выбудешь" : "Выйти из игры?";
+      if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
     } else go();
   },
   copy: () => { navigator.clipboard && navigator.clipboard.writeText(S.room.code); toast("Код скопирован"); haptic(); },

@@ -47,6 +47,7 @@ const Sfx = (() => {
     load: () => { tone(300, .06, .2, "square"); setTimeout(() => tone(220, .08, .2, "square"), 90); },
     thud: () => tone(55, .4, .7, "sine", .6),
     saw: () => { for (let i = 0; i < 6; i++) setTimeout(() => noise(.12, 4000 - (i % 2) * 1500, .35, 1), i * 140); },
+    bottle: () => { setTimeout(() => { tone(180, .12, .5, "square", .5); noise(.35, 6000, .45, 2); for (let i = 0; i < 5; i++) setTimeout(() => tone(2400 + Math.random() * 2400, .08, .08, "sine"), 40 + i * 50); }, 650); },   // бац и звон стекла
   };
 })();
 document.addEventListener("pointerdown", () => { if (S.screen === "room" && S.room && S.room.game === "roulette") Sfx.unlock(); }, { passive: true });
@@ -108,7 +109,7 @@ function rouSeats() {
     return `<div class="seat ${r.turn === id && ["play", "shot"].includes(r.phase) ? "turn" : ""} ${p.alive ? "" : "dead"} ${id === S.me ? "me" : ""} ${r.aim === id ? "aimed" : ""}" ${canAim ? `data-a="rou-aim" data-v="${id}"` : ""}>
       ${av(p, "sm")}<div class="grow"><b>${id === S.me ? "Вы" : nm(p)}</b><div class="hearts">${hearts(p.hp, r.maxHp)}</div>
       <div class="inv">${p.items.map((k) => `<span title="${esc(RI()[k].name)}">${RI()[k].emoji}</span>`).join("") || '<span class="muted">пусто</span>'}</div>
-      <div class="st">${st.vest ? "🦺" : ""}${st.mirror ? "🪞" : ""}${st.frozen ? "🧊" : ""}${p.stakes ? `🪙×${p.stakes}` : ""}${r.phase === "load" && p.alive ? (p.loaded ? " ✓ зарядил(а)" : " …") : ""}</div></div></div>`; }).join("")}</div>`;
+      <div class="st">${st.vest ? "🦺" : ""}${st.mirror ? "🪞" : ""}${st.frozen ? "💫" : ""}${p.stakes ? `🪙×${p.stakes}` : ""}${r.phase === "load" && p.alive ? (p.loaded ? " ✓ зарядил(а)" : " …") : ""}</div></div></div>`; }).join("")}</div>`;
 }
 
 function rouLobby() {
@@ -302,7 +303,7 @@ function rouEvents() {
         if (e.live && e.out) setTimeout(Sfx.thud, 600);
       }, 700);
     } else if (e.kind === "load") { Sfx.spin(); if (msg) { msg.className = "stage-msg show load"; msg.textContent = `${e.total} патронов`; } setTimeout(() => rouLoadReveal(e), 400); }
-    else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); if (["flashlight", "box", "ear", "spin", "thief"].includes(e.item)) setTimeout(() => rouReveal(e), e.item === "spin" || e.item === "thief" ? 600 : 1600); }
+    else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); if (e.item === "freeze") Sfx.bottle(); if (["flashlight", "box", "ear", "spin", "thief"].includes(e.item)) setTimeout(() => rouReveal(e), e.item === "spin" || e.item === "thief" ? 600 : 1600); }
     else if (e.kind === "win") Sfx.thud();
   });
   S.rouSeen = top;

@@ -170,9 +170,13 @@ const Cellar = (() => {
       add(box(.16, .04, .12, mat({ color: 0x3a5a2a, flatShading: true })), 0, .02, 0);
       add(box(.05, .012, .04, mat({ color: 0x2a4a1e })), -.04, .045, .02); add(box(.05, .012, .04, mat({ color: 0x2a4a1e })), .04, .045, .02);
       add(box(.17, .01, .02, black), 0, .042, -.035);
-    } else if (key === "freeze") {
-      add(box(.09, .08, .09, mat({ color: 0xa8f0ff, emissive: 0x1a5a70, transparent: true, opacity: .75, flatShading: true })), 0, .04, 0, .2, .5, .1);
-      add(box(.04, .04, .04, mat({ color: 0xffffff, emissive: 0x8ad8ff })), 0, .04, 0, 0, .8, 0);
+    } else if (key === "freeze") {                                     // бутылка: зелёное стекло, горлышко, пробка, этикетка
+      const glass = mat({ color: 0x2a7a3a, emissive: 0x0a2a10, transparent: true, opacity: .85, flatShading: true });
+      add(cyl(.032, .034, .12, glass, 8), 0, .03, 0, 0, 0, Math.PI / 2);
+      add(cyl(.014, .03, .04, glass, 8), .08, .03, 0, 0, 0, Math.PI / 2);
+      add(cyl(.012, .012, .04, glass, 8), .115, .03, 0, 0, 0, Math.PI / 2);
+      add(cyl(.013, .013, .016, mat({ color: 0x8a6a3a }), 6), .14, .03, 0, 0, 0, Math.PI / 2);
+      add(cyl(.0345, .0345, .05, mat({ color: 0xe8d8a0 }), 8), -.01, .03, 0, 0, 0, Math.PI / 2);
     } else if (key === "medkit") {
       add(cyl(.022, .022, .12, mat({ color: 0xe8f0f0, transparent: true, opacity: .7 })), 0, .025, 0, 0, 0, Math.PI / 2);
       add(cyl(.016, .016, .08, mat({ color: 0xd0101e, emissive: 0x400004 })), -.015, .025, 0, 0, 0, Math.PI / 2);
@@ -445,6 +449,8 @@ const Cellar = (() => {
       if (!!p.status.mirror !== !!ud.hasMirror) { ud.hasMirror = !!p.status.mirror; if (ud.hasMirror) mirrorRise(f); else setTimeout(() => { if (!ud.hasMirror) ud.mirror.visible = false; }, 1600); }
       if (!!p.status.vest !== !!ud.hasVest) { ud.hasVest = !!p.status.vest; ud.vest.visible = ud.hasVest && rel !== 0; if (ud.hasVest) burst(worldOf(f, 0, 1.1, .4), 0x5aa83a, 14, .8); }
       ud.frozen = !!p.status.frozen;
+      if (ud.frozen && !ud.stars) ud.stars = makeStars(f);
+      if (ud.stars) ud.stars.visible = ud.frozen && !ud.dead && rel !== 0;
       if (!p.alive && !ud.dead) { ud.dead = true; slump(f, p); }
     });
     Object.keys(state.figs).forEach((pid) => { if (!seats.includes(pid)) { const f = state.figs[pid]; figGroup.remove(f); disposeTree(f); delete state.figs[pid]; } });
@@ -476,6 +482,20 @@ const Cellar = (() => {
     const RS = 3.47, ax = Math.abs(wp.x), az = Math.abs(wp.z);
     if (az >= ax) splat(new T.Vector3(wp.x * RS / Math.max(az, .01) * .9, 1.2 + rnd() * .8, Math.sign(wp.z) * RS), new T.Euler(0, wp.z > 0 ? Math.PI : 0, rnd() * .6 - .3), size * (.8 + rnd() * .4), 0x5a0008, true);
     else splat(new T.Vector3(Math.sign(wp.x) * RS, 1.2 + rnd() * .8, wp.z * RS / Math.max(ax, .01) * .9), new T.Euler(0, wp.x > 0 ? -Math.PI / 2 : Math.PI / 2, rnd() * .6 - .3), size * (.8 + rnd() * .4), 0x5a0008, true);
+  }
+  // кольцо звёздочек над головой (после бутылки)
+  function makeStars(f) {
+    const g = new T.Group(), c = document.createElement("canvas"); c.width = c.height = 16;
+    const x = c.getContext("2d"); x.fillStyle = "#ffe040"; x.beginPath();
+    for (let i = 0; i < 10; i++) { const r = i % 2 ? 3 : 7.5, a = -Math.PI / 2 + i * Math.PI / 5; x.lineTo(8 + Math.cos(a) * r, 8 + Math.sin(a) * r); }
+    x.fill(); x.fillStyle = "#fff8c0"; x.fillRect(7, 6, 2, 2);
+    const tex = spriteTex(c);
+    for (let i = 0; i < 5; i++) {
+      const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, alphaTest: .4, depthTest: false }));
+      const a = i / 5 * Math.PI * 2; sp.scale.set(.19, .19, 1); sp.position.set(Math.cos(a) * .3, 0, Math.sin(a) * .3); g.add(sp);
+    }
+    g.position.set(0, 2.0, 0); g.visible = false; f.add(g);
+    return g;
   }
   function slump(f, p) {                                            // выбывший падает лицом на стол, под ним лужа
     const ud = f.userData;
@@ -567,7 +587,20 @@ const Cellar = (() => {
       if (f) anim.push({ t: 0, dur: .4, step: (k) => { f.userData.items.position.y = .9 - .12 * k; } });
       const at = (ff, y = 1.6) => (ff ? worldOf(ff, 0, y, .2) : new T.Vector3(0, 1.4, 1.8));
       if (e.item === "spin") anim.push({ t: 0, dur: 1, step: (k) => { gun.rotation.z = k * Math.PI * 2; gun.position.y = .86 + Math.sin(k * Math.PI) * .4; }, done: () => { gun.rotation.z = 0; } });
-      if (e.item === "freeze" && tf) burst(at(tf, 1.3), 0x9af0ff, 30, 1, { size: .05, life: 1.2 });
+      if (e.item === "freeze" && tf) {                                  // бутылка летит по дуге, кувыркаясь, — и в голову
+        const from = at(f, 1.1), to = tf.userData.rel === 0 ? camera.position.clone().add(new T.Vector3(0, -.15, -.35)) : worldOf(tf, 0, 1.6, .1);
+        const b = itemMesh("freeze"); b.scale.setScalar(1.6); scene.add(b);
+        anim.push({ t: 0, dur: .65, step: (k) => { b.position.lerpVectors(from, to, k); b.position.y += Math.sin(k * Math.PI) * .7; b.rotation.z = k * 14; b.rotation.y = k * 5; },
+          done: () => {
+            scene.remove(b); disposeTree(b);
+            burst(to.clone(), 0x3aaa5a, 26, 1.4, { size: .035, life: .9 });
+            burst(to.clone(), 0xe8f8e0, 10, 1.8, { size: .02, life: .5 });
+            burst(to.clone(), 0xffe040, 8, .6, { size: .05, life: .6, gravity: 0 });
+            if (tf.userData.rel === 0) { state.shake = Math.max(state.shake, .9); state.hurt = Math.max(state.hurt || 0, .35); }
+            else tf.userData.jolt = 1;
+            state.flicker = .2;
+          } });
+      }
       if (e.item === "medkit") burst(at(f, 1.3), 0xff3040, 16, .6, { up: .8, gravity: -.5, life: 1.2, size: .05 });
       if (e.item === "stake") burst(at(f, .9), 0xffd23f, 10, .5, { size: .04, life: .8 });
       if (e.item === "ear" && tf) for (let i = 0; i < 3; i++) {
@@ -734,8 +767,9 @@ const Cellar = (() => {
       ud.sprite.position.z = -ud.jolt * .25;
       const red = ud.jolt > .3 && Math.floor(t * 20) % 2 === 0;
       if (red) ud.smat.color.setRGB(1, .15, .15);
-      else if (ud.frozen) ud.smat.color.setRGB(.55 * lit, .85 * lit, 1 * lit);
       else ud.smat.color.setRGB(.95 * lit, .82 * lit, .7 * lit);
+      ud.smat.rotation = ud.frozen && !ud.dead ? Math.sin(t * 3.2 + i) * .09 : 0;          // оглушённый покачивается
+      if (ud.stars && ud.stars.visible) { ud.stars.rotation.y = t * 2.4; ud.stars.children.forEach((st, j) => { st.position.y = Math.sin(t * 4 + j) * .03; }); }
       ud.hearts.rotation.y = t;
       const turn = state.turn === ud.pid && ["play", "shot"].includes(state.phase);
       ud.rugM.emissive.setRGB(turn ? .18 + Math.sin(t * 4) * .08 : 0, turn ? .06 : 0, 0);
