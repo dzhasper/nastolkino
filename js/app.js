@@ -192,8 +192,14 @@ function boot() {
     S.screen = S.registered ? "home" : "register";
     const qs = new URLSearchParams(location.search);
     if (S.registered && (qs.get("tab") === "pets" || startParam === "pets")) { S.screen = "pets"; S.petSel = Number(qs.get("pet")) || null; }
+    if (S.registered && (qs.get("tab") === "shop" || startParam === "cases")) S.screen = "shop";
     Api.onState = petOnState;
     Api.start();
+    const bcode = qs.get("battle") || (startParam && /^b_[0-9A-F]{8}$/i.test(startParam) ? startParam.slice(2) : null);
+    const tcode = qs.get("trade") || (startParam && /^t_[0-9A-F]{8}$/i.test(startParam) ? startParam.slice(2) : null);
+    if (S.registered && qs.get("tour")) tourOpen(qs.get("tour"));
+    else if (S.registered && bcode) battleOpen(bcode);
+    else if (S.registered && tcode) tradeOpen(tcode);
     const snapshot = Net.loadSnapshot();
     if (snapshot && !S.pendingRoom) { resumeHost(snapshot); return render(); }
     if (S.registered && S.pendingRoom) joinRoom(S.pendingRoom);
@@ -265,7 +271,7 @@ function render() {
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
-  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
+  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
   $app.innerHTML = (screens[S.screen] || viewLoading)();
   renderOverlay();
   if (PX()) Pixel.apply();
@@ -280,7 +286,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
+  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -319,7 +325,7 @@ function viewRegister() {
 function tabs() {
   const hungry = Api.state && Api.state.pets.some((p) => p.alive && !p.egg && petLive(p).hunger < 25);
   const b = (k, ic, label) => `<button class="${S.screen === k ? "on" : ""}" data-a="tab" data-v="${k}"><span class="ti">${ic}</span><span>${label}</span></button>`;
-  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🛒", `Магазин${Shop.chestReady() ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
+  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейсы${Shop.chestReady() || Shop.CASES.some((c) => caseFree(c.key)) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
 }
 const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 
@@ -357,6 +363,12 @@ function viewHome() {
       <p>Игроки против игроков. Честная раздача: колода проверяется на твоём телефоне</p>
       <button class="btn">За стол ▶</button>
     </div>
+    <button class="game-hero solo-hero mt2" data-a="go" data-v="solo" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
+      <div class="pill" style="background:rgba(60,20,80,.7)">👤 один · против бота</div>
+      <h2 class="mt">Одиночные игры</h2>
+      <p>Блэкджек с дилером и «Выше или ниже». Немного монет каждый день, когда друзей нет рядом</p>
+      <span class="btn">Играть ▶</span>
+    </button>
     <div class="section-title">Есть код комнаты?</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
       <button class="btn" data-a="join">Войти</button></div>
@@ -378,7 +390,7 @@ function viewProfile() {
     <div class="top"><div class="grow"><h1>Профиль</h1><div class="muted small">${S.me.startsWith("tg") ? "Вход через Telegram" : "Гостевой профиль"}</div></div>${coinPill()}</div>
     ${myCard()}
     ${petBadge(store.pet, true)}
-    <div class="row mt2"><button class="btn grow" data-a="tab" data-v="shop">🛒 Магазин приколов</button></div>
+    <div class="row mt2"><button class="btn grow" data-a="tab" data-v="shop">🎁 Кейсы и инвентарь</button></div>
     ${Shop.chestReady() ? `<button class="card chest mt" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Открой и забери монеты</div></div><span class="pill on">Открыть</span></button>` : ""}
     ${p.favorite_role ? `<div class="card mt"><span class="muted small">Чаще всего играешь</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
     <div class="section-title">Изменить профиль</div>
@@ -402,34 +414,7 @@ function shopPreview(it) {
   return `<div class="sp-ava">${emo(it.emoji, 32)}</div>`;
 }
 
-function viewShop() {
-  const p = S.profile;
-  const cat = S.shopCat || "frame";
-  const items = Shop.ITEMS.filter((x) => x.cat === cat).sort((a, b) => a.price - b.price);
-  const tryIt = S.shopTry && S.shopTry.cat === cat ? Shop.byId(cat, S.shopTry.id) : null;
-  const lookNow = Object.assign({}, p.look, tryIt && tryIt.cat !== "ava" ? { [cat]: tryIt.id } : {});
-  const worn = (it) => it.cat === "ava" ? p.avatar === it.emoji : p.look[it.cat] === it.id;
-  let bar = "";
-  if (tryIt) {
-    const own = Shop.owns(tryIt);
-    bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${own ? (worn(tryIt) ? "Уже надето" : "Есть у тебя") : `Цена: ${tryIt.price} монет`}</div></div>
-      ${worn(tryIt) ? `<button class="btn small" disabled>Надето ✓</button>`
-        : own ? `<button class="btn small" data-a="shop-equip">Надеть</button>`
-        : `<button class="btn small" data-a="shop-buy" ${p.coins < tryIt.price ? "disabled" : ""}>${p.coins < tryIt.price ? `Не хватает ${tryIt.price - p.coins}` : `Купить · ${tryIt.price}`}</button>`}</div>`;
-  }
-  return `<div class="fade-in">
-    <div class="pxscene shop-scene" style="background-image:url(${Pixel.scene("shop")})"><div class="shop-sign">Лавка приколов</div></div>
-    <div class="top"><div class="grow"><h1>Магазин</h1><div class="muted small">Трать монеты на оформление профиля</div></div>${coinPill()}</div>
-    ${Shop.chestReady() ? `<button class="card chest" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Раз в день: от 15 до 60 монет</div></div><span class="pill on">Открыть</span></button>`
-      : `<div class="card small muted earn">${PX() ? Pixel.sprite("coin", 2) : "🪙"} Монеты: +${Shop.REWARD.game} за партию, +${Shop.REWARD.win} за победу, +${Shop.REWARD.alive} если дожил(а) до конца. Сундук — снова завтра.</div>`}
-    <div class="shop-preview">${cat === "ava" ? `<div class="sp-big">${av(Object.assign({}, p, tryIt ? { avatar: tryIt.emoji, photo: null } : {}), "huge")}</div>` : myCard(lookNow)}</div>
-    <div class="cats">${Shop.CATS.map((c) => `<button class="pill ${c.key === cat ? "on" : ""} ${Shop.ITEMS.some((x) => x.cat === c.key && x.fresh && !Shop.owns(x)) ? "has-new" : ""}" data-a="shop-cat" data-v="${c.key}">${c.icon} ${c.name}</button>`).join("")}</div>
-    <div class="shop-grid ${cat}">${items.map((it) => `<button class="shop-item ${tryIt === it ? "sel" : ""} ${worn(it) ? "worn" : ""} ${it.price >= 1000 ? "lux" : ""}" data-a="shop-try" data-v="${it.id}">
-      ${it.fresh && !Shop.owns(it) ? '<span class="new-tag">NEW</span>' : ""}${shopPreview(it)}<b>${esc(it.name)}</b>
-      <span class="price">${worn(it) ? "✓ надето" : Shop.owns(it) ? "есть" : `${PX() ? Pixel.sprite("coin", 1) : "🪙"} ${it.price}`}</span></button>`).join("")}</div>
-    ${bar}
-  </div>${tabs()}`;
-}
+// экран кейсов и инвентаря — в js/cases-ui.js (viewShop)
 
 function peekSheet(pl) {
   const lk = pl.look || {};
@@ -789,6 +774,12 @@ function renderOverlay() {
     body = rouSettingsSheet();
   } else if (S.sheet.type === "draw-settings") {
     body = drawSettingsSheet();
+  } else if (S.sheet.type === "battle-setup") {
+    body = battleSetupSheet();
+  } else if (S.sheet.type === "trade-pick") {
+    body = tradePickSheet();
+  } else if (S.sheet.type === "case-odds") {
+    body = caseOddsSheet(S.sheet.key);
   } else if (S.sheet.type === "hatch") {
     body = petHatchSheet(S.sheet.id);
   } else if (S.sheet.type === "peek") {
@@ -891,12 +882,6 @@ const actions = {
   shop: () => { S.screen = "shop"; render(); },
   "shop-cat": (v) => { S.shopCat = v; S.shopTry = null; haptic(); render(); },
   "shop-try": (v) => { S.shopTry = { cat: S.shopCat || "frame", id: v }; haptic(); render(); },
-  "shop-buy": () => {
-    const it = Shop.byId(S.shopTry.cat, S.shopTry.id);
-    const r = Shop.buy(it);
-    if (!r.ok) { notify("error"); return toast(`Не хватает ${r.need} монет`); }
-    Shop.equip(it); saveProfile(); syncProfile(); notify("success"); toast(`Куплено: ${it.name} ✓`); render();
-  },
   "shop-equip": () => { const it = Shop.byId(S.shopTry.cat, S.shopTry.id); if (Shop.equip(it)) { saveProfile(); syncProfile(); haptic("medium"); toast("Надето ✓"); render(); } },
   chest: () => {
     if (Api.on && Api.ready) {                               // сундук на сервере: монеты и крошечный шанс на яйцо
@@ -954,7 +939,10 @@ const actions = {
     roles = roles.includes(v) ? roles.filter((x) => x !== v) : roles.concat([v]);
     send({ t: "settings", settings: { roles } });
   },
-  "close-sheet": () => { S.sheet = null; renderOverlay(); },
+  "close-sheet": () => {
+    if (S.sheet && S.sheet.type === "trade-pick") return tradePickSave();                    // закрыл выбор — сохраняем
+    S.sheet = null; renderOverlay();
+  },
   start: () => { send({ t: "start" }); haptic("heavy"); },
   flip: () => { if (!S.flipOpen) { S.flipOpen = true; haptic("heavy"); render(); } },
   seen: () => { send({ t: "seen" }); toast("Ждём остальных…"); },
@@ -981,7 +969,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS);
+Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");
@@ -1026,8 +1014,14 @@ if (tg) {
   tg.expand();
   try { tg.disableVerticalSwipes(); } catch (e) { /* старый клиент */ }
   tg.BackButton.onClick(() => {
+    if (caseBack()) return;                                                                 // открытие кейса
     if (S.sheet || S.chatOpen) { S.sheet = null; S.chatOpen = false; $overlay.innerHTML = ""; renderChat(); return; }   // сначала закрыть шторку
     if (S.screen === "room") actions.leave();
+    else if (S.screen === "pets" && S.battleCode) actions["battle-back"]();
+    else if (S.screen === "pets" && S.tradeCode) actions["trade-back"]();
+    else if (S.screen === "pets" && S.tourId) actions["tour-back"]();
+    else if (S.screen === "solo-bj" || S.screen === "solo-hilo") { S.screen = "solo"; render(); }
+    else if (S.screen === "pets" && S.petSel) actions["pets-back"]();
     else { S.screen = "home"; render(); }
   });
 }

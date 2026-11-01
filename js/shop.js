@@ -70,6 +70,25 @@ const Shop = (() => {
     I("ava", "orb", "Шар судьбы", 200, { emoji: "🔮", fresh: 1 }), I("ava", "joker", "Джокер", 300, { emoji: "🃏", fresh: 1 }), I("ava", "jolly", "Весёлый Роджер", 500, { emoji: "☠️", fresh: 1 }),
   ];
   const byId = (cat, id) => ITEMS.find((x) => x.cat === cat && x.id === id);
+  const byKey = (k) => { const [c, i] = String(k).split(":"); return byId(c, i); };
+
+  /* ---------------------------------------------------------------- кейсы: вещи только выбиваются. Таблицы — такие же в server/worker.js */
+  const TIERS = [
+    { name: "Обычная", color: "#9aa4b8" }, { name: "Редкая", color: "#4fa8ff" },
+    { name: "Эпическая", color: "#b05cff" }, { name: "Легендарная", color: "#ffb020" },
+  ];
+  const tier = (it) => (it.price >= 750 ? 3 : it.price >= 300 ? 2 : it.price >= 150 ? 1 : 0);
+  const CASES = [
+    { key: "basement", name: "Подвальный кейс", price: 100, w: [70, 24, 5, 1], food: .25, egg: 0, desc: "В основном обычные вещи, иногда еда для питомцев" },
+    { key: "dark", name: "Тёмный кейс", price: 300, w: [30, 42, 22, 6], food: .1, egg: .003, desc: "Редкие и эпические вещи, бывает легендарка" },
+    { key: "legend", name: "Легендарный кейс", price: 1000, w: [0, 35, 45, 20], food: 0, egg: .015, desc: "Без обычных вещей, каждая пятая — легендарка" },
+  ];
+  const DUP = [25, 60, 150, 400];                                 // повтор превращается в монеты
+  const POOL = ITEMS.filter((x) => x.price > 0);
+  const caseByKey = (k) => CASES.find((c) => c.key === k);
+  const rnd = () => crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
+  function rollTier(w) { let r = rnd() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { r -= w[i]; if (r < 0) return i; } return w.length - 1; }
+  const rollItem = (t) => { const list = POOL.filter((x) => tier(x) === t); return list[Math.floor(rnd() * list.length)]; };
   const DEFAULT = { frame: "none", bg: "rpg", style: "rpg", title: "none", fx: "none" };
   const REWARD = { game: 20, win: 30, alive: 10 };
 
@@ -250,6 +269,16 @@ const Shop = (() => {
     else store.look[it.cat] = it.id;
     return true;
   }
+  // без сервера кейс открывается на телефоне (только вещи)
+  function openCaseLocal(key) {
+    const c = caseByKey(key);
+    if (!c) return { error: "Нет такого кейса" };
+    if (store.coins < c.price) return { error: `Не хватает ${c.price - store.coins} монет` };
+    store.coins -= c.price;
+    const t = rollTier(c.w), it = rollItem(t), k = it.cat + ":" + it.id, dup = store.owned.includes(k);
+    if (dup) store.coins += DUP[t]; else store.owned.push(k);
+    return { type: "item", item: k, tier: t, dup, refund: dup ? DUP[t] : 0 };
+  }
   function reward(won, alive) {
     const sum = REWARD.game + (won ? REWARD.win : 0) + (alive ? REWARD.alive : 0);
     store.coins += sum;
@@ -336,6 +365,6 @@ const Shop = (() => {
     if (typeof saveProfile === "function") { saveProfile(); if (typeof syncProfile === "function") syncProfile(); }
   }
 
-  return { CATS, ITEMS, DEFAULT, REWARD, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl,
+  return { CATS, ITEMS, DEFAULT, REWARD, TIERS, CASES, DUP, POOL, tier, caseByKey, rollTier, rollItem, openCaseLocal, byKey, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl,
     card, nameFx, level, rank, titleText, demo, get coins() { return store ? store.coins : 0; } };
 })();

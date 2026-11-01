@@ -11,7 +11,8 @@
   ];
   // порядок еды обязан совпадать с server/worker.js (FOODS)
   const FOOD_KEYS = ["korm", "zhuk", "kasha", "sup", "konfeta", "yagody", "ryba", "syr", "pirog", "kotleta"];
-  const FOOD_EMOJI = { korm: "🥣", zhuk: "🪲", kasha: "🍚", sup: "🍲", konfeta: "🍬", yagody: "🫐", ryba: "🐟", syr: "🧀", pirog: "🥟", kotleta: "🍖", zoloto: "🍏" };
+  const FOOD_EMOJI = { korm: "🥣", zhuk: "🪲", kasha: "🍚", sup: "🍲", konfeta: "🍬", yagody: "🫐", ryba: "🐟", syr: "🧀", pirog: "🥟", kotleta: "🍖", zoloto: "🍏",
+    pechenka: "🍪", morozhenoe: "🍦", tort: "🍰", energetik: "🥤", baton: "🍫", bronya: "🥫", perets: "🌶️", pyl: "✨" };
   const NAME_A = ["Шур", "Бул", "Мяк", "Хрум", "Пух", "Тоф", "Зю", "Бяк", "Кус", "Моч", "Фыр", "Жуж", "Плюх", "Тык", "Бор", "Гиз", "Чух", "Вин", "Ляп", "Ням", "Шмыг", "Бубл", "Крак", "Тяп"];
   const NAME_B = ["ик", "ша", "зя", "ок", "уся", "ыш", "он", "ка", "ля", "ёнок", "мяк", "ус", "ня", "бас"];
   const SOCIAL = [
@@ -89,6 +90,25 @@
       partner: p2 ? { name: name(p2), temper: TEMPER[byte(p2, 12) % TEMPER.length], hobby: HOBBY[byte(p2, 11) % HOBBY.length] } : null,
     };
   }
+  // боевые характеристики — те же формулы в server/worker.js (petStats)
+  function stats(dna, rarity) {
+    const ks = muts(dna).map((m) => m.key);
+    let hp = 70 + (byte(dna, 2) % 31) + rarity * 12, atk = 10 + (byte(dna, 7) % 9) + rarity * 3, def = 5 + (byte(dna, 10) % 7) + rarity * 2, spd = 5 + (byte(dna, 14) % 9) + rarity;
+    if (ks.includes("giant")) hp = Math.round(hp * 1.2);
+    if (ks.includes("tiny")) spd += 3;
+    if (ks.includes("cyborg") || ks.includes("mummy")) def += 3;
+    if (ks.includes("demon")) atk = Math.round(atk * 1.15);
+    if (ks.includes("hero")) { hp += 6; atk += 1; def += 1; spd += 1; }
+    return { hp, atk, def, spd };
+  }
+  // что умеет в бою (из мутаций и стихии)
+  const SKILLS = {
+    fire: "поджигает врага", ice: "может заморозить", storm: "чаще бьёт критом", shadow: "уворачивается", crystal: "кристальный щит",
+    cosmic: "подлечивается звёздами", vampire: "пьёт здоровье", zombie: "встаёт один раз после поражения", angel: "лечится, когда плохо",
+    werewolf: "звереет на половине здоровья", cthulhu: "оглушает щупальцами", twins: "бьёт дважды", pair: "бьёт дважды", wizard: "магия пробивает защиту",
+    ghost: "уворачивается", ninja: "уворачивается", tiny: "юркий", glitch: "телепортируется от ударов", sixeyes: "меткий", bigeye: "меткий",
+  };
+  const skills = (dna) => muts(dna).filter((m) => SKILLS[m.key]).map((m) => ({ emoji: m.emoji, text: SKILLS[m.key] }));
   const rarityName = (rarity, dna) => { const el = muts(dna).find((m) => m.group === "element"); return RARITY[rarity].name + (el ? " · " + el.name : ""); };
 
   /* ---------------------------------------------------------------- цвета */
@@ -459,7 +479,7 @@
     return `<i class="pet-spr ${opts.dead ? "dead" : ""} ${opts.cls || ""}" style="width:${size}px;height:${size}px;background-image:url(${url})"></i>`;
   };
 
-  const api = { RARITY, FOOD_KEYS, FOOD_EMOJI, SOCIAL, MUTATIONS, traits, name: fullName, muts, partner, rarityName, sprite, frame };
+  const api = { RARITY, FOOD_KEYS, FOOD_EMOJI, SOCIAL, TEMPER, MUTATIONS, stats, skills, traits, name: fullName, muts, partner, rarityName, sprite, frame };
   root.Pets = api;
   if (typeof module !== "undefined") module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

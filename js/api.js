@@ -37,6 +37,7 @@
   function applyState(st) {
     if (!st) return st;
     applyCoins(st.coins);
+    if (Array.isArray(st.inv)) store.owned = st.inv.slice();                     // инвентарь хранит сервер
     if (st.chest === false) store.chest = new Date().toISOString().slice(0, 10);   // сундук уже открыт (может, с другого телефона)
     if (st.pets) {
       st.skew = (st.now || Date.now()) - Date.now();
@@ -62,9 +63,9 @@
     flushing = true;
     try {
       while (store.q.length) {
-        const [key, delta] = store.q[0];
+        const [key, delta, reason] = store.q[0];
         try {
-          const r = await call("/api/coins", { delta, key, reason: delta > 0 ? "game" : "spend" });
+          const r = await call("/api/coins", { delta, key, reason: reason || (delta > 0 ? "game" : "spend") });
           store.q.shift(); applyCoins(r.coins);
         } catch (e) {
           if (e.status === 409 || e.status === 400) {             // не хватило монет на сервере — отменяем трату
@@ -83,12 +84,20 @@
   Api.sync = sync;
   Api.start = () => {
     if (!on) return Promise.resolve(null);
-    return call("/api/me", { coins: Math.max(0, Math.floor(store.coins || 0)) }).then((st) => {
+    return call("/api/me", { coins: Math.max(0, Math.floor(store.coins || 0)), owned: store.owned || [] }).then((st) => {
       Api.ready = true; store.q = store.q || [];
       if (typeof store.srv !== "number") store.q = [];             // первый вход: локальные монеты уже перенесены на сервер
       applyState(st); flush(); return st;
     }).catch((e) => { Api.error = e.message; retry = setTimeout(Api.start, 15000); return null; });
   };
+  Api.call = (path, body) => call(path, body);
+  // заработок в одиночных играх: отдельный дневной лимит на сервере
+  Api.solo = (n) => {
+    store.q = store.q || [];
+    store.coins += n;
+    store.q.push(["s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), n, "solo"]);
+    save();
+  };                     // запрос без обновления баланса (бои, обмены)
   Api.refresh = () => (Api.ready ? call("/api/me", {}).then(applyState) : Api.start());
   // действия с питомцами и едой — ответ всегда содержит полное новое состояние
   Api.act = (path, body) => call(path, body).then(applyState);
