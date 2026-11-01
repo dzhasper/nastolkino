@@ -123,7 +123,7 @@ const LOG_TEXT = {
   burn: (A, D, d) => `🔥 ${A} горит: −${d}`, burnon: (A, D) => `🔥 ${A} поджигает ${D}`, freeze: (A, D) => `❄️ ${D} заморожен`,
   frozen: (A) => `🧊 ${A} пропускает ход`, stun: (A, D) => `🐙 Щупальца оглушают ${D}`, heal: (A, D, d) => `💚 ${A} лечится: +${d}`,
   drain: (A, D, d) => `🧛 ${A} пьёт здоровье: +${d}`, shield: (A, D, d) => `💎 Щит ${A} гасит ${d}`, double: (A) => `👯 ${A} бьёт ещё раз!`,
-  revive: (A) => `🧟 ${A} поднимается с 1 здоровьем!`, revenge: (A) => `😤 ${A} жаждет реванша: +10% к атаке`,
+  revive: (A) => `🧟 ${A} поднимается с 1 здоровьем!`, rebirth: (A, D, d) => `🔥 ${A} возрождается из пепла: +${d}!`, revenge: (A) => `😤 ${A} жаждет реванша: +10% к атаке`,
   out: (A) => `💤 ${A} выбывает`, in: (A) => `➡️ На арену выходит ${A}!`,
 };
 function replayStep() {
@@ -140,10 +140,10 @@ function replayStep() {
   const hit = ["hit", "crit"].includes(e.t);
   if (me && foe) {
     if (hit || e.t === "double") { me.classList.remove("lunge"); void me.offsetWidth; me.classList.add("lunge"); }
-    const target = ["burn", "heal", "drain", "frozen", "revive", "revenge", "shield", "out"].includes(e.t) ? me : foe;
+    const target = ["burn", "heal", "drain", "frozen", "revive", "rebirth", "revenge", "shield", "out"].includes(e.t) ? me : foe;
     if (hit || e.t === "burn") { target.classList.remove("hurt"); void target.offsetWidth; target.classList.add("hurt"); }
     if (e.t === "out") target.classList.add("faint");
-    if (e.d) floatNum(target, (["heal", "drain"].includes(e.t) ? "+" : "−") + e.d, e.t);
+    if (e.d) floatNum(target, (["heal", "drain", "rebirth"].includes(e.t) ? "+" : "−") + e.d, e.t);
   }
   arenaBars();
   const log = document.getElementById("blog"); if (log) log.textContent = r.text;

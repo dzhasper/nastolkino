@@ -325,7 +325,7 @@ function viewRegister() {
 function tabs() {
   const hungry = Api.state && Api.state.pets.some((p) => p.alive && !p.egg && petLive(p).hunger < 25);
   const b = (k, ic, label) => `<button class="${S.screen === k ? "on" : ""}" data-a="tab" data-v="${k}"><span class="ti">${ic}</span><span>${label}</span></button>`;
-  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейсы${Shop.chestReady() || Shop.CASES.some((c) => caseFree(c.key)) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
+  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейсы${Shop.chestReady() || Shop.CASES.some((c) => caseFree(c.key)) || (Api.state && Api.state.season && seasonLeft() > 0) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
 }
 const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 

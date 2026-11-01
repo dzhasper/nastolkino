@@ -29,6 +29,27 @@ const Shop = (() => {
     I("frame", "lava", "Лава", 560, { fresh: 1, strip: 4, speed: .7 }), I("frame", "galaxy", "Галактика", 750, { fresh: 1, strip: 6, speed: 1.2 }),
     I("frame", "plasma", "Плазма", 1000, { fresh: 1, strip: 6, speed: .8 }), I("frame", "dragon", "Драконья чешуя", 1000, { fresh: 1, strip: 4, speed: 1 }),
     I("frame", "royal", "Королевская", 2000, { fresh: 1, strip: 6, speed: 1.1 }),
+    // набор Создателя: только у администратора, из кейсов не выпадает (можно лишь подарить обменом)
+    I("frame", "bwfire", "Чёрно-белое пламя", 0, { excl: 1, strip: 6, speed: .7 }),
+    I("bg", "throne", "Трон Создателя", 0, { excl: 1 }),
+    I("style", "creator", "Создатель", 0, { excl: 1, desc: "Чёрная карта в чёрно-белом пламени с печатью Создателя" }),
+    I("title", "creator", "Создатель Настолкино", 0, { excl: 1, text: "Создатель Настолкино" }),
+    I("fx", "bwflame", "Чёрно-белое пламя", 0, { excl: 1 }),
+    I("ava", "key", "Ключ Создателя", 0, { excl: 1, emoji: "🗝️" }),
+    // сезонные кейсы: каждая вещь выпадает только из своего кейса (tier: 0 обычная … 3 легендарная)
+    ...[["s_ice", [["title", "s_ice1", "Дитя метели", 0, { text: "Дитя метели" }], ["ava", "s_ice1", "Снеговик", 0, { emoji: "☃️" }], ["frame", "s_snow", "Снежинки", 1],
+        ["title", "s_ice2", "Повелитель льда", 1, { text: "Повелитель льда" }], ["ava", "s_ice2", "Ледышка", 1, { emoji: "🧊" }], ["bg", "s_ice", "Северное сияние", 2],
+        ["fx", "s_ice", "Сияние", 2], ["frame", "s_aurora", "Северное сияние", 3, { strip: 6, speed: 1.4 }], ["style", "s_ice", "Ледяная карта", 3, { desc: "Морозное стекло, снег и сияние" }]]],
+      ["s_moon", [["title", "s_moon1", "Дитя луны", 0, { text: "Дитя луны" }], ["ava", "s_moon1", "Полнолуние", 0, { emoji: "🌕" }], ["frame", "s_fangs", "Клыки", 1],
+        ["title", "s_moon2", "Охотник на вампиров", 1, { text: "Охотник на вампиров" }], ["ava", "s_moon2", "Капля крови", 1, { emoji: "🩸" }], ["bg", "s_moon", "Кровавая луна", 2],
+        ["fx", "s_moon", "Лунный пульс", 2], ["frame", "s_bloodmoon", "Кровавая луна", 3, { strip: 6, speed: 1 }], ["style", "s_moon", "Проклятый свиток", 3, { desc: "Пергамент, кровь и луна" }]]],
+      ["s_neon", [["title", "s_neon1", "Хакер", 0, { text: "Хакер" }], ["ava", "s_neon1", "Кибер-рука", 0, { emoji: "🦾" }], ["frame", "s_circuit", "Схема", 1],
+        ["title", "s_neon2", "Призрак сети", 1, { text: "Призрак сети" }], ["ava", "s_neon2", "НЛО", 1, { emoji: "🛸" }], ["bg", "s_neon", "Неон-сити", 2],
+        ["fx", "s_neon", "Неон", 2], ["frame", "s_holo", "Голограмма", 3, { strip: 6, speed: .6 }], ["style", "s_neon", "Кибер-ID", 3, { desc: "Неоновое удостоверение с помехами" }]]],
+      ["s_dragon", [["title", "s_dragon1", "Сын неба", 0, { text: "Сын неба" }], ["ava", "s_dragon1", "Фонарик", 0, { emoji: "🏮" }], ["frame", "s_clouds", "Облака", 1],
+        ["title", "s_dragon2", "Хозяин дракона", 1, { text: "Хозяин дракона" }], ["ava", "s_dragon2", "Дракончик", 1, { emoji: "🐲" }], ["bg", "s_dragon", "Храм дракона", 2],
+        ["fx", "s_dragon", "Золото дракона", 2], ["frame", "s_gdragon", "Золотой дракон", 3, { strip: 6, speed: 1.2 }], ["style", "s_dragon", "Свиток императора", 3, { desc: "Красный лак, золото и печать дракона" }]]],
+    ].flatMap(([season, list]) => list.map(([cat, id, name, tier, extra]) => I(cat, id, name, 0, Object.assign({ season, tier }, extra || {})))),
 
     I("bg", "rpg", "Замок", 0), I("bg", "arcade", "Аркада", 80), I("bg", "office", "Офис", 100), I("bg", "classic", "Нуар", 100),
     I("bg", "90s", "Район 90-х", 100), I("bg", "halloween", "Кладбище", 120), I("bg", "bunker", "Бункер", 120), I("bg", "west", "Салун", 120),
@@ -75,15 +96,24 @@ const Shop = (() => {
   /* ---------------------------------------------------------------- кейсы: вещи только выбиваются. Таблицы — такие же в server/worker.js */
   const TIERS = [
     { name: "Обычная", color: "#9aa4b8" }, { name: "Редкая", color: "#4fa8ff" },
-    { name: "Эпическая", color: "#b05cff" }, { name: "Легендарная", color: "#ffb020" },
+    { name: "Эпическая", color: "#b05cff" }, { name: "Легендарная", color: "#ffb020" }, { name: "Эксклюзив", color: "#f2f2f2" },
   ];
-  const tier = (it) => (it.price >= 750 ? 3 : it.price >= 300 ? 2 : it.price >= 150 ? 1 : 0);
+  const tier = (it) => (it.excl ? 4 : it.tier != null ? it.tier : it.price >= 750 ? 3 : it.price >= 300 ? 2 : it.price >= 150 ? 1 : 0);
   const CASES = [
     { key: "basement", name: "Подвальный кейс", price: 100, w: [70, 24, 5, 1], food: .25, egg: 0, desc: "В основном обычные вещи, иногда еда для питомцев" },
     { key: "dark", name: "Тёмный кейс", price: 300, w: [30, 42, 22, 6], food: .1, egg: .003, desc: "Редкие и эпические вещи, бывает легендарка" },
     { key: "legend", name: "Легендарный кейс", price: 1000, w: [0, 35, 45, 20], food: 0, egg: .015, desc: "Без обычных вещей, каждая пятая — легендарка" },
   ];
   const DUP = [25, 60, 150, 400];                                 // повтор превращается в монеты
+  // сезонные кейсы: появляются на несколько минут (раз в день или по команде админа). Таблицы — такие же в server/worker.js (SEASONS)
+  const SEASONS = [
+    { key: "s_ice", name: "Ледяная ночь", emoji: "❄️", price: 400, w: [50, 30, 15, 5], color: "#7ad8ff", desc: "Иней, северное сияние и вечный холод" },
+    { key: "s_moon", name: "Кровавая луна", emoji: "🌕", price: 400, w: [50, 30, 15, 5], color: "#ff3b4a", desc: "Ночь, когда луна наливается кровью" },
+    { key: "s_neon", name: "Неоновый город", emoji: "🌃", price: 400, w: [50, 30, 15, 5], color: "#ff3ec8", desc: "Дождь, неон и помехи в сети" },
+    { key: "s_dragon", name: "Золотой дракон", emoji: "🐲", price: 400, w: [50, 30, 15, 5], color: "#ffc23b", desc: "Фонари, облака и золото императора" },
+  ];
+  const seasonByKey = (k) => SEASONS.find((x) => x.key === k);
+  const seasonPool = (k) => ITEMS.filter((x) => x.season === k);
   const POOL = ITEMS.filter((x) => x.price > 0);
   const caseByKey = (k) => CASES.find((c) => c.key === k);
   const rnd = () => crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
@@ -212,6 +242,49 @@ const Shop = (() => {
       t.Rr(20, 0, 8, 5, "#c8a040"); t.Rr(22, 1, 4, 3, f === 3 ? "#000" : "#ffd23f"); if (f !== 3) t.Rr(23, 1, 2, 3, "#000");   // глаз моргает
       [[A - 6, A + 2], [B + 4, A + 2]].forEach(([x, y]) => { for (let i = 0; i < 4; i++) t.Rr(x + (x < 24 ? -i : i) * .5, y + i * 2, 2, 2, "#2a7a2a"); });
     },
+    bwfire(t, R, f, n) {                                         // рамка Создателя: чёрное кольцо, вокруг пляшет чёрно-белое пламя
+      t.ring(3, (x, y, d) => (d === 0 ? "#000000" : d === 1 ? "#2a2a2a" : "#0c0c0c"));
+      const C = ["#3a3a3a", "#8a8a8a", "#d8d8d8", "#ffffff"];
+      const flame = (x, y, dx, dy, u) => {
+        const h = 1 + Math.floor(2.6 * (1 + Math.sin(u * 47 + f * 2.2 + Math.cos(u * 13 - f * 1.3) * 2)));
+        for (let k = 0; k < h; k++) t.P(x + dx * k, y + dy * k, C[Math.min(3, Math.floor((k / h) * 4 + (h > 4 ? 1 : 0)))]);
+      };
+      const L = A - 4, M = B + 3;
+      for (let x = L + 1; x < M; x++) { flame(x, L, 0, -1, x / 48); flame(x, M, 0, 1, x / 48 + .5); }
+      for (let y = L + 1; y < M; y++) { flame(L, y, -1, 0, y / 48 + .25); flame(M, y, 1, 0, y / 48 + .75); }
+      for (let i = 0; i < 6; i++) { const k = (i * 7 + f * 3) % 32; t.P(A + k, A + ((i * 5 + f) % 3), "#ffffffaa"); t.P(B - 1 - ((i * 3 + f) % 3), A + ((k + 9) % 32), "#ffffff88"); }   // искры по краю аватара
+      t.corners((x, y, i) => { t.Rr(x - 1, y - 1, 3, 3, "#000"); t.P(x, y, (i + f) % 2 ? "#ffffff" : "#7a7a7a"); });
+    },
+    // ---- сезонные рамки
+    s_snow(t) { t.bevel("#e8fbff", "#9be3ff", "#3a8ac8"); [[A - 3, A - 3], [24, A - 3], [B + 2, A - 3], [A - 3, 24], [B + 2, 24], [A - 3, B + 2], [24, B + 2], [B + 2, B + 2]].forEach(([x, y]) => t.star(x, y, "#ffffff", "#7ad8ff")); },
+    s_aurora(t, R, f, n) {                                       // северное сияние бежит по кругу, мерцают звёзды
+      t.ring(5, (x, y, d, u) => { if (d === 0 || d === 4) return "#04101c"; const v = Math.sin(u * Math.PI * 6 + f / n * Math.PI * 2) + Math.sin(u * Math.PI * 14 - f / n * Math.PI * 2) * .5 + (d - 2) * .3;
+        return v > .95 ? "#ffffff" : v > .3 ? "#1affb0" : v > -.3 ? "#2ad8ff" : v > -.9 ? "#7a5aff" : "#2a1a5a"; });
+      for (let i = 0; i < 12; i++) { const a = i * 2.1, r = 22 + (i % 2), x = 24 + Math.cos(a) * r, y = 24 + Math.sin(a) * r; if ((i + f) % 3) t.P(x, y, i % 2 ? "#ffffff" : "#bfefff"); }
+    },
+    s_fangs(t) { t.ring(4, (x, y, d) => (d === 0 || d === 3 ? "#1a0004" : d === 1 ? "#8a0a14" : "#5a0610"));
+      for (let x = A + 2; x < B - 2; x += 5) { t.Rr(x, A, 2, 1, "#f4f0e0"); t.P(x, A + 1, "#f4f0e0"); t.Rr(x, B - 1, 2, 1, "#f4f0e0"); t.P(x + 1, B - 2, "#f4f0e0"); }
+      [[A + 3, B + 4], [B - 6, B + 4], [24, B + 4]].forEach(([x, y], i) => { t.Rr(x, y, 1, 2 + i, "#a0000c"); t.P(x, y + 2 + i, "#ff2a3a"); }); },
+    s_bloodmoon(t, R, f, n) {                                    // кровь течёт, луна пульсирует
+      t.ring(5, (x, y, d, u) => (d === 0 || d === 4 ? "#120002" : ((u * 60 + d * 3 + f * 2) % 9) < 2 ? "#ff2a3a" : d === 2 ? "#8a0010" : "#5a000a"));
+      for (let i = 0; i < 5; i++) { const x = 10 + i * 7, len = (f + i * 2) % 6 + 1; t.Rr(x, B + 4, 2, len, "#a0000c"); t.P(x, B + 4 + len, "#ff2a3a"); }
+      for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) if (dx * dx + dy * dy <= 16 + (f % 2) * 3) t.P(B + 3 + dx, A - 3 + dy, dx + dy < -3 ? "#ff8a8a" : f % 2 ? "#ff3b4a" : "#d0202e");
+    },
+    s_circuit(t) { t.ring(4, (x, y, d) => (d === 0 || d === 3 ? "#021006" : "#0a3a1a"));
+      t.ring(4, (x, y, d, u) => (d === 1 && Math.floor(u * 24) % 3 === 0 ? "#d8b040" : d === 2 && Math.floor(u * 24 + 1) % 4 === 0 ? "#d8b040" : null));
+      t.corners((x, y) => { t.Rr(x - 1, y - 1, 3, 3, "#d8b040"); t.P(x, y, "#3aff8a"); }); },
+    s_holo(t, R, f, n) {                                         // голограмма с бегущими полосами и сбоем
+      t.ring(5, (x, y, d, u) => { if (d === 0 || d === 4) return "#00000088"; if ((y + f * 2) % 4 === 0) return "#ffffff"; return ((u * 2 + f / n) % 1) < .5 ? "#00e5ff" : "#ff2bd6"; });
+      t.Rr(A - 5 + (f % 2 ? 2 : -2), 10 + f * 5, 8, 2, "#00e5ffaa"); t.Rr(B - 3 - (f % 2 ? 2 : -2), 36 - f * 4, 8, 1, "#ff2bd6aa");
+    },
+    s_clouds(t) { t.bevel("#ff6a5a", "#c8202a", "#7a0a10", 4); t.ring(4, (x, y, d) => (d === 2 && (x + y) % 6 === 0 ? "#ffd23f" : null));
+      [[A - 3, A - 3], [B + 2, A - 3], [A - 3, B + 2], [B + 2, B + 2], [24, A - 3], [24, B + 2]].forEach(([x, y]) => { t.Rr(x - 2, y, 5, 1, "#ffd23f"); t.P(x - 2, y - 1, "#ffd23f"); t.P(x + 2, y + 1, "#ffd23f"); t.P(x, y - 1, "#fff4b0"); }); },
+    s_gdragon(t, R, f, n) {                                      // золотой дракон ползёт вокруг аватара
+      t.bevel("#fff4b0", "#ffd23f", "#b87a10", 5);
+      const h = f / n, L = A - 3, M = B + 2, w = M - L, at = (u) => { const p = ((u % 1) + 1) % 1 * 4, k = Math.floor(p), q = p - k; return [[L + q * w, L], [M, L + q * w], [M - q * w, M], [L, M - q * w]][k]; };
+      t.ring(5, (x, y, d, u) => { const k = (h - u + 1) % 1; return k < .35 && d >= 1 && d <= 3 ? (d === 2 ? (Math.floor(u * 90) % 2 ? "#d0202a" : "#ff4a2a") : "#7a0a10") : null; });
+      const [hx, hy] = at(h); t.Rr(hx - 2, hy - 2, 5, 5, "#ffd23f"); t.P(hx, hy - 1, "#ff2a2a"); t.P(hx - 2, hy - 3, "#fff4b0"); t.P(hx + 2, hy - 3, "#fff4b0");
+    },
     royal(t, R, f, n) {                                          // золото, камни по очереди вспыхивают, корона с искрой
       t.bevel("#fff4b0", "#ffd23f", "#b87a10", 5);
       const gems = ["#ff3355", "#3ec8ff", "#7aff6a", "#c86aff", "#ff3355", "#3ec8ff"];
@@ -254,7 +327,7 @@ const Shop = (() => {
     store.owned = Array.isArray(store.owned) ? store.owned : [];
     store.look = Object.assign({}, DEFAULT, store.look || {});
   }
-  const owns = (it) => it.price === 0 || store.owned.includes(it.cat + ":" + it.id);
+  const owns = (it) => (it.price === 0 && !it.excl && !it.season) || store.owned.includes(it.cat + ":" + it.id);
   const look = () => Object.assign({}, DEFAULT, store.look);
   function buy(it) {
     if (owns(it)) return { ok: true };
@@ -346,6 +419,18 @@ const Shop = (() => {
         <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div>
         <div class="pc-num">${String(4000 + (p.games || 0) * 37).padStart(4, "0")} ${String(1000 + (p.wins || 0) * 91).slice(-4)} ${String(lv).padStart(2, "0")}${String(rate).padStart(2, "0")} ${String(p.coins || 0).padStart(4, "0").slice(-4)}</div>
         <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} побед</span><span>${rate}%</span></div>${bg}`,
+      s_ice: `<div class="pc-frost"></div>${bg}<div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div>
+        <div class="pc-foot"><span>❄ LV ${lv}</span><span>${p.wins || 0} побед</span><span>${rate}%</span></div>`,
+      s_moon: `<div class="pc-moon"></div><div class="pc-name">${name}</div><div class="pc-sub">— ${esc(title)} —</div><div class="pc-window">${bg}${avatar}</div>
+        <div class="pc-stats">${p.games || 0} ночей · ${p.wins || 0} побед · уровень ${lv}</div>`,
+      s_neon: `<div class="pc-scan"></div>${bg}<div class="pc-top"><b>CYBER·ID</b><span>#${String(1000 + (p.games || 0) * 13).slice(-4)}</span></div>
+        <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div><div class="pc-code">LV ${lv} · WIN ${rate}%</div></div></div><div class="pc-barcode"></div>`,
+      s_dragon: `${bg}<div class="pc-seal">龍</div><div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
+          <div class="pc-code">Уровень ${lv} · ${p.wins || 0} побед</div></div></div>`,
+      creator: `<div class="pc-flames"><i></i><i></i><i></i></div>${bg}<div class="pc-seal">✦ СОЗДАТЕЛЬ ✦</div>
+        <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
+          <div class="pc-admin">ADMIN · НАСТОЛКИНО</div></div></div>
+        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} побед</span><span>${p.games || 0} партий</span></div>`,
       arcade: `${bg}<div class="pc-hs">HIGH SCORE</div><div class="pc-body">${avatar}<div class="pc-main"><div class="pc-p1">PLAYER 1</div>
           <div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div>
         <div class="pc-table"><div><span>LEVEL</span><b>${String(lv).padStart(2, "0")}</b></div><div><span>WINS</span><b>${String(p.wins || 0).padStart(3, "0")}</b></div>
@@ -365,6 +450,6 @@ const Shop = (() => {
     if (typeof saveProfile === "function") { saveProfile(); if (typeof syncProfile === "function") syncProfile(); }
   }
 
-  return { CATS, ITEMS, DEFAULT, REWARD, TIERS, CASES, DUP, POOL, tier, caseByKey, rollTier, rollItem, openCaseLocal, byKey, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl,
+  return { CATS, ITEMS, DEFAULT, REWARD, TIERS, CASES, DUP, POOL, SEASONS, seasonByKey, seasonPool, tier, caseByKey, rollTier, rollItem, openCaseLocal, byKey, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl,
     card, nameFx, level, rank, titleText, demo, get coins() { return store ? store.coins : 0; } };
 })();

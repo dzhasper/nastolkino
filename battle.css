@@ -40,6 +40,7 @@ body.pixel .seg.seg4 button { font-size: 8px; }
   pointer-events: none; animation: fnum 1.1s ease-out forwards; }
 .fnum.crit { color: #ffd23b; font-size: 28px; }
 .fnum.heal, .fnum.drain { color: #7aff6a; }
+.fnum.rebirth { color: #ffb020; font-size: 28px; }
 .fnum.burn { color: #ff8a1f; }
 .fnum.shield { color: #7fe6ff; }
 @keyframes fnum { to { transform: translate(-50%, -60px); opacity: 0; } }

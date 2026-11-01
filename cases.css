@@ -79,3 +79,9 @@
 body.pixel .seg, body.pixel .seg button, body.pixel .case-card, body.pixel .reel, body.pixel .rc, body.pixel .odd, body.pixel .odds-items span, body.pixel .tier-tag, body.pixel .case-free { border-radius: 0; }
 body.pixel .seg button { font-family: var(--font-head); font-size: 9px; }
 .cats .pill .seg-n { display: block; margin-top: 2px; }
+/* сезонный кейс */
+.case-card.season { position: relative; flex-wrap: wrap; border-color: var(--sc); background: linear-gradient(150deg, color-mix(in srgb, var(--sc) 30%, transparent), var(--card)); box-shadow: 0 0 16px color-mix(in srgb, var(--sc) 45%, transparent); animation: seasonGlow 1.6s ease-in-out infinite; }
+@keyframes seasonGlow { 50% { box-shadow: 0 0 26px color-mix(in srgb, var(--sc) 70%, transparent); } }
+.season-tag { width: 100%; font-size: 12px; font-weight: 800; color: var(--sc); }
+.season-tag b { font-variant-numeric: tabular-nums; }
+.ct-ico.mystery { color: #fff; text-shadow: 0 0 8px var(--tc); }

@@ -98,9 +98,10 @@ function petDetail(p) {
     <div class="pet-title"><b class="pet-name">${esc(t.name)}</b> <span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span><div class="small muted">ДНК ${t.code} · ${esc(t.shape)}</div></div>
     ${petMutBlock(t)}
     <div class="card">
-      <div class="pstat"><span>🍖 ${hungerText(p.hunger)}</span><b>${p.hunger}%</b></div>${bar(p.hunger, "food")}
+      ${t.immortal ? `<div class="pstat"><span>♾️ Не нуждается в еде — никогда</span><b>∞</b></div>` : `<div class="pstat"><span>🍖 ${hungerText(p.hunger)}</span><b>${p.hunger}%</b></div>${bar(p.hunger, "food")}`}
       <div class="pstat mt"><span>💛 ${moodText(p.mood)}</span><b>${p.mood}%</b></div>${bar(p.mood, "mood")}
-      ${p.hunger < 25 ? `<div class="warn small mt">⚠️ Умрёт через <b data-until="${p.starve_at}">${petTime(p.dieIn)}</b>, если не покормить</div>` : ""}
+      ${t.reborn ? `<div class="small mt">🔥 Феникс не умирает: если долго не кормить, он сгорит и возродится из пепла яйцом</div>` : ""}
+      ${p.hunger < 25 && !t.reborn ? `<div class="warn small mt">⚠️ Умрёт через <b data-until="${p.starve_at}">${petTime(p.dieIn)}</b>, если не покормить</div>` : ""}
     </div>
     <div class="section-title">Покормить</div>
     ${foods.length ? `<div class="pantry">${foods.map((x) => `<button class="food-chip" data-a="pet-feed" data-v="${x}">${Pets.FOOD_EMOJI[x] || "🍽"} ${esc(petFood(x).name)} <b>×${food[x]}</b></button>`).join("")}</div>`
@@ -173,6 +174,11 @@ function petFx(text) {
 // после каждого ответа сервера: показать вылупившихся, перерисовать экран
 function petOnState() {
   const st = Api.state;
+  if (st && Array.isArray(st.inv) && st.inv.includes("frame:bwfire") && !store.creatorSet) {   // администратор получил набор — сразу надеваем
+    store.creatorSet = true;
+    ["frame:bwfire", "bg:throne", "style:creator", "title:creator", "fx:bwflame", "ava:key"].forEach((k) => { const it = Shop.byKey(k); if (it) Shop.equip(it); });
+    saveProfile(); syncProfile(); toast("👑 Набор Создателя надет");
+  }
   if (st) {
     store.petSeen = store.petSeen || [];
     const fresh = st.pets.find((p) => p.alive && !p.egg && !store.petSeen.includes(p.id));

@@ -258,3 +258,88 @@ body[data-screen="profile"][data-pstyle="badge"] .top h1, body[data-screen="prof
 .pc-vip .pc-num { font-family: "Press Start 2P", monospace; font-size: 10px; letter-spacing: 2px; color: #e8d8a8; margin-top: 14px; text-shadow: 1px 1px 0 #000; }
 .pc-vip .pc-foot { display: flex; justify-content: space-between; margin-top: 10px; font-family: "Press Start 2P", monospace; font-size: 8px; color: #b8a060; }
 body[data-screen="profile"][data-pstyle="vip"] { --bg: #070707; --card: #141414; --card2: #1e1e1e; --bd: #d8b040; --accent: #d8b040; --text: #f0e6c8; --muted: #a89a70; --btn-ink: #1a1206; background: #070707 !important; }
+
+/* набор Создателя */
+.fx-bwflame { background: linear-gradient(0deg, #ffffff 0%, #9a9a9a 30%, #ffffff 50%, #3a3a3a 75%, #ffffff 100%); background-size: 100% 300%;
+  -webkit-background-clip: text; background-clip: text; color: transparent !important; -webkit-text-fill-color: transparent; text-shadow: none !important;
+  filter: drop-shadow(0 0 2px #ffffff) drop-shadow(0 -2px 3px rgba(255,255,255,.5)); animation: fx-bwflame 1.4s steps(8) infinite; }
+@keyframes fx-bwflame { from { background-position: 0 0; } to { background-position: 0 -300%; } }
+.pc-creator { background: #050506; color: #eaeaea; padding: 18px 16px 14px; overflow: hidden;
+  box-shadow: inset 0 0 0 2px #ffffff, inset 0 0 0 5px #050506, inset 0 0 0 6px #6a6a6a, 0 0 18px rgba(255,255,255,.25); }
+.pc-creator > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .35; filter: grayscale(1) contrast(1.2); z-index: 0; }
+.pc-creator > *:not(.pc-scene):not(.pc-flames) { position: relative; z-index: 2; }
+.pc-creator .pc-flames { position: absolute; left: 0; right: 0; bottom: 0; height: 60%; z-index: 1; pointer-events: none; display: flex; }
+.pc-creator .pc-flames i { flex: 1; background: radial-gradient(ellipse 60% 100% at 50% 100%, rgba(255,255,255,.35), rgba(160,160,160,.12) 45%, transparent 70%);
+  transform-origin: 50% 100%; animation: pc-flame 1.1s steps(4) infinite alternate; }
+.pc-creator .pc-flames i:nth-child(2) { animation-delay: -.4s; animation-duration: .9s; }
+.pc-creator .pc-flames i:nth-child(3) { animation-delay: -.7s; animation-duration: 1.3s; }
+@keyframes pc-flame { from { transform: scaleY(.7) skewX(-4deg); opacity: .7; } to { transform: scaleY(1.15) skewX(4deg); opacity: 1; } }
+.pc-creator .pc-seal { text-align: center; font-family: "Press Start 2P", monospace; font-size: 10px; letter-spacing: .1em; color: #ffffff; text-shadow: 0 0 6px #ffffff; margin-bottom: 12px; }
+.pc-creator .pc-body { display: flex; gap: 14px; align-items: center; }
+.pc-creator .pc-name { font-size: 20px; font-weight: 800; }
+.pc-creator .pc-sub { color: #c8c8c8; font-size: 13px; margin-top: 2px; }
+.pc-creator .pc-admin { display: inline-block; margin-top: 8px; font-family: "Press Start 2P", monospace; font-size: 7px; padding: 4px 6px; background: #ffffff; color: #000; }
+.pc-creator .pc-foot { display: flex; justify-content: space-between; margin-top: 14px; font-family: "Press Start 2P", monospace; font-size: 8px; color: #9a9a9a; }
+.pcard.mini.pc-creator .pc-seal { font-size: 7px; margin-bottom: 6px; }
+
+/* страница профиля в стиле «Создатель»: чёрно-белая, снизу горит пламя, летят искры */
+body[data-screen="profile"][data-pstyle="creator"] { --bg: #040405; --card: #101013; --card2: #1b1b20; --bd: #e8e8e8; --accent: #f2f2f2; --text: #f4f4f4; --muted: #9a9aa2; --btn-ink: #000000; background: #040405 !important; }
+body[data-screen="profile"][data-pstyle="creator"] #app { position: relative; z-index: 1; }
+body[data-screen="profile"][data-pstyle="creator"]::before { content: ""; position: fixed; left: -10%; right: -10%; bottom: 0; height: 48vh; pointer-events: none; z-index: 0; transform-origin: 50% 100%;
+  background: radial-gradient(ellipse 22% 62% at 12% 100%, rgba(255,255,255,.2), rgba(150,150,150,.06) 50%, transparent 72%),
+    radial-gradient(ellipse 26% 80% at 38% 100%, rgba(255,255,255,.14), transparent 70%), radial-gradient(ellipse 24% 70% at 62% 100%, rgba(255,255,255,.18), transparent 70%),
+    radial-gradient(ellipse 22% 60% at 88% 100%, rgba(255,255,255,.2), rgba(150,150,150,.06) 50%, transparent 72%);
+  animation: creator-flame 1.3s steps(5) infinite alternate; }
+@keyframes creator-flame { from { transform: scaleY(.82) skewX(-3deg); opacity: .75; } to { transform: scaleY(1.12) skewX(3deg); opacity: 1; } }
+body[data-screen="profile"][data-pstyle="creator"]::after { content: ""; position: fixed; left: 0; bottom: 0; width: 3px; height: 3px; pointer-events: none; z-index: 0; background: transparent;
+  box-shadow: 8vw -4vh #fff, 22vw -12vh #bbb, 35vw -6vh #fff, 47vw -18vh #888, 58vw -9vh #fff, 71vw -15vh #ccc, 84vw -5vh #fff, 93vw -20vh #999,
+    15vw -26vh #777, 41vw -30vh #aaa, 66vw -28vh #fff, 79vw -34vh #888;
+  animation: creator-embers 4s linear infinite; }
+@keyframes creator-embers { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-40vh); opacity: 0; } }
+body[data-screen="profile"][data-pstyle="creator"] .top h1 { text-shadow: 0 0 8px rgba(255,255,255,.6); }
+body[data-screen="profile"][data-pstyle="creator"] .card:not(.pcard) { background: linear-gradient(180deg, #16161a, #0b0b0d) !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+body[data-screen="profile"][data-pstyle="creator"] .section-title { color: #ffffff; text-shadow: 0 0 6px rgba(255,255,255,.5); }
+body[data-screen="profile"][data-pstyle="creator"] .btn:not(.ghost) { background: #f2f2f2; color: #000; box-shadow: 0 0 12px rgba(255,255,255,.35); }
+body.pixel[data-screen="profile"][data-pstyle="creator"] .card:not(.pcard) { background: #0e0e11 !important; box-shadow: 0 0 0 2px #e8e8e8, 4px 4px 0 0 #000 !important; }
+
+/* ---- сезонные карточки, страницы профиля и эффекты имени */
+.fx-s_ice { background: linear-gradient(90deg, #1affb0, #2ad8ff, #7a5aff, #c06aff, #1affb0); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text;
+  color: transparent !important; -webkit-text-fill-color: transparent; text-shadow: none !important; filter: drop-shadow(0 0 3px rgba(42,216,255,.6)); animation: fx-royal 3s linear infinite; }
+.fx-s_moon { color: #ff3b4a !important; text-shadow: 0 0 6px #ff0010, 0 2px 0 #4a0006 !important; animation: fx-moon 1.6s ease-in-out infinite; }
+@keyframes fx-moon { 50% { color: #ff9aa2; text-shadow: 0 0 14px #ff0010, 0 2px 0 #4a0006; } }
+.fx-s_neon { color: #fff !important; text-shadow: 0 0 4px #00e5ff, 0 0 10px #00e5ff, 2px 0 #ff2bd6 !important; animation: fx-neon 2.2s steps(1) infinite; }
+@keyframes fx-neon { 0%, 18%, 22%, 60%, 64%, 100% { opacity: 1; } 20%, 62% { opacity: .35; } }
+.fx-s_dragon { background: linear-gradient(100deg, #b80a14 0%, #ffd23f 35%, #fff4b0 50%, #ffd23f 65%, #b80a14 100%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text;
+  color: transparent !important; -webkit-text-fill-color: transparent; text-shadow: none !important; animation: fx-royal 2.4s linear infinite; }
+
+.pc-s_ice { background: linear-gradient(160deg, rgba(220,245,255,.95), rgba(150,210,240,.9)); color: #0a2a44; padding: 16px; box-shadow: inset 0 0 0 2px #ffffff, inset 0 0 0 4px #7ad8ff, 0 0 18px rgba(122,216,255,.4); overflow: hidden; }
+.pc-s_ice > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .35; z-index: 0; }
+.pc-s_ice > *:not(.pc-scene) { position: relative; z-index: 1; }
+.pc-s_ice .pc-frost { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(circle at 10% 10%, rgba(255,255,255,.8) 0 2px, transparent 3px), radial-gradient(circle at 80% 20%, rgba(255,255,255,.7) 0 1px, transparent 2px), radial-gradient(circle at 60% 80%, rgba(255,255,255,.7) 0 2px, transparent 3px); background-size: 40px 40px; animation: frost-fall 6s linear infinite; }
+@keyframes frost-fall { to { background-position: 0 120px, 0 120px, 0 120px; } }
+.pc-s_ice .pc-body { display: flex; gap: 14px; align-items: center; } .pc-s_ice .pc-name { font-size: 20px; font-weight: 800; } .pc-s_ice .pc-sub { color: #1c5a82; }
+.pc-s_ice .pc-foot { display: flex; justify-content: space-between; margin-top: 12px; font-weight: 800; font-size: 12px; color: #1c5a82; }
+.pc-s_moon { background: linear-gradient(180deg, #e8d4b0, #c8a878); color: #3a0408; padding: 14px 16px; text-align: center; box-shadow: inset 0 0 0 3px #5a0a10, inset 0 0 0 6px #e8d4b0, inset 0 0 0 7px #8a1a20; }
+.pc-s_moon .pc-moon { width: 34px; height: 34px; border-radius: 50%; margin: 0 auto 6px; background: radial-gradient(circle at 35% 35%, #ff6a6a, #c8101e 60%, #6a0008); box-shadow: 0 0 14px #ff2a3a; animation: fx-moon 2s ease-in-out infinite; }
+.pc-s_moon .pc-name { font-size: 20px; font-weight: 800; } .pc-s_moon .pc-sub { font-style: italic; color: #6a0a10; }
+.pc-s_moon .pc-window { position: relative; margin: 10px auto; width: 120px; height: 120px; overflow: hidden; box-shadow: 0 0 0 3px #3a0408; display: flex; align-items: center; justify-content: center; }
+.pc-s_moon .pc-window .pc-scene { position: absolute; inset: 0; height: auto; } .pc-s_moon .pc-window .pc-av { position: relative; }
+.pc-s_moon .pc-stats { font-size: 12px; color: #5a0a10; font-weight: 700; }
+.pc-s_neon { background: #07040f; color: #e8f8ff; padding: 14px 16px; box-shadow: inset 0 0 0 2px #00e5ff, 0 0 14px rgba(0,229,255,.45), inset 0 0 18px rgba(255,43,214,.25); overflow: hidden; }
+.pc-s_neon > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .3; z-index: 0; } .pc-s_neon > *:not(.pc-scene) { position: relative; z-index: 1; }
+.pc-s_neon .pc-scan { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 3px); animation: neon-scan 4s linear infinite; }
+@keyframes neon-scan { to { background-position: 0 60px; } }
+.pc-s_neon .pc-top { display: flex; justify-content: space-between; font-family: "Press Start 2P", monospace; font-size: 9px; color: #00e5ff; text-shadow: 0 0 6px #00e5ff; margin-bottom: 10px; }
+.pc-s_neon .pc-top span { color: #ff2bd6; text-shadow: 0 0 6px #ff2bd6; }
+.pc-s_neon .pc-body { display: flex; gap: 14px; align-items: center; } .pc-s_neon .pc-name { font-size: 20px; font-weight: 800; } .pc-s_neon .pc-sub { color: #ff9ae8; }
+.pc-s_neon .pc-code { font-family: "Press Start 2P", monospace; font-size: 8px; color: #00e5ff; margin-top: 6px; }
+.pc-s_neon .pc-barcode { height: 14px; margin-top: 10px; background: repeating-linear-gradient(90deg, #00e5ff 0 2px, transparent 2px 4px, #00e5ff 4px 5px, transparent 5px 8px); opacity: .8; }
+.pc-s_dragon { background: linear-gradient(160deg, #a8101a, #6a0810); color: #fff4d0; padding: 16px; box-shadow: inset 0 0 0 2px #ffd23f, inset 0 0 0 5px #6a0810, inset 0 0 0 6px #b87a10; overflow: hidden; }
+.pc-s_dragon > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .3; z-index: 0; } .pc-s_dragon > *:not(.pc-scene) { position: relative; z-index: 1; }
+.pc-s_dragon .pc-seal { position: absolute !important; right: 12px; top: 10px; font-size: 40px; color: #ffd23f; text-shadow: 2px 2px 0 #5a0408, 0 0 10px rgba(255,210,63,.6); opacity: .9; }
+.pc-s_dragon .pc-body { display: flex; gap: 14px; align-items: center; } .pc-s_dragon .pc-name { font-size: 20px; font-weight: 800; } .pc-s_dragon .pc-sub { color: #ffd23f; }
+.pc-s_dragon .pc-code { font-size: 12px; color: #ffcf9a; margin-top: 6px; }
+body[data-screen="profile"][data-pstyle="s_ice"] { --bg: #06142a; --card: #0e2440; --card2: #16325a; --bd: #bfefff; --accent: #7ad8ff; --text: #eaf8ff; --muted: #8ab8d8; --btn-ink: #06142a; background: #06142a !important; }
+body[data-screen="profile"][data-pstyle="s_moon"] { --bg: #160206; --card: #2a060c; --card2: #3a0a12; --bd: #ff3b4a; --accent: #d0202e; --text: #ffe8e8; --muted: #c88a8a; --btn-ink: #fff; background: #160206 !important; }
+body[data-screen="profile"][data-pstyle="s_neon"] { --bg: #07040f; --card: #120a22; --card2: #1c1036; --bd: #00e5ff; --accent: #ff2bd6; --text: #e8f8ff; --muted: #9a8ac8; --btn-ink: #fff; background: #07040f !important; }
+body[data-screen="profile"][data-pstyle="s_dragon"] { --bg: #2a0608; --card: #4a0a10; --card2: #5e1016; --bd: #ffd23f; --accent: #ffd23f; --text: #fff4d0; --muted: #e0a888; --btn-ink: #3a0408; background: #2a0608 !important; }

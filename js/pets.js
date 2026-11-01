@@ -58,6 +58,10 @@
     [43, "shadow", "element", "🌑", "Теневой", "соткан из тьмы, светятся только глаза"],
     [44, "crystal", "element", "💎", "Кристальный", "на спине растут кристаллы"],
     [45, "cosmic", "element", "🌌", "Космический", "внутри него мерцают звёзды"],
+    [46, "bwfire", "element", "🔥", "Чёрно-белое пламя", "горит чёрно-белым огнём — такого пламени нет больше ни у кого"],
+    [50, "cerberus", "twin", "🐕", "Цербер", "три головы, у каждой по три глаза. Ему не нужна еда — никогда"],
+    [47, "phoenixfire", "element", "🔥", "Белое пламя феникса", "бело-серое пламя, из которого он рождается снова и снова"],
+    [51, "phoenix", "creature", "🐦", "Феникс", "огненная птица: сгорает и возрождается из пепла — умереть насовсем не может"],
   ].map(([id, key, group, emoji, name, desc]) => ({ id, key, group, emoji, name, desc }));
   const MUT_ID = Object.fromEntries(MUTATIONS.map((m) => [m.id, m]));
 
@@ -76,7 +80,7 @@
   }
   function fullName(dna) {
     const ks = muts(dna).map((m) => m.key);
-    return ks.includes("pair") ? `${name(dna)} & ${name(partner(dna))}` : ks.includes("twins") ? `${name(dna)}-${name(dna)}` : name(dna);
+    return ks.includes("phoenix") ? "Феникс" : ks.includes("cerberus") ? "Цербер" : ks.includes("pair") ? `${name(dna)} & ${name(partner(dna))}` : ks.includes("twins") ? `${name(dna)}-${name(dna)}` : name(dna);
   }
   function traits(dna) {
     const fav = FOOD_KEYS[byte(dna, 5) % FOOD_KEYS.length];
@@ -86,7 +90,7 @@
       name: fullName(dna), social: byte(dna, 4) % 3, fav, dis, shape: SHAPES[byte(dna, 2) % SHAPES.length],
       temper: TEMPER[byte(dna, 12) % TEMPER.length], hobby: HOBBY[byte(dna, 11) % HOBBY.length], quirk: QUIRK[byte(dna, 13) % QUIRK.length],
       code: String(dna).slice(0, 4).toUpperCase() + "-" + String(dna).slice(28, 32).toUpperCase(),
-      muts: ms, element: ms.find((m) => m.group === "element") || null,
+      muts: ms, element: ms.find((m) => m.group === "element") || null, immortal: ms.some((m) => m.key === "cerberus"), reborn: ms.some((m) => m.key === "phoenix"),
       partner: p2 ? { name: name(p2), temper: TEMPER[byte(p2, 12) % TEMPER.length], hobby: HOBBY[byte(p2, 11) % HOBBY.length] } : null,
     };
   }
@@ -99,6 +103,8 @@
     if (ks.includes("cyborg") || ks.includes("mummy")) def += 3;
     if (ks.includes("demon")) atk = Math.round(atk * 1.15);
     if (ks.includes("hero")) { hp += 6; atk += 1; def += 1; spd += 1; }
+    if (ks.includes("cerberus")) { hp = Math.round(hp * 1.15); atk += 2; }
+    if (ks.includes("phoenix")) { atk += 2; spd += 3; }
     return { hp, atk, def, spd };
   }
   // что умеет в бою (из мутаций и стихии)
@@ -106,7 +112,7 @@
     fire: "поджигает врага", ice: "может заморозить", storm: "чаще бьёт критом", shadow: "уворачивается", crystal: "кристальный щит",
     cosmic: "подлечивается звёздами", vampire: "пьёт здоровье", zombie: "встаёт один раз после поражения", angel: "лечится, когда плохо",
     werewolf: "звереет на половине здоровья", cthulhu: "оглушает щупальцами", twins: "бьёт дважды", pair: "бьёт дважды", wizard: "магия пробивает защиту",
-    ghost: "уворачивается", ninja: "уворачивается", tiny: "юркий", glitch: "телепортируется от ударов", sixeyes: "меткий", bigeye: "меткий",
+    cerberus: "кусает тремя пастями", phoenix: "раз за бой возрождается из пепла", phoenixfire: "поджигает белым пламенем", bwfire: "поджигает чёрно-белым огнём", ghost: "уворачивается", ninja: "уворачивается", tiny: "юркий", glitch: "телепортируется от ударов", sixeyes: "меткий", bigeye: "меткий",
   };
   const skills = (dna) => muts(dna).filter((m) => SKILLS[m.key]).map((m) => ({ emoji: m.emoji, text: SKILLS[m.key] }));
   const rarityName = (rarity, dna) => { const el = muts(dna).find((m) => m.group === "element"); return RARITY[rarity].name + (el ? " · " + el.name : ""); };
@@ -117,7 +123,7 @@
     const hue = Math.round(byte(dna, 3) * 360 / 256), hue2 = hue + 140 + (byte(dna, 14) % 80);
     const sat = [42, 62, 74, 80, 88][rarity], fluke = byte(dna, 15);
     let base = { h: hue, s: sat, l: 58 }, skin = "normal";
-    const over = M.zombie ? { h: 95, s: 24, l: 52 } : M.vampire ? { h: 265, s: 14, l: 84 } : M.mummy ? { h: 40, s: 34, l: 76 }
+    const over = M.cerberus ? { h: 0, s: 0, l: 17 } : M.zombie ? { h: 95, s: 24, l: 52 } : M.vampire ? { h: 265, s: 14, l: 84 } : M.mummy ? { h: 40, s: 34, l: 76 }
       : M.ghost ? { h: 195, s: 45, l: 86 } : M.skeleton ? { h: 250, s: 14, l: 22 } : M.werewolf ? { h: 26, s: 26, l: 44 }
       : M.demon ? { h: 356, s: 70, l: 46 } : M.angel ? { h: 46, s: 60, l: 90 } : M.cthulhu ? { h: 168, s: 40, l: 44 }
       : M.ice ? { h: 194, s: 72, l: 74 } : M.shadow ? { h: 265, s: 34, l: 16 } : M.cosmic ? { h: 238, s: 58, l: 20 } : null;
@@ -131,10 +137,10 @@
       body: (dy) => (rainbow ? hsl(hue + dy * 14, 85, 62) : hsl(base.h, base.s, base.l)),
       light: (dy) => (rainbow ? hsl(hue + dy * 14, 90, 78) : hsl(base.h, base.s - 6, base.l + (dark ? 10 : 14))),
       dark: (dy) => (rainbow ? hsl(hue + dy * 14, 70, 44) : hsl(base.h, base.s + 4, base.l - (dark ? 8 : 18))),
-      line: dark ? hsl(M.shadow ? 275 : hue, 70, 55) : hsl(base.h, Math.min(60, base.s), 14),
+      line: M.cerberus ? "#ededed" : dark ? hsl(M.shadow ? 275 : hue, 70, 55) : hsl(base.h, Math.min(60, base.s), 14),
       accent: hsl(hue2, Math.max(50, sat), 60), accentDark: hsl(hue2, Math.max(50, sat), 42),
-      eye: M.vampire ? "#ff2b3b" : M.werewolf || M.demon || M.mummy ? "#ffd23b" : M.shadow || skin === "shadow" ? hsl(M.shadow ? 280 : hue2, 100, 70) : dark ? "#f4f0ff" : "#14121c",
-      glow: RARITY[rarity].color,
+      eye: M.cerberus ? "#ffffff" : M.vampire ? "#ff2b3b" : M.werewolf || M.demon || M.mummy ? "#ffd23b" : M.shadow || skin === "shadow" ? hsl(M.shadow ? 280 : hue2, 100, 70) : dark ? "#f4f0ff" : "#14121c",
+      glow: M.cerberus || M.bwfire ? "#ffffff" : RARITY[rarity].color,
     };
   }
 
@@ -163,10 +169,88 @@
     return { shape, rx, ry, cx, cy, bottom, inside, top, eyeY, eX: Math.max(2, Math.round(rx * .4)), mY: eyeY + 3, ex: Math.round(rx * .55) };
   }
 
+  /* ---------------------------------------------------------------- Феникс: белая огненная птица, поднятые крылья машут, хвост струится, горит бело-серым пламенем */
+  function phoenixFrame(dna, f, dead) {
+    const g = Array.from({ length: W }, () => Array(W).fill(null));
+    const solid = Array.from({ length: W }, () => Array(W).fill(false));
+    const put = (x, y, c, s = true) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < W) { g[y][x] = c; if (s) solid[y][x] = true; } };
+    const empty = (x, y) => { x = Math.round(x); y = Math.round(y); return x >= 0 && y >= 0 && x < W && y < W && !g[y][x]; };
+    const side = (fn) => { fn(-1); fn(1); };
+    const tint = [[0, 0], [220, 10], [40, 9], [260, 8]][byte(dna, 3) % 4];       // гены: чистый, холодный, тёплый или лунный оттенок белого
+    const G = (l) => hsl(tint[0], tint[1], l);
+    const C = { line: G(9), dark: G(34), mid: G(56), light: G(78), white: G(95) };
+    const live = !dead, cx = 19.5, bob = live ? [0, -1, -1, 0, 1, 1][f] : 0, flap = live ? [0, 1, 2, 1, 0, -1][f] : 0;
+    const by = 22 + bob, hy = 12 + bob;
+    // хвост: широкий веер из пяти перьев, струится
+    [-2, -1, 0, 1, 2].forEach((k) => {
+      const len = 12 - Math.abs(k);
+      for (let j = 0; j < len; j++) {
+        const sway = live ? Math.sin(j * .45 + f * 1.05 + k) * .8 * (j / len) : 0;
+        const x = cx + k * (1.2 + j * .55) + sway, y = by + 6 + j * .78;
+        const col = j > len - 3 ? C.white : j > len * .45 ? C.light : C.mid;
+        put(x - .5, y, col); put(x + .5, y, k ? col : C.light); if (j > 1 && j < len - 2) put(x + (k < 0 ? -1.5 : 1.5), y, C.mid);
+      }
+    });
+    // крылья: по пять маховых перьев, подняты буквой V
+    const tips = [];
+    side((s) => {
+      const sx = cx + s * 3.5, sy = by - 4;
+      [78, 63, 48, 34, 21].forEach((deg, i) => {
+        const a = (deg - flap * 7) * Math.PI / 180, len = [12, 15, 16, 14, 11][i] + (byte(dna, 2 + i) % 2);
+        for (let j = 0; j <= len; j++) {
+          const x = sx + s * Math.cos(a) * j, y = sy - Math.sin(a) * j;
+          const col = j > len * .72 ? C.white : j > len * .4 ? C.light : C.mid;
+          put(x, y, col); put(x, y + 1, j > len * .72 ? C.light : C.mid);
+          if (j === len) tips.push([x, y, s, a]);
+        }
+      });
+      for (let r = 0; r < 6; r++) {                                                // кроющие перья у плеча
+        const a = (70 - r * 10 - flap * 5) * Math.PI / 180;
+        for (let j = 0; j < 6; j++) put(sx + s * Math.cos(a) * j, sy - Math.sin(a) * j + 1, r % 2 ? C.mid : C.dark);
+      }
+    });
+    // тело-капля с пёрышками на груди
+    for (let y = by - 7; y <= by + 7; y++) for (let x = 0; x < W; x++) {
+      const v = (y + .5 - by) / 7.5, w = 5.2 * Math.sqrt(Math.max(0, 1 - v * v)) * (v < 0 ? .78 + .22 * (1 + v) : 1);
+      const u = (x + .5 - cx) / Math.max(.1, w);
+      if (Math.abs(u) > 1) continue;
+      const lit = -(u * .45 + v * .6);
+      let c = lit > .45 ? C.white : lit > -.1 ? C.light : lit > -.55 ? C.mid : C.dark;
+      if (Math.abs(u) < .7 && v > -.4 && y % 2 === 0 && (x + (y >> 1)) % 3 === 0) c = C.mid;  // чешуйки-пёрышки
+      put(x, y, c);
+    }
+    for (let y = -4; y <= 4; y++) for (let x = -4; x <= 4; x++) if (x * x + y * y <= 15) put(cx + x - .5, hy + y, -(x + y) > 2 ? C.white : (x + y) > 3 ? C.mid : C.light);   // голова
+    for (let y = hy + 3; y <= by - 6; y++) for (let x = -2; x <= 2; x++) put(cx + x - .5, y, C.light);   // шея
+    // контур
+    const out = [];
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (!solid[y][x] && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => solid[y + b] && solid[y + b][x + a])) out.push([x, y]);
+    out.forEach(([x, y]) => put(x, y, C.line, false));
+    // бело-серое пламя: хохолок, кончики крыльев, хвост, бока
+    const flame = (x, y, h, dx = 0) => { for (let k = 0; k < h; k++) if (empty(x + dx * k, y - k)) put(x + dx * k + (live ? Math.sin(k + f * 1.7 + x) * .6 : 0), y - k, k > h - 2 ? "#ffffff" : k > h / 2 ? "#dcdce6" : "#9a9aa8", false); };
+    if (live) {
+      [-2, 0, 2].forEach((k, i) => flame(cx - .5 + k, hy - 5, 3 + ((i + f) % 3) + (k ? 0 : 2), k * .25));
+      tips.forEach(([x, y, s2], i) => flame(x + s2, y - 1, 2 + ((i + f) % 3), s2 * .4));
+      [-2, 0, 2].forEach((k, i) => flame(cx + k * (1.2 + 9 * .55), by + 15, 2 + ((i + f) % 2), 0));
+      side((s2) => { for (let i = 0; i < 3; i++) { const y = by - 3 + i * 4 + (f % 2); flame(cx + s2 * 6.5, y, 2 + ((i + f) % 2), s2 * .5); } });
+    } else for (let k = -2; k <= 2; k++) put(cx + k * 2, hy - 5, C.mid, false);
+    // глаза и клюв
+    [[cx - 2.5, hy], [cx + 1.5, hy]].forEach(([x, y]) => {
+      if (dead) { put(x, y - 1, C.line); put(x + 1, y, C.line); put(x, y + 1, C.line); return; }
+      if (f === 5) { put(x, y, C.line); put(x + 1, y, C.line); return; }
+      put(x - 1, y, C.dark); put(x + 2, y, C.dark); put(x - 1, y - 1, C.dark); put(x, y - 1, C.dark); put(x + 1, y - 1, C.dark); put(x + 2, y - 1, C.dark);   // «маска»
+      put(x, y, "#ffffff"); put(x + 1, y, "#101018"); put(x, y + 1, "#101018"); put(x + 1, y + 1, "#101018");
+    });
+    put(cx - .5, hy + 2, C.dark); put(cx + .5, hy + 2, C.dark); put(cx - .5, hy + 3, C.line);
+    const fx = [];
+    if (live) for (let i = 0; i < 5; i++) fx.push([[5, 34, 9, 30, 3, 36][(f + i * 2) % 6], [6, 10, 3, 4, 15, 8][(f * 2 + i) % 6] + (i % 2) * 3, i % 2 ? "#dcdce6" : "#ffffff"]);
+    return { g, fx, glow: live ? "#ffffff" : null, ghost: false, glitch: false };
+  }
+
   /* ---------------------------------------------------------------- один кадр */
   function frame(code, f, dead) {
     const rarity = Math.max(0, Math.min(4, Number(code[0]) || 0)), dna = code.slice(1);
     const M = {}; muts(dna).forEach((m) => { M[m.key] = true; });
+    if (M.phoenix) return phoenixFrame(dna, f, dead);
     const g = Array.from({ length: W }, () => Array(W).fill(null));
     const solid = Array.from({ length: W }, () => Array(W).fill(false));
     const put = (x, y, c, s = true) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < W) { g[y][x] = c; if (s) solid[y][x] = true; } };
@@ -174,10 +258,11 @@
     const isSolid = (x, y) => solid[Math.round(y)] && solid[Math.round(y)][Math.round(x)];
     const side = (fn) => { fn(-1); fn(1); };
     const live = !dead, wave = live ? f % 2 : 0;
-    const scale = (M.giant ? 1.15 : M.tiny ? .7 : 1) * (M.twins || M.pair ? .82 : 1.1);
+    const scale = (M.giant ? 1.15 : M.tiny ? .7 : 1) * (M.cerberus ? 1 : M.twins || M.pair ? .82 : 1.1);
     const bottom = 36.5 - (M.ghost && live ? [1, 2, 3, 2, 1, 0][f] + 1 : 0);
-    const genes = M.twins || M.pair ? [{ dna, cx: 13.5 }, { dna: M.pair ? partner(dna) : dna, cx: 25.5 }] : [{ dna, cx: 19.5 }];
-    const B = genes.map((b) => Object.assign(b, { P: palette(b.dna, rarity, M), G: geo(b.dna, live ? f : 0, dead, b.cx, bottom, scale, M) }));
+    const genes = M.cerberus ? [{ dna, cx: 8.5, s: .72, lift: 4 }, { dna: partner(dna), cx: 19.5, s: .84, lift: 9 }, { dna: partner(partner(dna)), cx: 30.5, s: .72, lift: 4 }]
+      : M.twins || M.pair ? [{ dna, cx: 13.5 }, { dna: M.pair ? partner(dna) : dna, cx: 25.5 }] : [{ dna, cx: 19.5 }];
+    const B = genes.map((b) => Object.assign(b, { P: palette(b.dna, rarity, M), G: geo(b.dna, live ? f : 0, dead, b.cx, bottom - (b.lift || 0), scale * (b.s || 1), M) }));
     const P0 = B[0].P;
 
     // ---- сзади тела: плащи, крылья, кристаллы, хвост демона
@@ -196,22 +281,34 @@
       if (M.demon) { const tx = Math.round(cx + rx), ty = Math.round(cy + ry * .5); [[0, 0], [1, -1], [2, -2], [3, -3], [3, -4], [3, -5], [2, -6], [3, -6], [4, -6], [3, -7]].forEach(([a, b]) => put(tx + a, ty + b, "#5a1018")); }
     });
 
+    // ---- Цербер: общее туловище с четырьмя лапами, на нём три головы
+    if (M.cerberus) {
+      const bcx = 19.5, bcy = bottom - 6, brx = 15, bry = 7, Pb = B[1].P;
+      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+        const u = (x + .5 - bcx) / brx, v = (y + .5 - bcy) / bry;
+        if (u * u + v * v <= 1) { const lit = -(u * .4 + v * .8); put(x, y, lit > .55 ? Pb.light(0) : lit < -.5 ? Pb.dark(0) : Pb.body(0)); }
+      }
+      [-11, -5, 5, 11].forEach((dx, i) => { const lx = Math.round(bcx + dx), ly = Math.round(bottom) - 1, step = live && (f + i) % 2 ? 1 : 0; for (let k = 0; k < 3; k++) { put(lx, ly + k - step, Pb.dark(2)); put(lx + 1, ly + k - step, Pb.dark(2)); } put(lx - 1, ly + 2 - step, "#f4f4f4"); put(lx + 2, ly + 2 - step, "#f4f4f4"); });
+      const tx = Math.round(bcx + brx), ty = Math.round(bcy - 1);
+      [[0, 0], [1, -1], [2, -2], [3, -2], [4, -3 + (live && f % 2)], [5, -4 + (live && f % 2)]].forEach(([a, b2]) => put(tx + a, ty + b2, Pb.dark(1)));
+    }
+
     // ---- тела по генам
-    B.forEach(({ G, P, dna: d }) => {
+    (M.cerberus ? [B[0], B[2], B[1]] : B).forEach(({ G, P, dna: d }) => {
       const { cx, cy, rx, ry, top, ex } = G;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (G.inside(x, y)) {
         const u = (x + .5 - cx) / rx, v = (y + .5 - cy) / ry, dy = Math.round(v * 3), lit = -(u * .55 + v * .75);
         put(x, y, lit > .62 ? P.light(dy) : lit < -.55 ? P.dark(dy) : P.body(dy));
       }
       const inB = (x, y) => G.inside(Math.round(x), Math.round(y));
-      const pat = M.mummy || M.skeleton || M.cosmic || M.shadow ? 0 : byte(d, 10) % 7;
+      const pat = M.mummy || M.skeleton || M.cosmic || M.shadow || M.cerberus ? 0 : byte(d, 10) % 7;
       if (pat === 1) for (let i = 0; i < 5; i++) { const sx = Math.round(cx - rx + 2 + (byte(d, (i + 3) % 16) % Math.max(1, Math.round(rx * 2 - 3)))), sy = Math.round(cy - ry * .2 + (byte(d, (i + 8) % 16) % Math.max(1, Math.round(ry)))); [[0, 0], [1, 0], [0, 1], [1, 1]].forEach(([a, b]) => inB(sx + a, sy + b) && put(sx + a, sy + b, P.accentDark)); }
       if (pat === 2) for (let y = Math.round(cy - ry); y < cy - 1; y++) if ((y + byte(d, 7)) % 4 === 0) for (let x = 0; x < W; x++) if (inB(x, y) && inB(x, y + 1)) put(x, y, P.dark(0));
       if (pat === 3 || pat === 6) for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const u = (x + .5 - cx) / (rx * .62), v = (y + .5 - (cy + ry * .45)) / (ry * .55); if (u * u + v * v <= 1 && inB(x, y)) put(x, y, pat === 6 ? P.accent : hsl(P.hue, 30, 86)); }
       if (pat === 4) for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (inB(x, y) && y > cy + ry * .25) put(x, y, (x + y) % 2 ? P.accent : P.accentDark);
       if (pat === 5) [[-.5, -.55], [.45, -.7], [.1, -.85]].forEach(([a, b]) => { const sx = cx + a * rx, sy = cy + b * ry; if (inB(sx, sy)) { put(sx, sy, "#fff6c0"); put(sx - 1, sy, P.accent); put(sx + 1, sy, P.accent); put(sx, sy - 1, P.accent); put(sx, sy + 1, P.accent); } });
       // уши / рога / антенны по генам (оборотню — волчьи, магу их закрывает шляпа)
-      const ears = M.werewolf ? 8 : M.wizard ? -1 : byte(d, 7) % 8;
+      const ears = M.werewolf || M.cerberus ? 8 : M.wizard ? -1 : byte(d, 7) % 8;
       if (ears === 1) side((s) => { const bx = cx + s * ex; for (let i = 0; i < 4; i++) for (let j = 0; j < 4 - i; j++) put(bx + j - (3 - i) / 2, top + 1 - i, i > 0 && i < 3 && j === Math.floor((3 - i) / 2) ? "#ffb3c8" : P.body(-3)); });
       if (ears === 2) side((s) => { for (let i = 0; i < 7; i++) { put(cx + s * (ex - 1), top - i, P.body(-3)); put(cx + s * ex, top - i, i > 1 && i < 6 ? "#ffb3c8" : P.body(-3)); } });
       if (ears === 3) side((s) => { [[0, 0], [1, 0], [0, -1], [1, -1], [s < 0 ? -1 : 2, 0], [s < 0 ? -1 : 2, -1], [0, -2], [1, -2]].forEach(([a, b]) => put(cx + s * ex + a - .5, top + b, P.dark(-3))); });
@@ -219,23 +316,26 @@
       if (ears === 5) { for (let i = 1; i < 5; i++) put(cx, top - i, P.line); put(cx, top - 5, P.accent); put(cx - 1, top - 5, P.accent); put(cx, top - 6, P.accent); put(cx - 1, top - 6, P.accent); }
       if (ears === 6) { put(cx, top - 1, "#3b8f3b"); put(cx, top - 2, "#3b8f3b"); for (let i = 0; i < 3; i++) { put(cx + 1 + i, top - 3 - (i === 1 ? 1 : 0), "#6fd16f"); put(cx - 1 - i, top - 2 - (i === 1 ? 1 : 0), "#4fb34f"); } }
       if (ears === 7) side((s) => { const wx = cx + s * (rx + .5); for (let i = 0; i < 4; i++) for (let j = 0; j < 3 - (i >> 1); j++) put(wx + s * j, cy - 1 + i - (wave ? 1 : 0), i === 0 ? P.light(0) : P.accent); });
-      if (ears === 8) side((s) => { const bx = cx + s * ex; for (let i = 0; i < 6; i++) { const w = Math.max(0, 2 - Math.floor(i / 2)); for (let j = -w; j <= w; j++) put(bx + j + s * Math.floor(i / 3), top + 1 - i, j === 0 && i > 0 && i < 4 ? "#e8a0a8" : P.dark(-3)); } });
+      if (ears === 8) side((s) => { const bx = cx + s * ex; for (let i = 0; i < 6; i++) { const w = Math.max(0, 2 - Math.floor(i / 2)); for (let j = -w; j <= w; j++) put(bx + j + s * Math.floor(i / 3), top + 1 - i, j === 0 && i > 0 && i < 4 ? (M.cerberus ? "#8a8a8a" : "#e8a0a8") : P.dark(-3)); } });
       // хвост, лапки
-      const tail = M.demon ? 0 : byte(d, 14) % 4, tx = Math.round(cx + rx), ty = Math.round(cy + ry * .45);
+      const tail = M.demon || M.cerberus ? 0 : byte(d, 14) % 4, tx = Math.round(cx + rx), ty = Math.round(cy + ry * .45);
       if (tail === 1) { put(tx, ty, P.body(1)); put(tx + 1, ty - 1, P.body(1)); }
       if (tail === 2) { const w = wave; [[0, 0], [1, -1], [2, -2], [2, -3], [1, -4 + w], [0, -4 + w]].forEach(([a, b]) => put(tx + a, ty + b, P.accentDark)); }
       if (tail === 3) { [[0, 0], [1, 0], [2, -1], [1, -1]].forEach(([a, b]) => put(tx + a, ty + b, P.light(0))); }
-      if (G.shape !== 4) side((s) => { const fx = Math.round(cx + s * rx * .45); put(fx, G.bottom + .2, P.dark(3)); put(fx + (s < 0 ? -1 : 1), G.bottom + .2, P.dark(3)); if (M.werewolf) put(fx + (s < 0 ? -2 : 2), G.bottom + .2, "#f4efe0"); });
+      if (G.shape !== 4 && !M.cerberus) side((s) => { const fx = Math.round(cx + s * rx * .45); put(fx, G.bottom + .2, P.dark(3)); put(fx + (s < 0 ? -1 : 1), G.bottom + .2, P.dark(3)); if (M.werewolf) put(fx + (s < 0 ? -2 : 2), G.bottom + .2, "#f4efe0"); });
       // украшения по генам — если нет костюма
-      const acc = M.pirate || M.ninja || M.wizard || M.hero || M.cyborg ? 0 : (byte(d, 6) >> 3) % 9;
+      const acc = M.pirate || M.ninja || M.wizard || M.hero || M.cyborg || M.cerberus ? 0 : (byte(d, 6) >> 3) % 9;
       if (acc === 1) [[-1, 0], [-2, -1], [-2, 1], [0, 0], [1, 0], [2, -1], [2, 1]].forEach(([a, b]) => put(cx + ex * .4 + a + 2, top + 1 + b, "#ff4d6d"));
       if (acc === 2) for (let x = Math.round(cx - rx * .8); x <= Math.round(cx + rx * .8); x++) if (inB(x, cy + ry * .3)) { put(x, cy + ry * .3, "#e0403a"); if (x === Math.round(cx + rx * .3)) { put(x, cy + ry * .3 + 1, "#e0403a"); put(x, cy + ry * .3 + 2, "#b02a2a"); } }
       if (acc === 3 && rarity >= 3) { const cy2 = top - (ears === 5 || ears === 6 ? 7 : 2); [[-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [-2, -1], [0, -1], [2, -1], [-2, -2], [0, -2], [2, -2]].forEach(([a, b]) => put(cx + a, cy2 + b, b === 0 ? "#d99a00" : "#ffd43b")); }
+      if (M.cerberus) {                                    // контур головы поверх туловища и соседей — чтобы головы читались
+        for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (G.inside(x, y) && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => !G.inside(x + a, y + b) && solid[y + b] && solid[y + b][x + a])) put(x, y, "#9a9a9a");
+      }
     });
 
-    // ---- сиамские: общее тело снизу, две головы сверху
-    if (B.length === 2) {
-      const [a, b] = B, y0 = Math.round(Math.max(a.G.cy, b.G.cy) - 1), y1 = Math.round(Math.min(a.G.bottom, b.G.bottom) - 1);
+    // ---- сиамские и Цербер: общее тело снизу, головы сверху
+    for (let n = 0; n + 1 < B.length && !M.cerberus; n++) {
+      const a = B[n], b = B[n + 1], y0 = Math.round(Math.max(a.G.cy, b.G.cy) - 1), y1 = Math.round(Math.max(a.G.bottom, b.G.bottom) - 1);
       for (let y = y0; y <= y1; y++) for (let x = Math.round(a.G.cx); x <= Math.round(b.G.cx); x++) if (!isSolid(x, y)) {
         const left = x < (a.G.cx + b.G.cx) / 2, Pp = left ? a.P : b.P, dy = Math.round(((y - y0) / Math.max(1, y1 - y0)) * 3);
         put(x, y, y === y1 ? Pp.dark(dy) : Pp.body(dy));
@@ -332,6 +432,7 @@
       };
       let kind = ["dot", "big", "sleepy", "cyclops", "three", "angry", rarity >= 2 ? "star" : "big", rarity >= 3 ? "heart" : "dot"][byte(d, 8) % 8];
       if (M.vampire || M.werewolf || M.demon || M.shadow || M.zombie || M.mummy || M.cyborg || M.pirate) kind = kind === "three" ? "three" : "dot";
+      if (M.cerberus) kind = "three";
       if (M.sixeyes) {
         [Math.round(cx) - 5, Math.round(cx) - 1, Math.round(cx) + 3].forEach((x) => { dot(x, eyeY - 2); dot(x, eyeY + 1); });
       } else if (M.bigeye) {
@@ -358,7 +459,7 @@
       if (M.cthulhu || M.ninja) { /* щупальца или маска */ }
       else if (dead) { put(cx - 1.5, mY, L); put(cx - .5, mY, L); put(cx + .5, mY, L); }
       else if (M.vampire) { put(cx - 1.5, mY, L); put(cx - .5, mY, L); put(cx + .5, mY, L); put(cx + 1.5, mY, L); put(cx - 1.5, mY + 1, "#ffffff"); put(cx + 1.5, mY + 1, "#ffffff"); }
-      else if (M.werewolf) { for (let a = -2; a <= 2; a++) put(cx + a - .5, mY, L); put(cx - .5, mY + 1, "#7a2030"); put(cx + .5, mY + 1, "#7a2030"); put(cx - 2.5, mY + 1, "#ffffff"); put(cx + 1.5, mY + 1, "#ffffff"); }
+      else if (M.werewolf || M.cerberus) { const mo = M.cerberus ? "#000000" : "#7a2030"; for (let a = -2; a <= 2; a++) put(cx + a - .5, mY, L); put(cx - .5, mY + 1, mo); put(cx + .5, mY + 1, mo); put(cx - 2.5, mY + 1, "#ffffff"); put(cx + 1.5, mY + 1, "#ffffff"); }
       else if (M.zombie) { put(cx - 1.5, mY, L); put(cx - .5, mY - 1, L); put(cx + .5, mY, L); put(cx + 1.5, mY - 1, L); put(cx - .5, mY, "#e8e4c8"); }
       else if (M.skeleton) { for (let a = -2; a <= 2; a++) { put(cx + a - .5, mY, (a + 2) % 2 ? "#0a0810" : "#e8e4d8"); put(cx + a - .5, mY + 1, (a + 3) % 2 ? "#0a0810" : "#e8e4d8"); } }
       else {
@@ -370,23 +471,24 @@
         else if (mouth === 4) { put(cx - 1.5, mY - 1, "#ffa424"); put(cx - .5, mY - 1, "#ffa424"); put(cx + .5, mY - 1, "#ffa424"); put(cx - .5, mY, "#d97a00"); }
         else if (mouth === 5) { put(cx - 2.5, mY - 1, L); put(cx - 1.5, mY, L); put(cx - .5, mY - 1, L); put(cx + .5, mY, L); put(cx + 1.5, mY - 1, L); }
       }
-      if (live && byte(d, 13) % 2 && !(M.skeleton || M.zombie || M.mummy || M.ninja || M.shadow || M.cosmic || M.sixeyes)) { put(cx - eX - 2.5, mY - 1, "#ff8fab"); put(cx + eX + 1.5, mY - 1, "#ff8fab"); }
+      if (live && byte(d, 13) % 2 && !(M.cerberus || M.skeleton || M.zombie || M.mummy || M.ninja || M.shadow || M.cosmic || M.sixeyes)) { put(cx - eX - 2.5, mY - 1, "#ff8fab"); put(cx + eX + 1.5, mY - 1, "#ff8fab"); }
     });
 
     // ---- стихии и свечение (поверх, без контура)
     const fx = [];
     if (live) B.forEach(({ G, dna: d }) => {
       const { cx, rx, ry, bottom: bt } = G;
-      if (M.fire) {
+      if (M.fire || M.bwfire) {
+        const FC = M.bwfire ? ["#ffffff", "#e2e2e2", "#9a9a9a", "#4a4a4a"] : ["#fff3a0", "#ffd23b", "#ff8a1f", "#ff4a1f"];
         for (let x = Math.round(cx - rx * .9); x <= Math.round(cx + rx * .9); x++) {
           if (x < 0 || x >= W) continue;
           let y = 0; while (y < W && !g[y][x]) y++;
           if (y >= W) continue;
-          const h = 2 + ((x * 7 + f * 5 + byte(d, x % 16)) % 5) - (Math.abs(x - cx) > rx * .55 ? 2 : 0);
-          for (let k = 0; k < h; k++) if (empty(x, y - 1 - k)) put(x, y - 1 - k, k === h - 1 ? "#fff3a0" : k > h * .6 ? "#ffd23b" : k > h * .3 ? "#ff8a1f" : "#ff4a1f", false);
+          const h = Math.min(M.cerberus ? 4 : 9, 2 + ((x * 7 + f * 5 + byte(d, x % 16)) % 5) - (Math.abs(x - cx) > rx * .55 ? 2 : 0));
+          for (let k = 0; k < h; k++) if (empty(x, y - 1 - k)) put(x, y - 1 - k, k === h - 1 ? FC[0] : k > h * .6 ? FC[1] : k > h * .3 ? FC[2] : FC[3], false);
         }
-        side((s) => { for (let k = 0; k < 3 + ((f + (s > 0 ? 3 : 0)) % 3); k++) { const x = Math.round(cx + s * (rx + 1)) + (k > 1 ? s : 0), y = Math.round(G.cy + 2 - k); if (empty(x, y)) put(x, y, k > 1 ? "#ffd23b" : "#ff6a1f", false); } });
-        fx.push([Math.round(cx - rx + ((f * 5) % Math.max(1, Math.round(rx * 2)))), Math.max(1, G.top - 6 - f), "#ffd23b"]);
+        side((s) => { for (let k = 0; k < 3 + ((f + (s > 0 ? 3 : 0)) % 3); k++) { const x = Math.round(cx + s * (rx + 1)) + (k > 1 ? s : 0), y = Math.round(G.cy + 2 - k); if (empty(x, y)) put(x, y, k > 1 ? FC[1] : FC[2], false); } });
+        fx.push([Math.round(cx - rx + ((f * 5) % Math.max(1, Math.round(rx * 2)))), Math.max(1, G.top - 6 - f), FC[0]]);
       }
       if (M.storm) {
         const sx = f % 2 ? Math.round(cx + rx + 3) : Math.round(cx - rx - 3), sy = Math.round(G.cy - 4 + (f % 3) * 2);
