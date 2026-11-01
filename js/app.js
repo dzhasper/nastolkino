@@ -196,6 +196,10 @@ function boot() {
     if (S.registered && (qs.get("tab") === "shop" || startParam === "cases")) S.screen = "shop";
     Api.onState = petOnState;
     Api.start();
+    let lastRefresh = Date.now();
+    const refresh = () => { if (!Api.ready || document.hidden || S.screen === "room" || Date.now() - lastRefresh < 20000) return; lastRefresh = Date.now(); Api.refresh().catch(() => {}); };
+    document.addEventListener("visibilitychange", refresh);
+    setInterval(refresh, 120000);
     const bcode = qs.get("battle") || (startParam && /^b_[0-9A-F]{8}$/i.test(startParam) ? startParam.slice(2) : null);
     const tcode = qs.get("trade") || (startParam && /^t_[0-9A-F]{8}$/i.test(startParam) ? startParam.slice(2) : null);
     if (S.registered && qs.get("u") && Api.on) setTimeout(() => openPlayer(qs.get("u")), 300);
@@ -330,7 +334,7 @@ function viewRegister() {
 function tabs() {
   const hungry = Api.state && Api.state.pets.some((p) => p.alive && !p.egg && petLive(p).hunger < 25);
   const b = (k, ic, label) => `<button class="${S.screen === k ? "on" : ""}" data-a="tab" data-v="${k}"><span class="ti">${ic}</span><span>${label}</span></button>`;
-  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейсы${Shop.chestReady() || Shop.CASES.some((c) => caseFree(c.key)) || (Api.state && Api.state.season && seasonLeft() > 0) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
+  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейсы${dailyReady() || Shop.CASES.some((c) => caseFree(c.key)) || (Api.state && Api.state.season && seasonLeft() > 0) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
 }
 const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 
@@ -343,6 +347,7 @@ function viewHome() {
   return `<div class="fade-in">
     <div class="top"><div class="logo">${PX() ? Pixel.sprite("dice", 3) : "🎲"}</div><div class="grow"><h1>${esc(S.catalog.app)}</h1>
       <div class="muted small">Привет, ${esc(p.name)}!</div></div>${coinPill()}</div>
+    ${dailyCard("mb")}
     <div class="game-hero" data-a="go" data-v="mafia" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
       ${PX() ? `<div class="big-emoji">${Pixel.emoji("🕴️", 40)}</div>` : '<div class="big-emoji">🕴️</div>'}
       <div class="pill" style="background:rgba(255,255,255,.15)">🔥 ${S.catalog.min}–${S.catalog.max} игроков</div>
@@ -395,6 +400,14 @@ function myCard(lookOverride) {
     lookOverride || p.look);
 }
 
+// ежедневный бонус: с сервером — колесо фортуны (сундук стал одним из его секторов), без сервера — старый сундук на телефоне
+const wheelReady = () => !!(Api.on && Api.state && Api.state.wheel && Api.state.wheel.ready);
+const dailyReady = () => (Api.on ? wheelReady() : Shop.chestReady());
+function dailyCard(cls = "") {
+  if (Api.on) return wheelReady() ? `<button class="card chest wheel-daily ${cls}" data-a="go" data-v="solo-wheel"><span class="wd-ico">🎡</span><div class="grow"><b>Колесо фортуны</b><div class="muted small">Раз в день бесплатно: монеты, осколки, еда, кейсы, сундук — и крошечный шанс на яйцо</div></div><span class="pill on">Крутить</span></button>` : "";
+  return Shop.chestReady() ? `<button class="card chest ${cls}" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Открой и забери монеты</div></div><span class="pill on">Открыть</span></button>` : "";
+}
+
 function viewProfile() {
   const p = S.profile;
   return `<div class="fade-in">
@@ -402,7 +415,7 @@ function viewProfile() {
     ${myCard()}
     ${petBadge(store.pet, true)}
     <div class="row mt2"><button class="btn grow" data-a="tab" data-v="shop">🎁 Кейсы и инвентарь</button></div>
-    ${Shop.chestReady() ? `<button class="card chest mt" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Открой и забери монеты</div></div><span class="pill on">Открыть</span></button>` : ""}
+    ${dailyCard("mt")}
     ${p.favorite_role ? `<div class="card mt"><span class="muted small">Чаще всего играешь</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
     <div class="section-title">Изменить профиль</div>
     <input class="input" id="reg-name" maxlength="20" value="${esc(S.regName || p.name)}">
@@ -827,6 +840,10 @@ function renderOverlay() {
     body = playerSheet(S.sheet.data);
   } else if (S.sheet.type === "pet-hat") {
     body = petHatSheet();
+  } else if (S.sheet.type === "gifts") {
+    body = giftsSheet();
+  } else if (S.sheet.type === "toy-give") {
+    body = toyGiveSheet();
   } else if (S.sheet.type === "hatch") {
     body = petHatchSheet(S.sheet.id);
   } else if (S.sheet.type === "mc-role") {
@@ -989,6 +1006,11 @@ const actions = {
     let roles = S.room.settings.roles || th.specials.map((s) => s.key);
     roles = roles.includes(v) ? roles.filter((x) => x !== v) : roles.concat([v]);
     send({ t: "settings", settings: { roles } });
+  },
+  "gift-go": (v) => {                                                    // из окна подарка — туда, где он лежит
+    S.sheet = null; renderOverlay();
+    if (v === "mg") { S.screen = "shop"; S.shopTab = "inv"; S.shopCat = "mg"; } else if (v === "cases") { S.screen = "shop"; S.shopTab = "cases"; } else { S.screen = "pets"; S.petSel = null; }
+    render(); window.scrollTo(0, 0);
   },
   "close-sheet": () => {
     if (S.sheet && S.sheet.type === "trade-pick") return tradePickSave();                    // закрыл выбор — сохраняем

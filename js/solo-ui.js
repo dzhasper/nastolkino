@@ -2,7 +2,7 @@
    Просто так — мемори, реакция, тир, змейка (личные рекорды). Колесо фортуны — раз в день. И мини-игры с питомцем. */
 "use strict";
 
-const SOLO_GAMES = { bj: { cap: 200, reason: "solo_bj" }, hilo: { cap: 100, reason: "solo_hilo" }, cups: { cap: 100, reason: "solo_cups" } };
+const SOLO_GAMES = { bj: { cap: 200, reason: "solo_bj" }, hilo: { cap: 100, reason: "solo_hilo" }, cups: { cap: 100, reason: "solo_cups" }, snake: { cap: 150, reason: "solo_snake" } };
 const soloToday = () => new Date().toISOString().slice(0, 10);
 const soloGot = (g) => (store.solo2 && store.solo2.day === soloToday() ? store.solo2[g] || 0 : 0);
 function soloEarn(g, n) {
@@ -55,6 +55,7 @@ function viewSolo() {
       ${tile("solo-bj", "🃏", "Блэкджек", `победа 5–8 🪙 · ${soloGot("bj")}/${SOLO_GAMES.bj.cap}`)}
       ${tile("solo-hilo", "⬆️", "Выше или ниже", `до 10 🪙 · ${soloGot("hilo")}/${SOLO_GAMES.hilo.cap}`)}
       ${tile("solo-cups", "🥤", "Напёрстки", `3–5 🪙 · ${soloGot("cups")}/${SOLO_GAMES.cups.cap}`)}
+      ${tile("solo-snake", "🐍", "Змейка", `съел ÷ 2 🪙 · ${soloGot("snake")}/${SOLO_GAMES.snake.cap}`)}
       ${tile("petfun", "🐾", "С питомцем", "радует питомца", "pet")}
     </div>
     <div class="section-title">🎈 Просто так</div>
@@ -62,7 +63,6 @@ function viewSolo() {
       ${tile("solo-memo", "🧠", "Мемори", recTxt("memo", " ходов"))}
       ${tile("solo-react", "⚡", "Реакция", recTxt("react", " мс"))}
       ${tile("solo-shoot", "🎯", "Тир", recTxt("shoot", " очков"))}
-      ${tile("solo-snake", "🐍", "Змейка", recTxt("snake", ""))}
     </div>
   </div>${tabs()}`;
 }
@@ -160,7 +160,7 @@ function viewSoloWheel() {
       <div class="wheel-hub">🎡</div></div>
     ${w.got ? `<div class="sbj-res win">Выпало: ${esc(w.got)}</div>` : ""}
     <button class="btn mt2" data-a="wheel-spin" ${wh.ready && !w.spinning ? "" : "disabled"}>${w.spinning ? "Крутится…" : wh.ready ? "Крутить!" : "Приходи завтра"}</button>
-    <div class="small muted mt center">Монеты, осколки, еда, кейсы и даже второй сундук. Одна попытка в день.</div>
+    <div class="small muted mt center">Монеты, осколки, еда, кейсы, сундук с монетами — и крошечный шанс на яйцо. Одна попытка в день.</div>
   </div>`;
 }
 
@@ -208,11 +208,11 @@ const SNAKE_N = 15;
 function viewSoloSnake() {
   const g = S.snake;
   return `<div class="fade-in">
-    ${soloTop("Змейка", `Свайп или кнопки · рекорд: ${soloRec("snake") != null ? soloRec("snake") : "—"}`)}
+    ${soloTop("Змейка", `Свайп или кнопки · рекорд: ${soloRec("snake") != null ? soloRec("snake") : "—"} · монеты: съеденное ÷ 2 (сегодня ${soloGot("snake")}/${SOLO_GAMES.snake.cap})`)}
     <div class="hilo-streak">Съедено: <b id="snake-score">${g ? g.score : 0}</b></div>
     <canvas class="snake-cv" id="snake-cv" width="300" height="300"></canvas>
     ${g && g.alive ? `<div class="snake-pad"><button data-a="snake-dir" data-v="0,-1">▲</button><div><button data-a="snake-dir" data-v="-1,0">◀</button><button data-a="snake-dir" data-v="1,0">▶</button></div><button data-a="snake-dir" data-v="0,1">▼</button></div>`
-      : `${g ? `<div class="sbj-res ${g.rec ? "win" : "lose"}">Съедено: ${g.score}${g.rec ? " — новый рекорд 🏆" : ""}</div>` : ""}<button class="btn mt2" data-a="snake-start">${g ? "Ещё раз" : "Играть"}</button>`}
+      : `${g ? `<div class="sbj-res ${g.rec || g.coins ? "win" : "lose"}">Съедено: ${g.score}${g.rec ? " — новый рекорд 🏆" : ""}<div class="small">${g.coins ? `+${g.coins} 🪙 (съеденное пополам)` : g.score >= 2 ? "Лимит монет за змейку на сегодня исчерпан" : "Съешь хотя бы 2 — получишь монету"}</div></div>` : ""}<button class="btn mt2" data-a="snake-start">${g ? "Ещё раз" : "Играть"}</button>`}
   </div>`;
 }
 function snakeDraw() {
@@ -238,7 +238,8 @@ function snakeTick() {
   g.dir = g.next;
   const h = [g.body[0][0] + g.dir[0], g.body[0][1] + g.dir[1]];
   if (h[0] < 0 || h[1] < 0 || h[0] >= SNAKE_N || h[1] >= SNAKE_N || g.body.some(([a, b]) => a === h[0] && b === h[1])) {
-    g.alive = false; g.rec = soloSetRec("snake", g.score); notify(g.rec ? "success" : "error"); render(); setTimeout(snakeDraw, 0); return;
+    g.alive = false; g.rec = soloSetRec("snake", g.score); g.coins = soloEarn("snake", Math.floor(g.score / 2));   // монеты: съеденное пополам
+    if (g.coins) coinRain(); notify(g.rec || g.coins ? "success" : "error"); render(); setTimeout(snakeDraw, 0); return;
   }
   g.body.unshift(h);
   if (h[0] === g.food[0] && h[1] === g.food[1]) { g.score++; g.food = snakeFood(g); haptic(); const el = document.getElementById("snake-score"); if (el) el.textContent = g.score; } else g.body.pop();

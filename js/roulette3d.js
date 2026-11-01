@@ -702,6 +702,12 @@ const Cellar = (() => {
     if (table) want.set(0, .72, .2);
     else if (state.aim && state.turn === state.me && af && af.userData.rel !== 0) want.set(af.position.x * .55, 1.1, af.position.z * .55);
     else if (tf && state.turn !== state.me && tf.userData.rel !== 0) want.set(tf.position.x * .5, 1.05, tf.position.z * .5 - .1);
+    // сам оглядываешься: провёл пальцем — камера поворачивается; нажал на игрока — смотришь на него. Через пару секунд камера возвращается к игре
+    const nowMs = performance.now(), fo = state.focus && state.figs[state.focus.pid];
+    if (!table && state.free && (state.free.hold || nowMs - state.free.at < 3500)) {
+      const d = 3; want.set(camera.position.x + Math.sin(state.free.yaw) * Math.cos(state.free.pitch) * d, camera.position.y + Math.sin(state.free.pitch) * d, camera.position.z - Math.cos(state.free.yaw) * Math.cos(state.free.pitch) * d);
+    } else if (!table && fo && nowMs - state.focus.at < 4500) want.set(fo.position.x * .62, 1.25, fo.position.z * .62);
+    else { state.free = null; state.focus = null; }
     state.look = state.look || want.clone();
     state.look.lerp(want, Math.min(1, dt * 3.5));
     camera.lookAt(state.look.x + (Math.random() - .5) * sh * .1, state.look.y + (Math.random() - .5) * sh * .1, state.look.z);
@@ -783,10 +789,12 @@ const Cellar = (() => {
       if (h && api.onPickItem) { const it = h.object.userData.item; api.onPickItem(it.userData); highlight(it); }
       return;
     }
-    if (!api.onPick) return;
-    const sprites = Object.values(state.figs).filter((f) => f.userData.sprite.visible && !f.userData.dead).map((f) => { f.userData.sprite.userData.pid = f.userData.pid; return f.userData.sprite; });
+    const sprites = Object.values(state.figs).filter((f) => f.userData.sprite.visible).map((f) => { f.userData.sprite.userData.pid = f.userData.pid; return f.userData.sprite; });
     const hit = ray.intersectObjects(sprites)[0];
-    if (hit) api.onPick(hit.object.userData.pid);
+    if (!hit) return;
+    const pid = hit.object.userData.pid, f = state.figs[pid];
+    if (state.turn !== state.me || (f && f.userData.dead) || !api.onPick) { state.focus = { pid, at: performance.now() }; state.free = null; return; }   // не твой ход — просто посмотреть на него
+    api.onPick(pid);
   }
 
   function mount(el, cb) {
@@ -812,7 +820,19 @@ const Cellar = (() => {
         const tapStart = (ev) => { down = { x: ev.clientX, y: ev.clientY, t: performance.now() }; };
         const tapEnd = (ev, fn) => { if (down && Math.hypot(ev.clientX - down.x, ev.clientY - down.y) < 10 && performance.now() - down.t < 450) fn(ev); down = null; };
         canvas.addEventListener("pointerdown", tapStart);
-        canvas.addEventListener("pointerup", (ev) => tapEnd(ev, () => pickAt(ev.clientX, ev.clientY)));
+        canvas.addEventListener("pointerup", (ev) => { if (state.free) state.free.hold = false; tapEnd(ev, () => pickAt(ev.clientX, ev.clientY)); });
+        canvas.addEventListener("pointercancel", () => { if (state.free) state.free.hold = false; });
+        // провести пальцем влево-вправо — оглядеться за столом (вверх-вниз страница по-прежнему листается)
+        canvas.style.touchAction = "pan-y";
+        canvas.addEventListener("pointermove", (ev) => {
+          if (!down || state.view === "table" || Math.abs(ev.clientX - down.x) < 8) return;
+          if (!state.free || !state.free.hold) {
+            const look = state.look || new T.Vector3(0, 1, -.3), dx = look.x - camera.position.x, dy = look.y - camera.position.y, dz = look.z - camera.position.z;
+            state.free = { yaw: Math.atan2(dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)), at: performance.now(), hold: true, lx: ev.clientX };
+          }
+          const f = state.free;
+          f.yaw = Math.max(-1.75, Math.min(1.75, f.yaw + (ev.clientX - f.lx) * .006)); f.lx = ev.clientX; f.at = performance.now(); state.focus = null;
+        });
         labelLayer = document.createElement("div"); labelLayer.className = "c3-labels";
         labelLayer.addEventListener("pointerdown", tapStart);
         labelLayer.addEventListener("pointerup", (ev) => tapEnd(ev, () => {   // нажатие на подпись предмета = выбор предмета

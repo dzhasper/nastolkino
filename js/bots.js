@@ -1,4 +1,4 @@
-/* Боты для проверки игр — только у администратора (тестовая версия).
+/* Боты: любой хост может добавить их в свою комнату в любом режиме.
    Бот — игрок, которого «держит» телефон хоста: входит в комнату и сам ходит во всех режимах.
    Боты не подглядывают: в мафии знают только свою роль, свои проверки, открытые роли погибших, голоса и чат;
    в «Последнем заряде» считают патроны по выстрелам и своим предметам; в блэкджеке видят только открытые карты. */
@@ -17,15 +17,15 @@ const Bots = (() => {
   const mem = (room, id) => { room._ai = room._ai || {}; return room._ai[id] = room._ai[id] || {}; };   // память бота (в сохранение комнаты не попадает)
   const think = (id, a, b) => { wait[id] = Date.now() + a + Math.random() * (b - a); };
 
-  const allowed = () => !!(typeof Api !== "undefined" && Api.on && Api.state && Api.state.admin);
+  const allowed = () => true;                                         // боты доступны всем (раньше — только админу)
   function add() {
     const h = hub();
-    if (!h || !allowed()) return toast("Боты — только у администратора, и только в своей комнате");
+    if (!h || !allowed()) return toast("Ботов добавляет только хост — в своей комнате");
     const room = h.room, used = room.order.map((p) => room.members[p].name);
     const id = "bot_" + Date.now().toString(36) + (seq++);
     const name = NAMES.find((x) => !used.includes(x)) || "Бот №" + (room.order.length + 1);
     h.handle(id, { t: "hello", profile: { name, avatar: pick(AVA), look: { c: "999", frame: pick(["none", "wood", "gold", "neon"]) } } });
-    if (room.kind === "blackjack" && room.settings.stake) { room.updateSettings({ stake: 0 }); toast("С ботами — только на интерес, без монет"); }
+    if (["blackjack", "roulette"].includes(room.kind) && room.settings.stake) { room.updateSettings({ stake: 0 }); toast("С ботами — только на интерес, без монет"); }
     h.push(); start();
   }
   function removeAll() {
@@ -371,11 +371,15 @@ const Bots = (() => {
     const known = (room.peek || {})[id] || {}, heard = (room.heard || {})[id] || {};
     m.known = known;
     if (known[0]) { m.p = known[0] === "live" ? 1 : 0; return m; }
-    // ожидаемое число боевых в магазине: мой заряд + подслушанные + по половине на неизвестные и подвал, минус уже вылетевшие
-    const alive = Object.keys(room.contrib || {});
-    let eLive = 0, unknown = 0;
-    alive.forEach((p) => { const v = p === id ? room.contrib[id] : heard[p]; if (v) eLive += v === "live" ? 1 : 0; else unknown++; });
-    eLive += .5 * (unknown + room.house) - m.live;
+    // боевых в магазине: состав объявлен всем после зарядки — точное число минус уже вылетевшие
+    let eLive;
+    if (room.liveTotal != null && room.fired) eLive = room.liveTotal - room.fired.live;
+    else {                                                              // старое сохранение комнаты: оцениваем, как раньше
+      const alive = Object.keys(room.contrib || {});
+      let unknown = 0; eLive = 0;
+      alive.forEach((p) => { const v = p === id ? room.contrib[id] : heard[p]; if (v) eLive += v === "live" ? 1 : 0; else unknown++; });
+      eLive += .5 * (unknown + room.house) - m.live;
+    }
     let n = room.drum.length;
     Object.entries(known).forEach(([, t]) => { n--; if (t === "live") eLive--; });
     m.p = n > 0 ? Math.max(0, Math.min(1, eLive / n)) : .5;
@@ -435,8 +439,8 @@ const Bots = (() => {
       if (!sure) {
         if (has("box")) return useItem("box");
         if (has("flashlight") && (room.drum.length <= 4 || (p > .3 && p < .7))) return useItem("flashlight");
-        const deaf = others.find((o) => !((room.heard || {})[id] || {})[o]);
-        if (has("ear") && deaf && room.drum.length >= 2 && p > .2 && p < .8) return useItem("ear", deaf);
+        const spy = others.find((o) => m.peeked[o]);                     // видел, что он светил фонариком или открывал шкатулку, — подслушать его
+        if (has("ear") && spy) { m.peeked[spy] = false; return useItem("ear", spy); }
       }
       if (has("thief")) {                                               // крадём самое ценное, что пригодится прямо сейчас
         let best = null;
@@ -465,7 +469,8 @@ const Bots = (() => {
     if (me.vest) thr += .12;
     if (others.length >= 2) thr -= .04;
     const list = rouTargets(room, id, m, dmgNow), goodT = list.some((t) => t.s > -5);
-    let selfShot = p < thr;
+    const gut = sure ? p : Math.max(0, Math.min(1, p + (Math.random() - .5) * .3));   // как живой человек: иногда ошибается «на глаз»
+    let selfShot = gut < thr;
     if (p === 0) selfShot = true;                                       // точно холостой — в себя, ход останется у меня
     if (p === 1) selfShot = false;                                      // точно боевой — только в соперника
 
@@ -559,11 +564,11 @@ const Bots = (() => {
     act(h, id, { slot: move }, 1000, 2500);
   }
 
-  // кнопки в лобби: только админ и только хост своей комнаты
+  // кнопки в лобби: у хоста своей комнаты
   function bar(room) {
     if (!allowed() || !Net.isHost() || !room || !["lobby", "end"].includes(room.phase)) return "";
     const n = room.players ? room.players.filter((p) => isBot(p.id)).length : 0;
-    return `<div class="card bot-bar"><div class="grow small">🤖 <b>Тест с ботами</b> — видно только админу${n ? ` · ботов: ${n}` : ""}</div>
+    return `<div class="card bot-bar"><div class="grow small">🤖 <b>Боты</b> — если не хватает игроков${n ? ` · ботов: ${n}` : ""}${n && ["blackjack", "roulette"].includes(room.game) ? "<br><span class=\"muted\">с ботами — без ставок</span>" : ""}</div>
       <button class="btn small" data-a="bot-add">＋ Бот</button>${n ? `<button class="btn ghost small" data-a="bot-clear">Убрать</button>` : ""}</div>`;
   }
 

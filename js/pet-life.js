@@ -57,6 +57,10 @@ function petActivity(p, t = petNow()) {
     tr.quirkIdx === 2 ? "ХРРР… ХРРР…" : tr.quirkIdx === 12 ? "бу-бу-бу…" : "Zzz…", "спит"), { sleep: true, note: `${tr.chrono.name}: спит до ${sl.wake}:00` });
   if (tr.quirkIdx === 6 && h < 25) return QUIRK_ACT[6];
   if (p.toy && p.toy_at && t - p.toy_at < 1800 && toyOf(p.toy)) return mkAct("act-toy", toyOf(p.toy)[2], "sparkle", "моя " + toyOf(p.toy)[1].toLowerCase() + "!", "играет: " + toyOf(p.toy)[1].toLowerCase());
+  if (p.holds && toyOf(p.holds) && h < 45) {                           // игрушка в лапах — не выпускает
+    const o = toyOf(p.holds), line = [["моё!", "не отдаёт: "], ["не трогай!", "охраняет: "], ["хрум-хрум", "грызёт: "], ["никому не дам", "прижимает к себе: "]][(slot + b(3)) % 4];
+    return mkAct("act-toy", o[2], "sparkle", line[0], line[1] + o[1].toLowerCase());
+  }
   if (p.fed_at && t - p.fed_at < 600) return tr.quirkIdx === 10 ? QUIRK_ACT[10] : mkAct("act-chew", "🍽", "crumbs", "ням-ням-ням", "ест");
   if (p.gift) return QUIRK_ACT[8];
   if (!tr.immortal && p.hunger != null && p.hunger < 25) return mkAct("act-hungry", "🥣", "question", "покорми меня…", "голодный!");
@@ -91,6 +95,39 @@ function petMiniHtml(p, size = 80) {
     <span class="pet-doing">${esc(a.short || "")}</span>`;
 }
 
+/* ---------------------------------------------------------------- игрушки дома: копии, кто любит, у кого в лапах, под диваном */
+const TOY_ACC = { ball: "мячик", mouse: "мышку", yarn: "клубок", bone: "косточку", sock: "носок", bell: "колокольчик", duck: "уточку", feather: "перо", frisbee: "фрисби", box: "коробку",
+  cucumber: "огурец", teddy: "мишку", yoyo: "йо-йо", kite: "змея", laser: "указку", rocket: "ракету" };
+const homePets = () => ((Api.state && Api.state.pets) || []).filter((x) => x.alive && !x.egg);
+function toyInfo(k) {
+  const s = ((Api.state && Api.state.toys) || {})[k] || { n: 0, held: [], floor: 0, free: 0 }, pets = homePets();
+  const lovers = pets.filter((x) => Pets.toyPrefs(x.dna).fav === k), haters = pets.filter((x) => Pets.toyPrefs(x.dna).dislikes.includes(k));
+  return Object.assign({}, s, { lovers, haters, holders: s.held.map((id) => pets.find((x) => x.id === id)).filter(Boolean), short: Math.max(0, lovers.length - s.n) });
+}
+const petNm = (x) => (x ? Pets.name(x.dna) : "?");
+function toyNews(limit = 4, petId) {
+  const log = ((Api.state && Api.state.toylog) || []).filter((e) => !petId || e.pet === petId || e.other === petId).slice(0, limit);
+  if (!log.length) return "";
+  const ico = { snatch: "😤", repelled: "🛡", wait: "⏳", throw: "💢", tantrum: "💢", take: "🤫", share: "🤝", gave: "🤝", shelf: "📥", refuse: "🙅", drop: "📥", thrown: "💢" };
+  return `<div class="toy-news">${log.map((e) => `<div class="tn ${e.kind}"><span>${ico[e.kind] || "🧸"}</span><div>${esc(e.text)}<i>${petAgo(e.ts)}</i></div></div>`).join("")}</div>`;
+}
+function petAgo(ts) { const d = Math.max(0, Math.floor(Date.now() / 1000 - ts)); return d < 90 ? "только что" : d < 3600 ? Math.round(d / 60) + " мин назад" : d < 86400 ? Math.round(d / 3600) + " ч назад" : Math.round(d / 86400) + " дн назад"; }
+// под диваном: что туда зашвырнули
+function toyFloorHtml() {
+  const toys = (Api.state && Api.state.toys) || {}, under = Object.keys(toys).filter((k) => toys[k].floor > 0);
+  return under.length ? `<div class="toy-floor">🛋 Под диваном: ${under.map((k) => `<button class="pill" data-a="toy-fetch" data-v="${k}">${(toyOf(k) || [])[2]} ${esc((toyOf(k) || [])[1] || k)}${toys[k].floor > 1 ? " ×" + toys[k].floor : ""} · достать</button>`).join("")}</div>` : "";
+}
+// карточка в списке питомцев: новости игрушек и споры
+function toysCard() {
+  const toys = (Api.state && Api.state.toys) || {};
+  if (!Object.keys(toys).length) return "";
+  const fights = Object.keys(toys).map((k) => [k, toyInfo(k)]).filter(([, i]) => i.short > 0);
+  const news = toyNews(3), floor = toyFloorHtml();
+  if (!news && !floor && !fights.length) return "";
+  return `<div class="card toys-card"><b>🧸 Игрушки</b>${fights.map(([k, i]) => `<div class="toy-fight">⚠️ ${(toyOf(k) || [])[2]} ${esc((toyOf(k) || [])[1])}: любят ${i.lovers.map(petNm).map(esc).join(", ")}, а есть ${i.n} — делят и ссорятся. Нужна ещё ${i.short}</div>`).join("")}
+    ${news}${floor}</div>`;
+}
+
 function petLifeBlock(p, t) {
   const tp = t.toys, k = petKnow(p.id), inv = (Api.state && Api.state.inv) || [];
   const toys = inv.filter((x) => x.startsWith("toy:")).map((x) => toyOf(x.slice(4))).filter(Boolean);
@@ -102,13 +139,27 @@ function petLifeBlock(p, t) {
       <div class="perk"><span class="pe">${t.chrono.key === "owl" ? "🦉" : t.chrono.key === "lark" ? "🐓" : "🌗"}</span><div><b>${esc(t.chrono.name)}</b><div class="small muted">${esc(t.chrono.desc)}${t.chrono.key !== "any" ? ". Спящий питомец не дерётся" : ""}</div></div></div></div>
     <div class="section-title">Игрушки</div>
     <div class="card"><div class="small">🧸 ${esc(mode)}</div>
-      <div class="small mt"><span class="muted">Любимая:</span> ${k.toyFav ? `${fav[2]} ${esc(fav[1])}` : "??? — узнаешь, когда он её выберет"}</div>
+      <div class="small mt"><span class="muted">Любимая:</span> ${k.toyFav || inv.includes("toy:" + tp.fav) ? `${fav[2]} ${esc(fav[1])}` : "??? — узнаешь, когда он её выберет"}</div>
       <div class="small"><span class="muted">Не возьмёт:</span> ${(k.toyNo || []).length ? k.toyNo.map((x) => { const o = toyOf(x); return o ? o[2] + " " + esc(o[1]) : ""; }).join(", ") : "???"}</div>
-      <div class="small mt">${toys.length ? `Твои игрушки: ${toys.map((o) => o[2]).join(" ")}` : `<span class="muted">Игрушек нет — их выбивают только из кейса «Питомник»</span>`}</div>
+      <div class="small mt">${toys.length ? `Твои игрушки: ${toys.map((o) => { const i = toyInfo(o[0]); return o[2] + (i.n > 1 ? "×" + i.n : ""); }).join(" ")}` : `<span class="muted">Игрушек нет — их выбивают только из кейса «Питомник»</span>`}</div>
+      ${p.holds && toyOf(p.holds) ? (() => { const o = toyOf(p.holds), i = toyInfo(p.holds), want = i.lovers.filter((x) => x.id !== p.id && !i.held.includes(x.id));
+        return `<div class="toy-hold"><span class="th-ico">${o[2]}</span><div class="grow"><b>В лапах: ${esc(o[1])}</b>${p.holds === tp.fav ? " ❤" : ""}
+          ${want.length ? `<div class="small muted">Её тоже любит ${want.map(petNm).map(esc).join(", ")} — ${i.free ? "есть свободная копия" : "а копия одна"}</div>` : ""}</div></div>
+          <div class="row case-btns"><button class="btn ghost small" data-a="toy-give-open">🤝 Отдать другому</button><button class="btn ghost small" data-a="toy-give" data-v="0">📥 Забрать на полку</button></div>`; })() : ""}
+      ${toyNews(3, p.id)}
       <div class="row mt case-btns"><button class="btn small" data-a="pet-play" ${toys.length ? "" : "disabled"}>🎾 Поиграть</button>
         <button class="btn ghost small" data-a="pet-hat-open">🎩 ${p.hat ? "Прикол: " + esc((Pets.HATS.find((h) => h[0] === p.hat) || [])[1] || "") : hats.length ? "Надеть прикол" : "Приколов нет"}</button>
         ${p.gift ? `<button class="btn small" data-a="pet-gift">🎁 Что он принёс?</button>` : ""}</div>
-      <div class="small muted mt">Питомец сам выбирает, во что играть. Нелюбимое не возьмёт, а без разнообразия заскучает.</div></div>`;
+      <div class="small muted mt">Питомец сам выбирает, во что играть, и держит игрушку у себя. Нелюбимое может зашвырнуть под диван, задира — отнять чужое, жадина — не отдать. Добрые делятся по очереди.</div></div>`;
+}
+
+function toyGiveSheet() {
+  const p = homePets().find((x) => x.id === S.petSel);
+  if (!p || !p.holds) return `<div class="muted">Игрушки в лапах уже нет</div>`;
+  const o = toyOf(p.holds), list = homePets().filter((x) => x.id !== p.id && !x.den);
+  return `<h2>${o[2]} Кому отдать ${esc(TOY_ACC[p.holds] || o[1])}?</h2><div class="small muted mt">${esc(petNm(p))} решит сам: добрый отдаст, жадный или злой — может и не отдать, а то и зашвырнуть под диван.</div>
+    <div class="toy-give-list mt">${list.map((x) => { const pr = Pets.toyPrefs(x.dna), love = pr.fav === p.holds, hate = pr.dislikes.includes(p.holds);
+      return `<button class="toy-give-row" data-a="toy-give" data-v="${x.id}">${Pets.sprite(petCode(x), 40)}<div class="grow"><b>${esc(petNm(x))}</b><div class="small ${love ? "good" : hate ? "bad" : "muted"}">${love ? "❤ это и его любимая" : hate ? "терпеть такие не может" : "просто поиграет"}${x.holds ? ` · сейчас у него ${(toyOf(x.holds) || [])[2] || ""}` : ""}</div></div><span>›</span></button>`; }).join("") || '<div class="muted">Больше некому — питомец один</div>'}</div>`;
 }
 
 function petHatSheet() {
@@ -214,7 +265,12 @@ const LIFE_ACTIONS = {
     haptic();
     Api.act("/api/pet/play", { pet: p.id }).then((st) => {
       const r = st.play, o = r.toy ? toyOf(r.toy) : null, k = petKnow(p.id);
-      if (r.reaction === "fav") { k.toyFav = 1; notify("success"); toast(`${t.name} схватил ${o[1].toLowerCase()} — это его любимая! ❤`); petFx("❤"); }
+      const on = r.other ? r.other.name : "";
+      if (r.reaction === "snatch") { k.toyFav = 1; notify("warning"); toast(`${t.name} без спроса вырвал ${TOY_ACC[r.toy] || o[1]} у ${on}! 😤`); petFx("😤"); }
+      else if (r.reaction === "repelled") { notify("error"); toast(`${t.name} полез отнимать игрушку у ${on}, но получил отпор 🛡`); }
+      else if (r.reaction === "wait") toast(`${t.name} хочет свою любимую, но она в лапах у ${on}. Ждёт… (или выбей ещё одну копию)`);
+      else if (r.reaction === "throw") { k.toyNo = [...new Set([...(k.toyNo || []), r.toy])]; notify("error"); toast(`${t.name} схватил ${TOY_ACC[r.toy] || o[1]}, потряс и зашвырнул под диван! 💢`); petFx("💢"); }
+      else if (r.reaction === "fav") { k.toyFav = 1; notify("success"); toast(`${t.name} схватил ${o[1].toLowerCase()} — это его любимая! ❤`); petFx("❤"); }
       else if (r.reaction === "ok") { toast(`${t.name} выбрал: ${o[2]} ${o[1].toLowerCase()}`); petFx("✨"); }
       else if (r.reaction === "seek") toast(`${t.name} обнюхал игрушки и отвернулся: он однолюб и ищет свою единственную любимую`);
       else if (r.reaction === "bored") toast(`${t.name} зевает: эти игрушки ему надоели — нужно больше разных`);
@@ -224,6 +280,17 @@ const LIFE_ACTIONS = {
     }).catch(petErr);
   },
   "pet-hat-open": () => { S.sheet = { type: "pet-hat" }; renderOverlay(); },
+  "toy-give-open": () => { S.sheet = { type: "toy-give" }; renderOverlay(); },
+  "toy-give": (v) => {
+    const to = Number(v) || 0;
+    Api.act("/api/pet/toygive", { pet: S.petSel, to: to || null }).then((st) => {
+      const g = st.give; S.sheet = null; renderOverlay();
+      notify(g.ok && g.kind !== "thrown" ? "success" : "error"); haptic(g.ok ? "medium" : "heavy");
+      toast((g.ok ? (g.kind === "thrown" ? "💢 " : "🤝 ") : g.kind === "tantrum" ? "💢 " : "🙅 ") + g.text); petFx(g.ok ? (g.kind === "thrown" ? "💢" : "🤝") : "😠");
+      render();
+    }).catch(petErr);
+  },
+  "toy-fetch": (k) => Api.act("/api/toy/fetch", { toy: k }).then(() => { haptic("medium"); toast(`Достал из-под дивана: ${(toyOf(k) || [])[2]} ${(toyOf(k) || [])[1]} — снова на полке`); render(); }).catch(petErr),
   "pet-hat-set": (h) => Api.act("/api/pet/hat", { pet: S.petSel, hat: h || null }).then(() => { S.sheet = null; renderOverlay(); syncProfile(); haptic("medium"); render(); }).catch(petErr),
   "pet-gift": () => Api.act("/api/pet/gift", { pet: S.petSel }).then((st) => {
     const g = st.gift;

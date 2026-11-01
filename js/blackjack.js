@@ -102,7 +102,7 @@
     online() { return this.order.filter((p) => this.members[p].online); }
     stakeOf(pid) { return this.settings.stake * (this.hands[pid] && this.hands[pid].doubled ? 2 : 1); }
 
-    updateSettings(s) { if (STAKES.includes(Number(s.stake))) this.settings.stake = Number(s.stake); this.touch(); }
+    updateSettings(s) { if (STAKES.includes(Number(s.stake)) && !(Number(s.stake) && this.order.some((p) => /^bot_/.test(p)))) this.settings.stake = Number(s.stake); this.touch(); }   // с ботами — без ставок
 
     join(m) {
       if (this.members[m.id]) { Object.assign(this.members[m.id], { online: true, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); this.touch(); return; }

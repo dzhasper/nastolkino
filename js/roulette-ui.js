@@ -64,6 +64,7 @@ function viewRouletteMenu() {
       <div class="muted small">Подвал, стол, один дробовик · ${Roulette.MIN_PLAYERS}–${Roulette.MAX_PLAYERS} игрока</div></div></div>
     <div class="card rou-rules">
       <p>Перед каждой зарядкой <b>каждый тайно заряжает в дробовик один патрон</b> — боевой или холостой. Подвал докладывает ещё несколько своих.</p>
+      <p>Потом все видят, <b>сколько всего патронов и сколько из них боевых и холостых</b> — но не порядок и не то, кто что положил. Если все патроны вышли холостыми, подвал перезаряжает свои.</p>
       <p>В свой ход целишься <b>в себя или в соперника</b>. Холостой в себя — ходишь ещё раз. Боевой — минус сердце.</p>
       <p>Последний, кто остался за столом, забирает всё.</p>
     </div>
@@ -84,7 +85,7 @@ function viewRouletteRoom() {
   const fade = S.rouFade !== r.code + r.phase; S.rouFade = r.code + r.phase;
   return `${netBanner()}<div class="${fade ? "fade-in" : ""}">
     <div class="stage" id="stage"><div class="stage-hud">
-      <div class="drum">${r.pot ? `<span class="pot">🪙${r.pot}</span> ` : ""}${r.phase === "lobby" ? "ПОДВАЛ" : r.phase === "load" ? "ЗАРЯДКА…" : `ПАТРОНЫ ${"■".repeat(r.drum.left)}${"□".repeat(Math.max(0, r.drum.total - r.drum.left))}`}</div>
+      <div class="drum">${r.pot ? `<span class="pot">🪙${r.pot}</span> ` : ""}${r.phase === "lobby" ? "ПОДВАЛ" : r.phase === "load" ? "ЗАРЯДКА…" : `<span class="d-live">🔴${r.drum.liveLeft}</span> <span class="d-blank">⚪${r.drum.blankLeft}</span> <i class="d-of">из ${r.drum.total}</i>`}</div>
       ${r.deadline && ["play", "load"].includes(r.phase) ? `<div class="stage-timer" id="timer" data-total="${r.total}"><span id="timer-num">${fmtTime(remaining())}</span></div>` : ""}
       ${["play", "shot", "load"].includes(r.phase) ? `<button class="snd" data-a="rou-view">${S.rouView === "table" ? "↩" : "🔍"}</button>` : ""}
       <button class="snd" data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button>
@@ -93,7 +94,7 @@ function viewRouletteRoom() {
     ${r.phase !== "lobby" ? statusBar() : ""}
     ${(panels[r.phase] || rouLobby)()}
     ${r.phase !== "lobby" ? `<div class="section-title">За столом</div>${rouSeats()}` : ""}
-    ${r.phase !== "lobby" ? `<div class="section-title">Что происходит</div><div class="card rou-log">${(r.events || []).slice().reverse().slice(0, 7).map((e, i) =>
+    ${r.phase !== "lobby" ? `<div class="section-title">Что происходит</div><div class="card rou-log">${(r.events || []).filter((e) => !rouSecret(e)).slice().reverse().slice(0, 7).map((e, i) =>
       `<div class="ev ${e.kind} ${i === 0 ? "new" : ""}">${esc(e.text)}</div>`).join("")}</div>` : ""}
   </div>
   ${r.players.length > 1 ? `<button class="chat-fab" data-a="chat">💬<span id="chat-badge"></span></button>` : ""}`;
@@ -132,7 +133,7 @@ function rouLoad() {
   if (!me || !me.alive || r.seats.indexOf(S.me) < 0) return `<div class="card center">Остальные заряжают барабан…</div>`;
   if (r.my_load) return `<div class="card center load-done">Ты зарядил(а) <b class="${r.my_load}">${r.my_load === "live" ? "БОЕВОЙ" : "холостой"}</b> патрон.
     <div class="muted small mt">Никто не знает, что именно. Ждём остальных…</div></div>${hostSkip("Зарядить сейчас")}`;
-  return `<div class="card center"><b>Заряди один патрон</b><div class="muted small mt">Его не увидит никто. Подвал добавит ещё несколько своих.</div></div>
+  return `<div class="card center"><b>Заряди один патрон</b><div class="muted small mt">Что ты положил(а), не увидит никто. Подвал добавит ещё несколько своих, и все узнают, сколько всего боевых и холостых — но не порядок.</div></div>
     <div class="row mt load-btns"><button class="btn grow shell-live" data-a="rou-load" data-v="live">🔴 Боевой</button>
       <button class="btn grow shell-blank" data-a="rou-load" data-v="blank">⚪ Холостой</button></div>`;
 }
@@ -160,7 +161,8 @@ function rouPlay() {
   const notes = (r.notes || []).slice().reverse();
   let out = "";
   if (!mine) {
-    out += `<div class="card center turn-wait">${r.phase === "shot" ? "…" : `Ходит <b>${esc(turnP.name || "")}</b>`}${me && !me.alive ? `<div class="muted small mt">Ты выбыл(а). Смотри, чем кончится</div>` : ""}</div>`;
+    out += `<div class="card center turn-wait">${r.phase === "shot" ? "…" : `Ходит <b>${esc(turnP.name || "")}</b>`}${me && !me.alive ? `<div class="muted small mt">Ты выбыл(а). Смотри, чем кончится</div>` : ""}
+      <div class="tiny muted mt">👀 Проведи пальцем по сцене влево-вправо, чтобы оглядеться, или нажми на игрока — посмотришь на него</div></div>`;
   } else {
     const opps = r.seats.map((id) => r.players.find((p) => p.id === id)).filter((p) => p && p.id !== S.me && p.alive);
     const sel = S.rouItem != null ? me.items[S.rouItem] : null;
@@ -225,10 +227,10 @@ function statusBar() {
   const hp = seated ? me.hp : 0;
   return `<div class="dbar">
     <div class="dcell"><b class="big">${seated ? hp : "—"}</b><span>СЕРДЦА</span></div>
-    <div class="dcell"><b class="big">${r.drum.left}</b><span>ПАТРОНЫ</span></div>
+    <div class="dcell dshells"><b class="big"><i class="c-live">${r.drum.liveLeft}</i><i class="c-sep">/</i><i class="c-blank">${r.drum.blankLeft}</i></b><span>БОЕВ / ХОЛ</span></div>
     <div class="dface"><canvas id="dface" width="24" height="24"></canvas></div>
     <div class="dcell"><b class="big">${seated ? me.items.length : "—"}</b><span>ПРЕДМЕТЫ</span></div>
-    <div class="dcell"><b class="big">${r.seats.filter((id) => { const p = r.players.find((x) => x.id === id); return p && p.alive; }).length}</b><span>ЖИВЫХ</span></div>
+    <div class="dcell"><b class="big">${r.seats.filter((id) => { const p = r.players.find((x) => x.id === id); return p && p.alive; }).length}</b><span>ИГРОКОВ</span></div>
   </div>`;
 }
 
@@ -299,11 +301,31 @@ function rouEvents() {
         if (m) { m.className = "stage-msg show " + (e.live ? "bang" : "blank") + (e.live && (e.absorbed || e.redirected) ? " long" : ""); m.textContent = e.live ? (e.absorbed ? "БАХ! ЖИЛЕТ" : e.redirected ? "ЗЕРКАЛО!" : e.dmg > 1 ? "БАХ! ×2" : "БАХ!") : "щёлк"; }
         if (e.live && e.out) setTimeout(Sfx.thud, 600);
       }, 700);
-    } else if (e.kind === "load") { Sfx.spin(); if (msg) { msg.className = "stage-msg show load"; msg.textContent = `${e.total} патронов`; } }
+    } else if (e.kind === "load") { Sfx.spin(); if (msg) { msg.className = "stage-msg show load"; msg.textContent = `${e.total} патронов`; } setTimeout(() => rouLoadReveal(e), 400); }
     else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); if (["flashlight", "box", "ear", "spin", "thief"].includes(e.item)) setTimeout(() => rouReveal(e), e.item === "spin" || e.item === "thief" ? 600 : 1600); }
     else if (e.kind === "win") Sfx.thud();
   });
   S.rouSeen = top;
+}
+
+// фонарик, шкатулка, подслушка — тайное дело: остальные видят только анимацию на столе, без надписей
+const rouSecret = (e) => e.kind === "item" && ["flashlight", "box", "ear"].includes(e.item) && e.who !== S.me;
+
+// после зарядки: сколько боевых и сколько холостых (патроны показываются и перемешиваются)
+function rouLoadReveal(e) {
+  if (e.live == null) return;
+  const shells = [...Array(e.live).fill("live"), ...Array(e.blank).fill("blank")];
+  const old = document.getElementById("rou-reveal"); if (old) old.remove();
+  const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal load";
+  d.innerHTML = `<div class="rr-card"><div class="rr-big">🔫 Заряжено ${e.total} ${e.total < 5 ? "патрона" : "патронов"}</div>
+    <div class="rr-shells">${shells.map((k, i) => `<i class="sh ${k}" style="--i:${i}"></i>`).join("")}</div>
+    <div class="rr-count"><b class="c-live">🔴 ${e.live} ${e.live === 1 ? "боевой" : "боевых"}</b><b class="c-blank">⚪ ${e.blank} ${e.blank === 1 ? "холостой" : "холостых"}</b></div>
+    <div class="rr-small">${e.rerolled ? "Все положили холостые — подвал перезарядил свои патроны.<br>" : ""}${e.total - e.house} от игроков и ${e.house} от подвала. Порядок — случайный, кто что положил — тайна.</div></div>`;
+  d.onclick = () => d.remove();
+  document.body.appendChild(d);
+  setTimeout(() => d.classList.add("mix"), 1300);
+  setTimeout(() => d.classList.add("fade"), 4200);
+  setTimeout(() => d.remove(), 4800);
 }
 
 // в тебя попали: экран мгновенно красный, кровь стекает, громкий выстрел (мимо выключателя звука), сильная вибрация
@@ -343,20 +365,19 @@ function rouReveal(e) {
     big = `Следующий выстрел — ${live ? "БОЕВОЙ" : "холостой"}`;
     small = live ? "Стреляй в соперника — или отпили стволы 🪚" : "Можно смело стрелять в себя: холостой в себя — ещё один ход";
   } else if (mine && e.item === "ear") {
-    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("👂")) || "", live = /БОЕВОЙ/.test(n), none = /неизвестно/.test(n);
+    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("👂")) || "", none = /ничего не знает/.test(n);
     if (!n) return;
-    cls = none ? "" : live ? "live" : "blank";
-    big = none ? `${nm(e.target)}: не понятно` : `${nm(e.target)} зарядил(а) ${live ? "БОЕВОЙ" : "холостой"}`;
-    small = "Этот патрон где-то в магазине — но где именно, неизвестно";
+    const what = n.replace(/^👂 Подслушал\(а\) [^:]+: /, "");
+    cls = none ? "" : /БОЕВОЙ/.test(what) ? "live" : "blank";
+    big = none ? `${nm(e.target)} ничего не знает про патроны` : what.charAt(0).toUpperCase() + what.slice(1);
+    small = none ? "Он(а) ещё не пользовался(ась) фонариком или шкатулкой" : `Это знает ${nm(e.target)} — теперь знаешь и ты. №1 — следующий выстрел`;
   } else if (e.item === "spin") {
     big = "Патроны перемешаны"; small = "Всё, что знали про порядок патронов, — больше не верно";
   } else if (e.item === "thief") {
+    if (!mine && e.target !== S.me) return;                         // чужую кражу видно на столе — без надписи
     const st = RI()[e.stolen] || {};
     big = `${mine ? "Ты стащил(а)" : e.target === S.me ? `${nm(e.who)} стащил(а) у тебя` : `${nm(e.who)} стащил(а)`}: ${st.emoji || ""} ${st.name || ""}`; small = "";
-  } else {                                                           // чужой фонарик/шкатулка/подслушка: видно только, кто смотрел
-    big = `${it.emoji || ""} ${nm(e.who)} ${e.item === "flashlight" ? "подсветил(а) один патрон" : e.item === "box" ? "узнал(а) следующий патрон" : `подслушал(а) ${e.target === S.me ? "тебя" : nm(e.target)}`}`;
-    small = "Что там — видит только он(а)"; cls = "other";
-  }
+  } else return;                                                     // чужой фонарик/шкатулка/подслушка — только анимация, без надписей
   const old = document.getElementById("rou-reveal"); if (old) old.remove();
   const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal " + cls;
   d.innerHTML = `<div class="rr-card"><div class="rr-ico">${emo(it.emoji || "❔", 34)}</div><div class="rr-big">${esc(big)}</div>${small ? `<div class="rr-small">${esc(small)}</div>` : ""}</div>`;

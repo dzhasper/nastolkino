@@ -54,7 +54,7 @@ function petList() {
   const den = st.den || { rooms: 0, used: 0 };
   const care = live.filter((p) => !p.egg).length >= 2 ? `<div class="care-bar"><button class="btn" data-a="care-open">🤲 Уход за всеми</button>
     <span class="den-pill" title="Комнаты в домике">🏠 ${den.used}/${den.rooms}</span></div>` : "";
-  return `${questsCard()}${care}${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
+  return `${questsCard()}${care}${toysCard()}${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
       : `<div class="card center"><div class="pet-empty">🥚</div><b>Питомцев пока нет</b><div class="muted small mt">Яйца выпадают из промокодов и раздач в боте, а очень редко — из ежедневного сундука.</div></div>`}
     ${live.some((p) => !p.egg && p.hunger < 25) ? `<div class="card warn mt">⚠️ Кто-то голодает. Без еды двое суток — питомец умирает навсегда.</div>` : ""}
     ${petPantry()}
@@ -253,6 +253,11 @@ function petOnState() {
     ["frame:bwfire", "bg:throne", "style:creator", "title:creator", "fx:bwflame", "ava:key"].forEach((k) => { const it = Shop.byKey(k); if (it) Shop.equip(it); });
     saveProfile(); syncProfile(); toast("👑 Набор Создателя надет");
   }
+  if (st && Array.isArray(st.gifts) && st.gifts.length && !S.room && !S.sheet) {   // тебе что-то подарили — показываем сразу
+    S.sheet = { type: "gifts", list: st.gifts.slice() }; st.gifts = [];
+    notify("success"); haptic("heavy"); renderOverlay();
+    Api.call("/api/gifts/seen", {}).catch(() => {});
+  }
   if (st) {
     store.petSeen = store.petSeen || [];
     const fresh = st.pets.find((p) => p.alive && !p.egg && !store.petSeen.includes(p.id));
@@ -263,6 +268,16 @@ function petOnState() {
   }
   const busy = document.activeElement && document.activeElement.tagName === "INPUT";
   if (!busy && ["pets", "home", "profile", "shop"].includes(S.screen)) render();
+}
+
+// окно «Тебе подарили»: что пришло и куда посмотреть
+const GIFT_ICO = { coins: "🪙", egg: "🥚", food: "🍖", case: "🎁", mg: "💉", pet: "🐉" }, GIFT_SRC = { admin: "от администратора", tour: "приз за турнир", gw: "из раздачи" };
+function giftsSheet() {
+  const list = (S.sheet && S.sheet.list) || [], first = list[0] || {};
+  const go = { mg: "gift-go:mg", pet: "gift-go:pets", egg: "gift-go:pets", food: "gift-go:pets", case: "gift-go:cases", coins: "" }[first.kind] || "";
+  return `<div class="gift-pop"><div class="gp-box">🎁</div><h2>Тебе подарили!</h2>
+    <div class="gp-list">${list.map((g) => `<div class="gp-row"><span class="gp-i">${GIFT_ICO[g.kind] || "🎁"}</span><div class="grow"><b>${esc(g.text)}</b><div class="small muted">${GIFT_SRC[g.src] || ""} · ${petAgo(g.ts)}</div></div></div>`).join("")}</div>
+    ${go ? `<button class="btn mt" data-a="gift-go" data-v="${go.split(":")[1]}">👀 Посмотреть</button>` : ""}</div>`;
 }
 
 let petRefreshing = false, petActSlot = 0;

@@ -17,7 +17,7 @@
     vest: { name: "Жилет", emoji: "🦺", desc: "Поглотит одно попадание" },
     freeze: { name: "Заморозка", emoji: "🧊", desc: "Выбранный соперник пропустит свой следующий ход", target: true },
     medkit: { name: "Аптечка", emoji: "💉", desc: "Вернуть одно сердце" },
-    ear: { name: "Подслушка", emoji: "👂", desc: "Узнать, какой патрон зарядил выбранный соперник", target: true },
+    ear: { name: "Подслушка", emoji: "👂", desc: "Подслушать соперника: узнаешь всё, что он знает про патроны (что ему показали фонарик и шкатулка)", target: true },
     box: { name: "Шкатулка", emoji: "📦", desc: "Внутри записка: какой патрон следующий. Видишь только ты" },
     saw: { name: "Ножовка", emoji: "🪚", desc: "Отпилить стволы: следующий выстрел снимет 2 сердца. Сгорает даже на холостом" },
     thief: { name: "Перчатка вора", emoji: "🧤", desc: "Стащить у соперника любой его предмет себе", target: true, steal: true },
@@ -47,6 +47,7 @@
       this.sawed = false;
       this.drum = []; this.loadTotal = 0; this.house = 0; this.contrib = {}; this.loads = 0;
       this.peek = {}; this.heard = {};                             // что каждый знает сейчас: патроны по местам, кто что зарядил
+      this.liveTotal = 0; this.blankTotal = 0; this.fired = { live: 0, blank: 0 };   // состав магазина — его видят все
       this.turn = null; this.events = []; this.eventN = 0; this.winner = null; this.pending = null;
     }
 
@@ -62,7 +63,7 @@
       if (HP_OPTIONS.includes(Number(s.hp))) this.settings.hp = Number(s.hp);
       if (TURN_TIMES.includes(Number(s.turnTime))) this.settings.turnTime = Number(s.turnTime);
       if (ITEM_OPTIONS.includes(Number(s.items))) this.settings.items = Number(s.items);
-      if (STAKES.includes(Number(s.stake))) this.settings.stake = Number(s.stake);
+      if (STAKES.includes(Number(s.stake)) && !(Number(s.stake) && this.order.some((p) => /^bot_/.test(p)))) this.settings.stake = Number(s.stake);   // с ботами — без ставок
       this.touch();
     }
 
@@ -140,13 +141,17 @@
     finishLoad() {
       this.alive().forEach((p) => { if (!this.contrib[p]) this.contrib[p] = Math.random() < .5 ? "live" : "blank"; });
       const house = 1 + Math.floor(Math.random() * 3) + (this.loads > 2 ? 1 : 0);      // со временем подвал злее
-      const fromHouse = Array.from({ length: house }, () => (Math.random() < .5 ? "live" : "blank"));
-      let drum = Object.values(this.contrib).concat(fromHouse);
-      if (!drum.includes("live")) fromHouse[0] = "live", drum = Object.values(this.contrib).concat(fromHouse);   // хотя бы один боевой всегда есть
+      let fromHouse = Array.from({ length: house }, () => (Math.random() < .5 ? "live" : "blank")), rerolled = false;
+      // все патроны холостые — подвал перезаряжает свои, пока не попадётся боевой
+      for (let i = 0; i < 20 && !Object.values(this.contrib).concat(fromHouse).includes("live"); i++) { rerolled = true; fromHouse = Array.from({ length: house }, () => (Math.random() < .5 ? "live" : "blank")); }
+      if (!Object.values(this.contrib).concat(fromHouse).includes("live")) fromHouse[0] = "live";
+      const drum = Object.values(this.contrib).concat(fromHouse);
       this.drum = shuffle(drum); this.loadTotal = this.drum.length; this.house = house;
+      this.liveTotal = drum.filter((x) => x === "live").length; this.blankTotal = drum.length - this.liveTotal; this.fired = { live: 0, blank: 0 };
       const n = this.settings.items;
       this.alive().forEach((p) => { for (let i = 0; i < n && this.items[p].length < MAX_ITEMS; i++) this.items[p].push(pick(KEYS)); });
-      this.event({ kind: "load", total: this.loadTotal, house, text: `Дробовик заряжен: ${this.loadTotal} патронов — ${this.alive().length} от вас и ${house} от подвала${n ? `. Каждому выдано предметов: ${n}` : ""}` });
+      this.event({ kind: "load", total: this.loadTotal, house, live: this.liveTotal, blank: this.blankTotal, rerolled,
+        text: `${rerolled ? "Все положили холостые — подвал перезарядил свои. " : ""}Дробовик заряжен: ${this.loadTotal} патронов — 🔴 ${this.liveTotal} боевых и ⚪ ${this.blankTotal} холостых (${this.alive().length} от вас, ${house} от подвала). Порядок — случайный${n ? `. Каждому выдано предметов: ${n}` : ""}` });
       if (!(this.hp[this.turn] > 0)) this.turn = this.nextAfter(this.turn);
       this.startTurn();
     }
@@ -225,10 +230,10 @@
       } else if (key === "stake") {
         this.stakes[pid] = (this.stakes[pid] || 0) + 1;
         this.event({ kind: "item", item: key, who: pid, text: `${nm} кладёт монету на стол: ставка на себя (×${this.stakes[pid]})` });
-      } else if (key === "ear") {
-        const v = this.contrib[target];
-        if (v) ((this.heard = this.heard || {})[pid] = this.heard[pid] || {})[target] = v;
-        this.note(pid, `👂 ${this.name(target)} положил(а) ${v === "live" ? "БОЕВОЙ" : v === "blank" ? "холостой" : "неизвестно что"}`);
+      } else if (key === "ear") {                                  // подслушка: что знает он — теперь знаешь и ты
+        const theirs = Object.entries((this.peek || {})[target] || {}).sort((x, y) => x[0] - y[0]);
+        theirs.forEach(([i, t]) => this.know(pid, +i, t));
+        this.note(pid, `👂 Подслушал(а) ${this.name(target)}: ${theirs.length ? theirs.map(([i, t]) => `${+i === 0 ? "следующий выстрел" : `${+i + 1}-й выстрел`} — ${t === "live" ? "БОЕВОЙ" : "холостой"}`).join(", ") : "ничего не знает про патроны"}`);
         this.event({ kind: "item", item: key, who: pid, target, text: `${nm} подслушивает ${this.name(target)}` });
       }
       this.items[pid].splice(idx, 1);
@@ -239,6 +244,7 @@
       if (this.phase !== "play" || pid !== this.turn) throw new GameError("Сейчас не твой ход");
       if (!(this.hp[target] > 0)) throw new GameError("Он(а) уже не за столом");
       const shell = this.drum.shift();
+      if (this.fired) this.fired[shell === "live" ? "live" : "blank"]++;
       Object.keys(this.peek || {}).forEach((p) => {                // подсказки сдвигаются: №2 стал следующим
         const k = {}; Object.entries(this.peek[p]).forEach(([i, t]) => { if (+i > 0) k[+i - 1] = t; }); this.peek[p] = k;
       });
@@ -335,7 +341,8 @@
         theme: { key: "roulette", title: "Последний заряд", emoji: "🎯", accent: "#c0141f", accent2: "#3a0a0a" },
         settings: this.settings, phase: this.phase, deadline: this.deadline ? Math.round(this.deadline * 1000) : null, total: this.total,
         players, seats: this.seats, sawed: !!this.sawed, stake: this.settings.stake || 0, pot: (this.settings.stake || 0) * this.seats.length, turn: this.turn, aim: this.phase === "play" ? this.aim || null : null, winner: this.winner, maxHp: this.settings.hp,
-        drum: { left: this.drum.length, total: this.loadTotal, house: this.house },
+        drum: { left: this.drum.length, total: this.loadTotal, house: this.house, live: this.liveTotal || 0, blank: this.blankTotal || 0,
+          liveLeft: Math.max(0, (this.liveTotal || 0) - ((this.fired || {}).live || 0)), blankLeft: Math.max(0, (this.blankTotal || 0) - ((this.fired || {}).blank || 0)) },
         my_load: this.contrib[pid] || null, notes: (this.notes[pid] || []).slice(), events: this.events.slice(-12),
         known: Object.entries((this.peek || {})[pid] || {}).map(([i, t]) => ({ at: +i + 1, live: t === "live" })).sort((a, b) => a.at - b.at),
         heard: Object.entries((this.heard || {})[pid] || {}).map(([id, t]) => ({ id, name: this.name(id), live: t === "live" })),

@@ -62,7 +62,7 @@ function viewShop() {
   return `<div class="fade-in">
     <div class="pxscene shop-scene" style="background-image:url(${Pixel.scene("shop")})"><div class="shop-sign">${tab === "inv" ? "Инвентарь" : tab === "craft" ? "Мастерская" : "Кейсы"}</div></div>
     <div class="top"><div class="grow"><h1>${tab === "inv" ? "Инвентарь" : tab === "craft" ? "Мастерская" : "Кейсы"}</h1><div class="muted small">${tab === "inv" ? "Всё выбитое — здесь. Нажми, чтобы примерить" : tab === "craft" ? "Осколки и переделка вещей" : "Вещи только выбиваются — открывай за монеты"}</div></div>${shardPill()}${coinPill()}</div>
-    ${Shop.chestReady() ? `<button class="card chest" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Раз в день: от 15 до 60 монет</div></div><span class="pill on">Открыть</span></button>` : ""}
+    ${dailyCard()}
     <div class="seg seg3 mt">
       <button class="${tab === "cases" ? "on" : ""}" data-a="shop-tab" data-v="cases">🎁 Кейсы</button>
       <button class="${tab === "inv" ? "on" : ""}" data-a="shop-tab" data-v="inv">🎒 Вещи <span class="seg-n">${invCount()}</span></button>
@@ -121,6 +121,23 @@ function caseOddsSheet(key) {
       .map((it) => `<span class="${Shop.owns(it) ? "have" : ""}">${Shop.owns(it) ? "✓ " : ""}${esc(it.name)}</span>`).join("")}</div>` : "")).join("")}`;
 }
 
+// игрушка в инвентаре: сколько копий, чья любимая, хватает ли на всех
+function toyTileMarks(k) {
+  const i = toyInfo(k);
+  return `${i.n > 1 ? `<span class="toy-n">×${i.n}</span>` : ""}${i.lovers.length ? `<span class="toy-lovers">${i.lovers.slice(0, 4).map((x) => `<i title="${esc(Pets.name(x.dna))}">${Pets.sprite(petCode(x), 20)}</i>`).join("")}${i.lovers.length > 4 ? `<em>+${i.lovers.length - 4}</em>` : ""}<b>❤</b></span>` : ""}${i.short ? `<span class="toy-short">нужна ещё ${i.short}</span>` : ""}`;
+}
+function toyBar(it) {
+  const i = toyInfo(it.id), names = (l) => l.map((x) => esc(Pets.name(x.dna))).join(", ");
+  return `<div class="shop-bar toy-bar"><div class="grow"><b>${it.emoji} ${esc(it.name)}</b> <span class="small muted">· копий: ${i.n} из 4</span>
+    <div class="small mt">${i.lovers.length ? `❤ Любимая у: <b>${names(i.lovers)}</b>` : `<span class="muted">Пока ничья не любимая</span>`}</div>
+    ${i.short ? `<div class="small toy-warn">⚠️ Любят ${i.lovers.length}, а копий ${i.n}. Выбей ещё ${i.short} в «Питомнике» — иначе будут делить: добрые по очереди, а жадный или злой может вообще не отдать.</div>`
+      : i.lovers.length > 1 ? `<div class="small good">✓ Копий хватает — каждому своя</div>` : ""}
+    ${i.holders.length ? `<div class="small">🐾 Сейчас в лапах у: ${names(i.holders)}</div>` : ""}
+    ${i.floor ? `<div class="small">🛋 Под диваном: ${i.floor} <button class="pill" data-a="toy-fetch" data-v="${it.id}">достать</button></div>` : ""}
+    ${i.haters.length ? `<div class="small muted">Не любят: ${names(i.haters)} — могут зашвырнуть под диван</div>` : ""}</div>
+    <button class="btn small" data-a="case-pets">🐾 К питомцам</button></div>`;
+}
+
 // инвентарь: только то, что реально есть у игрока (и стартовые вещи). Невыбитое не показываем вовсе — пусть будет сюрпризом.
 function viewInv() {
   const p = S.profile, cat = S.shopCat || "frame";
@@ -133,9 +150,10 @@ function viewInv() {
   if (tryIt && Shop.owns(tryIt)) {
     const t = Shop.tier(tryIt), src = tryIt.excl ? (tryIt.cat === "title" && tryIt.desc ? "🐉 " + tryIt.desc : "👑 набор Создателя") : tryIt.season ? "🌙 " + (Shop.seasonByKey(tryIt.season) || {}).name : "";
     const m = tryIt.mg ? Pets.MUTATIONS.find((x) => x.key === tryIt.mg) : null;
-    const act = tryIt.cat === "toy" ? `<span class="small muted">Питомцы сами выбирают игрушки</span>` : tryIt.cat === "hat" || tryIt.cat === "mg" ? `<button class="btn small" data-a="case-pets">🐾 К питомцам</button>`
+    const act = tryIt.cat === "toy" ? `<button class="btn small" data-a="case-pets">🐾 К питомцам</button>` : tryIt.cat === "hat" || tryIt.cat === "mg" ? `<button class="btn small" data-a="case-pets">🐾 К питомцам</button>`
       : worn(tryIt) ? `<button class="btn small" disabled>Надето ✓</button>` : `<button class="btn small" data-a="shop-equip">Надеть</button>`;
-    bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${ranked(tryIt) ? tierTag(t) : ""} ${m ? `${m.emoji} ${esc(m.name)} — уколи питомцу со значком 🧬` : tryIt.cat === "hat" ? "Надевается питомцу в его карточке, снимается там же" : src ? esc(src) : worn(tryIt) ? "Надето" : "Есть у тебя"}</div></div>
+    if (tryIt.cat === "toy" && typeof toyInfo === "function") bar = toyBar(tryIt);
+    else bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${ranked(tryIt) ? tierTag(t) : ""} ${m ? `${m.emoji} ${esc(m.name)} — уколи питомцу со значком 🧬` : tryIt.cat === "hat" ? "Надевается питомцу в его карточке, снимается там же" : src ? esc(src) : worn(tryIt) ? "Надето" : "Есть у тебя"}</div></div>
       ${act}</div>`;
   }
   const petCat = ["toy", "hat", "mg"].includes(cat);
@@ -144,7 +162,7 @@ function viewInv() {
       return `<button class="pill ${c.key === cat ? "on" : ""}" data-a="shop-cat" data-v="${c.key}">${c.icon} ${c.name}${have ? ` <span class="seg-n">${have}</span>` : ""}</button>`; }).join("")}</div>
     <div class="shop-grid ${cat}">${items.map((it) => { const t = Shop.tier(it);
       return `<button class="shop-item ${tryIt === it ? "sel" : ""} ${worn(it) ? "worn" : ""}" style="--tc:${ranked(it) ? Shop.TIERS[t].color : "transparent"}" data-a="shop-try" data-v="${it.id}">
-        ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${worn(it) ? "✓ надето" : ranked(it) ? Shop.TIERS[t].name : "есть"}</span></button>`; }).join("")}</div>
+        ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${worn(it) ? "✓ надето" : ranked(it) ? Shop.TIERS[t].name : "есть"}</span>${it.cat === "toy" ? toyTileMarks(it.id) : ""}</button>`; }).join("")}</div>
     ${items.filter(ranked).length ? "" : `<div class="card small muted center mt">${cat === "mg" ? "Шприцов пока нет. Их дают за турниры, а в «Питомнике» — шанс 0,01%" : petCat ? "Пока пусто — это выпадает из кейса «Питомник»" : "Здесь пока только стартовое. Всё, что выбьешь в кейсах, появится тут."}</div>`}
     ${bar}`;
 }
@@ -276,7 +294,7 @@ function caseResult(c, drop) {
   let prize = "", info = "", main = "";
   if (it) {
     prize = `<div class="cl-prize">${shopPreview(it)}</div>`;
-    info = drop.dup ? `<div class="cl-dup">Повтор — уже есть. Превратилось в <b>${drop.shards != null ? `+${drop.shards} ✨ осколков` : `+${drop.refund} 🪙`}</b></div>`
+    info = drop.copy ? `<div class="cl-dup">🧸 Ещё одна копия! Теперь их <b>${drop.copy}</b> — меньше ссор из-за игрушки</div>` : drop.dup ? `<div class="cl-dup">Повтор — уже есть. Превратилось в <b>${drop.shards != null ? `+${drop.shards} ✨ осколков` : `+${drop.refund} 🪙`}</b></div>`
       : it.mg ? `<div class="small">💉 Мутаген! Уколи питомцу со значком 🧬 — облик изменится навсегда</div>` : `<div class="small muted">Уже в инвентаре</div>`;
     if (!drop.dup) main = ["toy", "hat", "mg"].includes(it.cat) ? `<button class="btn" data-a="case-pets">🐾 К питомцам</button>` : `<button class="btn" data-a="case-equip" data-v="${esc(drop.item)}">Надеть</button>`;
   } else if (drop.type === "shards") {
