@@ -195,3 +195,5 @@ body.pixel .wheel-lbl { font-size: 9px; }
 .tchip.item { display: inline-flex; align-items: center; gap: 6px; }
 .ti-prev { width: 34px; height: 34px; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
 .ti-prev > * { transform: scale(.4); transform-origin: center; flex: none; }
+.bot-bar { display: flex; align-items: center; gap: 8px; margin-top: 10px; border: 1px dashed rgba(122,255,106,.5); }
+.bot-bar .btn { width: auto; flex: none; }

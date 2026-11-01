@@ -559,6 +559,7 @@ function viewLobby() {
         <span class="pill">${r.settings.reveal ? "👁 Роли умерших видны" : "🙈 Роли скрыты"}</span>
         <span class="pill">${r.settings.anonymous ? "🗳 Тайное голосование" : "🗳 Открытое голосование"}</span></div>
     </div>
+    ${Bots.bar(S.room)}
     ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Начать игру 🎬" : `Ждём игроков (минимум ${S.catalog.min})`}</button>`
       : `<div class="card center mt2 muted">⏳ Ждём, когда хост начнёт игру…</div>`}`;
 }
@@ -1014,7 +1015,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
+Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");

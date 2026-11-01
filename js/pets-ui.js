@@ -45,12 +45,15 @@ function petList() {
   const card = (p) => {
     if (p.egg) return `<button class="pet-card egg" data-a="pets-sel" data-v="${p.id}">${Pets.sprite(petCode(p), 80, { egg: true })}
       <b>Яйцо</b><span class="small muted" data-until="${p.hatch}" data-egg="1">${p.left > 0 ? "через " + petTime(p.left) : "вылупляется!"}</span></button>`;
-    const t = Pets.traits(p.dna), a = petActivity(p);
+    const t = Pets.traits(p.dna);
     return `<button class="pet-card ${p.hunger < 25 ? "hungry" : ""} ${st.main_pet === p.id ? "main" : ""}" data-a="pets-sel" data-v="${p.id}">
-      ${st.main_pet === p.id ? '<span class="pet-star">★</span>' : ""}${p.den ? '<span class="pet-zz">🏠</span>' : a.sleep ? '<span class="pet-zz">💤</span>' : a.prop ? `<span class="pet-zz">${a.prop}</span>` : ""}${t.collect ? '<span class="pet-cl">✦</span>' : p.receptive ? '<span class="pet-cl dna">🧬</span>' : ""}<span class="pet-act mini ${a.cls}">${Pets.sprite(petCode(p), 80, { sleep: !!a.sleep })}</span>
+      ${st.main_pet === p.id ? '<span class="pet-star">★</span>' : ""}${p.den ? '<span class="pet-zz">🏠</span>' : ""}${t.collect ? '<span class="pet-cl">✦</span>' : p.receptive ? '<span class="pet-cl dna">🧬</span>' : ""}${petMiniHtml(p, 80)}
       <b>${esc(t.name)}</b><span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span>${t.muts.length ? `<span class="mut-icons">${t.muts.map((m) => m.emoji).join("")}</span>` : ""}${bar(p.hunger, "food")}</button>`;
   };
-  const care = live.filter((p) => !p.egg && !p.den).length >= 2 ? `<button class="btn ghost mt" data-a="pet-careall">🤲 Уход за всеми: накормить и погладить</button>` : "";
+  if (S.care) return careScene();
+  const den = st.den || { rooms: 0, used: 0 };
+  const care = live.filter((p) => !p.egg).length >= 2 ? `<div class="care-bar"><button class="btn" data-a="care-open">🤲 Уход за всеми</button>
+    <span class="den-pill" title="Комнаты в домике">🏠 ${den.used}/${den.rooms}</span></div>` : "";
   return `${questsCard()}${care}${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
       : `<div class="card center"><div class="pet-empty">🥚</div><b>Питомцев пока нет</b><div class="muted small mt">Яйца выпадают из промокодов и раздач в боте, а очень редко — из ежедневного сундука.</div></div>`}
     ${live.some((p) => !p.egg && p.hunger < 25) ? `<div class="card warn mt">⚠️ Кто-то голодает. Без еды двое суток — питомец умирает навсегда.</div>` : ""}
@@ -102,7 +105,7 @@ function petDetail(p) {
     ${petCollectBlock(p, t)}${petMutBlock(t)}
     <div class="card">
       ${petGrowLine(p)}
-      ${t.immortal ? `<div class="pstat"><span>♾️ Не нуждается в еде — никогда</span><b>∞</b></div>` : `<div class="pstat"><span>🍖 ${hungerText(p.hunger)}${p.den ? " · 🏠 в домике голодает вчетверо медленнее" : Pets.sleepState(p.dna, petNow()).asleep ? " · 💤 спит и не голодает" : ""}</span><b>${p.hunger}%</b></div>${bar(p.hunger, "food")}`}
+      ${t.immortal ? `<div class="pstat"><span>♾️ Не нуждается в еде — никогда</span><b>∞</b></div>` : `<div class="pstat"><span>🍖 ${hungerText(p.hunger)}${p.den ? " · 🏠 в домике голодает вчетверо медленнее" : Pets.sleepState(p.dna, petNow()).asleep ? " · 💤 спит — голодает на 30% медленнее" : ""}</span><b>${p.hunger}%</b></div>${bar(p.hunger, "food")}`}
       <div class="pstat mt"><span>💛 ${moodText(p.mood)}</span><b>${p.mood}%</b></div>${bar(p.mood, "mood")}
       ${t.reborn ? `<div class="small mt">🔥 Феникс не умирает: если долго не кормить, он сгорит и возродится из пепла яйцом</div>` : ""}
       ${p.hunger < 25 && !t.reborn ? `<div class="warn small mt">⚠️ Умрёт через <b data-until="${p.starve_at}">${petTime(p.dieIn)}</b>, если не покормить</div>` : ""}
@@ -171,7 +174,7 @@ function petCareBlock(p, t) {
     <div class="row case-btns"><button class="btn small" data-a="pet-fun" ${p.den ? "disabled" : ""}>🎮 Мини-игры</button>
       <button class="btn ghost small" data-a="pet-den" data-v="${p.den ? 0 : 1}">${p.den ? "☀️ Разбудить" : "🏠 В домик"}</button>
       ${p.receptive ? `<button class="btn ghost small" data-a="pet-mg-open">💉 Мутаген ${(p.mg || []).length}/2</button>` : ""}</div>
-    <div class="small muted mt">${p.den ? "Спит в домике: голодает вчетверо медленнее, настроение не портится. Но не играет и не дерётся." : "Домик — для тех, кого сейчас некогда кормить: там он почти не голодает, но не играет и не дерётся."}</div>
+    <div class="small muted mt">${p.den ? "Спит в домике: голодает вчетверо медленнее, настроение не портится. Но не играет и не дерётся." : `Домик — для тех, кого сейчас некогда кормить: там голодает вчетверо медленнее, но не играет и не дерётся. Комнат: ${(Api.state.den || {}).used || 0} из ${(Api.state.den || {}).rooms || 0} — их больше, когда больше питомцев (10 питомцев — 4 комнаты).`}</div>
     <div class="small muted">🎮 Хочет играть ${Pets.funWant(p.dna, petStage(p))} раз${Pets.funWant(p.dna, petStage(p)) === 1 ? "" : "а"} в день${p.fun ? ` · сегодня уже ${p.fun}` : ""}${t.social === 0 ? " — любит тишину, не зови слишком часто" : t.social === 2 ? " — обожает внимание" : ""}</div>
     ${p.receptive ? `<div class="small mt">🧬 Принимает мутагены: можно уколоть ещё ${2 - (p.mg || []).length}${mgs ? ` · у тебя шприцов: ${mgs}` : " · шприцов пока нет (турниры и редко — «Питомник»)"}</div>` : ""}
     ${(p.mg || []).length ? `<div class="small muted">💉 Уколото: ${p.mg.map((k) => { const it = Shop.byKey(k); return it ? "«" + esc(it.name) + "»" : ""; }).join(", ")}</div>` : ""}</div>`;
@@ -262,10 +265,12 @@ function petOnState() {
   if (!busy && ["pets", "home", "profile", "shop"].includes(S.screen)) render();
 }
 
-let petRefreshing = false;
+let petRefreshing = false, petActSlot = 0;
 setInterval(() => {
   if (S.screen !== "pets") return;
   const t = petNow();
+  const slot = Math.floor(t / ACT_SLOT), busy = document.activeElement && document.activeElement.tagName === "INPUT";
+  if (slot !== petActSlot) { const first = !petActSlot; petActSlot = slot; if (!first && !S.care && !S.sheet && !busy && (S.petTab || "list") === "list") render(); }   // питомцы сменили занятие
   document.querySelectorAll("[data-until]").forEach((el) => {
     const left = Number(el.dataset.until) - t;
     el.textContent = left > 0 ? (el.dataset.egg && el.classList.contains("small") ? "через " : "") + petTime(left) : el.dataset.egg ? "вылупляется!" : "0 с";
@@ -276,7 +281,7 @@ setInterval(() => {
 const petErr = (e) => { notify("error"); toast(e.message || "Ошибка"); };
 const PET_ACTIONS = {
   "pets-sel": (v) => { S.petSel = Number(v); haptic(); render(); window.scrollTo(0, 0); },
-  "pets-tab": (v) => { S.petTab = v; S.petSel = null; haptic(); render(); window.scrollTo(0, 0); if (v === "battle") battleLoadList(); if (v === "trade") tradeLoadList(); },
+  "pets-tab": (v) => { S.petTab = v; S.petSel = null; S.care = null; haptic(); render(); window.scrollTo(0, 0); if (v === "battle") battleLoadList(); if (v === "trade") tradeLoadList(); },
   "food-cat": (v) => { S.shopFood = v; haptic(); render(); },
   "food-buy5": (item) => Api.act("/api/food/buy", { item, qty: 5 }).then(() => { haptic("medium"); toast(`Куплено: ${petFood(item).name} ×5`); }).catch(petErr),
   "pets-back": () => { S.petSel = null; render(); },
@@ -307,10 +312,6 @@ const PET_ACTIONS = {
       setTimeout(() => { petFx(st.reaction === "dis" ? "🤢" : st.reaction === "fav" ? "😍" : "🍖"); petJump("act-chew"); if (t.quirkIdx === 10) setTimeout(() => petSay("ик!"), 900); }, 60);
     }).catch(petErr);
   },
-  "pet-careall": () => Api.act("/api/pet/careall", {}).then((st) => {
-    const c = st.care; haptic("medium");
-    toast(c.fed || c.petted ? `🤲 Накормлено: ${c.fed}, поглажено: ${c.petted}${c.hungry ? ` · не хватило еды для ${c.hungry}` : ""}` : c.hungry ? "Еды не хватило — купи в лавке" : "Все сыты и довольны");
-  }).catch(petErr),
   "pet-den": (v) => Api.act("/api/pet/den", { pet: S.petSel, on: v === "1" }).then(() => { haptic("medium"); toast(v === "1" ? "🏠 Спит в домике" : "☀️ Проснулся!"); }).catch(petErr),
   "pet-mg-open": () => { S.sheet = { type: "pet-mg" }; renderOverlay(); },
   "pet-mg-inject": (k) => {

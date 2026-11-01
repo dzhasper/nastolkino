@@ -57,6 +57,7 @@ function drawLobby() {
         ${isHost() ? `<button class="btn ghost small" data-a="draw-settings">⚙️</button>` : ""}</div>
       <div class="small mt">Каждый игрок нарисует ${r.settings.rounds === 1 ? "одну картинку" : r.settings.rounds + " картинки"}. Пока рисуют, чат закрыт — без подсказок!</div>
     </div>
+    ${Bots.bar(S.room)}
     ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Начать игру 🎬" : `Ждём игроков (минимум ${Draw.MIN_PLAYERS})`}</button>`
       : `<div class="card center mt2 muted">⏳ Ждём, когда хост начнёт игру…</div>`}`;
 }

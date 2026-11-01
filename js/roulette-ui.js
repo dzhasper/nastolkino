@@ -106,6 +106,7 @@ function rouLobby() {
     <div class="section-title">Правила стола</div>
     <div class="card"><div class="row"><div class="grow small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, выживший забирает банк ${s.stake * Math.min(r.players.length, Roulette.MAX_PLAYERS)}<br>` : "🎲 На интерес<br>"}❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🎒 Предметов за зарядку: <b>${s.items}</b></div>
       ${isHost() ? `<button class="btn ghost small" data-a="rou-settings">⚙️</button>` : ""}</div></div>
+    ${Bots.bar(S.room)}
     ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Закрыть дверь и начать" : `Ждём игроков (минимум ${Roulette.MIN_PLAYERS})`}</button>`
       : `<div class="card center mt2 muted">⏳ Ждём, когда хост закроет дверь…</div>`}`;
 }

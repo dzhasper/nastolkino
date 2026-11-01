@@ -53,6 +53,7 @@ function bjLobby() {
     <div class="section-title">Ставки</div>
     <div class="card"><div class="row"><div class="grow">${s.stake ? `🪙 <b>На монеты: ${s.stake} с каждого за раздачу</b><div class="small muted">Банк раздачи забирает лучший. Нужно иметь хотя бы ${s.stake} монет.</div>` : `🎲 <b>На интерес</b><div class="small muted">Без монет — просто кто кого.</div>`}</div>
       ${isHost() ? `<button class="btn ghost small" data-a="bj-settings">⚙️</button>` : ""}</div></div>
+    ${Bots.bar(S.room)}
     ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Раздать карты" : `Ждём игроков (минимум ${Blackjack.MIN_PLAYERS})`}</button>`
       : `<div class="card center mt2 muted">⏳ Ждём, когда хост начнёт раздачу…</div>`}`;
 }

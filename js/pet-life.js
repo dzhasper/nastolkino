@@ -2,48 +2,93 @@
    Занятие выбирается по генам и времени — у одного питомца оно одинаковое на любом телефоне в эти 15 минут. */
 "use strict";
 
+// занятие: cls — анимация тела, prop — предмет рядом, fx — частицы вокруг, text — реплика в облачке, short — подпись в списке
+const mkAct = (cls, prop, fx, text, short, extra) => Object.assign({ cls, prop, fx, text, short }, extra || {});
 const HOBBY_ACT = [
-  { prop: "🔘", cls: "act-toy", text: "перебирает пуговицы" }, { prop: "🌧", cls: "act-stare", text: "смотрит на дождь" },
-  { prop: "✨", cls: "act-stare", text: "считает звёзды: …41, 42…" }, { prop: "🍞", cls: "act-hop", text: "строит башню из крошек" },
-  { prop: "🧦", cls: "act-pounce", text: "охотится на носок!" }, { prop: "🎵", cls: "act-sing", text: "♪ ля-ля-ля ♪" },
-  { prop: "", cls: "act-roll", text: "катается по полу" }, { prop: "📦", cls: "act-box", text: "спрятался в коробку" },
-  { prop: "🌸", cls: "act-stare", text: "нюхает цветочек" }, { prop: "✏️", cls: "act-chew", text: "грызёт карандаш" },
-  { prop: "⏰", cls: "act-stare", text: "тик-так… тик-так…" }, { prop: "·", cls: "act-hop", text: "гоняет пылинки" },
-  { prop: "⌨️", cls: "act-sleep", text: "уснул на клавиатуре… ffffffff", sleep: true }, { prop: "🍬", cls: "act-toy", text: "собирает фантики" },
-  { prop: "🖐", cls: "act-paint", text: "рисует лапой на стекле" }, { prop: "👤", cls: "act-pounce", text: "пугает тени: БУ!" },
+  mkAct("act-toy", "🔘", "sparkle", "перебираю пуговицы…", "перебирает пуговицы"), mkAct("act-stare", "🪟", "rain", "кап-кап…", "смотрит на дождь"),
+  mkAct("act-stare", "🔭", "stars", "…сорок один, сорок два…", "считает звёзды"), mkAct("act-hop", "🍞", "crumbs", "ещё этаж!", "строит башню из крошек"),
+  mkAct("act-pounce", "🧦", "dust", "попался, носок!", "охотится на носок"), mkAct("act-sing", "🎤", "notes", "♪ ля-ля-ля ♪", "поёт"),
+  mkAct("act-roll", "", "dust", "вжу-у-ух!", "катается по полу"), mkAct("act-box", "📦", "question", "меня тут нет", "сидит в коробке"),
+  mkAct("act-sniff", "🌸", "petals", "м-м-м, цветочек", "нюхает цветок"), mkAct("act-chew", "✏️", "crumbs", "хрум-хрум", "грызёт карандаш"),
+  mkAct("act-tick", "⏰", "tick", "тик-так…", "слушает часы"), mkAct("act-hop", "", "dust", "пылинка!", "гоняет пылинки"),
+  mkAct("act-sleep", "⌨️", "zzz", "фффффффф…", "спит на клавиатуре", { sleep: true }), mkAct("act-toy", "🍬", "sparkle", "ещё фантик в коллекцию!", "собирает фантики"),
+  mkAct("act-paint", "🖼", "paint", "шедевр!", "рисует лапой"), mkAct("act-pounce", "👤", "anger", "БУ!", "пугает тени"),
+  mkAct("act-blow", "", "bubbles", "буль-буль-буль", "пускает пузыри"), mkAct("act-dance", "📻", "notes", "♪ туц-туц ♪", "танцует"),
+  mkAct("act-pounce", "", "butterfly", "стой, бабочка!", "ловит бабочку"), mkAct("act-float", "", "sparkle", "оммм…", "медитирует"),
+  mkAct("act-toy", "🪨", "dust", "этот — самый красивый", "собирает камушки"), mkAct("act-dig", "🕳", "dirt", "копаю-копаю", "копает ямку"),
+  mkAct("act-sleep", "🧦", "zzz", "уютное гнёздышко…", "дремлет в гнезде из носков", { sleep: true }), mkAct("act-pounce", "", "sun", "зайчик!", "ловит солнечного зайчика"),
+  mkAct("act-sing", "🦜", "echo", "кукареку! мяу! гав!", "подражает звукам"), mkAct("act-stare", "📺", "tv", "ха-ха-ха!", "смотрит мультики"),
+  mkAct("act-juggle", "🥜", "nuts", "оп-оп-оп!", "жонглирует орешками"), mkAct("act-swing", "🪟", "", "ииии-ха!", "качается на шторах"),
+  mkAct("act-write", "📜", "hearts", "о хозяин, ты прекрасен…", "сочиняет стихи"), mkAct("act-guard", "🥣", "anger", "это МОЯ миска", "охраняет миску"),
+  mkAct("act-stare", "🔭", "stars", "там Большая Медведица", "изучает небо"), mkAct("act-face", "🪞", "laugh", "бе-бе-бе!", "строит рожицы"),
 ];
 const QUIRK_ACT = [
-  { cls: "act-shake", text: "апчхи! 🤧" }, { prop: "🥒", cls: "act-scared", text: "А-А-А! ОГУРЕЦ!" }, null,
-  { prop: "⏰", cls: "act-grumpy", text: "бесит этот будильник 💢" }, { cls: "act-roll", text: "почеши пузико!" },
-  { cls: "act-shake", text: "только не уши!" }, null, { prop: "📱", cls: "act-grumpy", text: "опять в телефоне сидишь?" },
-  { prop: "🎁", cls: "act-hop", text: "я тебе кое-что принёс!" }, { cls: "act-stare", text: "…" },
-  { cls: "act-hiccup", text: "ик!" }, { prop: "🧊", cls: "act-wave", text: "привет, холодильник!" },
+  mkAct("act-shake", "", "sneeze", "апчхи!", "чихает от радости"), mkAct("act-scared", "🥒", "sweat", "А-А-А! ОГУРЕЦ!", "испугался огурца"),
+  mkAct("act-sleep", "", "snore", "ХРРР… ХРРР…", "храпит", { sleep: true }), mkAct("act-grumpy", "⏰", "anger", "бесит этот будильник", "ворчит на будильник"),
+  mkAct("act-belly", "", "hearts", "почеши пузико!", "подставляет пузико"), mkAct("act-shake", "", "anger", "только не уши!", "прячет уши"),
+  mkAct("act-sleep", "", "zzz", "уснул на ровном месте…", "внезапно уснул", { sleep: true }), mkAct("act-grumpy", "📱", "anger", "опять в телефоне?", "ревнует к телефону"),
+  mkAct("act-hop", "🎁", "sparkle", "я тебе кое-что принёс!", "несёт подарок"), mkAct("act-stare", "", "dots", "…", "смотрит в одну точку"),
+  mkAct("act-hiccup", "", "hic", "ик!", "икает"), mkAct("act-wave", "🧊", "cold", "привет, холодильник!", "здоровается с холодильником"),
+  mkAct("act-sleep", "", "mumble", "бу-бу-бу… мои печеньки…", "бормочет во сне", { sleep: true }), mkAct("act-scared", "🌀", "sweat", "ПЫЛЕСОС!!!", "прячется от пылесоса"),
+  mkAct("act-shake", "", "sneeze", "а-а-апчхи!", "чихает от пыли"), mkAct("act-back", "", "dust", "так тоже можно", "ходит задом наперёд"),
+  mkAct("act-sneak", "🍖", "question", "это на потом…", "прячет еду"), mkAct("act-sleep", "🧸", "zzz", "мой мишка…", "спит в обнимку", { sleep: true }),
+  mkAct("act-bark", "📮", "anger", "ГАВ! ГАВ!", "лает на почтальона"), mkAct("act-sneak", "🧦", "sparkle", "твой носок теперь мой", "таскает носки"),
+  mkAct("act-face", "🪞", "laugh", "какой я красивый", "кривляется у зеркала"), mkAct("act-purr", "", "hearts", "мррр-мррр…", "мурчит"),
+  mkAct("act-scared", "⛈", "sweat", "гром!..", "боится грозы"), mkAct("act-sleep", "🐑", "sheep", "одна овечка… две…", "считает овечек", { sleep: true }),
+];
+// обычные занятия, которые бывают у любого питомца
+const IDLE_ACT = [
+  mkAct("act-blow", "", "bubbles", "буль!", "пускает пузыри"), mkAct("act-yawn", "", "", "ааауф…", "зевает"), mkAct("act-dance", "", "notes", "♪", "пританцовывает"),
+  mkAct("act-pounce", "", "butterfly", "бабочка!", "гонится за бабочкой"), mkAct("act-shake", "", "dust", "чешусь-чешусь", "чешется"), mkAct("act-float", "", "sparkle", "я лёгкий, как пёрышко", "парит в мечтах"),
+  mkAct("act-spin", "", "stars", "уиии!", "кружится"), mkAct("act-wave", "", "hearts", "привет!", "машет лапкой"), mkAct("act-sleep", "", "zzz", "Zzz…", "задремал", { sleep: true }),
+  mkAct("act-stare", "", "fly", "муха…", "следит за мухой"), mkAct("act-hop", "", "", "прыг-скок!", "прыгает"), mkAct("act-yawn", "", "", "м-м-м, потянусь", "потягивается"),
+  mkAct("act-purr", "", "notes", "мр-мр-мр", "мурлычет"), mkAct("act-float", "", "thought", "а что, если…", "мечтает"), mkAct("act-face", "", "laugh", "хи-хи", "хихикает"),
 ];
 const toyOf = (k) => Pets.TOYS.find((x) => x[0] === k);
 const mskHour = (t) => Math.floor((t / 3600 + 3) % 24);
+const ACT_SLOT = 90;                                                       // занятие меняется каждые полторы минуты
 
+// что питомец делает прямо сейчас: одинаково на любом телефоне в эти полторы минуты
 function petActivity(p, t = petNow()) {
-  const tr = Pets.traits(p.dna), sl = Pets.sleepState(p.dna, t);
-  const slot = Math.floor(t / 900), h = (parseInt(p.dna.slice(0, 2), 16) * 31 + slot * 17 + parseInt(p.dna.slice(2, 4), 16)) % 100;
-  if (p.den) return { key: "den", sleep: true, cls: "act-sleep", prop: "🏠", text: "спит в домике… Zzz", note: "в домике почти не голодает" };
-  if (sl.asleep) return { key: "sleep", sleep: true, cls: "act-sleep", prop: "", text: tr.quirkIdx === 2 ? "ХРРР… ХРРР…" : "Zzz…", note: `${tr.chrono.name}: спит до ${sl.wake}:00` };
-  if (tr.quirkIdx === 6 && h < 30) return { key: "nap", sleep: true, cls: "act-sleep", prop: "", text: "уснул на ровном месте… Zzz" };
-  if (p.toy && p.toy_at && t - p.toy_at < 1800 && toyOf(p.toy)) return { key: "toy", cls: "act-toy", prop: toyOf(p.toy)[2], text: "играет: " + toyOf(p.toy)[1].toLowerCase() };
-  if (tr.quirkIdx === 10 && p.fed_at && t - p.fed_at < 1200) return Object.assign({ key: "hiccup" }, QUIRK_ACT[10]);
-  if (p.gift) return Object.assign({ key: "gift" }, QUIRK_ACT[8]);
-  if (tr.quirkIdx === 3 && [7, 8].includes(mskHour(t))) return Object.assign({ key: "grumpy" }, QUIRK_ACT[3]);
-  if (h < 12) return { key: "chase", cls: "act-chase", prop: "", text: "где мой хвост?!" };
-  if (h < 55) return Object.assign({ key: "hobby" }, HOBBY_ACT[tr.hobbyIdx]);
-  if (h < 75 && QUIRK_ACT[tr.quirkIdx]) return Object.assign({ key: "quirk" }, QUIRK_ACT[tr.quirkIdx]);
-  return { key: "idle", cls: "", prop: "", text: "" };
+  const tr = Pets.traits(p.dna), sl = Pets.sleepState(p.dna, t), slot = Math.floor(t / ACT_SLOT);
+  const b = (i) => parseInt(p.dna.slice(i * 2, i * 2 + 2), 16) || 0, h = (b(0) * 31 + slot * 17 + b(1) * 7) % 100, k = (b(2) + slot * 13) % 1000;
+  if (p.den) return mkAct("act-sleep", "🏠", "zzz", "сплю в домике…", "спит в домике", { sleep: true, note: "в домике голодает вчетверо медленнее" });
+  if (sl.asleep) return Object.assign(mkAct("act-sleep", "", tr.quirkIdx === 2 ? "snore" : tr.quirkIdx === 23 ? "sheep" : tr.quirkIdx === 12 ? "mumble" : "zzz",
+    tr.quirkIdx === 2 ? "ХРРР… ХРРР…" : tr.quirkIdx === 12 ? "бу-бу-бу…" : "Zzz…", "спит"), { sleep: true, note: `${tr.chrono.name}: спит до ${sl.wake}:00` });
+  if (tr.quirkIdx === 6 && h < 25) return QUIRK_ACT[6];
+  if (p.toy && p.toy_at && t - p.toy_at < 1800 && toyOf(p.toy)) return mkAct("act-toy", toyOf(p.toy)[2], "sparkle", "моя " + toyOf(p.toy)[1].toLowerCase() + "!", "играет: " + toyOf(p.toy)[1].toLowerCase());
+  if (p.fed_at && t - p.fed_at < 600) return tr.quirkIdx === 10 ? QUIRK_ACT[10] : mkAct("act-chew", "🍽", "crumbs", "ням-ням-ням", "ест");
+  if (p.gift) return QUIRK_ACT[8];
+  if (!tr.immortal && p.hunger != null && p.hunger < 25) return mkAct("act-hungry", "🥣", "question", "покорми меня…", "голодный!");
+  if (p.mood != null && p.mood < 20) return mkAct("act-sad", "", "rain", "мне грустно…", "грустит");
+  if (tr.quirkIdx === 3 && [7, 8].includes(mskHour(t))) return QUIRK_ACT[3];
+  const r = (h + slot) % 10;                                               // хобби и странность видно часто, обычные занятия — между ними
+  if (r < 4) return HOBBY_ACT[tr.hobbyIdx];
+  if (r < 6) return QUIRK_ACT[tr.quirkIdx];
+  if (r < 7 && p.mood > 75) return mkAct("act-hop", "", "hearts", "я счастлив!", "радуется");
+  if (r < 8) return h < 50 ? mkAct("act-chase", "", "dust", "где мой хвост?!", "гоняется за хвостом") : IDLE_ACT[k % IDLE_ACT.length];
+  return IDLE_ACT[k % IDLE_ACT.length];
 }
+
+// частицы вокруг питомца
+const PFX = { zzz: ["z", "z", "Z"], snore: ["Х", "Р", "Р"], sheep: ["🐑", "🐑", "🐑"], mumble: ["бу", "бу", "…"], notes: ["♪", "♫", "♪"], bubbles: ["○", "◦", "○"],
+  hearts: ["❤", "❤", "❤"], stars: ["★", "✦", "★"], sparkle: ["✦", "✧", "✦"], petals: ["🌸", "✿", "🌸"], rain: ["|", "|", "|"], dust: ["·", "∙", "·"], crumbs: ["·", "·", "·"],
+  sweat: ["💧", "💧"], anger: ["💢"], question: ["?"], thought: ["💭"], tick: ["тик", "так"], sneeze: ["апчхи!"], hic: ["ик!"], cold: ["❄", "❄"], paint: ["●", "●", "●"],
+  butterfly: ["🦋"], fly: ["•"], dots: ["·", "·", "·"], dirt: ["▪", "▪", "▪"], sun: ["☀"], echo: ["♪", "!", "?"], tv: ["ха", "ха"], nuts: ["●", "●", "●"], laugh: ["ха", "хи", "ха"] };
+const pfxHtml = (fx) => (fx && PFX[fx] ? `<span class="pfx pfx-${fx}">${PFX[fx].map((c, i) => `<i style="--i:${i}">${c}</i>`).join("")}</span>` : "");
 
 // сцена питомца с занятием
 function petStageHtml(p, size = 190) {
   const a = petActivity(p);
   return `<div class="pet-stage r${p.rarity}" data-a="pet-pet" id="pet-stage">
-    <div class="pet-act ${a.cls}">${Pets.sprite(petCode(p), size, { sleep: !!a.sleep })}${a.prop ? `<span class="pet-prop">${a.prop}</span>` : ""}${a.sleep ? `<span class="pet-zzz">z<i>z</i><b>Z</b></span>` : ""}</div>
+    <div class="pet-act ${a.cls}">${Pets.sprite(petCode(p), size, { sleep: !!a.sleep })}${a.prop ? `<span class="pet-prop">${a.prop}</span>` : ""}${pfxHtml(a.fx)}</div>
     ${a.text ? `<div class="pet-bubble">${esc(a.text)}</div>` : ""}${a.note ? `<div class="pet-note">${esc(a.note)}</div>` : ""}<div class="pet-fx" id="pet-fx"></div></div>`;
+}
+// маленькая живая картинка для списка
+function petMiniHtml(p, size = 80) {
+  const a = petActivity(p);
+  return `<span class="pet-live"><span class="pet-act mini ${a.cls}">${Pets.sprite(petCode(p), size, { sleep: !!a.sleep })}${a.prop ? `<span class="pet-prop">${a.prop}</span>` : ""}${pfxHtml(a.fx)}</span></span>
+    <span class="pet-doing">${esc(a.short || "")}</span>`;
 }
 
 function petLifeBlock(p, t) {
@@ -77,6 +122,59 @@ function petHatSheet() {
     ${p.hat ? `<button class="btn ghost mt" data-a="pet-hat-set" data-v="">Снять прикол</button>` : ""}`;
 }
 
+/* ---------------------------------------------------------------- уход за всеми: сцена кормления
+   Любимая еда — только если игрок её уже узнал и она есть в кладовке. Иначе — случайная (нелюбимую, если знаем, не даём). */
+function carePlan() {
+  const st = Api.state, food = Object.assign({}, st.food || {}), foods = st.foods || {};
+  const okFood = (k) => food[k] > 0 && foods[k] && ["food", "treat"].includes(foods[k].cat);
+  const rows = st.pets.filter((p) => p.alive && !p.egg).map(petLive).sort((a, b) => a.hunger - b.hunger).map((p) => {
+    const t = Pets.traits(p.dna), k = petKnow(p.id);
+    if (p.den) return { p, mode: "den" };
+    if (t.immortal) return { p, mode: "imm" };
+    if (p.hunger >= 90) return { p, mode: "full" };
+    let item = null, mode = "rand";
+    if (k.fav && okFood(t.fav)) { item = t.fav; mode = "fav"; }
+    else { const list = Object.keys(food).filter((x) => okFood(x) && !(k.dis && x === t.dis)); if (list.length) item = list[Math.floor(Math.random() * list.length)]; }
+    if (!item) return { p, mode: "none" };
+    food[item]--;
+    return { p, item, mode };
+  });
+  return rows;
+}
+function careScene() {
+  const c = S.care, n = c.rows.filter((r) => r.item).length;
+  const cell = (r, i) => {
+    const shown = c.phase !== "plan" && i < c.shown, res = r.res || {}, t = Pets.traits(r.p.dna);
+    const tag = r.mode === "fav" ? "⭐ любимое" : r.mode === "rand" ? "🎲 наугад" : r.mode === "full" ? "😌 сыт" : r.mode === "imm" ? "♾️ не ест" : r.mode === "den" ? "🏠 спит" : "🚫 нет еды";
+    const react = !shown ? "" : res.error ? "✋" : res.reaction === "fav" ? "😍" : res.reaction === "dis" ? "🤢" : res.reaction ? "😋" : "";
+    const say = !shown ? "" : res.error ? esc(res.error) : res.reaction === "fav" ? "обожает это!" : res.reaction === "dis" ? "фу, не любит" : res.reaction ? (res.stash ? "припрятал на потом" : "ням!") : r.mode === "full" ? "уже сыт" : r.mode === "den" ? "спит в домике" : r.mode === "imm" ? "ему еда не нужна" : "";
+    return `<div class="care-cell ${shown ? "go" : ""} ${shown && r.item && !res.error ? "eat" : ""}">
+      <span class="care-food">${r.item ? Pets.FOOD_EMOJI[r.item] || "🍽" : ""}</span>
+      <span class="pet-act ${shown && r.item && !res.error ? "act-chew" : r.mode === "den" ? "act-sleep" : ""}">${Pets.sprite(petCode(r.p), 64, { sleep: r.mode === "den" })}</span>
+      ${react ? `<span class="care-react">${react}</span>` : ""}${shown && r.petted ? `<span class="care-heart">❤</span>` : ""}
+      <span class="care-bowl">🥣</span><b>${esc(t.name)}</b><span class="small muted">${shown && say ? say : r.item ? `${tag} · ${esc(petFood(r.item).name)}` : tag}</span></div>`;
+  };
+  const head = c.phase === "plan" ? `<div class="small">Кому что достанется: ⭐ — любимая еда (если ты её уже узнал и она есть в кладовке), 🎲 — случайная из кладовки.</div>`
+    : c.phase === "run" ? `<div class="small">Кормим… ${Math.min(c.shown, c.rows.length)}/${c.rows.length}</div>`
+    : `<div class="small"><b>Готово!</b> Накормлено: ${c.rows.filter((r) => r.res && r.res.reaction).length}, поглажено: ${c.rows.filter((r) => r.petted).length}${c.found.length ? `. Узнал любимую еду: ${c.found.map(esc).join(", ")}` : ""}</div>`;
+  return `<div class="card care-head"><div class="q-head">🤲 Уход за всеми</div>${head}</div>
+    <div class="care-grid">${c.rows.map(cell).join("")}</div>
+    ${c.phase === "plan" ? `<button class="btn mt2" data-a="care-go" ${n ? "" : "disabled"}>${n ? `🍽 Покормить (${n}) и погладить` : "Некого кормить или нет еды"}</button>
+      <button class="btn ghost mt" data-a="care-reroll">🎲 Перемешать случайную еду</button>` : ""}
+    ${c.phase === "done" || c.phase === "plan" ? `<button class="btn ghost mt" data-a="care-close">← К питомцам</button>` : ""}
+    ${c.phase === "plan" && !Object.keys(Api.state.food || {}).length ? `<div class="small muted mt center">Кладовка пуста — еда продаётся во вкладке «🛒 Лавка» (оптом ×10 со скидкой)</div>` : ""}`;
+}
+function careReveal() {
+  const c = S.care;
+  if (!c || c.phase !== "run") return;
+  c.shown++;
+  const r = c.rows[c.shown - 1];
+  if (r && r.res && r.res.reaction) haptic(r.res.reaction === "fav" ? "medium" : "light");
+  if (c.shown >= c.rows.length) { c.phase = "done"; notify("success"); saveProfile(); }
+  if (S.screen === "pets" && S.care === c) render();
+  if (c.phase === "run") setTimeout(careReveal, 650);
+}
+
 /* ---------------------------------------------------------------- ежедневные задания */
 const QUEST_TEXT = { feed: "Покорми питомца", pet: "Погладь питомца", play: "Поиграй с питомцем", case: "Открой любой кейс", battle: "Сразись в бою питомцев", buy: "Купи что-нибудь в лавке" };
 function questsCard() {
@@ -92,6 +190,23 @@ function questsCard() {
 
 const JUNK = ["фантик", "пуговицу", "крышку от бутылки", "сухой листик", "один носок", "камешек", "скрепку", "перо голубя"];
 const LIFE_ACTIONS = {
+  "care-open": () => { S.care = { phase: "plan", rows: carePlan(), shown: 0, found: [] }; haptic(); render(); window.scrollTo(0, 0); },
+  "care-reroll": () => { S.care.rows = carePlan(); haptic(); render(); },
+  "care-close": () => { S.care = null; render(); },
+  "care-go": () => {
+    const c = S.care; if (!c || c.phase !== "plan") return;
+    c.phase = "run"; c.shown = 0; render();
+    Api.act("/api/pet/careall", { plan: c.rows.filter((r) => r.item).map((r) => ({ pet: r.p.id, item: r.item })) }).then((st) => {
+      const fed = st.care.fed, petted = st.care.petted.map((x) => x.pet);
+      c.rows.forEach((r) => {
+        r.res = fed.find((x) => x.pet === r.p.id) || null; r.petted = petted.includes(r.p.id);
+        const k = petKnow(r.p.id);
+        if (r.res && r.res.reaction === "fav" && !k.fav) { k.fav = 1; c.found.push(Pets.traits(r.p.dna).name + " — " + petFood(r.item).name); }
+        if (r.res && r.res.reaction === "dis") k.dis = 1;
+      });
+      setTimeout(careReveal, 300);
+    }).catch((e) => { c.phase = "plan"; petErr(e); render(); });
+  },
   "pet-play": () => {
     const p = Api.state.pets.find((x) => x.id === S.petSel);
     if (!p) return;

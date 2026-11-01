@@ -17,7 +17,8 @@ function caseArt(key) {
     s_moon: { wood: "#5a0810", dark: "#2a0206", light: "#8a1018", metal: "#1a0a0c", mlight: "#4a2a2c", lock: "#ff3b4a", glow: "#ff3b4a" },
     s_neon: { wood: "#160a2a", dark: "#0a0418", light: "#2a1650", metal: "#00e5ff", mlight: "#ff2bd6", lock: "#ffe14d", glow: "#00e5ff" },
     s_dragon: { wood: "#c8101e", dark: "#7a0810", light: "#ff4a3a", metal: "#ffd23f", mlight: "#fff4b0", lock: "#ffd23f", glow: "#ffd23f" },
-  }[key] || {};
+    zoo: { wood: "#4fa83a", dark: "#2a6a22", light: "#8ad86a", metal: "#c89a50", mlight: "#f0d090", lock: "#ff8fb0", glow: "#ffe14d" },
+  }[key] || { wood: "#8a5a2b", dark: "#5e3a17", light: "#b77d40", metal: "#6b6f78", mlight: "#b5b9c2", lock: "#c9a227", glow: null };
   const g = Array.from({ length: H }, () => Array(W).fill(null));
   for (let y = 3; y <= 24; y++) for (let xx = 2; xx <= 29; xx++) {
     if (y === 3 && (xx < 4 || xx > 27)) continue;
@@ -30,6 +31,13 @@ function caseArt(key) {
     if ((key === "dark" || key === "s_neon" || key === "s_moon") && y >= 16 && y <= 20 && (xx === 10 || xx === 20) ) col = pal.glow;
     if (key === "dark" && y === 18 && (xx === 11 || xx === 19)) col = pal.glow;
     g[y][xx] = col;
+  }
+  if (key === "zoo") {                                       // «Питомник»: ушки на крышке, лапка спереди, травка снизу
+    [[5, 2], [6, 1], [6, 2], [7, 2], [24, 2], [25, 1], [25, 2], [26, 2]].forEach(([a, b]) => { g[b][a] = pal.dark; });
+    g[2][6] = "#ff8fb0"; g[2][25] = "#ff8fb0";
+    for (let yy = 16; yy <= 19; yy++) for (let xx = 13; xx <= 18; xx++) if (!((yy === 16 || yy === 19) && (xx === 13 || xx === 18))) g[yy][xx] = "#ff8fb0";
+    [[12, 14], [14, 13], [17, 13], [19, 14]].forEach(([a, b]) => { g[b][a] = "#ff8fb0"; g[b + 1][a] = "#ff8fb0"; });
+    [[3, 24], [5, 23], [8, 24], [22, 24], [25, 23], [28, 24]].forEach(([a, b]) => { g[b][a] = "#7ae05a"; g[b + 1] && (g[b + 1][a] = "#7ae05a"); });
   }
   for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++) {
     if (g[y][xx]) { x.fillStyle = g[y][xx]; x.fillRect(xx, y, 1, 1); continue; }
@@ -90,7 +98,7 @@ function viewCaseList() {
           <button class="btn ghost small" data-a="case-odds" data-v="${c.key}">Шансы</button></div></div></div>`;
   }).join("")}</div>
   <div class="card small muted mt earn">${PX() ? Pixel.sprite("coin", 2) : "🪙"} Монеты: +${Shop.REWARD.game} за партию, +${Shop.REWARD.win} за победу, +${Shop.REWARD.alive} если дожил(а) до конца.
-    Повторная вещь превращается в монеты: ${Shop.DUP.map((d, i) => `<b style="color:${Shop.TIERS[i].color}">${d}</b>`).join(" / ")}.</div>`;
+    ${Api.on ? `Повторная вещь превращается в ✨ осколки: ${[5, 12, 30, 80].map((d, i) => `<b style="color:${Shop.TIERS[i].color}">${d}</b>`).join(" / ")} — из них в мастерской делают новые вещи.` : `Повторная вещь превращается в монеты: ${Shop.DUP.map((d, i) => `<b style="color:${Shop.TIERS[i].color}">${d}</b>`).join(" / ")}.`}</div>`;
 }
 
 function caseOddsSheet(key) {
