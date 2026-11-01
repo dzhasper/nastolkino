@@ -349,59 +349,187 @@ const Bots = (() => {
   }
   const doodle = () => Array.from({ length: 6 }, () => { const cx = 30 + Math.random() * 100, cy = 30 + Math.random() * 100; return S(Math.floor(1 + Math.random() * 15), 4, O(Math.round(cx), Math.round(cy), Math.round(8 + Math.random() * 26), 14)); });
 
-  /* ================================================================ «Последний заряд»: считает патроны и пользуется предметами */
+  /* ================================================================ «Последний заряд»: считает патроны, помнит обиды, выбирает цель с умом */
+  // что бот знает честно: свой заряд, свои фонарик/шкатулку/подслушку (их видит и человек), выстрелы и предметы на столе
   function rouKnow(room, id) {
-    const m = mem(room, id), v = room.view(id);
-    if (m.gameNo !== v.game_no) Object.assign(m, { gameNo: v.game_no, ev: 0, known: {}, contrib: {}, live: 0, blank: 0, notes: 0 });
+    const m = mem(room, id);
+    if (m.gameNo !== room.gameNo) Object.assign(m, { gameNo: room.gameNo, ev: 0, live: 0, blank: 0, grudge: {}, threat: {}, peeked: {}, bold: (Math.random() - .5) * .12, turnKey: "", acts: 0 });
     room.events.filter((e) => e.n > m.ev).forEach((e) => {
-      if (e.kind === "load") { m.known = {}; m.contrib = {}; m.live = 0; m.blank = 0; }
-      else if (e.kind === "shot") { if (e.live) m.live++; else m.blank++; const k = {}; Object.entries(m.known).forEach(([i, t]) => { if (+i > 0) k[+i - 1] = t; }); m.known = k; }
-      else if (e.kind === "item" && e.item === "spin") m.known = {};
+      if (e.kind === "load") { m.live = 0; m.blank = 0; m.peeked = {}; }
+      else if (e.kind === "shot") {
+        if (e.live) m.live++; else m.blank++;
+        if (e.who !== id && e.target === id) m.grudge[e.who] = (m.grudge[e.who] || 0) + (e.live ? 3 : 2);          // целился в меня — запомню
+        else if (e.who !== id && !e.self) m.threat[e.who] = (m.threat[e.who] || 0) + (e.live ? 1 : .5);          // вообще агрессивный
+        if (e.redirected && e.hit === id) m.grudge[e.target] = (m.grudge[e.target] || 0) + 1;
+      } else if (e.kind === "item") {
+        if (e.item === "spin") m.peeked = {};
+        if (["flashlight", "box", "ear"].includes(e.item) && e.who !== id) m.peeked[e.who] = true;              // он что-то знает про патроны
+        if ((e.item === "freeze" || e.item === "thief" || e.item === "ear") && e.target === id && e.who !== id) m.grudge[e.who] = (m.grudge[e.who] || 0) + 1.5;
+      }
     });
     m.ev = room.eventN;
-    (room.notes[id] || []).slice(m.notes).forEach((t) => {
-      let r;
-      if ((r = /Патрон №(\d+).+— (БОЕВОЙ|холостой)/.exec(t))) m.known[Number(r[1]) - 1] = r[2] === "БОЕВОЙ" ? "live" : "blank";
-      else if ((r = /Следующий — (БОЕВОЙ|холостой)/.exec(t))) m.known[0] = r[1] === "БОЕВОЙ" ? "live" : "blank";
-      else if ((r = /👂 (.+) положил\(а\) (БОЕВОЙ|холостой)/.exec(t))) { const p = room.order.find((x) => room.members[x].name === r[1]); if (p) m.contrib[p] = r[2] === "БОЕВОЙ" ? "live" : "blank"; }
-    });
-    m.notes = (room.notes[id] || []).length;
-    // вероятность, что следующий — боевой
-    if (m.known[0]) return Object.assign(m, { p: m.known[0] === "live" ? 1 : 0 });
-    const left = room.drum.length, others = room.loadTotal - room.house - 1;
-    const knownOthers = Object.entries(m.contrib).filter(([p]) => p !== id);
-    let eLive = (room.contrib[id] === "live" ? 1 : 0) + knownOthers.filter(([, t]) => t === "live").length + .5 * Math.max(0, others - knownOthers.length) + .5 * room.house - m.live;
-    let n = left;
-    Object.entries(m.known).forEach(([, t]) => { n--; if (t === "live") eLive--; });
+    const known = (room.peek || {})[id] || {}, heard = (room.heard || {})[id] || {};
+    m.known = known;
+    if (known[0]) { m.p = known[0] === "live" ? 1 : 0; return m; }
+    // ожидаемое число боевых в магазине: мой заряд + подслушанные + по половине на неизвестные и подвал, минус уже вылетевшие
+    const alive = Object.keys(room.contrib || {});
+    let eLive = 0, unknown = 0;
+    alive.forEach((p) => { const v = p === id ? room.contrib[id] : heard[p]; if (v) eLive += v === "live" ? 1 : 0; else unknown++; });
+    eLive += .5 * (unknown + room.house) - m.live;
+    let n = room.drum.length;
+    Object.entries(known).forEach(([, t]) => { n--; if (t === "live") eLive--; });
     m.p = n > 0 ? Math.max(0, Math.min(1, eLive / n)) : .5;
     return m;
   }
+
+  const ROU_VALUE = { saw: 5, box: 4.5, medkit: 4, vest: 3.5, mirror: 3.5, flashlight: 3, freeze: 2.5, ear: 2, spin: 1.5, thief: 1.5, stake: 1 };
+  // насколько выгодно стрелять в каждого соперника (боевым): добить, отомстить, убрать самого опасного
+  function rouTargets(room, id, m, dmg) {
+    const alive = room.seats.filter((p) => room.hp[p] > 0), others = alive.filter((p) => p !== id);
+    const nextP = room.nextAfter(id);
+    return others.map((o) => {
+      const st = room.status[o] || {}, hp = room.hp[o], items = room.items[o] || [];
+      let s = 1, why = "";
+      if (st.mirror) return { id: o, s: -9, why: "mirror" };            // зеркало вернёт пулю мне
+      if (st.vest) { s -= dmg > 1 ? 3 : 1.6; why = "vest"; }
+      if (hp <= dmg && !st.vest) { s += 3; why = "kill"; }              // можно выбить из игры — меньше соперников
+      else s += (room.settings.hp - hp) * .35;                          // уже ранен — дожать
+      s += Math.min(4, (m.grudge[o] || 0) * .55) + Math.min(2, (m.threat[o] || 0) * .3);
+      s += items.reduce((a, k) => a + (ROU_VALUE[k] || 1), 0) * .12;    // у кого много полезного — тот опаснее
+      if (m.peeked[o]) s += .6;                                         // он знает патроны — опасен на следующем ходу
+      if (o === nextP && others.length > 1) s += .4;                    // следующий по кругу стреляет сразу после меня
+      if ((m.grudge[o] || 0) >= 3 && why !== "kill") why = "grudge";
+      return { id: o, s, why };
+    });
+  }
+  // взвешенный случай: лучшая цель вероятнее, но не всегда
+  function rouPick(list, temp = .9) {
+    const ok = list.filter((t) => t.s > -5);
+    if (!ok.length) return null;
+    const w = ok.map((t) => Math.exp(t.s / temp)), sum = w.reduce((a, b) => a + b, 0);
+    let r = Math.random() * sum;
+    for (let i = 0; i < ok.length; i++) { r -= w[i]; if (r <= 0) return ok[i]; }
+    return ok[ok.length - 1];
+  }
+
   function rouletteBot(h, room, id) {
     if (!(room.hp && room.hp[id] > 0)) return;
     if (room.phase === "load" && !room.contrib[id]) {
-      const weak = room.hp[id] <= Math.min(...Object.keys(room.hp).filter((p) => room.hp[p] > 0).map((p) => room.hp[p]));
-      return act(h, id, { slot: "load", value: chance(weak ? .4 : .6) ? "live" : "blank" }, 1000, 3000);   // слабый кладёт холостой чаще
+      const hps = room.seats.filter((p) => room.hp[p] > 0).map((p) => room.hp[p]);
+      const weak = room.hp[id] <= Math.min(...hps), safe = (room.status[id] || {}).vest || (room.status[id] || {}).mirror;
+      return act(h, id, { slot: "load", value: chance(safe ? .75 : weak ? .35 : .58) ? "live" : "blank" }, 1000, 3000);   // раненый кладёт холостой чаще
     }
     if (room.phase !== "play" || room.turn !== id) return;
-    const m = rouKnow(room, id), items = room.items[id] || [], has = (k) => items.indexOf(k);
-    const others = Object.keys(room.hp).filter((p) => room.hp[p] > 0 && p !== id), maxHp = room.settings.hp;
-    const useItem = (k, target) => { h.handle(id, { t: "act", slot: "item", index: items.indexOf(k), key: k, target: target || null, pick: null }); think(id, 900, 1600); return true; };
-    const best = others.slice().sort((a, b) => (room.status[a].mirror ? 5 : 0) - (room.status[b].mirror ? 5 : 0) || (room.status[a].vest ? 2 : 0) - (room.status[b].vest ? 2 : 0) || room.hp[a] - room.hp[b])[0];
-    if (has("medkit") >= 0 && room.hp[id] < maxHp && (room.hp[id] <= 2 || chance(.5))) return useItem("medkit");
-    if (m.p > .2 && m.p < .8 && !(0 in m.known)) { if (has("box") >= 0) return useItem("box"); if (has("flashlight") >= 0 && room.drum.length <= 4) return useItem("flashlight"); }
-    if (has("ear") >= 0 && others.some((p) => !m.contrib[p]) && room.drum.length >= 3) return useItem("ear", others.find((p) => !m.contrib[p]));
-    if (has("thief") >= 0) { const victim = others.find((p) => (room.items[p] || []).some((k) => ["medkit", "saw", "box", "vest"].includes(k))); if (victim) { const k = room.items[victim].findIndex((x) => ["medkit", "saw", "box", "vest"].includes(x)); h.handle(id, { t: "act", slot: "item", index: items.indexOf("thief"), key: "thief", target: victim, pick: k }); think(id, 900, 1500); return; } }
-    if (has("vest") >= 0 && !room.status[id].vest && room.hp[id] <= 2) return useItem("vest");
-    if (has("mirror") >= 0 && !room.status[id].mirror && room.hp[id] <= 2) return useItem("mirror");
-    if (has("freeze") >= 0 && others.length > 1 && chance(.6)) return useItem("freeze", others.slice().sort((a, b) => room.hp[b] - room.hp[a])[0]);
-    const shootOther = m.p >= .5;
-    if (shootOther && has("saw") >= 0 && !room.sawed && m.p >= .65 && best) return useItem("saw");
-    if (!shootOther && m.p > .35 && has("spin") >= 0 && chance(.3)) return useItem("spin");
-    const target = shootOther || !best ? best || id : id;
-    if (room.aim !== target) {
-      if (chance(.25)) say(h, room, id, target === id ? pick(["Чувствую, холостой…", "Рискну. В себя", "Ну, удача, не подведи"]) : pick([`${room.members[target].name}, ничего личного`, "Этот точно боевой", `Прости, ${room.members[target].name}`]));
-      h.handle(id, { t: "act", slot: "aim", target }); think(id, 900, 1800); return;
+    const m = rouKnow(room, id), items = room.items[id] || [], has = (k) => items.includes(k);
+    const me = room.status[id] || {}, hp = room.hp[id], maxHp = room.settings.hp, name = (p) => room.members[p].name;
+    const others = room.seats.filter((p) => room.hp[p] > 0 && p !== id);
+    const tk = room.gameNo + ":" + room.loads + ":" + room.drum.length + ":" + id;
+    if (m.turnKey !== tk) { m.turnKey = tk; m.acts = 0; m.said = false; }
+    const useItem = (k, target, pickIdx) => { m.acts++; h.handle(id, { t: "act", slot: "item", index: items.indexOf(k), key: k, target: target || null, pick: pickIdx == null ? null : pickIdx }); think(id, ["box", "flashlight", "ear"].includes(k) ? 2200 : 1300, ["box", "flashlight", "ear"].includes(k) ? 4200 : 2600); return true; };   // после фонарика/шкатулки — «смотрит» и думает
+    const line = (t) => { if (!m.said && t) { m.said = true; say(h, room, id, t); } };
+    const p = m.p, sure = p === 0 || p === 1;
+    const aiming = !!(m.aimFor && m.aimFor.key.startsWith(tk + ":"));      // уже водит стволом — предметы больше не трогает
+
+    if (m.acts < 6 && !aiming) {                                                   // сначала предметы — по делу, не все подряд
+      if (has("medkit") && hp < maxHp && (hp <= 2 || maxHp - hp >= 2 || chance(.4))) return useItem("medkit");
+      if (!sure) {
+        if (has("box")) return useItem("box");
+        if (has("flashlight") && (room.drum.length <= 4 || (p > .3 && p < .7))) return useItem("flashlight");
+        const deaf = others.find((o) => !((room.heard || {})[id] || {})[o]);
+        if (has("ear") && deaf && room.drum.length >= 2 && p > .2 && p < .8) return useItem("ear", deaf);
+      }
+      if (has("thief")) {                                               // крадём самое ценное, что пригодится прямо сейчас
+        let best = null;
+        others.forEach((o) => (room.items[o] || []).forEach((k, j) => {
+          if (k === "thief") return;
+          let v = ROU_VALUE[k] || 1;
+          if (k === "medkit" && hp >= maxHp) v = 1.5;
+          if (k === "saw" && p >= .6) v += 2;
+          if (k === "box" && !sure) v += 1.5;
+          v += Math.min(1, (m.grudge[o] || 0) * .2) + Math.random() * .3;
+          if (!best || v > best.v) best = { o, j, v };
+        }));
+        if (best && best.v >= 2) { line(chance(.4) ? `${name(best.o)}, это теперь моё` : ""); return useItem("thief", best.o, best.j); }
+      }
+      // кто-то знает порядок патронов, а я — нет: встряхнуть, чтобы его знания сгорели
+      if (has("spin") && !sure && Object.keys(m.peeked).some((o) => room.hp[o] > 0) && chance(.55)) { line(chance(.5) ? "Что вы там подсмотрели? Забудьте" : ""); return useItem("spin"); }
+      if (has("vest") && !me.vest && (hp <= 2 || hp < maxHp || Object.values(m.grudge).some((g) => g >= 3))) return useItem("vest");
+      if (has("mirror") && !me.mirror && (hp <= maxHp - 1 || Object.values(m.grudge).some((g) => g >= 2) || chance(.35))) return useItem("mirror");
+      if (has("stake") && hp >= Math.ceil(maxHp / 2) && chance(.6)) return useItem("stake");
     }
+
+    // стрелять в себя или в соперника? Холостой в себя — лишний ход; боевой в себя — минус сердце (с жилетом — только жилет)
+    const dmgNow = room.sawed ? 2 : 1;
+    let thr = .45 + m.bold;                                              // базовый порог: в себя, если боевой маловероятен
+    if (hp <= dmgNow && !me.vest) thr -= .17;                            // одно сердце — рисковать собой нельзя
+    if (me.vest) thr += .12;
+    if (others.length >= 2) thr -= .04;
+    const list = rouTargets(room, id, m, dmgNow), goodT = list.some((t) => t.s > -5);
+    let selfShot = p < thr;
+    if (p === 0) selfShot = true;                                       // точно холостой — в себя, ход останется у меня
+    if (p === 1) selfShot = false;                                      // точно боевой — только в соперника
+
+    if (!selfShot && m.acts < 6 && !aiming) {
+      if (!goodT && has("spin") && p >= .6) { line("Нет, так не пойдёт. Перемешаем"); return useItem("spin"); }   // все за зеркалами
+      if (has("freeze") && others.length >= 1 && p >= .5) {             // заморозить того, кто ходит после меня (вдвоём — это лишний ход мне)
+        const nx = room.nextAfter(id), tgt = others.length === 1 ? others[0] : (list.find((t) => t.id === nx && t.s > 2) ? nx : others.slice().sort((a, b) => ((m.grudge[b] || 0) + (room.items[b] || []).length) - ((m.grudge[a] || 0) + (room.items[a] || []).length))[0]);
+        if (tgt && !(room.status[tgt] || {}).frozen) return useItem("freeze", tgt);
+      }
+      if (has("saw") && !room.sawed && p >= .75) {                      // обрез — только когда боевой почти наверняка
+        const top = list.filter((t) => t.s > -5).sort((a, b) => b.s - a.s)[0];
+        if (top && !(room.status[top.id] || {}).vest && (room.hp[top.id] >= 2 || p === 1)) { line(chance(.5) ? "Сейчас будет больно" : ""); return useItem("saw"); }
+      }
+    } else if (selfShot && m.acts < 6 && !aiming && has("freeze") && others.length > 1 && chance(.35)) {
+      const nx = room.nextAfter(id); if (!(room.status[nx] || {}).frozen) return useItem("freeze", nx);
+    }
+
+    let target;
+    if (selfShot) target = id;
+    else {
+      if (m.aimFor && m.aimFor.key === tk + ":" + m.acts) target = m.aimFor.id;
+      else {
+        const chosen = rouPick(list, p === 1 ? .7 : 1.1);
+        target = chosen ? chosen.id : (me.vest || hp > dmgNow ? (others.sort((a, b) => room.hp[b] - room.hp[a])[0] || id) : id);   // все с зеркалами: снять зеркало у самого живучего
+        m.why = chosen ? chosen.why : "";
+      }
+    }
+    // напряжение: бот водит стволом по столу, иногда долго думает, иногда стреляет сразу — по ситуации и характеру
+    const left = room.deadline ? room.deadline - room.clock() : 99, key = tk + ":" + m.acts;
+    if (!m.aimFor || m.aimFor.key !== key) {
+      const alive = room.seats.filter((q) => room.hp[q] > 0), unsure = sure ? 0 : 1 - Math.abs(p - .5) * 2;
+      const style = Math.random();
+      let fakes = style < .22 ? 0 : style < .7 ? 1 + (Math.random() < unsure ? 1 : 0) : 2 + Math.floor(Math.random() * 2);
+      if (p === 1 && chance(.5)) fakes = Math.max(fakes, 2);              // знает, что боевой, — играет с жертвами
+      if (p === 0 && chance(.4)) fakes = Math.max(fakes, 1);              // знает, что холостой, — пугает, а потом в себя
+      const steps = [];
+      for (let i = 0; i < fakes; i++) {
+        const pool = alive.filter((q) => q !== target && q !== steps[steps.length - 1]);
+        if (pool.length) steps.push(pick(pool));
+      }
+      steps.push(target);
+      const slow = chance(.18 + unsure * .25);                              // «долго думает» перед первым движением
+      m.aimFor = { key, id: target, steps, i: 0, slow, quick: style < .22 && !slow };
+      if (slow) { if (chance(.4)) line(pick(["Хм…", "Дайте подумать", "Так-так…", "Сложный выбор"])); think(id, 3500, 7500); return; }
+    }
+    const plan = m.aimFor;
+    if (left < 7) { if (room.aim !== target) { h.handle(id, { t: "act", slot: "aim", target }); think(id, 500, 900); return; } return act(h, id, { slot: "shoot", target }, 600, 900); }
+    if (plan.i < plan.steps.length) {
+      const to = plan.steps[plan.i++], last = plan.i === plan.steps.length;
+      if (room.aim !== to || !last) h.handle(id, { t: "act", slot: "aim", target: to });
+      if (!last) {
+        if (chance(.22)) line(to === id ? pick(["А может, в себя?..", "Или так…"]) : pick([`${name(to)}?..`, "Кто же, кто же…", "Не дёргайтесь", `Посмотри на меня, ${name(to)}`]));
+        return think(id, plan.quick ? 700 : 1100, plan.quick ? 1300 : 2900);
+      }
+      if (chance(.3)) {
+        const nm = target !== id ? name(target) : "";
+        line(target === id ? (p === 0 ? pick(["Знаю, что делаю", "Там пусто. Смотрите", "Спокойно — холостой"]) : pick(["Чувствую, холостой…", "Рискну. В себя", "Ну, удача, не подведи"]))
+          : m.why === "kill" ? pick([`${nm}, это конец`, `Прощай, ${nm}`, "Добью"]) : m.why === "grudge" ? pick([`${nm}, ты первый начал(а)`, `Это за прошлый раз, ${nm}`, `${nm}, это личное`])
+          : p === 1 ? pick([`${nm}, я знаю, что там`, "Этот точно боевой"]) : pick([`${nm}, ничего личного`, `Прости, ${nm}`, "Посмотрим…"]));
+      }
+      return think(id, plan.quick ? 600 : 1300, plan.quick ? 1200 : plan.steps.length > 2 ? 4200 : 3000);   // палец на спуске
+    }
+    if (room.aim !== target) { h.handle(id, { t: "act", slot: "aim", target }); think(id, 800, 1500); return; }
+    m.aimFor = null;
     act(h, id, { slot: "shoot", target }, 1200, 2000);
   }
 

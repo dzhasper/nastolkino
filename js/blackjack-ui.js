@@ -136,6 +136,8 @@ function bjSettingsSheet() {
 function bjCoins(r) {
   if (!r.settings.stake) return;
   const me = r.players.find((p) => p.id === S.me);
+  const tbl = Api.table(r);
+  if (tbl) return bjBank(r, me, tbl);
   if (!me || !me.playing) return;
   const base = "bj:" + r.code + ":" + r.game_no + ":" + r.handNo;
   let changed = false;
@@ -146,6 +148,21 @@ function bjCoins(r) {
     if (pay) { store.coins += pay; changed = true; if (r.results.winners.includes(S.me)) { coinRain(); notify("success"); } }
   }
   if (changed) { saveProfile(); syncProfile(); }
+}
+
+// монеты через банк стола на сервере: ставка уходит сразу, хост присылает итог, сервер переводит выигрыш
+function bjBank(r, me, tbl) {
+  const hand = String(r.handNo), base = tbl + ":" + hand, done = (S.bjBank = S.bjBank || {});
+  const once = (k, fn) => { if (!done[base + k]) { done[base + k] = 1; fn(); } };
+  if (me && me.playing) once(":a", () => Api.bet(tbl, hand, "ante", r.settings.stake).catch((e) => toast("Ставка не списалась: " + e.message)));
+  if (me && me.doubled) once(":d", () => Api.bet(tbl, hand, "double", r.settings.stake).catch((e) => toast("Удвоение не списалось: " + e.message)));
+  if (r.phase === "show" && r.results) {
+    if (isHost()) once(":s", () => setTimeout(() => Api.settle(tbl, hand, r.results.payout).catch(() => { done[base + ":s"] = 0; }), 2000));   // даём ставкам дойти до сервера
+    if (me && me.playing) once(":r", () => {
+      if ((r.results.payout[S.me] || 0) > 0 && r.results.winners.includes(S.me)) { coinRain(); notify("success"); }
+      [4000, 9000].forEach((ms) => setTimeout(() => Api.coins().then(() => render()).catch(() => {}), ms));   // забрать выигрыш с сервера
+    });
+  }
 }
 
 function bjVerify(r) {

@@ -276,6 +276,7 @@ function render() {
   const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
   $app.innerHTML = (screens[S.screen] || viewLoading)();
   renderOverlay();
+  MChat.sync();                                                   // мафия в виде чата живёт поверх экрана
   if (PX()) Pixel.apply();
   drawMount();
   rouMount();
@@ -530,8 +531,9 @@ function viewRoom() {
   if (r.game === "draw") return viewDrawRoom();
   if (r.game === "roulette") return viewRouletteRoom();
   if (r.game === "blackjack") return viewBlackjackRoom();
+  if (MChat.active()) return `<div class="mc-spacer"></div>`;
   const views = { lobby: viewLobby, reveal: viewReveal, night: viewNight, day: viewDay, vote: viewVote, verdict: viewVerdict, end: viewEnd };
-  return `${netBanner()}${r.phase === "night" ? '<div class="night-sky"></div><div class="stars"></div>' : ""}
+  return `${netBanner()}${!["lobby", "end"].includes(r.phase) ? `<button class="mc-tochat" data-a="mafia-view">💬 Вид чата</button>` : ""}${r.phase === "night" ? '<div class="night-sky"></div><div class="stars"></div>' : ""}
     <div class="fade-in" key="${r.phase}">${PX() ? `<div class="pxscene ${r.phase === "lobby" ? "big" : ""}" style="background-image:url(${Pixel.scene(r.settings.theme)})"></div>` : ""}${(views[r.phase] || viewLobby)()}</div>
     ${r.phase !== "lobby" || r.players.length > 1 ? `<button class="chat-fab" data-a="chat">💬<span id="chat-badge"></span></button>` : ""}`;
 }
@@ -827,6 +829,8 @@ function renderOverlay() {
     body = petHatSheet();
   } else if (S.sheet.type === "hatch") {
     body = petHatchSheet(S.sheet.id);
+  } else if (S.sheet.type === "mc-role") {
+    body = MChat.roleSheet();
   } else if (S.sheet.type === "peek") {
     const pl = player(S.sheet.id);
     body = pl ? peekSheet(pl) : "";
@@ -862,6 +866,7 @@ const CHANNELS = { all: "💬 Общий", mafia: "🩸 Команда", dead: "
 
 function renderChat() {
   const r = S.room;
+  if (S.chatOpen && MChat.active()) S.chatOpen = false;             // в чат-виде мафии чат и так на экране
   const badge = document.getElementById("chat-badge");
   if (r && badge) {
     const unread = Object.entries(r.chat || {}).reduce((n, [ch, list]) => n + Math.max(0, list.length - (S.seen[ch] || 0)), 0);
@@ -1015,7 +1020,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
+Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, MChat.ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");

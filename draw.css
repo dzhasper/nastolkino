@@ -28,7 +28,7 @@ body.pixel .draw-hero h2 { color: #fff; }
 /* меню: как играть */
 .how { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; }
 .how + .how { border-top: 2px dashed rgba(38, 38, 58, .15); }
-.how > b { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: #ffec27; color: #000; font-family: "Press Start 2P", monospace; font-size: 11px;
+.how > b { flex: none; width: 30px; height: 30px; display: grid; place-items: center; background: #ffec27; color: #000; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 11px;
   box-shadow: 0 -2px 0 #26263a, 0 2px 0 #26263a, -2px 0 0 #26263a, 2px 0 0 #26263a; }
 .how-t { font-weight: 700; }
 
@@ -52,7 +52,7 @@ body.pixel .draw-hero h2 { color: #fff; }
 /* слово плитками */
 .secret { text-align: center; margin-bottom: 12px; }
 .tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 6px; }
-.tiles i { width: 24px; height: 30px; display: grid; place-items: center; font-style: normal; background: #fff; color: #1e1e2e; font-family: "Press Start 2P", monospace; font-size: 12px;
+.tiles i { width: 24px; height: 30px; display: grid; place-items: center; font-style: normal; background: #fff; color: #1e1e2e; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 12px;
   text-transform: uppercase; box-shadow: 0 -2px 0 #26263a, 0 2px 0 #26263a, -2px 0 0 #26263a, 2px 0 0 #26263a, inset 0 -4px 0 #ece4d0; }
 .tiles i.gap { width: 10px; background: none; box-shadow: none; }
 .reveal-word { margin: 4px 0 16px; }
@@ -90,18 +90,18 @@ body.pixel .draw-hero h2 { color: #fff; }
 .sc + .sc { border-top: 2px dashed rgba(38, 38, 58, .12); }
 .sc.me { background: rgba(255, 236, 39, .25); margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
 .sc.off { opacity: .5; }
-.sc .pl { width: 20px; font-family: "Press Start 2P", monospace; font-size: 10px; color: var(--muted); flex: none; }
+.sc .pl { width: 20px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 10px; color: var(--muted); flex: none; }
 .sc .nmline { min-width: 0; display: flex; flex-direction: column; }
 .sc .nmline b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sc .pts { font-family: "Press Start 2P", monospace; font-size: 13px; min-width: 34px; text-align: right; }
-.sc .plus { font-family: "Press Start 2P", monospace; font-size: 10px; color: #00a83a; animation: plus .8s steps(4) both; }
+.sc .pts { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 13px; min-width: 34px; text-align: right; }
+.sc .plus { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 10px; color: #00a83a; animation: plus .8s steps(4) both; }
 @keyframes plus { from { transform: translateY(8px); opacity: 0; } }
 
 /* пьедестал */
 .podium { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin-top: 22px; }
 .pod { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 30%; min-width: 0; }
 .pod b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
-.pod .step { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: "Press Start 2P", monospace;
+.pod .step { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; font-family: "NkDigitsHead", "Press Start 2P", monospace;
   box-shadow: 0 -3px 0 #26263a, -3px 0 0 #26263a, 3px 0 0 #26263a; }
 .pod .step span { font-size: 18px; } .pod .step small { font-size: 9px; margin-top: 6px; }
 .pod.p1 .step { height: 92px; background: #ffa300; } .pod.p2 .step { height: 66px; background: #29adff; } .pod.p3 .step { height: 48px; background: #ff77a8; }

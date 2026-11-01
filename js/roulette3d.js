@@ -205,10 +205,16 @@ const Cellar = (() => {
 
   /* ---------------------------------------------------------------- соперник: плоский пиксельный спрайт, как противники в старых шутерах */
   const COATS = [["#3e3228", "#2a2018", "#4e4032"], ["#2c343a", "#1c2228", "#3c4650"], ["#40262a", "#2a181c", "#52343a"], ["#323a28", "#20261a", "#424c34"]];
-  function figureCanvas(p, idx, dead, faceImg) {
+  function figureCanvas(p, idx, dead, faceImg, blood = 0) {
     const c = document.createElement("canvas"); c.width = 48; c.height = 64;
     const g = c.getContext("2d"), [c1, c2, c3] = COATS[idx % 4];
     const R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+    let bs = 7 + idx * 131;                                           // свой узор крови у каждого игрока — не прыгает при перерисовке
+    const br = () => { bs = (bs * 16807) % 2147483647; return bs / 2147483647; };
+    const gore = (lvl, x0, y0, w, h) => {                              // пятна и потёки: чем больше ранений, тем больше крови
+      for (let i = 0; i < lvl * 70; i++) { const x = x0 + br() * w | 0, y = y0 + br() * h | 0; R(x, y, 1 + (br() < .35), 1 + (br() < .25), br() < .5 ? "#8a000c" : "#5a0008"); }
+      for (let i = 0; i < lvl * 6; i++) { const x = x0 + 2 + br() * (w - 4) | 0, y = y0 + br() * h * .5 | 0; R(x, y, 1, 3 + br() * 9 | 0, "#6a000a"); }
+    };
     if (!dead) {
       R(7, 30, 34, 34, c1); R(5, 34, 5, 24, c1); R(38, 34, 5, 24, c1);          // плечи, пальто
       R(7, 30, 4, 34, c3); R(5, 34, 2, 22, c3);                                 // свет слева
@@ -227,11 +233,16 @@ const Cellar = (() => {
       R(4, 56, 11, 8, "#6a5040"); R(33, 56, 11, 8, "#6a5040");                 // руки на столе
       R(4, 56, 11, 1, "#8a6a52"); R(33, 56, 11, 1, "#8a6a52");
       for (let i = 0; i < 3; i++) { R(6 + i * 3, 62, 1, 2, "#4a3426"); R(35 + i * 3, 62, 1, 2, "#4a3426"); }
+      if (blood > 0) {                                                // ранен: кровь на лице, рубашке, руках
+        gore(blood, 12, 8, 24, 20); gore(blood * 1.4, 10, 30, 28, 26); gore(blood * .6, 4, 56, 40, 8);
+        if (blood >= .5) { R(26, 10, 2, 16, "#7a000a"); R(16, 14, 1, 12, "#6a000a"); }   // потёки со лба
+      }
     } else {
       R(5, 40, 38, 24, c1); R(5, 40, 38, 2, c3);                                // упал лицом на стол
       R(12, 46, 24, 16, "#4a3a2e"); R(10, 43, 28, 5, "#18120e");
       g.fillStyle = "#7a000c"; for (let i = 0; i < 80; i++) g.fillRect(3 + Math.random() * 42 | 0, 54 + Math.random() * 10 | 0, 2, 1);
       R(2, 60, 44, 4, "#5a0008");
+      gore(1.4, 5, 40, 38, 24); R(16, 44, 14, 6, "#6a000a"); R(10, 50, 26, 3, "#5a0008");   // голова в луже, спина в крови
     }
     return c;
   }
@@ -252,7 +263,7 @@ const Cellar = (() => {
     const sprite = new T.Sprite(smat); sprite.scale.set(1.2, 1.6, 1); sprite.position.y = 1.25; g.add(sprite);
     if (p.photo) {                                                   // фото на лицо — только если сервер разрешает
       const img = new Image(); img.crossOrigin = "anonymous"; img.referrerPolicy = "no-referrer";
-      img.onload = () => { try { const t = document.createElement("canvas").getContext("2d"); t.drawImage(img, 0, 0); t.getImageData(0, 0, 1, 1); if (!ud.dead) { smat.map.dispose(); smat.map = spriteTex(figureCanvas(p, idx, false, img)); smat.needsUpdate = true; } } catch (e) { /* остаётся эмодзи */ } };
+      img.onload = () => { try { const t = document.createElement("canvas").getContext("2d"); t.drawImage(img, 0, 0); t.getImageData(0, 0, 1, 1); ud.faceImg = img; if (!ud.dead) { smat.map.dispose(); smat.map = spriteTex(figureCanvas(p, idx, false, img, ud.blood || 0)); smat.needsUpdate = true; } } catch (e) { /* остаётся эмодзи */ } };
       img.src = p.photo;
     }
     const chair = makeChair(idx); chair.position.set(0, 0, -.32); g.add(chair);
@@ -354,16 +365,20 @@ const Cellar = (() => {
     scene.add(state.dust);
   }
 
-  function splat(pos, rot, size, color) {
-    const t = tex(16, (g, s) => {
+  function splat(pos, rot, size, color, big) {
+    const t = tex(32, (g, s) => {
       g.clearRect(0, 0, s, s);
-      g.fillStyle = "#" + color.toString(16).padStart(6, "0");
-      for (let i = 0; i < 40; i++) { const a = rnd() * 6.28, r = Math.pow(rnd(), 1.6) * 7; g.fillRect(8 + Math.cos(a) * r | 0, 8 + Math.sin(a) * r | 0, 1 + (rnd() < .4 ? 1 : 0), 1); }
-      for (let i = 0; i < 4; i++) { const x = 4 + rnd() * 8 | 0; g.fillRect(x, 8, 1, 4 + rnd() * 6 | 0); }
+      const col = "#" + color.toString(16).padStart(6, "0"), dark = "#2a0004", c = s / 2;
+      g.fillStyle = col;
+      for (let i = 0; i < (big ? 260 : 150); i++) { const a = rnd() * 6.28, r = Math.pow(rnd(), big ? 1.1 : 1.7) * (s * .45); g.fillRect(c + Math.cos(a) * r | 0, c + Math.sin(a) * r | 0, 1 + (rnd() < .5 ? 1 : 0), 1 + (rnd() < .3 ? 1 : 0)); }
+      g.beginPath(); g.arc(c, c, s * (big ? .22 : .12), 0, 6.28); g.fill();                 // плотное ядро
+      for (let i = 0; i < 9; i++) { const a = rnd() * 6.28, r = s * (.3 + rnd() * .18); g.fillRect(c + Math.cos(a) * r | 0, c + Math.sin(a) * r | 0, 2, 2); }   // капли вокруг
+      g.fillStyle = dark; for (let i = 0; i < 14; i++) { const a = rnd() * 6.28, r = rnd() * s * .18; g.fillRect(c + Math.cos(a) * r | 0, c + Math.sin(a) * r | 0, 1, 1); }
+      g.fillStyle = col; for (let i = 0; i < 6; i++) { const x = c - 8 + rnd() * 16 | 0; g.fillRect(x, c, 1 + (rnd() < .4), 5 + rnd() * 12 | 0); }   // потёки вниз
     });
     const m = new T.Mesh(new T.PlaneGeometry(size, size), new T.MeshLambertMaterial({ map: t, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
     m.position.copy(pos); m.rotation.copy(rot); decals.add(m);
-    while (decals.children.length > 26) { const old = decals.children[2]; decals.remove(old); old.geometry.dispose(); old.material.map.dispose(); old.material.dispose(); }
+    while (decals.children.length > 70) { const old = decals.children[2]; decals.remove(old); old.geometry.dispose(); old.material.map.dispose(); old.material.dispose(); }
     return m;
   }
 
@@ -405,6 +420,10 @@ const Cellar = (() => {
         for (let k = 0; k < room.maxHp; k++) {
           const h = box(.09, .09, .09, k < p.hp ? mat({ color: 0xd0101e, emissive: 0x500006 }) : mat({ color: 0x2a1a1a }));
           h.position.x = (k - (room.maxHp - 1) / 2) * .14; ud.hearts.add(h);
+        }
+        const bl = room.maxHp ? Math.max(ud.blood || 0, 1 - p.hp / room.maxHp) : 0;   // ранили — кровь на одежде остаётся до конца партии (аптечка её не смывает)
+        if (p.alive && !ud.dead && bl > (ud.blood || 0)) {
+          ud.blood = bl; ud.smat.map.dispose(); ud.smat.map = spriteTex(figureCanvas(p, ud.idx, false, ud.faceImg || null, bl)); ud.smat.needsUpdate = true;
         }
         ud.hp = p.hp;
       }
@@ -452,11 +471,20 @@ const Cellar = (() => {
     if (big && api.onSpin) api.onSpin();                              // звук раскрутки
   }
 
+  // брызги на стене за спиной: ближайшая стена по направлению от центра стола
+  function wallSplat(wp, size) {
+    const RS = 3.47, ax = Math.abs(wp.x), az = Math.abs(wp.z);
+    if (az >= ax) splat(new T.Vector3(wp.x * RS / Math.max(az, .01) * .9, 1.2 + rnd() * .8, Math.sign(wp.z) * RS), new T.Euler(0, wp.z > 0 ? Math.PI : 0, rnd() * .6 - .3), size * (.8 + rnd() * .4), 0x5a0008, true);
+    else splat(new T.Vector3(Math.sign(wp.x) * RS, 1.2 + rnd() * .8, wp.z * RS / Math.max(ax, .01) * .9), new T.Euler(0, wp.x > 0 ? -Math.PI / 2 : Math.PI / 2, rnd() * .6 - .3), size * (.8 + rnd() * .4), 0x5a0008, true);
+  }
   function slump(f, p) {                                            // выбывший падает лицом на стол, под ним лужа
     const ud = f.userData;
     ud.smat.map.dispose(); ud.smat.map = spriteTex(figureCanvas(p, ud.idx, true, null)); ud.smat.needsUpdate = true;
     const wp = new T.Vector3(); f.getWorldPosition(wp);
-    splat(new T.Vector3(wp.x * .55, .785, wp.z * .55), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .8, 0x6a0008);
+    splat(new T.Vector3(wp.x * .55, .785, wp.z * .55), new T.Euler(-Math.PI / 2, 0, rnd() * 6), 1.1, 0x6a0008, true);
+    splat(new T.Vector3(wp.x * .42, .787, wp.z * .42), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .7, 0x4a0006);
+    splat(new T.Vector3(wp.x * 1.1, .013, wp.z * 1.1), new T.Euler(-Math.PI / 2, 0, rnd() * 6), 1.6, 0x3a0005, true);   // лужа натекла на пол
+    if (ud.rel !== 0) wallSplat(wp, 1.6);
   }
 
   /* ---------------------------------------------------------------- эффекты: частицы, трассеры, гильзы, ножовка, зеркало */
@@ -577,7 +605,12 @@ const Cellar = (() => {
       const mp = worldOf(tf, .42, .95, .62);
       tracer(mz, mp); setTimeout(() => { tracer(mp, head(hf), 0xc8ecff); mirrorShatter(tf); }, 90);
     } else tracer(mz, head(hf));
-    if (hf && !e.absorbed && hf.userData.rel !== 0) burst(head(hf), 0x9a000c, 22, 1.2, { size: .045, life: 1.1 });
+    if (hf && !e.absorbed && hf.userData.rel !== 0) {                // фонтан крови: брызги, капли падают на стол, облачко
+      const n = e.dmg > 1 ? 2 : 1;
+      burst(head(hf), 0x9a000c, 40 * n, 1.5, { size: .05, life: 1.3 });
+      burst(head(hf), 0x6a0008, 24 * n, .7, { size: .035, life: 1.6, up: -.2 });
+      burst(head(hf), 0xc0101a, 14, 2.2, { size: .025, life: .6, gravity: 1 });
+    }
     if (e.absorbed && hf) burst(head(hf), 0x5aa83a, 14, .9, { size: .04, life: .7 });
     state.flash = 1; state.shake = e.hit === state.me ? 1 : .55; state.flicker = .6;
     gun.userData.muzzle.intensity = 6;
@@ -585,9 +618,11 @@ const Cellar = (() => {
     if (hf && !e.absorbed) {
       hf.userData.jolt = 1;
       const wp = hf.position;
-      splat(new T.Vector3(wp.x * .62, .786 + rnd() * .002, wp.z * .62), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .55 + rnd() * .3, 0x7a000a);
-      if (wp.z < -1) splat(new T.Vector3(wp.x * 1.6, 1.3 + rnd() * .6, -3.47), new T.Euler(0, 0, 0), 1.1, 0x5a0008);   // брызги на стене за спиной
-      else splat(new T.Vector3(wp.x * 1.45, .012, wp.z * 1.45), new T.Euler(-Math.PI / 2, 0, rnd() * 6), 1, 0x4a0006);
+      const n = e.dmg > 1 ? 3 : 2;                                    // обрез — крови вдвое больше
+      for (let i = 0; i < n; i++) splat(new T.Vector3(wp.x * (.5 + rnd() * .2) + (rnd() - .5) * .4, .786 + rnd() * .002, wp.z * (.5 + rnd() * .2) + (rnd() - .5) * .4), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .45 + rnd() * .45, 0x7a000a, i === 0);   // на столе
+      if (hf.userData.rel !== 0) { wallSplat(wp, 1.3); if (e.dmg > 1) wallSplat(wp, 1); }   // стена за спиной
+      splat(new T.Vector3(wp.x * 1.3 + (rnd() - .5) * .5, .012, wp.z * 1.3 + (rnd() - .5) * .5), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .9 + rnd() * .5, 0x4a0006);   // на полу
+      if (hf.userData.rel === 0) splat(new T.Vector3((rnd() - .5) * .6, .787, 0), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .8, 0x8a000c, true);   // попали в тебя: кровь прямо перед тобой
     }
     for (let i = 0; i < 8; i++) puff();
   }

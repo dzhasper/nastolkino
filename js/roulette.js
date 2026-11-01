@@ -46,6 +46,7 @@
       this.seats = []; this.hp = {}; this.items = {}; this.status = {}; this.notes = {}; this.stakes = {};
       this.sawed = false;
       this.drum = []; this.loadTotal = 0; this.house = 0; this.contrib = {}; this.loads = 0;
+      this.peek = {}; this.heard = {};                             // что каждый знает сейчас: патроны по местам, кто что зарядил
       this.turn = null; this.events = []; this.eventN = 0; this.winner = null; this.pending = null;
     }
 
@@ -93,6 +94,7 @@
     name(pid) { return this.members[pid] ? this.members[pid].name : "?"; }
     alive() { return this.seats.filter((p) => this.hp[p] > 0); }
     setTimer(sec) { this.total = sec; this.deadline = this.clock() + sec; }
+    know(pid, i, t) { ((this.peek = this.peek || {})[pid] = this.peek[pid] || {})[i] = t; }
     note(pid, text) { (this.notes[pid] = this.notes[pid] || []).push(text); this.notes[pid] = this.notes[pid].slice(-8); }
     event(e) { this.eventN += 1; e.n = this.eventN; this.events.push(e); this.events = this.events.slice(-30); return e; }
 
@@ -122,7 +124,7 @@
 
     /* ---------- зарядка: каждый тайно кладёт заряд */
     startLoad() {
-      this.phase = "load"; this.contrib = {}; this.loads += 1;
+      this.phase = "load"; this.contrib = {}; this.loads += 1; this.peek = {}; this.heard = {};
       this.setTimer(LOAD_SECONDS);
       this.touch();
     }
@@ -185,10 +187,11 @@
       if (it.target && !(this.hp[target] > 0 && target !== pid)) throw new GameError("Выбери соперника за столом");
       if (key === "flashlight") {
         const i = Math.floor(Math.random() * this.drum.length);
-        this.note(pid, `🔦 Патрон №${i + 1} по очереди — ${this.drum[i] === "live" ? "БОЕВОЙ" : "холостой"}`);
+        this.know(pid, i, this.drum[i]);
+        this.note(pid, `🔦 Патрон №${i + 1} по очереди — ${this.drum[i] === "live" ? "БОЕВОЙ" : "холостой"}${i === 0 ? " (это следующий выстрел)" : ` (будет ${i + 1}-м выстрелом)`}`);
         this.event({ kind: "item", item: key, who: pid, text: `${nm} светит фонариком в магазин` });
       } else if (key === "spin") {
-        shuffle(this.drum);
+        shuffle(this.drum); this.peek = {};                       // все прежние подсказки больше не верны
         this.event({ kind: "item", item: key, who: pid, text: `${nm} встряхивает дробовик. Всё, что вы знали, — уже неправда` });
       } else if (key === "mirror") {
         if (st.mirror) throw new GameError("Зеркальце уже стоит");
@@ -203,7 +206,7 @@
         if (this.hp[pid] >= this.settings.hp) throw new GameError("Сердца и так полные");
         this.hp[pid] += 1; this.event({ kind: "item", item: key, who: pid, text: `${nm} колет аптечку и возвращает сердце` });
       } else if (key === "box") {
-        const next = this.drum[0];
+        const next = this.drum[0]; this.know(pid, 0, next);
         this.note(pid, `📦 Записка в шкатулке: «Следующий — ${next === "live" ? "БОЕВОЙ" : "холостой"}»`);
         this.event({ kind: "item", item: key, who: pid, text: `${nm} открывает шкатулку и молча читает записку` });
       } else if (key === "thief") {
@@ -224,6 +227,7 @@
         this.event({ kind: "item", item: key, who: pid, text: `${nm} кладёт монету на стол: ставка на себя (×${this.stakes[pid]})` });
       } else if (key === "ear") {
         const v = this.contrib[target];
+        if (v) ((this.heard = this.heard || {})[pid] = this.heard[pid] || {})[target] = v;
         this.note(pid, `👂 ${this.name(target)} положил(а) ${v === "live" ? "БОЕВОЙ" : v === "blank" ? "холостой" : "неизвестно что"}`);
         this.event({ kind: "item", item: key, who: pid, target, text: `${nm} подслушивает ${this.name(target)}` });
       }
@@ -235,6 +239,9 @@
       if (this.phase !== "play" || pid !== this.turn) throw new GameError("Сейчас не твой ход");
       if (!(this.hp[target] > 0)) throw new GameError("Он(а) уже не за столом");
       const shell = this.drum.shift();
+      Object.keys(this.peek || {}).forEach((p) => {                // подсказки сдвигаются: №2 стал следующим
+        const k = {}; Object.entries(this.peek[p]).forEach(([i, t]) => { if (+i > 0) k[+i - 1] = t; }); this.peek[p] = k;
+      });
       const live = shell === "live";
       let hit = target, redirected = false, absorbed = false;
       const dmg = this.sawed ? 2 : 1;
@@ -330,6 +337,8 @@
         players, seats: this.seats, sawed: !!this.sawed, stake: this.settings.stake || 0, pot: (this.settings.stake || 0) * this.seats.length, turn: this.turn, aim: this.phase === "play" ? this.aim || null : null, winner: this.winner, maxHp: this.settings.hp,
         drum: { left: this.drum.length, total: this.loadTotal, house: this.house },
         my_load: this.contrib[pid] || null, notes: (this.notes[pid] || []).slice(), events: this.events.slice(-12),
+        known: Object.entries((this.peek || {})[pid] || {}).map(([i, t]) => ({ at: +i + 1, live: t === "live" })).sort((a, b) => a.at - b.at),
+        heard: Object.entries((this.heard || {})[pid] || {}).map(([id, t]) => ({ id, name: this.name(id), live: t === "live" })),
         chat: { all: this.chat.all.slice(-40) }, can_write: ["all"],
       };
     }

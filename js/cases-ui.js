@@ -221,7 +221,7 @@ function caseThumb(d) {
 }
 const dropTier = (d) => (d.type === "mystery" ? d.tier : d.type === "item" ? Shop.tier(Shop.byKey(d.item)) : d.type === "egg" ? 3 : 0);
 const dropName = (d) => (d.type === "mystery" ? "???" : d.type === "shards" ? `Осколки ×${d.qty}` : d.type === "egg" ? "Яйцо питомца" : d.type === "food" ? (Api.state && Api.state.foods && Api.state.foods[d.item] ? Api.state.foods[d.item].name : "Еда") + " ×" + d.qty : (Shop.byKey(d.item) || {}).name || "");
-const caseCell = (d) => `<div class="rc" style="--tc:${Shop.TIERS[dropTier(d)].color}">${caseThumb(d)}<span>${esc(dropName(d))}</span></div>`;
+const caseCell = (d) => `<div class="rcell" style="--tc:${Shop.TIERS[dropTier(d)].color}">${caseThumb(d)}<span>${esc(dropName(d))}</span></div>`;
 
 function caseLayerOpen(c) {
   const old = caseLayer(); if (old) old.remove();
@@ -271,7 +271,7 @@ function caseResult(c, drop) {
   const box = document.getElementById("cl-res");
   if (!box) return;
   const t = dropTier(drop), it = drop.type === "item" ? Shop.byKey(drop.item) : null;
-  const win = document.querySelectorAll("#reel-strip .rc")[38];
+  const win = document.querySelectorAll("#reel-strip .rcell")[38];
   if (win) win.classList.add("won");
   let prize = "", info = "", main = "";
   if (it) {

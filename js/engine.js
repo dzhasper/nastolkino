@@ -81,7 +81,9 @@
       const options = this.theme.story[key] || THEMES.classic.story[key] || [""];
       return fmt(rnd.choice(options), kw);
     }
-    say(kind, text) { if (text) this.log.push({ day: this.day, night: this.night, kind, text }); }
+    say(kind, text, extra) { if (text) this.log.push(Object.assign({ day: this.day, night: this.night, kind, text, ts: Date.now() }, extra || {})); }
+    // кто выбыл — для анимации; роль только если её разрешено открывать всем
+    gone(q, how) { const r = this.role(q); return { who: q.id, how, role: this.settings.reveal ? { name: r.name, emoji: r.emoji, team: q.team, converted: !!q.converted } : null }; }
 
     abilities(p, phase) {
       if (!p.alive || p.converted) return [];
@@ -215,7 +217,7 @@
       Object.entries(privateMsg).forEach(([pid, text]) => this.players[pid].private.push(text));
 
       this.day += 1; this.phase = "day";
-      died.forEach((q) => this.say("death", this.settings.reveal ? this.pick("dead", { name: q.name, role: this.roleTitle(q) }) : this.pick("dead_hidden", { name: q.name })));
+      died.forEach((q) => this.say("death", this.settings.reveal ? this.pick("dead", { name: q.name, role: this.roleTitle(q) }) : this.pick("dead_hidden", { name: q.name }), this.gone(q, "night")));
       if (!died.length) this.say("calm", this.pick("none"));
       if (saved) this.say("saved", this.pick("saved"));
       this.alive().forEach((q) => { if (q.silenced_day === this.day) this.say("silenced", this.pick("silenced", { name: q.name }) || `${q.name} сегодня без голоса.`); });
@@ -235,7 +237,7 @@
       this.say("duel", this.pick("duel", { a: p.name, b: q.name }) || `${p.name} вызывает ${q.name} на дуэль!`);
       const loser = rnd.choice([p, q]);
       loser.alive = false;
-      this.say("death", this.pick(this.settings.reveal ? "duel_dead" : "duel_dead_hidden", { name: loser.name, role: this.roleTitle(loser) }));
+      this.say("death", this.pick(this.settings.reveal ? "duel_dead" : "duel_dead_hidden", { name: loser.name, role: this.roleTitle(loser) }), this.gone(loser, "duel"));
       this.checkWin();
       return loser.id;
     }
@@ -266,7 +268,7 @@
       this.phase = "verdict";
       if (out) {
         out.alive = false;
-        this.say("out", this.pick(this.settings.reveal ? "out" : "out_hidden", { name: out.name, role: this.roleTitle(out) }));
+        this.say("out", this.pick(this.settings.reveal ? "out" : "out_hidden", { name: out.name, role: this.roleTitle(out) }), this.gone(out, "vote"));
         Object.values(this.players).forEach((b) => {
           if (b.alive && b.bounty_target === out.id && !b.bounty_won) {
             b.bounty_won = true;

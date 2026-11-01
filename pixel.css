@@ -5,7 +5,7 @@
    ===================================================================== */
 body.pixel {
   --px: 3px; --bd: #05010d;
-  --font-head: "Press Start 2P", monospace; --font-body: "Pixelify Sans", sans-serif;
+  --font-head: "NkDigitsHead", "Press Start 2P", monospace; --font-body: "NkDigits", "Pixelify Sans", sans-serif;
   -webkit-font-smoothing: none; font-size: 16px; letter-spacing: 0;
 }
 body.pixel canvas.pix, body.pixel .sprite, body.pixel .pxscene, body.pixel .theme, body.pixel .game-hero { image-rendering: pixelated; }
@@ -107,16 +107,16 @@ body.pixel .win h2 { font-size: 20px; }
 
 /* RPG-лист в профиле */
 body.pixel .rpg-banner { margin-top: 18px; margin-bottom: 0; height: 110px; }
-body.pixel .rpg .lvl { font-family: "Press Start 2P", monospace; font-size: 14px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
+body.pixel .rpg .lvl { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 14px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
 body.pixel .bar-label { font-size: 13px; margin: 10px 0 4px; display: flex; align-items: center; gap: 6px; }
 body.pixel .bar { height: 14px; background: #0a0a1a; box-shadow: 0 -3px 0 0 #fff, 0 3px 0 0 #fff, -3px 0 0 0 #fff, 3px 0 0 0 #fff; margin: 0 3px; }
 body.pixel .bar i { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--c1) 0 6px, var(--c2) 6px 8px); }
 body.pixel .bar.hp i { --c1: #ff3355; --c2: #c01a3a; }
 body.pixel .bar.xp i { --c1: #3ec8ff; --c2: #1a8ac0; }
-body.pixel .loot { display: flex; align-items: center; gap: 4px; font-family: "Press Start 2P", monospace; font-size: 11px; }
+body.pixel .loot { display: flex; align-items: center; gap: 4px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 11px; }
 
 /* титульный экран */
-body.pixel .press-start { font-family: "Press Start 2P", monospace; font-size: 11px; color: var(--accent); margin-top: 14px; animation: blink 1s steps(2) infinite; }
+body.pixel .press-start { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 11px; color: var(--accent); margin-top: 14px; animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 body.pixel .hero { position: relative; }
 body.pixel .avatars { gap: 12px; padding: 3px; }
@@ -139,9 +139,9 @@ body.pixel .game-hero .pill { background: #000; color: #ffd23f; }
 body.pixel .game-hero .big-emoji { right: 6px; bottom: 6px; transform: none; filter: drop-shadow(4px 4px 0 #000); }
 body.pixel .game-hero .big-emoji canvas { width: 120px; height: 120px; }
 body.pixel[data-skin="app"] .game-tile { background: #1f0f3f; margin: 3px; }
-body.pixel[data-skin="app"] .game-tile .soon { border-radius: 0; background: #ff3ec8; color: #fff; font-family: "Press Start 2P"; font-size: 7px; }
-body.pixel[data-skin="app"] .game-tile b { font-family: "Press Start 2P"; font-size: 10px; line-height: 1.5; }
-body.pixel[data-skin="app"] .join-box .input { color: #43f0ff; font-family: "Press Start 2P"; font-size: 16px; }
+body.pixel[data-skin="app"] .game-tile .soon { border-radius: 0; background: #ff3ec8; color: #fff; font-family: "NkDigitsHead", "Press Start 2P"; font-size: 7px; }
+body.pixel[data-skin="app"] .game-tile b { font-family: "NkDigitsHead", "Press Start 2P"; font-size: 10px; line-height: 1.5; }
+body.pixel[data-skin="app"] .join-box .input { color: #43f0ff; font-family: "NkDigitsHead", "Press Start 2P"; font-size: 16px; }
 body.pixel[data-skin="app"] .section-title { color: #43f0ff; }
 
 /* ПРОФИЛЬ — RPG-меню (синие окна с белой рамкой, как в старых JRPG) */
@@ -150,7 +150,7 @@ body.pixel[data-screen="profile"] {
   --btn-ink: #1a1030; background: #0c1030 !important;
 }
 body.pixel[data-screen="profile"][data-pstyle="rpg"] .card:not(.pcard) { background: linear-gradient(180deg, #2c4ad0, #121e78) !important; }
-body.pixel[data-screen="profile"] .stat b { font-family: "Press Start 2P"; font-size: 18px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
+body.pixel[data-screen="profile"] .stat b { font-family: "NkDigitsHead", "Press Start 2P"; font-size: 18px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
 body.pixel[data-screen="profile"] h2 { font-size: 14px; }
 
 /* ВХОД — титульный экран */
@@ -162,21 +162,21 @@ body.pixel[data-screen="register"] .hero h1 { position: relative; z-index: 2; co
 /* КЛАССИКА — 1-бит нуар: чёрное, белое и кровь */
 body.pixel[data-skin="classic"] {
   --bg: #000; --card: #0b0b0b; --card2: #1c1c1c; --bd: #e8e4dc; --accent: #c0141f; --text: #e8e4dc; --muted: #8a857c; --btn-ink: #fff;
-  --font-head: "Press Start 2P", monospace; --font-body: "Tiny5", "Pixelify Sans", sans-serif; background: #000 !important; font-size: 17px;
+  --font-head: "NkDigitsHead", "Press Start 2P", monospace; --font-body: "NkDigits", "Tiny5", "Pixelify Sans", sans-serif; background: #000 !important; font-size: 17px;
 }
 body.pixel[data-skin="classic"]::before { opacity: .05; }
 body.pixel[data-skin="classic"] .player .avatar canvas { filter: grayscale(1) contrast(1.2); }
 body.pixel[data-skin="classic"] .player.sel .avatar canvas { filter: grayscale(1) contrast(1.2) sepia(1) hue-rotate(-50deg) saturate(4); }
 body.pixel[data-skin="classic"] .glyph canvas { filter: grayscale(1) contrast(1.6) brightness(1.1) sepia(1) hue-rotate(-50deg) saturate(5); }
-body.pixel[data-skin="classic"] .rc-stamp { border-radius: 0; font-family: "Press Start 2P"; font-size: 8px; }
+body.pixel[data-skin="classic"] .rc-stamp { border-radius: 0; font-family: "NkDigitsHead", "Press Start 2P"; font-size: 8px; }
 body.pixel[data-skin="classic"] .face.front { background: #000 !important; }
 body.pixel[data-skin="classic"] .cf { border: 0; outline: 3px solid #c0141f; outline-offset: -14px; }
-body.pixel[data-skin="classic"] .cf-mono { font-family: "Press Start 2P"; font-style: normal; font-size: 64px; }
+body.pixel[data-skin="classic"] .cf-mono { font-family: "NkDigitsHead", "Press Start 2P"; font-style: normal; font-size: 64px; }
 
 /* 90-е — неон, 8-бит кассета */
 body.pixel[data-skin="90s"] {
   --bg: #12051c; --card: #1d0a2c; --card2: #2e1244; --bd: #ff2bd6; --accent: #ffd400; --btn-ink: #12051c; --text: #fff6d6; --muted: #c9a8d9;
-  --font-head: "Press Start 2P", monospace; --font-body: "Pixelify Sans", sans-serif; background: #12051c !important;
+  --font-head: "NkDigitsHead", "Press Start 2P", monospace; --font-body: "NkDigits", "Pixelify Sans", sans-serif; background: #12051c !important;
 }
 body.pixel[data-skin="90s"] h1, body.pixel[data-skin="90s"] h2, body.pixel[data-skin="90s"] .gamebar .title b { text-shadow: -2px 0 #ff2bd6, 2px 0 #00e5ff; }
 body.pixel[data-skin="90s"] .vhs-label { transform: none; box-shadow: 4px 4px 0 #ff2bd6; }
@@ -187,20 +187,20 @@ body.pixel[data-skin="90s"] .face.front { background: #1a1a1a !important; }
 /* ХЭЛЛОУИН — фиолетовая ночь и тыквенный свет */
 body.pixel[data-skin="halloween"] {
   --bg: #0b0614; --card: #1a0c28; --card2: #2a1440; --bd: #ff8a2a; --accent: #ff7a18; --btn-ink: #1a0800; --text: #ffe8cc; --muted: #c4a0c8;
-  --font-head: "Press Start 2P", monospace; --font-body: "Pixelify Sans", sans-serif; background: #0b0614 !important;
+  --font-head: "NkDigitsHead", "Press Start 2P", monospace; --font-body: "NkDigits", "Pixelify Sans", sans-serif; background: #0b0614 !important;
 }
 body.pixel[data-skin="halloween"] .player { border-radius: 0 !important; }
 body.pixel[data-skin="halloween"] .tarot-window { border-radius: 0; box-shadow: 0 -3px 0 0 #ff8a2a, 0 3px 0 0 #ff8a2a, -3px 0 0 0 #ff8a2a, 3px 0 0 0 #ff8a2a; border: 0; }
 body.pixel[data-skin="halloween"] .rc { border-radius: 0; }
 body.pixel[data-skin="halloween"] .rc-name { color: #ffb067 !important; }
-body.pixel[data-skin="halloween"] .tarot-num, body.pixel[data-skin="halloween"] .tarot-team { font-family: "Press Start 2P"; font-size: 10px; }
+body.pixel[data-skin="halloween"] .tarot-num, body.pixel[data-skin="halloween"] .tarot-team { font-family: "NkDigitsHead", "Press Start 2P"; font-size: 10px; }
 body.pixel[data-skin="halloween"] .face.front { background: #2a1440 !important; }
 body.pixel[data-skin="halloween"] .cf { border-radius: 0; }
 
 /* БУНКЕР — зелёный терминал */
 body.pixel[data-skin="bunker"] {
   --bg: #020502; --card: #06120a; --card2: #0d1f12; --bd: #9cff57; --accent: #9cff57; --btn-ink: #021004; --text: #b8ffa1; --muted: #5d8f52;
-  --font-head: "Press Start 2P", monospace; --font-body: "Handjet", "Pixelify Sans", monospace; background: #020502 !important; font-size: 19px;
+  --font-head: "NkDigitsHead", "Press Start 2P", monospace; --font-body: "NkDigits", "Handjet", "Pixelify Sans", monospace; background: #020502 !important; font-size: 19px;
 }
 body.pixel[data-skin="bunker"] * { text-shadow: none; }
 body.pixel[data-skin="bunker"] .btn { background: #9cff57 !important; }
@@ -209,12 +209,12 @@ body.pixel[data-skin="bunker"] .player .avatar canvas, body.pixel[data-skin="bun
   filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(4) brightness(.95); }
 body.pixel[data-skin="bunker"] .hazard { height: 9px; }
 body.pixel[data-skin="bunker"] .face.front { background: #0a120b !important; }
-body.pixel[data-skin="bunker"] .cf-stamp { font-family: "Press Start 2P"; font-size: 14px; }
+body.pixel[data-skin="bunker"] .cf-stamp { font-family: "NkDigitsHead", "Press Start 2P"; font-size: 14px; }
 
 /* ДИКИЙ ЗАПАД — песок, дерево, плакаты */
 body.pixel[data-skin="west"], body.pixel[data-skin="west"].night {
   --bg: #e9d2a4; --card: #f6e6c4; --card2: #e2c894; --bd: #4a2a12; --accent: #b03a1a; --btn-ink: #fff3dc; --text: #2a160a; --muted: #7a5a34;
-  --font-head: "Press Start 2P", monospace; --font-body: "Pixelify Sans", sans-serif; background: #e9d2a4 !important;
+  --font-head: "NkDigitsHead", "Press Start 2P", monospace; --font-body: "NkDigits", "Pixelify Sans", sans-serif; background: #e9d2a4 !important;
 }
 body.pixel[data-skin="west"] .portrait canvas, body.pixel[data-skin="west"] .player .avatar canvas { filter: sepia(.85) contrast(1.05); }
 body.pixel[data-skin="west"] .wanted { font-family: "Press Start 2P" !important; font-size: 15px !important; line-height: 1.6; }
@@ -226,7 +226,7 @@ body.pixel[data-skin="west"] .face.front { background: #c98e4a !important; }
 /* КОРПОРАТИВ — интерфейс Windows 95: серые окна, бирюзовый рабочий стол */
 body.pixel[data-skin="office"], body.pixel[data-skin="office"].night {
   --bg: #008080; --card: #c0c0c0; --card2: #d4d0c8; --bd: #000; --accent: #000080; --btn-ink: #fff; --text: #000; --muted: #404040;
-  --font-head: "Press Start 2P", monospace; --font-body: "Tiny5", "Pixelify Sans", sans-serif; background: #008080 !important; font-size: 17px;
+  --font-head: "NkDigitsHead", "Press Start 2P", monospace; --font-body: "NkDigits", "Tiny5", "Pixelify Sans", sans-serif; background: #008080 !important; font-size: 17px;
 }
 body.pixel[data-skin="office"].night { --bg: #000040; background: #000040 !important; }
 body.pixel[data-skin="office"] .card, body.pixel[data-skin="office"] .player, body.pixel[data-skin="office"] .face, body.pixel[data-skin="office"] .win {

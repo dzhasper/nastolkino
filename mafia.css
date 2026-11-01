@@ -1,0 +1,225 @@
+/* Мафия в виде чата: лента ведущего и игроков, действия внизу, анимации смертей */
+body.mc-on { overflow: hidden; }
+body.mc-on #app { min-height: 0; }
+.mc-spacer { height: 1px; }
+.mc { position: fixed; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 560px; z-index: 40;
+  display: flex; flex-direction: column; background: radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--accent2) 55%, transparent), transparent 70%), var(--bg);
+  padding-top: var(--safe-top); transition: background .8s; }
+.mc.night { background: radial-gradient(120% 60% at 50% 0%, #0c1636, transparent 70%), #05060d; }
+.mc-tochat { display: block; margin: 8px 0 0 auto; font-size: 12px; padding: 6px 10px; border-radius: 12px; background: var(--card2); color: var(--text); }
+
+/* шапка */
+.mc-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); position: relative; flex-wrap: nowrap; }
+.mc-head .net-banner { position: absolute; left: 0; right: 0; top: 100%; z-index: 3; }
+.mc-back { width: 34px; height: 34px; flex: none; border-radius: 50%; background: var(--card2); color: var(--text); font-size: 16px; }
+.mc-ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mc-ttl b { font-family: var(--font-head); font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-ttl .kicker { font-size: 9px; }
+.mc-ttl .small { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-rolechip { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; background: var(--card2); color: var(--text); font-size: 20px; line-height: 1; }
+.mc-rolechip i { font-style: normal; font-size: 8.5px; color: var(--muted); margin-top: 2px; }
+.mc-rolechip canvas { width: 22px !important; height: 22px !important; }
+.mc-rolechip.team-mafia { box-shadow: inset 0 0 0 1px #f8717188; } .mc-rolechip.team-town { box-shadow: inset 0 0 0 1px #4ade8088; } .mc-rolechip.team-solo { box-shadow: inset 0 0 0 1px #fbbf2488; }
+.mc-view { flex: none; width: 30px; height: 30px; border-radius: 10px; background: var(--card); color: var(--muted); font-size: 15px; }
+.mc-head .timer { flex: none; transform: scale(.78); margin: -6px -4px -6px -6px; }
+.mc-head .timer span { font-size: 15px; }
+
+/* игроки */
+.mc-strip { display: flex; gap: 4px; overflow-x: auto; padding: 6px 8px; border-bottom: 1px solid var(--line); scrollbar-width: none; flex: none; }
+.mc-strip::-webkit-scrollbar { display: none; }
+.ms-p { position: relative; flex: none; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; color: var(--text); padding: 2px 0; }
+.ms-p .avatar { width: 34px; height: 34px; font-size: 18px; }
+.ms-p span { font-size: 9.5px; max-width: 52px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .85; }
+.ms-p.me span { color: var(--accent); font-weight: 700; opacity: 1; }
+.ms-p.dead .avatar { filter: grayscale(1) brightness(.55); }
+.ms-p.dead span { text-decoration: line-through; opacity: .5; }
+.ms-x { position: absolute; top: 4px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 20px; color: #e11d48; text-shadow: 0 0 4px #000; }
+.ms-r { position: absolute; top: -2px; right: 2px; font-style: normal; font-size: 12px; }
+.ms-p em { position: absolute; top: 22px; right: 4px; font-style: normal; font-size: 10px; line-height: 1; }
+.ms-p em canvas { width: 14px !important; height: 14px !important; }
+.ms-view .ms-ico { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: var(--card2); font-size: 17px; color: var(--muted); max-width: none; opacity: 1; }
+
+/* лента */
+.mc-feedwrap { position: relative; flex: 1; min-height: 0; }
+.mc-feed { position: absolute; inset: 0; overflow-y: auto; padding: 10px 12px 16px; overscroll-behavior: contain; }
+.mc-down { position: absolute; right: 12px; bottom: 10px; z-index: 2; padding: 8px 12px; border-radius: 16px; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .5); opacity: 0; pointer-events: none; transform: translateY(10px); transition: .2s; }
+.mc-down.show { opacity: 1; pointer-events: auto; transform: none; }
+.mc-item { margin: 7px 0; }
+.mc-item.new { animation: mcIn .35s ease-out both; }
+@keyframes mcIn { from { opacity: 0; transform: translateY(12px); } }
+
+/* ведущий */
+.mc-host { display: flex; gap: 8px; align-items: flex-start; }
+.mh-ava { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; background: color-mix(in srgb, var(--accent) 35%, #000); }
+.mh-b { background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent); padding: 8px 11px; border-radius: 4px 14px 14px 14px; max-width: 86%; font-size: 14px; line-height: 1.42; }
+.mh-who { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 2px; letter-spacing: .02em; }
+.mc-host.priv .mh-b { border-style: dashed; border-left-style: solid; background: color-mix(in srgb, #fbbf24 8%, var(--card)); }
+.mc-host.priv .mh-who { color: #fbbf24; }
+.mc-host.night .mh-b { font-style: italic; background: rgba(40, 60, 140, .14); }
+.mc-host.saved .mh-b { border-left-color: #4ade80; }
+.mc-host.calm .mh-b { border-left-color: #93c5fd; }
+.mc-host.end .mh-b { border-left-color: #fbbf24; font-weight: 600; }
+
+/* разделители фаз */
+.mc-div { display: flex; flex-direction: column; align-items: center; text-align: center; margin: 18px 0 10px; }
+.mc-div b { font-family: var(--font-head); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; margin-top: 4px; }
+.mc-div span { font-size: 11px; color: var(--muted); }
+.md-sky { position: relative; width: 100%; height: 46px; border-radius: 14px; overflow: hidden; display: grid; place-items: center; }
+.md-ico { font-size: 30px; filter: drop-shadow(0 0 12px rgba(255, 255, 255, .5)); }
+.d-night .md-sky { background: linear-gradient(180deg, #0a1030, #1a2a60); box-shadow: inset 0 0 0 1px #2a3a80; }
+.d-night .md-sky::before { content: "✦  ·  ✧    ·   ✦  ·   ✧  ·    ✦   ·  ✧"; position: absolute; inset: 6px 0 auto; font-size: 9px; color: #cfe0ff; letter-spacing: 4px; white-space: nowrap; animation: twinkle 2.4s steps(3) infinite; }
+.d-day .md-sky { background: linear-gradient(180deg, #ffb347, #ffe08a 60%, #9ad0ff); box-shadow: inset 0 0 0 1px #ffd27a; }
+.d-day b { color: #ffd27a; }
+.d-vote .md-sky { background: linear-gradient(180deg, #3a1010, #6a1a1a); box-shadow: inset 0 0 0 1px #8a2a2a; }
+.d-vote b { color: #fca5a5; }
+@keyframes twinkle { 50% { opacity: .35; } }
+.mc-item.new .d-night .md-ico { animation: moonUp 1.6s ease-out both; }
+.mc-item.new .d-day .md-ico { animation: sunUp 1.6s ease-out both; }
+.mc-item.new .d-vote .md-ico { animation: scaleTilt 1.4s ease-in-out both; }
+.mc-item.new .d-night .md-sky { animation: dusk 1.6s ease-out both; }
+@keyframes moonUp { from { transform: translateY(40px); opacity: 0; } }
+@keyframes sunUp { from { transform: translateY(40px) scale(.6); opacity: 0; } 70% { transform: translateY(-4px) scale(1.1); } }
+@keyframes scaleTilt { 0% { transform: scale(.4) rotate(0); opacity: 0; } 40% { transform: scale(1.1) rotate(-14deg); opacity: 1; } 70% { transform: rotate(10deg); } 100% { transform: none; } }
+@keyframes dusk { from { filter: brightness(2.2) saturate(.6); } }
+
+/* смерть / изгнание: прицел → вспышка → кровь → штамп → кем был(а) */
+.mc-kill { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; background: linear-gradient(135deg, rgba(120, 0, 10, .35), rgba(0, 0, 0, .55)); border: 1px solid rgba(225, 29, 72, .45); position: relative; overflow: hidden; }
+.mc-kill.how-vote { background: linear-gradient(135deg, rgba(90, 50, 10, .4), rgba(0, 0, 0, .55)); border-color: rgba(251, 191, 36, .45); }
+.mk-stage { position: relative; flex: none; width: 86px; display: flex; flex-direction: column; align-items: center; }
+.mk-av { position: relative; width: 76px; height: 76px; }
+.mk-av .avatar { width: 76px; height: 76px; font-size: 40px; }
+.mk-face { display: block; filter: grayscale(1) brightness(.6) contrast(1.2); }
+.mk-cross { position: absolute; inset: -6px; border-radius: 50%; border: 2px solid #ff2d55; opacity: 0; }
+.mk-cross::before, .mk-cross::after { content: ""; position: absolute; background: #ff2d55; }
+.mk-cross::before { left: 50%; top: -6px; bottom: -6px; width: 2px; transform: translateX(-50%); }
+.mk-cross::after { top: 50%; left: -6px; right: -6px; height: 2px; transform: translateY(-50%); }
+.mk-flash { position: absolute; inset: -20px; border-radius: 50%; background: radial-gradient(circle, #fff, rgba(255, 255, 255, 0) 65%); opacity: 0; pointer-events: none; }
+.mk-blood { position: absolute; inset: -10px; pointer-events: none; background:
+  radial-gradient(circle at 30% 40%, #b0001c 0 9%, transparent 10%), radial-gradient(circle at 62% 28%, #8a0012 0 6%, transparent 7%),
+  radial-gradient(circle at 70% 66%, #b0001c 0 11%, transparent 12%), radial-gradient(circle at 42% 72%, #6a000c 0 7%, transparent 8%),
+  radial-gradient(circle at 20% 64%, #9a0016 0 4%, transparent 5%), radial-gradient(circle at 82% 44%, #9a0016 0 4%, transparent 5%),
+  radial-gradient(circle at 50% 50%, rgba(160, 0, 20, .55) 0 26%, transparent 40%); mix-blend-mode: multiply; }
+.how-vote .mk-blood { display: none; }
+.mk-gavel { position: absolute; right: -12px; top: -14px; font-style: normal; font-size: 30px; transform: rotate(-20deg); }
+.mk-stamp { margin-top: 6px; font-family: var(--font-head); font-size: 11px; letter-spacing: .14em; color: #ff2d55; border: 2px solid #ff2d55; padding: 2px 6px; transform: rotate(-8deg); }
+.how-vote .mk-stamp { color: #fbbf24; border-color: #fbbf24; }
+.mk-body { flex: 1; min-width: 0; }
+.mk-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fda4af; }
+.how-vote .mk-title { color: #fcd34d; }
+.mk-name { font-family: var(--font-head); font-size: 18px; margin: 2px 0 6px; overflow: hidden; text-overflow: ellipsis; }
+.mk-role { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; padding: 6px 9px; border-radius: 10px; background: rgba(0, 0, 0, .45); }
+.mk-role span { font-size: 11px; color: var(--muted); }
+.mk-role b { font-size: 15px; }
+.mk-role i { font-style: normal; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; opacity: .8; }
+.mk-role.team-mafia { box-shadow: inset 0 0 0 1px #f87171; } .mk-role.team-mafia b, .mk-role.team-mafia i { color: #f87171; }
+.mk-role.team-town { box-shadow: inset 0 0 0 1px #4ade80; } .mk-role.team-town b, .mk-role.team-town i { color: #4ade80; }
+.mk-role.team-solo { box-shadow: inset 0 0 0 1px #fbbf24; } .mk-role.team-solo b, .mk-role.team-solo i { color: #fbbf24; }
+.mk-text { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.35; font-style: italic; }
+/* только для только что случившегося */
+.mc-item.new .mc-kill { animation: killIn .4s ease-out both, killShake .35s 1s both; }
+.mc-item.new .mk-face { animation: toGray .5s 1.05s both; }
+.mc-item.new .mk-cross { animation: aim 1s .15s ease-in-out both; }
+.mc-item.new .mk-flash { animation: shotFlash .45s .95s ease-out both; }
+.mc-item.new .mk-blood { animation: bloodIn .45s 1s ease-out both; }
+.mc-item.new .mk-stamp { animation: stampIn .3s 1.45s cubic-bezier(.2, 2, .4, 1) both; }
+.mc-item.new .mk-role { animation: roleFlip .6s 2s ease-out both; }
+.mc-item.new .mk-gavel { animation: gavel .9s .3s ease-in both; }
+
+@keyframes killIn { from { opacity: 0; transform: scale(.92); } }
+@keyframes killShake { 0%, 100% { transform: none; } 20% { transform: translate(-6px, 2px); } 40% { transform: translate(5px, -3px); } 60% { transform: translate(-4px, 1px); } 80% { transform: translate(3px, 0); } }
+@keyframes toGray { from { filter: none; } }
+@keyframes aim { 0% { opacity: 0; transform: scale(2.2) rotate(-40deg); } 60% { opacity: 1; transform: scale(1) rotate(0); } 85% { opacity: 1; } 100% { opacity: 0; transform: scale(.9); } }
+@keyframes shotFlash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes bloodIn { from { opacity: 0; transform: scale(.3); } }
+@keyframes stampIn { from { opacity: 0; transform: rotate(-8deg) scale(2.6); } }
+@keyframes roleFlip { from { opacity: 0; transform: perspective(400px) rotateX(-90deg); } }
+@keyframes gavel { 0% { opacity: 0; transform: translateY(-40px) rotate(-60deg); } 60% { opacity: 1; transform: translateY(0) rotate(-60deg); } 75% { transform: rotate(10deg); } 100% { transform: rotate(-20deg); } }
+
+/* сообщения игроков */
+.mc-msg { display: flex; gap: 8px; align-items: flex-end; }
+.mc-msg .avatar { width: 30px; height: 30px; font-size: 16px; flex: none; }
+.mc-msg .b { background: var(--card2); padding: 7px 11px; border-radius: 14px 14px 14px 4px; max-width: 80%; font-size: 14px; line-height: 1.4; word-wrap: break-word; }
+.mc-msg .who { font-size: 11.5px; font-weight: 700; opacity: .8; display: flex; gap: 6px; align-items: center; }
+.mc-msg.mine { justify-content: flex-end; }
+.mc-msg.mine .b { background: var(--accent); color: #fff; border-radius: 14px 14px 4px 14px; }
+.mc-msg.ch-mafia .b { background: rgba(140, 10, 25, .55); box-shadow: inset 0 0 0 1px rgba(248, 113, 113, .5); }
+.mc-msg.ch-dead .b { background: rgba(80, 100, 140, .3); box-shadow: inset 0 0 0 1px rgba(150, 170, 220, .35); }
+.ch-tag { font-size: 9.5px; padding: 1px 6px; border-radius: 8px; font-weight: 700; }
+.ch-tag.mafia { background: #7f1d1d; color: #fecaca; } .ch-tag.dead { background: #334155; color: #cbd5e1; }
+.mc-msg.mine .ch-tag { display: inline-block; margin-bottom: 3px; }
+
+/* карта роли в чате */
+.mc-host.role .mh-b { max-width: 100%; flex: 1; }
+.mc-flip { perspective: 1200px; width: min(290px, 100%); height: 430px; margin: 10px auto 4px; cursor: pointer; }
+.mc-flip .flip-in { position: relative; width: 100%; height: 100%; transition: transform .8s cubic-bezier(.2, .8, .2, 1); transform-style: preserve-3d; }
+.mc-flip.open .flip-in { transform: rotateY(180deg); }
+.mc-flip .face { padding: 14px; }
+.mc-rolemini { display: none; margin-top: 6px; padding: 6px 9px; border-radius: 10px; background: rgba(0, 0, 0, .35); font-size: 13px; }
+.mc-mates { margin-top: 6px; font-size: 12.5px; }
+.mc-item.compact .mc-flip { display: none; }
+.mc-item.compact .mc-rolemini { display: block; }
+.mc-sheetcard { margin: 0 auto 6px; }
+
+/* действия */
+.mc-dock { flex: none; max-height: 44vh; overflow-y: auto; padding: 8px 10px; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 85%, #000); }
+.mc-dock:empty { display: none; }
+.mc-q { font-size: 12.5px; font-weight: 700; margin: 2px 0 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.mc-chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 6px; scrollbar-width: none; }
+.mc-chips::-webkit-scrollbar { display: none; }
+.mc-chip { position: relative; flex: none; width: 64px; padding: 6px 2px 5px; border-radius: 12px; background: var(--card); color: var(--text); display: flex; flex-direction: column; align-items: center; gap: 3px; box-shadow: inset 0 0 0 1px var(--line); }
+.mc-chip .avatar { width: 36px; height: 36px; font-size: 19px; }
+.mc-chip span { font-size: 10.5px; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-chip.on { box-shadow: inset 0 0 0 2px var(--accent); background: color-mix(in srgb, var(--accent) 25%, transparent); }
+.mc-chip.off { opacity: .35; }
+.mc-chip .cnt { position: absolute; top: 2px; right: 4px; font-style: normal; font-size: 11px; font-weight: 800; background: var(--accent); color: #fff; border-radius: 8px; padding: 0 5px; }
+.mc-chip .vs { display: flex; gap: 1px; font-style: normal; flex-wrap: wrap; justify-content: center; max-width: 60px; }
+.mc-chip .vs .avatar, body.pixel .mc-chip .vs .avatar { width: 14px; height: 14px; font-size: 9px; }
+.mc-chip .vs canvas { width: 12px !important; height: 12px !important; }
+.mc-row { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+.mc-row .btn { padding: 11px 12px; font-size: 13px; }
+.mc-pass { display: block; width: 100%; margin-top: 4px; padding: 9px 10px; border-radius: 12px; background: var(--card); color: var(--text); font-size: 13px; box-shadow: inset 0 0 0 1px var(--line); }
+.mc-pass.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.mc-row .mc-pass { margin-top: 0; }
+.mc-skip { flex: none; padding: 9px 10px; border-radius: 12px; background: var(--card); color: var(--muted); font-size: 12px; margin-top: 4px; }
+.mc-dock > .mc-skip { display: block; margin-left: auto; }
+.mc-hint { font-size: 13px; color: var(--muted); text-align: center; padding: 6px 4px; }
+.mc-done { font-size: 12.5px; padding: 6px 9px; border-radius: 10px; background: var(--card); margin-bottom: 6px; }
+
+/* ввод */
+.mc-input { flex: none; padding: 6px 10px calc(8px + var(--safe-bottom)); border-top: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 80%, #000); }
+.mc-input .chat-form { margin-top: 0; }
+.mc-input .chat-form.ch-mafia .input { box-shadow: inset 0 0 0 1px #f8717199; background: rgba(120, 10, 20, .25); }
+.mc-input .chat-form.ch-dead .input { box-shadow: inset 0 0 0 1px #94a3b899; }
+.mc-chs { display: flex; gap: 6px; margin-bottom: 6px; }
+.mc-chs .pill { font-size: 11.5px; padding: 5px 9px; }
+.mc-secret { font-size: 11px; color: #fca5a5; margin-bottom: 5px; }
+.mc-closed { font-size: 12.5px; color: var(--muted); text-align: center; padding: 8px 4px; }
+
+/* пиксельный режим */
+body.pixel .mc-chip, body.pixel .mh-b, body.pixel .mc-msg .b, body.pixel .mc-kill, body.pixel .md-sky, body.pixel .mk-role, body.pixel .mc-pass, body.pixel .mc-skip,
+body.pixel .mc-rolechip, body.pixel .mc-view, body.pixel .mc-down, body.pixel .mc-done, body.pixel .mc-rolemini { border-radius: 0; }
+body.pixel .mc-ttl b, body.pixel .mk-name, body.pixel .mc-div b { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 11px; line-height: 1.5; }
+body.pixel .mk-stamp { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 8px; }
+body.pixel .mk-av .avatar, body.pixel .ms-p .avatar, body.pixel .mc-chip .avatar, body.pixel .mc-msg .avatar { border-radius: 0; }
+body.pixel .mc-head .timer span { font-size: 14px; }
+
+/* сцена смерти поверх чата */
+.mc-cine { position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 14px;
+  background: radial-gradient(circle at 50% 45%, rgba(70, 0, 8, .97), rgba(0, 0, 0, .98) 70%); animation: cineIn .3s ease-out both; }
+.mc-cine .mc-kill { background: linear-gradient(160deg, #3a0008, #0a0204); }
+.mc-cine.how-vote .mc-kill { background: linear-gradient(160deg, #3a2608, #0a0602); }
+.mc-cine.how-vote { background: radial-gradient(circle at 50% 45%, rgba(70, 46, 0, .97), rgba(0, 0, 0, .98) 70%); }
+.mc-cine.out { animation: cineOut .38s ease-in both; }
+.mc-cine .mc-item { width: 100%; max-width: 360px; margin: 0; }
+.mc-cine .mc-kill { flex-direction: column; text-align: center; padding: 22px 16px 18px; gap: 14px; }
+.mc-cine .mk-stage { width: auto; }
+.mc-cine .mk-av, .mc-cine .mk-av .avatar { width: 130px; height: 130px; font-size: 70px; }
+.mc-cine .mk-stamp { font-size: 16px; margin-top: 10px; }
+.mc-cine .mk-name { font-size: 22px; }
+.mc-cine .mk-role { justify-content: center; }
+.mc-cine .mk-role b { font-size: 18px; }
+.mc-cine .mk-gavel { font-size: 46px; right: -24px; top: -24px; }
+.mc-cine-tap { margin-top: 14px; font-size: 11px; color: var(--muted); opacity: .7; }
+@keyframes cineIn { from { opacity: 0; } }
+@keyframes cineOut { to { opacity: 0; transform: scale(.96); } }

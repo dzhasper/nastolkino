@@ -27,13 +27,13 @@ body.pixel .rou-hero p { background: rgba(0, 0, 0, .75) !important; }
 .stage { position: relative; margin: calc(-14px - var(--safe-top, 0px)) -16px 0; aspect-ratio: 4 / 3.4; background: #000; overflow: hidden; border-bottom: 3px solid #000; }
 .cellar-canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; display: block; }
 .stage-hud { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; gap: 8px; padding: calc(10px + var(--safe-top, 0px)) 12px 0; z-index: 3;
-  font-family: "Press Start 2P", monospace; font-size: 9px; color: #e8c8a0; text-shadow: 2px 2px 0 #000; pointer-events: none; }
+  font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; color: #e8c8a0; text-shadow: 2px 2px 0 #000; pointer-events: none; }
 .stage-hud .drum { flex: 1; letter-spacing: 1px; color: #d0a070; overflow: hidden; white-space: nowrap; }
 .stage-timer { font-size: 14px; color: #ff3040; min-width: 40px; text-align: right; }
 .stage-hud .snd { pointer-events: auto; font-size: 16px; background: rgba(0, 0, 0, .5); padding: 4px 6px; }
-.stage-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #8a6e5a; font-family: "Press Start 2P", monospace; font-size: 9px; }
+.stage-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #8a6e5a; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; }
 .stage-msg { position: absolute; left: 0; right: 0; top: 38%; text-align: center; z-index: 4; pointer-events: none; opacity: 0;
-  font-family: "Press Start 2P", monospace; font-size: 34px; color: #ff1020; text-shadow: 4px 4px 0 #000, -2px 0 #000; }
+  font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 34px; color: #ff1020; text-shadow: 4px 4px 0 #000, -2px 0 #000; }
 .stage-msg.show { animation: smsg 1.6s steps(8) forwards; }
 .stage-msg.blank { color: #c8b8a0; font-size: 22px; }
 .stage-msg.load { color: #d0a070; font-size: 14px; }
@@ -44,8 +44,8 @@ body.pixel .rou-hero p { background: rgba(0, 0, 0, .75) !important; }
   background-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, .15) 0 2px, transparent 2px 7px), repeating-linear-gradient(0deg, rgba(255, 255, 255, .05) 0 1px, transparent 1px 5px);
   border-bottom: 3px solid #000; }
 .dcell { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 0; background: #241e18; box-shadow: inset 2px 2px 0 #14100c, inset -2px -2px 0 #4a4238; min-width: 0; }
-.dcell .big { font-family: "Press Start 2P", monospace; font-size: 18px; color: #d0101a; text-shadow: 2px 2px 0 #3a0004; }
-.dcell span { font-family: "Press Start 2P", monospace; font-size: 6px; color: #b8a888; margin-top: 6px; letter-spacing: .5px; }
+.dcell .big { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 18px; color: #d0101a; text-shadow: 2px 2px 0 #3a0004; }
+.dcell span { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 6px; color: #b8a888; margin-top: 6px; letter-spacing: .5px; }
 .dface { display: grid; place-items: center; background: #241e18; box-shadow: inset 2px 2px 0 #14100c, inset -2px -2px 0 #4a4238; }
 .dface canvas { width: 52px; height: 52px; image-rendering: pixelated; }
 
@@ -62,7 +62,7 @@ body.pixel .rou-hero p { background: rgba(0, 0, 0, .75) !important; }
 .hrt.on { background: #d0101a; }
 
 /* ход, прицел, предметы */
-.your-turn { text-align: center; font-family: "Press Start 2P", monospace; font-size: 14px; color: #ff2030; margin: 16px 0 10px; animation: blink 1s steps(2) infinite; }
+.your-turn { text-align: center; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 14px; color: #ff2030; margin: 16px 0 10px; animation: blink 1s steps(2) infinite; }
 .aim { display: grid; gap: 10px; }
 body.pixel .shoot-self { background: #4a1410 !important; }
 body.pixel .shoot-opp { background: #b0101a !important; }
@@ -104,16 +104,53 @@ body.pixel .btn.fire[disabled] { background: #3a1a16 !important; color: #7a5a4a 
 /* подписи поверх 3D: чёткий белый шрифт */
 .c3-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
 .c3-label { position: absolute; left: 0; top: 0; display: none; white-space: nowrap; pointer-events: none; will-change: transform;
-  font-family: "Pixelify Sans", sans-serif; font-size: 11px; line-height: 1.2; color: #fff; text-shadow: 1px 1px 0 #000;
+  font-family: "NkDigits", "Pixelify Sans", sans-serif; font-size: 11px; line-height: 1.2; color: #fff; text-shadow: 1px 1px 0 #000;
   background: rgba(0, 0, 0, .78); padding: 2px 5px 1px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .28); }
 .c3-label.item.big { pointer-events: auto; cursor: pointer; }
 .c3-label.item.mine { background: rgba(90, 6, 12, .88); box-shadow: 0 0 0 1px #ff4a58; }
 .c3-label.item.big { font-size: 13px; padding: 3px 6px 2px; }
 .c3-label.item:not(.big) { font-size: 13px; letter-spacing: 1px; padding: 1px 4px; }
-.c3-label.name { font-family: "Press Start 2P", monospace; font-size: 8px; padding: 3px 5px; background: rgba(0, 0, 0, .6); box-shadow: none; text-shadow: 1px 1px 0 #000; }
+.c3-label.name { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 8px; padding: 3px 5px; background: rgba(0, 0, 0, .6); box-shadow: none; text-shadow: 1px 1px 0 #000; }
 .c3-label.name.turn { color: #ffd23f; box-shadow: 0 0 0 1px #ffd23f; }
 .c3-label.name.dead { color: #9a8a80; text-decoration: line-through; }
 .turn-tag { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 4; pointer-events: none; white-space: nowrap;
-  font-family: "Press Start 2P", monospace; font-size: 9px; color: #e8d8c4; background: rgba(0, 0, 0, .7); padding: 6px 9px; box-shadow: 0 0 0 2px #2a1510; }
+  font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; color: #e8d8c4; background: rgba(0, 0, 0, .7); padding: 6px 9px; box-shadow: 0 0 0 2px #2a1510; }
 .turn-tag.me { color: #ff3040; box-shadow: 0 0 0 2px #b0101a; animation: blink 1s steps(2) infinite; }
 .stage-hud .pot { color: #ffd23f; }
+
+/* «Что ты знаешь сейчас» */
+.notes .kn { padding: 6px 8px; margin-top: 6px; font-size: 13px; background: rgba(255, 255, 255, .04); box-shadow: inset 3px 0 0 #6a6a6a; }
+.notes .kn.live { box-shadow: inset 3px 0 0 #e0202e; } .notes .kn.live b { color: #ff4050; }
+.notes .kn.blank { box-shadow: inset 3px 0 0 #8ab070; } .notes .kn.blank b { color: #b8e0a0; }
+.notes details summary { cursor: pointer; }
+
+/* в тебя попали: мгновенная красная вспышка, кровь стекает по экрану */
+.rou-hurt { position: fixed; inset: 0; z-index: 9000; pointer-events: none; overflow: hidden; }
+.rou-hurt .rh-flash { position: absolute; inset: 0; background: #d0000c; animation: rhflash 1.4s ease-out forwards; }
+@keyframes rhflash { 0% { opacity: 1; } 8% { opacity: .95; background: #ff1010; } 30% { opacity: .7; } 100% { opacity: .32; background: radial-gradient(ellipse at center, transparent 35%, #7a0006 100%); } }
+.rou-hurt.x2 .rh-flash { animation-duration: 2s; }
+.rou-hurt .rh-drops i { position: absolute; width: calc(var(--s) * 1.7); height: calc(var(--s) * 1.7); background:
+    radial-gradient(circle at 50% 50%, #9a000e 0 22%, transparent 23%), radial-gradient(circle at 30% 34%, #b0001a 0 9%, transparent 10%),
+    radial-gradient(circle at 72% 30%, #8a000c 0 7%, transparent 8%), radial-gradient(circle at 70% 70%, #a0000f 0 11%, transparent 12%),
+    radial-gradient(circle at 26% 72%, #7a000a 0 6%, transparent 7%), radial-gradient(circle at 88% 52%, #9a000e 0 4%, transparent 5%),
+    radial-gradient(circle at 12% 46%, #9a000e 0 3%, transparent 4%), radial-gradient(circle at 50% 8%, #8a000c 0 3%, transparent 4%);
+  opacity: 0; animation: rhdrop .25s var(--d) forwards, rhrun 2.8s calc(var(--d) + .4s) ease-in forwards; }
+.rou-hurt .rh-drops i::after { content: ""; position: absolute; left: 47%; top: 62%; width: 16%; height: var(--run); background: linear-gradient(#8a000c, rgba(90, 0, 8, 0)); border-radius: 0 0 6px 6px; transform-origin: top; transform: scaleY(0); animation: rhdrip 2.8s calc(var(--d) + .3s) ease-in forwards; }
+@keyframes rhdrop { from { opacity: 0; transform: scale(.2); } to { opacity: .92; transform: scale(1); } }
+@keyframes rhrun { to { transform: translateY(40px); } }
+@keyframes rhdrip { to { transform: scaleY(1); } }
+.rou-hurt .rh-txt { position: absolute; left: 0; right: 0; top: 42%; text-align: center; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 26px; color: #fff; text-shadow: 3px 3px 0 #3a0004, 0 0 18px #ff2030; animation: rhtxt .5s steps(4); }
+@keyframes rhtxt { from { transform: scale(2.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.rou-hurt.fade { transition: opacity 1.4s; opacity: 0; }
+
+/* после фонарика / шкатулки / подслушки — понятный итог крупно */
+.rou-reveal { position: fixed; left: 0; right: 0; top: 22%; z-index: 8500; display: flex; justify-content: center; padding: 0 16px; animation: rrin .35s steps(5); }
+.rou-reveal .rr-card { max-width: 380px; width: 100%; text-align: center; padding: 16px 14px 14px; background: rgba(12, 6, 4, .94); box-shadow: 0 0 0 3px #4a3020, 0 10px 40px rgba(0, 0, 0, .7); }
+.rou-reveal.live .rr-card { box-shadow: 0 0 0 3px #e0202e, 0 0 40px rgba(224, 32, 46, .5); }
+.rou-reveal.blank .rr-card { box-shadow: 0 0 0 3px #8ab070, 0 0 30px rgba(138, 176, 112, .35); }
+.rou-reveal.other .rr-card { padding: 10px 12px; } .rou-reveal.other .rr-big { font-size: 12px; }
+.rou-reveal .rr-big { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 15px; line-height: 1.5; color: #f0e0cc; margin-top: 8px; }
+.rou-reveal.live .rr-big { color: #ff4050; } .rou-reveal.blank .rr-big { color: #c8f0b0; }
+.rou-reveal .rr-small { font-size: 13px; color: #c8b8a0; margin-top: 8px; line-height: 1.4; }
+.rou-reveal.fade { transition: opacity .6s; opacity: 0; }
+@keyframes rrin { from { transform: translateY(-20px); opacity: 0; } to { transform: none; opacity: 1; } }

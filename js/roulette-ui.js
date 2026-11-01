@@ -15,15 +15,31 @@ const Sfx = (() => {
     const g = a.createGain(); g.gain.value = gain;
     src.connect(f).connect(g).connect(a.destination); src.start();
   }
-  function tone(freq, dur, gain, type = "sine", slide = 0) {
-    const a = ctx(); if (!a || !on()) return;
+  function tone(freq, dur, gain, type = "sine", slide = 0, force) {
+    const a = ctx(); if (!a || (!on() && !force)) return;
     const o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.value = freq;
     if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq * slide), a.currentTime + dur);
     g.gain.setValueAtTime(gain, a.currentTime); g.gain.exponentialRampToValueAtTime(.001, a.currentTime + dur);
     o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + dur);
   }
+  // попали в тебя: очень громко, с перегрузом, звук в этом режиме не выключается
+  function hurtBang() {
+    const a = ctx(); if (!a) return;
+    const len = Math.floor(a.sampleRate * 1.6), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.2);
+    const src = a.createBufferSource(); src.buffer = buf;
+    const sh = a.createWaveShaper(), curve = new Float32Array(1024);
+    for (let i = 0; i < 1024; i++) { const x = i / 512 - 1; curve[i] = Math.tanh(x * 6); }
+    sh.curve = curve;
+    const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 2600;
+    const comp = a.createDynamicsCompressor(); comp.threshold.value = -6; comp.ratio.value = 2;
+    const g = a.createGain(); g.gain.value = 3.2;
+    src.connect(f).connect(sh).connect(g).connect(comp).connect(a.destination); src.start();
+    tone(48, 1.1, 1, "sine", .35, true); tone(95, .6, .8, "square", .3, true);
+    setTimeout(() => tone(3400, 2.2, .05, "sine", 1, true), 250);           // звон в ушах
+  }
   return {
-    unlock: () => ctx(),
+    unlock: () => ctx(), hurtBang,
     bang: () => { noise(.9, 1400, 1.1, 3); tone(70, .5, .9, "sine", .4); },
     click: () => { tone(1800, .03, .25, "square"); noise(.05, 3000, .25, 2); },
     spin: () => { for (let i = 0; i < 8; i++) setTimeout(() => tone(900 + i * 30, .02, .12, "square"), i * 70); },
@@ -171,7 +187,13 @@ function rouPlay() {
     if (me.items.length) out += `<div class="section-title">Твои предметы</div><div class="my-items">${me.items.map((k, i) =>
       `<button class="mi ${S.rouItem === i ? "on" : ""}" data-a="${RI()[k].target ? "rou-item" : "rou-use"}" data-v="${RI()[k].target ? i : i + ":"}" title="${esc(RI()[k].desc)}">${emo(RI()[k].emoji, 24)}<span>${esc(RI()[k].name)}</span></button>`).join("")}</div>`;
   }
-  if (notes.length) out += `<div class="card notes mt"><b>🗒 Что ты знаешь</b>${notes.map((n) => `<div class="n small">${esc(n)}</div>`).join("")}<div class="tiny muted mt">После прокрутки барабана старые сведения не верны</div></div>`;
+  const known = r.known || [], heard = r.heard || [];
+  if (known.length || heard.length || notes.length) out += `<div class="card notes mt"><b>🗒 Что ты знаешь сейчас</b>
+    ${known.map((k) => `<div class="kn ${k.live ? "live" : "blank"}">${k.at === 1 ? "▶ Следующий выстрел" : `${k.at}-й выстрел отсюда`} — <b>${k.live ? "БОЕВОЙ" : "холостой"}</b></div>`).join("")}
+    ${heard.map((h) => `<div class="kn ${h.live ? "live" : "blank"}">👂 ${esc(h.name)} зарядил(а) — <b>${h.live ? "боевой" : "холостой"}</b></div>`).join("")}
+    ${!known.length && !heard.length ? `<div class="small muted">Сейчас ничего точно не известно</div>` : ""}
+    ${notes.length ? `<details class="mt"><summary class="tiny muted">Журнал подсказок</summary>${notes.map((n) => `<div class="n small">${esc(n)}</div>`).join("")}</details>` : ""}
+    <div class="tiny muted mt">Счёт идёт от следующего выстрела и сам сдвигается после каждого. Встряска 🔄 стирает всё</div></div>`;
   return out;
 }
 
@@ -269,22 +291,94 @@ function rouEvents() {
     const msg = document.getElementById("stage-msg");
     if (e.kind === "shot") {
       setTimeout(() => {
-        if (e.live) { Sfx.bang(); notify(e.hit === S.me ? "error" : "warning"); try { tg && tg.HapticFeedback.impactOccurred("heavy"); } catch (x) { /* нет */ } }
+        const meHit = e.live && e.hit === S.me && !e.absorbed;
+        if (meHit) rouHurt(e);
+        else if (e.live) { Sfx.bang(); notify("warning"); try { tg && tg.HapticFeedback.impactOccurred("heavy"); } catch (x) { /* нет */ } }
         else Sfx.click();
         const m = document.getElementById("stage-msg");
         if (m) { m.className = "stage-msg show " + (e.live ? "bang" : "blank") + (e.live && (e.absorbed || e.redirected) ? " long" : ""); m.textContent = e.live ? (e.absorbed ? "БАХ! ЖИЛЕТ" : e.redirected ? "ЗЕРКАЛО!" : e.dmg > 1 ? "БАХ! ×2" : "БАХ!") : "щёлк"; }
         if (e.live && e.out) setTimeout(Sfx.thud, 600);
       }, 700);
     } else if (e.kind === "load") { Sfx.spin(); if (msg) { msg.className = "stage-msg show load"; msg.textContent = `${e.total} патронов`; } }
-    else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); }
+    else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); if (["flashlight", "box", "ear", "spin", "thief"].includes(e.item)) setTimeout(() => rouReveal(e), e.item === "spin" || e.item === "thief" ? 600 : 1600); }
     else if (e.kind === "win") Sfx.thud();
   });
   S.rouSeen = top;
 }
 
+// в тебя попали: экран мгновенно красный, кровь стекает, громкий выстрел (мимо выключателя звука), сильная вибрация
+function rouHurt(e) {
+  Sfx.hurtBang(); notify("error");
+  try { tg && tg.HapticFeedback.impactOccurred("heavy"); setTimeout(() => tg && tg.HapticFeedback.impactOccurred("heavy"), 120); setTimeout(() => tg && tg.HapticFeedback.impactOccurred("rigid"), 260); } catch (x) { /* нет */ }
+  try { navigator.vibrate && navigator.vibrate([400, 80, 250]); } catch (x) { /* нет */ }
+  const old = document.getElementById("rou-hurt"); if (old) old.remove();
+  const d = document.createElement("div"); d.id = "rou-hurt"; d.className = "rou-hurt" + (e.dmg > 1 ? " x2" : "");
+  let drops = "";
+  for (let i = 0; i < (e.dmg > 1 ? 26 : 16); i++) {
+    const x = Math.random() * 100, y = Math.random() * 70, sz = 18 + Math.random() * 70, run = 30 + Math.random() * 160;
+    drops += `<i style="left:${x}%;top:${y}%;--s:${sz | 0}px;--run:${run | 0}px;--d:${(Math.random() * .4).toFixed(2)}s"></i>`;
+  }
+  d.innerHTML = `<div class="rh-flash"></div><div class="rh-drops">${drops}</div><div class="rh-txt">${e.out ? "ТЫ ВЫБЫЛ(А)" : e.dmg > 1 ? "−2 ❤" : "−1 ❤"}</div>`;
+  document.body.appendChild(d);
+  setTimeout(() => d.classList.add("fade"), 2600);
+  setTimeout(() => d.remove(), 4200);
+}
+
+// после фонарика, шкатулки, подслушки — крупный понятный текст: что именно узнал
+function rouReveal(e) {
+  const r = S.room; if (!r || r.game !== "roulette") return;
+  const mine = e.who === S.me, it = RI()[e.item] || {}, nm = (id) => ((r.players.find((p) => p.id === id) || {}).name || "?");
+  let big = "", small = "", cls = "";
+  if (mine && e.item === "flashlight") {
+    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("🔦")) || "", m = /№(\d+).+— (БОЕВОЙ|холостой)/.exec(n);
+    if (!m) return;
+    const k = Number(m[1]), live = m[2] === "БОЕВОЙ";
+    cls = live ? "live" : "blank";
+    big = `${k === 1 ? "Следующий патрон" : `Патрон №${k}`} — ${live ? "БОЕВОЙ" : "холостой"}`;
+    small = k === 1 ? "Это тот, что выстрелит прямо сейчас" : `№1 — следующий выстрел. Этот выстрелит ${k}-м по счёту (если никто не встряхнёт дробовик)`;
+  } else if (mine && e.item === "box") {
+    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("📦")) || "", live = /БОЕВОЙ/.test(n);
+    if (!n) return;
+    cls = live ? "live" : "blank";
+    big = `Следующий выстрел — ${live ? "БОЕВОЙ" : "холостой"}`;
+    small = live ? "Стреляй в соперника — или отпили стволы 🪚" : "Можно смело стрелять в себя: холостой в себя — ещё один ход";
+  } else if (mine && e.item === "ear") {
+    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("👂")) || "", live = /БОЕВОЙ/.test(n), none = /неизвестно/.test(n);
+    if (!n) return;
+    cls = none ? "" : live ? "live" : "blank";
+    big = none ? `${nm(e.target)}: не понятно` : `${nm(e.target)} зарядил(а) ${live ? "БОЕВОЙ" : "холостой"}`;
+    small = "Этот патрон где-то в магазине — но где именно, неизвестно";
+  } else if (e.item === "spin") {
+    big = "Патроны перемешаны"; small = "Всё, что знали про порядок патронов, — больше не верно";
+  } else if (e.item === "thief") {
+    const st = RI()[e.stolen] || {};
+    big = `${mine ? "Ты стащил(а)" : e.target === S.me ? `${nm(e.who)} стащил(а) у тебя` : `${nm(e.who)} стащил(а)`}: ${st.emoji || ""} ${st.name || ""}`; small = "";
+  } else {                                                           // чужой фонарик/шкатулка/подслушка: видно только, кто смотрел
+    big = `${it.emoji || ""} ${nm(e.who)} ${e.item === "flashlight" ? "подсветил(а) один патрон" : e.item === "box" ? "узнал(а) следующий патрон" : `подслушал(а) ${e.target === S.me ? "тебя" : nm(e.target)}`}`;
+    small = "Что там — видит только он(а)"; cls = "other";
+  }
+  const old = document.getElementById("rou-reveal"); if (old) old.remove();
+  const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal " + cls;
+  d.innerHTML = `<div class="rr-card"><div class="rr-ico">${emo(it.emoji || "❔", 34)}</div><div class="rr-big">${esc(big)}</div>${small ? `<div class="rr-small">${esc(small)}</div>` : ""}</div>`;
+  d.onclick = () => d.remove();
+  document.body.appendChild(d);
+  setTimeout(() => d.classList.add("fade"), mine ? 3800 : 2200);
+  setTimeout(() => d.remove(), mine ? 4400 : 2800);
+}
+
 // ставка списывается один раз, когда партия началась и ты сидишь за столом
 function rouStake(room) {
   if (!room.stake || !room.seats.includes(S.me) || room.phase === "lobby") return;
+  const tbl = Api.table(room);
+  if (tbl) {                                                         // банк стола на сервере: ставка уходит сразу, банк получит выживший
+    const key = "rb:" + tbl; S.rouBank = S.rouBank || {};
+    if (!S.rouBank[key]) { S.rouBank[key] = 1; Api.bet(tbl, "g", "ante", room.stake).then(() => toast(`Ставка ${room.stake} монет в банке`)).catch((e) => toast("Ставка не списалась: " + e.message)); }
+    if (room.phase === "end" && isHost() && !S.rouBank[key + ":s"]) {
+      S.rouBank[key + ":s"] = 1;
+      setTimeout(() => Api.settle(tbl, "g", room.winner ? { [room.winner]: room.pot } : {}).catch(() => { S.rouBank[key + ":s"] = 0; }), 2000);
+    }
+    return;
+  }
   const key = "rs:" + room.code + ":" + room.game_no;
   if (store.lastRouStake === key) return;
   store.lastRouStake = key; store.coins = Math.max(0, (store.coins || 0) - room.stake);
@@ -300,7 +394,7 @@ function recordRoulette(room) {
   const won = room.winner === S.me;
   if (won) store.wins = (store.wins || 0) + 1;
   let sum = Shop.reward(won, me.alive);
-  if (won && room.pot) { store.coins += room.pot; sum += room.pot; }                 // банк выжившему
+  if (won && room.pot) { if (Api.table(room)) [4000, 9000].forEach((ms) => setTimeout(() => Api.coins().then(() => render()).catch(() => {}), ms)); else store.coins += room.pot; sum += room.pot; }   // банк выжившему (с сервера — переводом)
   if (won && me.stakes) { store.coins += me.stakes * 15; sum += me.stakes * 15; }
   store.lastGame = key; S.reward = { key, sum };
   saveProfile(); syncProfile();

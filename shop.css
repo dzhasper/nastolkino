@@ -34,14 +34,14 @@
 @keyframes fx-wave { 50% { transform: translateY(-3px); } }
 
 /* монеты, сундук, награда */
-.coins { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; background: #000; color: #ffd23f; font-family: "Press Start 2P", monospace; font-size: 11px; flex: none;
+.coins { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; background: #000; color: #ffd23f; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 11px; flex: none;
   box-shadow: 0 -3px 0 0 #ffd23f, 0 3px 0 0 #ffd23f, -3px 0 0 0 #ffd23f, 3px 0 0 0 #ffd23f; margin: 3px; }
 .chest { display: flex !important; align-items: center; gap: 12px; width: calc(100% - 6px); text-align: left; animation: chest 1.6s ease-in-out infinite; }
 .chest .pill { flex: none; }
 @keyframes chest { 50% { transform: translateY(-2px); } }
 .earn { line-height: 1.5; }
 .earn svg { vertical-align: -3px; margin-right: 4px; }
-.reward-coins { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; font-family: "Press Start 2P", monospace; font-size: 13px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
+.reward-coins { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 13px; color: #ffd23f; text-shadow: 2px 2px 0 #000; }
 .tabs .dot { display: inline-block; width: 7px; height: 7px; background: #ff3355; margin-left: 3px; vertical-align: top; animation: blink 1s steps(2) infinite; }
 .confetti svg { display: block; }
 
@@ -52,7 +52,7 @@ body[data-screen="shop"] {
 }
 .shop-scene { height: auto !important; aspect-ratio: 2 / 1; background-position: center top !important; }
 .shop-sign { position: absolute; left: 32.5%; width: 35%; top: 5%; height: 8.75%; background: #c8302a; color: #ffe8a0; display: grid; place-items: center; z-index: 2;
-  font-family: "Press Start 2P", monospace; font-size: clamp(6px, 2.1vw, 10px); white-space: nowrap; text-shadow: 1px 1px 0 #2a0a04; }
+  font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: clamp(6px, 2.1vw, 10px); white-space: nowrap; text-shadow: 1px 1px 0 #2a0a04; }
 .shop-preview { margin-top: 14px; }
 .sp-big { display: grid; place-items: center; padding: 26px 0; background: var(--card); margin: 0 3px; }
 .cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; padding: 3px; }
@@ -78,11 +78,11 @@ body[data-screen="shop"] {
 .shop-bar .btn { width: auto; flex: none; max-width: 52%; }
 
 /* =================================================================== карточка профиля: общее */
-.pcard { position: relative; overflow: hidden; margin: 0 3px; color: #fff; font-family: "Pixelify Sans", sans-serif; letter-spacing: 0; }
+.pcard { position: relative; overflow: hidden; margin: 0 3px; color: #fff; font-family: "NkDigits", "Pixelify Sans", sans-serif; letter-spacing: 0; }
 .pcard .pc-scene { height: 112px; background-size: cover; background-position: center bottom; image-rendering: pixelated; }
 .pcard .pc-body { display: flex; gap: 16px; align-items: center; padding: 0 16px; }
 .pcard .pc-main { min-width: 0; flex: 1; }
-.pcard .pc-name { font-family: "Press Start 2P", monospace; font-size: 13px; line-height: 1.6; word-break: break-word; }
+.pcard .pc-name { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 13px; line-height: 1.6; word-break: break-word; }
 .pcard .pc-sub { font-size: 14px; margin-top: 2px; }
 .pcard .pc-av { flex: none; padding: 21px; margin: -21px; }
 .pcard .bar-label { font-size: 13px; margin: 10px 0 4px; display: flex; align-items: center; gap: 6px; }
@@ -100,15 +100,15 @@ body[data-screen="shop"] {
 .pc-rpg .pc-main { padding-bottom: 2px; }
 .pc-rpg .pc-name { text-shadow: 2px 2px 0 #000; }
 .pc-rpg .pc-sub { color: #ffd23f; }
-.pc-rpg .pc-lv { font-family: "Press Start 2P", monospace; font-size: 11px; color: #9af0ff; margin-top: 6px; }
+.pc-rpg .pc-lv { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 11px; color: #9af0ff; margin-top: 6px; }
 .pc-rpg .pc-bars { padding: 6px 16px 0; }
-.pc-rpg .pc-loot { display: flex; align-items: center; gap: 6px; padding: 14px 16px 0; font-family: "Press Start 2P", monospace; font-size: 10px; }
+.pc-rpg .pc-loot { display: flex; align-items: center; gap: 6px; padding: 14px 16px 0; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 10px; }
 .pc-rpg .pc-loot span { display: inline-flex; align-items: center; gap: 6px; margin: 0 8px; }
 
 /* ДОСЬЕ — папка детектива */
-.pc-dossier { background: #e9dcbc; color: #2a2014; padding: 34px 14px 18px; box-shadow: inset 0 0 0 3px #6a5434; font-family: "Tiny5", "Pixelify Sans", sans-serif; }
+.pc-dossier { background: #e9dcbc; color: #2a2014; padding: 34px 14px 18px; box-shadow: inset 0 0 0 3px #6a5434; font-family: "NkDigits", "Tiny5", "Pixelify Sans", sans-serif; }
 .pc-dossier::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 21px, rgba(90, 70, 40, .14) 21px 22px); pointer-events: none; }
-.pc-dossier .pc-tab { position: absolute; left: 14px; top: 0; background: #c8a86a; padding: 6px 12px; font-family: "Press Start 2P", monospace; font-size: 9px; box-shadow: 0 3px 0 #6a5434; }
+.pc-dossier .pc-tab { position: absolute; left: 14px; top: 0; background: #c8a86a; padding: 6px 12px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; box-shadow: 0 3px 0 #6a5434; }
 .pc-dossier .pc-body { padding: 0; align-items: flex-start; }
 .pc-dossier .pc-photo { position: relative; background: #fff; padding: 22px 22px 26px; box-shadow: 3px 3px 0 rgba(0, 0, 0, .3); transform: rotate(-3deg); }
 .pc-dossier .pc-photo .avatar { filter: grayscale(1) contrast(1.1); border-radius: 0; }
@@ -121,24 +121,24 @@ body[data-screen="shop"] {
 .pc-dossier .pc-evidence { position: relative; margin: 16px 0 0 auto; width: 58%; background: #fff; padding: 6px 6px 18px; transform: rotate(2deg); box-shadow: 3px 3px 0 rgba(0, 0, 0, .25); }
 .pc-dossier .pc-evidence .pc-scene { height: 78px; filter: sepia(.9) contrast(1.05); }
 .pc-dossier .pc-evidence span { position: absolute; bottom: 3px; left: 8px; font-size: 11px; color: #5a4a30; }
-.pc-dossier .pc-stamp { position: absolute; left: 12px; bottom: 26px; transform: rotate(-12deg); color: #b0141f; font-family: "Press Start 2P", monospace; font-size: 9px; padding: 6px 8px;
+.pc-dossier .pc-stamp { position: absolute; left: 12px; bottom: 26px; transform: rotate(-12deg); color: #b0141f; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; padding: 6px 8px;
   box-shadow: inset 0 0 0 3px #b0141f; text-transform: uppercase; opacity: .85; max-width: 38%; line-height: 1.6; }
 
 /* ТЕРМИНАЛ — зелёный экран */
-.pc-terminal { background: #020a04; color: #9cff57; padding: 12px 14px 16px; box-shadow: inset 0 0 0 3px #9cff57; font-family: "Handjet", "Pixelify Sans", monospace; font-size: 18px; }
+.pc-terminal { background: #020a04; color: #9cff57; padding: 12px 14px 16px; box-shadow: inset 0 0 0 3px #9cff57; font-family: "NkDigits", "Handjet", "Pixelify Sans", monospace; font-size: 18px; }
 .pc-terminal::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .25) 0 1px, transparent 1px 3px); pointer-events: none; }
-.pc-terminal .pc-head { font-family: "Press Start 2P", monospace; font-size: 9px; margin-bottom: 10px; animation: blink 1.4s steps(2) infinite; }
+.pc-terminal .pc-head { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; margin-bottom: 10px; animation: blink 1.4s steps(2) infinite; }
 .pc-terminal .pc-scene { height: 86px; filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(3) brightness(.8); box-shadow: inset 0 0 0 3px #9cff57; }
 .pc-terminal .pc-body { padding: 14px 0 0; }
 .pc-terminal .pc-av .avatar { filter: grayscale(1) sepia(1) hue-rotate(60deg) saturate(4); border-radius: 0; }
 .pc-terminal .pc-av .frame { filter: none; }
 .pc-terminal .pc-main div { line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pc-terminal .pc-name { font-family: inherit; font-size: inherit; color: #d8ffc8; }
-.pc-terminal .pc-pre { margin: 14px 0 0; font-family: "Handjet", monospace; font-size: 17px; line-height: 1.3; white-space: pre-wrap; color: #9cff57; }
+.pc-terminal .pc-pre { margin: 14px 0 0; font-family: "NkDigits", "Handjet", monospace; font-size: 17px; line-height: 1.3; white-space: pre-wrap; color: #9cff57; }
 
 /* КАССЕТА — 90-е */
 .pc-vhs { background: #161616; padding: 10px 12px 14px; box-shadow: inset 0 0 0 3px #000, inset 0 0 0 5px #2a2a2a; }
-.pc-vhs .pc-top { display: flex; justify-content: space-between; font-family: "Press Start 2P", monospace; font-size: 9px; color: #bbb; margin-bottom: 8px; }
+.pc-vhs .pc-top { display: flex; justify-content: space-between; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; color: #bbb; margin-bottom: 8px; }
 .pc-vhs .pc-label { background: #f4f0e4; color: #1a1020; padding: 0 0 14px; transform: rotate(-1deg); box-shadow: 4px 4px 0 #ff2bd6; }
 .pc-vhs .pc-scene { height: 92px; }
 .pc-vhs .pc-body { align-items: flex-start; padding-top: 10px; }
@@ -149,14 +149,14 @@ body[data-screen="shop"] {
 .pc-vhs .pc-stripes i { height: 5px; }
 .pc-vhs .pc-stripes i:nth-child(1) { background: #ff2b6a; } .pc-vhs .pc-stripes i:nth-child(2) { background: #ffd400; }
 .pc-vhs .pc-stripes i:nth-child(3) { background: #00e5ff; } .pc-vhs .pc-stripes i:nth-child(4) { background: #7aff6a; }
-.pc-vhs .pc-rec { font-family: "Press Start 2P", monospace; font-size: 9px; color: #ddd; line-height: 1.6; }
+.pc-vhs .pc-rec { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; color: #ddd; line-height: 1.6; }
 .pc-vhs .pc-rec b { color: #ff2a2a; animation: blink 1s steps(2) infinite; }
 
 /* ПРОПУСК — офис */
-.pc-badge { background: #e8eaee; color: #1a1a2a; padding: 22px 0 14px; box-shadow: inset 0 0 0 3px #8a8e98; font-family: "Tiny5", "Pixelify Sans", sans-serif; }
+.pc-badge { background: #e8eaee; color: #1a1a2a; padding: 22px 0 14px; box-shadow: inset 0 0 0 3px #8a8e98; font-family: "NkDigits", "Tiny5", "Pixelify Sans", sans-serif; }
 .pc-badge .pc-hole { position: absolute; top: 8px; left: 50%; width: 44px; height: 8px; margin-left: -22px; background: #b8bcc6; box-shadow: inset 0 2px 0 #8a8e98; }
 .pc-badge .pc-co { display: flex; justify-content: space-between; align-items: center; background: #000080; color: #fff; padding: 8px 14px; font-size: 13px; }
-.pc-badge .pc-co b { font-family: "Press Start 2P", monospace; font-size: 9px; font-weight: 400; }
+.pc-badge .pc-co b { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; font-weight: 400; }
 .pc-badge .pc-scene { height: 64px; }
 .pc-badge .pc-body { padding: 14px 16px 0; }
 .pc-badge .pc-av .avatar { border-radius: 0; box-shadow: 0 0 0 3px #fff, 0 0 0 5px #8a8e98; }
@@ -168,7 +168,7 @@ body[data-screen="shop"] {
 /* КАРТА ТАРО */
 .pc-tarot { background: #1a0c28; color: #ffe8cc; text-align: center; padding: 14px 18px 18px;
   box-shadow: inset 0 0 0 3px #d8a840, inset 0 0 0 7px #1a0c28, inset 0 0 0 9px #d8a840; }
-.pc-tarot .pc-num { font-family: "Press Start 2P", monospace; font-size: 12px; color: #d8a840; }
+.pc-tarot .pc-num { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 12px; color: #d8a840; }
 .pc-tarot .pc-window { position: relative; margin: 10px auto 12px; width: 72%; height: 150px; box-shadow: 0 0 0 3px #d8a840;
   clip-path: polygon(0 18%, 6% 18%, 6% 10%, 14% 10%, 14% 5%, 26% 5%, 26% 0, 74% 0, 74% 5%, 86% 5%, 86% 10%, 94% 10%, 94% 18%, 100% 18%, 100% 100%, 0 100%); }
 .pc-tarot .pc-window .pc-scene { position: absolute; inset: 0; height: auto; }
@@ -182,7 +182,7 @@ body[data-screen="shop"] {
 .pc-wanted { background: #ecd6a6; color: #2a160a; text-align: center; padding: 18px 18px 20px;
   box-shadow: inset 0 0 0 3px #4a2a12, inset 0 0 0 7px #ecd6a6, inset 0 0 0 9px #4a2a12; }
 .pc-wanted::before { content: ""; position: absolute; top: 6px; left: 50%; width: 8px; height: 8px; margin-left: -4px; background: #6a6a74; box-shadow: 0 0 0 2px #3a3a44; }
-.pc-wanted .pc-w1 { font-family: "Press Start 2P", monospace; font-size: 16px; line-height: 1.6; margin-top: 6px; }
+.pc-wanted .pc-w1 { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 16px; line-height: 1.6; margin-top: 6px; }
 .pc-wanted .pc-w2 { font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: #6a4424; }
 .pc-wanted .pc-photo { position: relative; margin: 12px auto; width: 70%; height: 140px; box-shadow: 0 0 0 3px #2a160a; }
 .pc-wanted .pc-photo .pc-scene { position: absolute; inset: 0; height: auto; filter: sepia(.9); }
@@ -191,17 +191,17 @@ body[data-screen="shop"] {
 .pc-wanted .pc-photo .avatar .frame { filter: none; }
 .pc-wanted .pc-name { color: #2a160a; font-size: 13px; }
 .pc-wanted .pc-sub { color: #6a4424; margin-top: 4px; }
-.pc-wanted .pc-reward { font-family: "Press Start 2P", monospace; font-size: 12px; color: #a82a10; margin-top: 12px; }
+.pc-wanted .pc-reward { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 12px; color: #a82a10; margin-top: 12px; }
 .pc-wanted .pc-stats { font-size: 13px; color: #6a4424; margin-top: 6px; }
 
 /* АРКАДА — таблица рекордов */
 .pc-arcade { background: #0a0418; color: #fff; padding: 0 0 16px; box-shadow: inset 0 0 0 3px #ff3ec8, inset 0 0 0 6px #0a0418, inset 0 0 0 8px #43f0ff; }
 .pc-arcade .pc-scene { margin: 8px 8px 0; height: 104px; }
-.pc-arcade .pc-hs { text-align: center; font-family: "Press Start 2P", monospace; font-size: 12px; color: #ffd23f; margin: 12px 0 10px; animation: blink 1s steps(2) infinite; text-shadow: 2px 2px 0 #ff3ec8; }
-.pc-arcade .pc-p1 { font-family: "Press Start 2P", monospace; font-size: 9px; color: #43f0ff; margin-bottom: 4px; }
+.pc-arcade .pc-hs { text-align: center; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 12px; color: #ffd23f; margin: 12px 0 10px; animation: blink 1s steps(2) infinite; text-shadow: 2px 2px 0 #ff3ec8; }
+.pc-arcade .pc-p1 { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; color: #43f0ff; margin-bottom: 4px; }
 .pc-arcade .pc-av .avatar { box-shadow: 0 0 0 3px #ff3ec8; border-radius: 0; }
 .pc-arcade .pc-sub { color: #ff9af0; }
-.pc-arcade .pc-table { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; padding: 14px 18px 0; font-family: "Press Start 2P", monospace; font-size: 10px; }
+.pc-arcade .pc-table { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; padding: 14px 18px 0; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 10px; }
 .pc-arcade .pc-table div { display: flex; justify-content: space-between; }
 .pc-arcade .pc-table span { color: #43f0ff; }
 .pc-arcade .pc-table b { color: #ffd23f; font-weight: 400; }
@@ -236,7 +236,7 @@ body[data-screen="profile"][data-pstyle="badge"] .top h1, body[data-screen="prof
 @keyframes fx-royal { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 
 /* значок новинки и дорогие товары */
-.new-tag { position: absolute; top: 4px; left: 4px; z-index: 3; background: #ff2a5a; color: #fff; font-family: "Press Start 2P", monospace; font-size: 7px; padding: 3px 4px; animation: blink 1.2s steps(2) infinite; }
+.new-tag { position: absolute; top: 4px; left: 4px; z-index: 3; background: #ff2a5a; color: #fff; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 7px; padding: 3px 4px; animation: blink 1.2s steps(2) infinite; }
 .cats .pill.has-new::after { content: ""; display: inline-block; width: 6px; height: 6px; background: #ff2a5a; margin-left: 4px; vertical-align: 2px; }
 .shop-item.lux { background: linear-gradient(160deg, #3a2a08, #1a1206) !important; box-shadow: 0 0 0 3px #d8b040 !important; }
 .shop-item.lux .price { color: #ffd23f; }
@@ -248,15 +248,15 @@ body[data-screen="profile"][data-pstyle="badge"] .top h1, body[data-screen="prof
 .pc-vip .pc-shine { position: absolute; top: -40%; left: -60%; width: 40%; height: 180%; background: linear-gradient(90deg, transparent, rgba(255, 240, 180, .28), transparent); transform: rotate(20deg); animation: vip-shine 3.2s linear infinite; z-index: 2; pointer-events: none; }
 @keyframes vip-shine { to { left: 130%; } }
 .pc-vip .pc-top { display: flex; justify-content: space-between; align-items: baseline; }
-.pc-vip .pc-top b { font-family: "Press Start 2P", monospace; font-size: 18px; color: #ffd23f; text-shadow: 2px 2px 0 #5a4010; }
-.pc-vip .pc-top span { font-family: "Press Start 2P", monospace; font-size: 7px; color: #b8a060; }
+.pc-vip .pc-top b { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 18px; color: #ffd23f; text-shadow: 2px 2px 0 #5a4010; }
+.pc-vip .pc-top span { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 7px; color: #b8a060; }
 .pc-vip .pc-chipx { width: 40px; height: 30px; margin: 12px 0 10px; background: linear-gradient(135deg, #f0d070, #a87a20); box-shadow: inset 0 0 0 2px #6a4a10, inset 13px 0 0 -11px #6a4a10, inset -13px 0 0 -11px #6a4a10; }
 .pc-vip .pc-body { padding: 0; }
 .pc-vip .pc-av .avatar { box-shadow: 0 0 0 2px #d8b040; border-radius: 0; }
 .pc-vip .pc-name { color: #ffd23f; }
 .pc-vip .pc-sub { color: #c8b880; }
-.pc-vip .pc-num { font-family: "Press Start 2P", monospace; font-size: 10px; letter-spacing: 2px; color: #e8d8a8; margin-top: 14px; text-shadow: 1px 1px 0 #000; }
-.pc-vip .pc-foot { display: flex; justify-content: space-between; margin-top: 10px; font-family: "Press Start 2P", monospace; font-size: 8px; color: #b8a060; }
+.pc-vip .pc-num { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 10px; letter-spacing: 2px; color: #e8d8a8; margin-top: 14px; text-shadow: 1px 1px 0 #000; }
+.pc-vip .pc-foot { display: flex; justify-content: space-between; margin-top: 10px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 8px; color: #b8a060; }
 body[data-screen="profile"][data-pstyle="vip"] { --bg: #070707; --card: #141414; --card2: #1e1e1e; --bd: #d8b040; --accent: #d8b040; --text: #f0e6c8; --muted: #a89a70; --btn-ink: #1a1206; background: #070707 !important; }
 
 /* набор Создателя */
@@ -274,12 +274,12 @@ body[data-screen="profile"][data-pstyle="vip"] { --bg: #070707; --card: #141414;
 .pc-creator .pc-flames i:nth-child(2) { animation-delay: -.4s; animation-duration: .9s; }
 .pc-creator .pc-flames i:nth-child(3) { animation-delay: -.7s; animation-duration: 1.3s; }
 @keyframes pc-flame { from { transform: scaleY(.7) skewX(-4deg); opacity: .7; } to { transform: scaleY(1.15) skewX(4deg); opacity: 1; } }
-.pc-creator .pc-seal { text-align: center; font-family: "Press Start 2P", monospace; font-size: 10px; letter-spacing: .1em; color: #ffffff; text-shadow: 0 0 6px #ffffff; margin-bottom: 12px; }
+.pc-creator .pc-seal { text-align: center; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 10px; letter-spacing: .1em; color: #ffffff; text-shadow: 0 0 6px #ffffff; margin-bottom: 12px; }
 .pc-creator .pc-body { display: flex; gap: 14px; align-items: center; }
 .pc-creator .pc-name { font-size: 20px; font-weight: 800; }
 .pc-creator .pc-sub { color: #c8c8c8; font-size: 13px; margin-top: 2px; }
-.pc-creator .pc-admin { display: inline-block; margin-top: 8px; font-family: "Press Start 2P", monospace; font-size: 7px; padding: 4px 6px; background: #ffffff; color: #000; }
-.pc-creator .pc-foot { display: flex; justify-content: space-between; margin-top: 14px; font-family: "Press Start 2P", monospace; font-size: 8px; color: #9a9a9a; }
+.pc-creator .pc-admin { display: inline-block; margin-top: 8px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 7px; padding: 4px 6px; background: #ffffff; color: #000; }
+.pc-creator .pc-foot { display: flex; justify-content: space-between; margin-top: 14px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 8px; color: #9a9a9a; }
 .pcard.mini.pc-creator .pc-seal { font-size: 7px; margin-bottom: 6px; }
 
 /* страница профиля в стиле «Создатель»: чёрно-белая, снизу горит пламя, летят искры */
@@ -329,10 +329,10 @@ body.pixel[data-screen="profile"][data-pstyle="creator"] .card:not(.pcard) { bac
 .pc-s_neon > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .3; z-index: 0; } .pc-s_neon > *:not(.pc-scene) { position: relative; z-index: 1; }
 .pc-s_neon .pc-scan { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.06) 0 1px, transparent 1px 3px); animation: neon-scan 4s linear infinite; }
 @keyframes neon-scan { to { background-position: 0 60px; } }
-.pc-s_neon .pc-top { display: flex; justify-content: space-between; font-family: "Press Start 2P", monospace; font-size: 9px; color: #00e5ff; text-shadow: 0 0 6px #00e5ff; margin-bottom: 10px; }
+.pc-s_neon .pc-top { display: flex; justify-content: space-between; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; color: #00e5ff; text-shadow: 0 0 6px #00e5ff; margin-bottom: 10px; }
 .pc-s_neon .pc-top span { color: #ff2bd6; text-shadow: 0 0 6px #ff2bd6; }
 .pc-s_neon .pc-body { display: flex; gap: 14px; align-items: center; } .pc-s_neon .pc-name { font-size: 20px; font-weight: 800; } .pc-s_neon .pc-sub { color: #ff9ae8; }
-.pc-s_neon .pc-code { font-family: "Press Start 2P", monospace; font-size: 8px; color: #00e5ff; margin-top: 6px; }
+.pc-s_neon .pc-code { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 8px; color: #00e5ff; margin-top: 6px; }
 .pc-s_neon .pc-barcode { height: 14px; margin-top: 10px; background: repeating-linear-gradient(90deg, #00e5ff 0 2px, transparent 2px 4px, #00e5ff 4px 5px, transparent 5px 8px); opacity: .8; }
 .pc-s_dragon { background: linear-gradient(160deg, #a8101a, #6a0810); color: #fff4d0; padding: 16px; box-shadow: inset 0 0 0 2px #ffd23f, inset 0 0 0 5px #6a0810, inset 0 0 0 6px #b87a10; overflow: hidden; }
 .pc-s_dragon > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .3; z-index: 0; } .pc-s_dragon > *:not(.pc-scene) { position: relative; z-index: 1; }

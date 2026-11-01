@@ -98,6 +98,13 @@
     store.q.push(["s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), n, reason]);
     save();
   };
+  // общий стол на монеты: ставка списывается сервером сразу, выигрыш приходит из банка стола (без дневного лимита)
+  const coinsBack = (r) => { if (r && typeof r.coins === "number") { applyCoins(r.coins); save(); if (Api.onState) Api.onState(Api.state); } return r; };
+  Api.table = (room) => (on && Api.ready && room && /^tg\d+$/.test(String(room.host)) ? `${room.game === "blackjack" ? "bj" : "rou"}:${room.code}:${room.host}:${room.game_no || 0}` : null);
+  Api.bet = (tbl, hand, kind, amount) => call("/api/table/bet", { tbl, hand: String(hand), kind, amount }).then(coinsBack)
+    .catch((e) => { coinsBack(e.data); throw e; });
+  Api.settle = (tbl, hand, pay) => call("/api/table/settle", { tbl, hand: String(hand), pay: pay || {} }).then(coinsBack);
+  Api.coins = () => (Api.ready ? call("/api/me", {}).then(applyState) : Promise.resolve(null));
   // публичный профиль (его смотрят по команде /profile в боте): отправляем, только если изменился, не чаще раза в 5 секунд
   let profT = null, profLast = "";
   Api.pushProfile = (p) => {
