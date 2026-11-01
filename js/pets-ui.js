@@ -3,7 +3,8 @@
 
 const PET_DAY = 86400;
 const petNow = () => (Date.now() + ((Api.state && Api.state.skew) || 0)) / 1000;
-const petCode = (p) => p.rarity + p.dna;
+const petStage = (p) => (p.egg ? "" : Pets.stageOf(p.grown, petNow()));
+const petCode = (p) => { const st = petStage(p); return p.rarity + p.dna + (st ? "." + st : "") + (p.hat && !p.egg ? "-" + p.hat : ""); };
 const petFood = (k) => (Api.state && Api.state.foods && Api.state.foods[k]) || { name: k, hunger: 0, mood: 0, price: 0 };
 function petTime(sec) {
   sec = Math.max(0, Math.round(sec));
@@ -16,8 +17,8 @@ function petTime(sec) {
 function petLive(p) {
   const t = petNow();
   if (p.egg) return Object.assign({}, p, { left: p.hatch - t });
-  const full = p.starve_at - 2 * PET_DAY;
-  return Object.assign({}, p, { hunger: Math.max(0, Math.min(100, Math.round(100 - (t - full) / 864))), dieIn: p.starve_at - t });
+  const imm = Pets.traits(p.dna).immortal, full = p.full_at != null ? p.full_at : p.starve_at - 2 * PET_DAY;
+  return Object.assign({}, p, { hunger: imm ? 100 : Pets.hungerAt(p.dna, full, p.den, t), dieIn: p.starve_at - t });
 }
 const petKnow = (id) => ((store.petKnow = store.petKnow || {})[id] = store.petKnow[id] || {});
 const bar = (v, cls) => `<div class="pbar ${cls} ${v < 25 ? "low" : ""}"><i style="width:${Math.max(0, Math.min(100, v))}%"></i></div>`;
@@ -44,12 +45,13 @@ function petList() {
   const card = (p) => {
     if (p.egg) return `<button class="pet-card egg" data-a="pets-sel" data-v="${p.id}">${Pets.sprite(petCode(p), 80, { egg: true })}
       <b>Яйцо</b><span class="small muted" data-until="${p.hatch}" data-egg="1">${p.left > 0 ? "через " + petTime(p.left) : "вылупляется!"}</span></button>`;
-    const t = Pets.traits(p.dna);
+    const t = Pets.traits(p.dna), a = petActivity(p);
     return `<button class="pet-card ${p.hunger < 25 ? "hungry" : ""} ${st.main_pet === p.id ? "main" : ""}" data-a="pets-sel" data-v="${p.id}">
-      ${st.main_pet === p.id ? '<span class="pet-star">★</span>' : ""}${Pets.sprite(petCode(p), 80)}
+      ${st.main_pet === p.id ? '<span class="pet-star">★</span>' : ""}${p.den ? '<span class="pet-zz">🏠</span>' : a.sleep ? '<span class="pet-zz">💤</span>' : a.prop ? `<span class="pet-zz">${a.prop}</span>` : ""}${t.collect ? '<span class="pet-cl">✦</span>' : p.receptive ? '<span class="pet-cl dna">🧬</span>' : ""}<span class="pet-act mini ${a.cls}">${Pets.sprite(petCode(p), 80, { sleep: !!a.sleep })}</span>
       <b>${esc(t.name)}</b><span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span>${t.muts.length ? `<span class="mut-icons">${t.muts.map((m) => m.emoji).join("")}</span>` : ""}${bar(p.hunger, "food")}</button>`;
   };
-  return `${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
+  const care = live.filter((p) => !p.egg && !p.den).length >= 2 ? `<button class="btn ghost mt" data-a="pet-careall">🤲 Уход за всеми: накормить и погладить</button>` : "";
+  return `${questsCard()}${care}${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
       : `<div class="card center"><div class="pet-empty">🥚</div><b>Питомцев пока нет</b><div class="muted small mt">Яйца выпадают из промокодов и раздач в боте, а очень редко — из ежедневного сундука.</div></div>`}
     ${live.some((p) => !p.egg && p.hunger < 25) ? `<div class="card warn mt">⚠️ Кто-то голодает. Без еды двое суток — питомец умирает навсегда.</div>` : ""}
     ${petPantry()}
@@ -79,7 +81,8 @@ function petShop() {
       <span class="fe">${Pets.FOOD_EMOJI[k] || "🍽"}</span><div class="grow"><b>${esc(f.name)}</b>${have[k] ? ` <span class="small muted">· есть ${have[k]}</span>` : ""}
         <div class="small muted">${f.desc ? esc(f.desc) : `+${f.hunger} сытости${f.mood ? ` · +${f.mood} настроения` : ""}`}</div></div>
       <div class="buy2"><button class="btn small" data-a="food-buy" data-v="${k}" ${S.profile.coins < f.price ? "disabled" : ""}>🪙 ${f.price}</button>
-        <button class="btn ghost small" data-a="food-buy5" data-v="${k}" ${S.profile.coins < f.price * 5 ? "disabled" : ""}>×5</button></div></div>`).join("")}</div>
+        <button class="btn ghost small" data-a="food-buy5" data-v="${k}" ${S.profile.coins < f.price * 5 ? "disabled" : ""}>×5</button>
+        <button class="btn ghost small" data-a="food-buy10" data-v="${k}" ${S.profile.coins < Math.round(f.price * 8) ? "disabled" : ""}>×10 −20%</button></div></div>`).join("")}</div>
     <div class="card small muted mt">🍏 Золотое яблоко и ✨ звёздная пыль не продаются — только в промокодах и раздачах бота.</div>`;
 }
 
@@ -94,11 +97,12 @@ function petDetail(p) {
   const t = Pets.traits(p.dna), k = petKnow(p.id), food = st.food || {}, soc = Pets.SOCIAL[t.social];
   const foods = Object.keys(food).filter((x) => food[x] > 0);
   return `<button class="btn ghost small" data-a="pets-back">← Все питомцы</button>
-    <div class="pet-stage r${p.rarity}" data-a="pet-pet" id="pet-stage">${Pets.sprite(petCode(p), 190)}<div class="pet-fx" id="pet-fx"></div></div>
+    ${petStageHtml(p)}${p.receptive ? `<button class="dna-side" data-a="pet-mg-open" title="Принимает мутагены">🧬<i>${(p.mg || []).length}/2</i></button>` : ""}
     <div class="pet-title"><b class="pet-name">${esc(t.name)}</b> <span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span><div class="small muted">ДНК ${t.code} · ${esc(t.shape)}</div></div>
-    ${petMutBlock(t)}
+    ${petCollectBlock(p, t)}${petMutBlock(t)}
     <div class="card">
-      ${t.immortal ? `<div class="pstat"><span>♾️ Не нуждается в еде — никогда</span><b>∞</b></div>` : `<div class="pstat"><span>🍖 ${hungerText(p.hunger)}</span><b>${p.hunger}%</b></div>${bar(p.hunger, "food")}`}
+      ${petGrowLine(p)}
+      ${t.immortal ? `<div class="pstat"><span>♾️ Не нуждается в еде — никогда</span><b>∞</b></div>` : `<div class="pstat"><span>🍖 ${hungerText(p.hunger)}${p.den ? " · 🏠 в домике голодает вчетверо медленнее" : Pets.sleepState(p.dna, petNow()).asleep ? " · 💤 спит и не голодает" : ""}</span><b>${p.hunger}%</b></div>${bar(p.hunger, "food")}`}
       <div class="pstat mt"><span>💛 ${moodText(p.mood)}</span><b>${p.mood}%</b></div>${bar(p.mood, "mood")}
       ${t.reborn ? `<div class="small mt">🔥 Феникс не умирает: если долго не кормить, он сгорит и возродится из пепла яйцом</div>` : ""}
       ${p.hunger < 25 && !t.reborn ? `<div class="warn small mt">⚠️ Умрёт через <b data-until="${p.starve_at}">${petTime(p.dieIn)}</b>, если не покормить</div>` : ""}
@@ -107,12 +111,14 @@ function petDetail(p) {
     ${foods.length ? `<div class="pantry">${foods.map((x) => `<button class="food-chip" data-a="pet-feed" data-v="${x}">${Pets.FOOD_EMOJI[x] || "🍽"} ${esc(petFood(x).name)} <b>×${food[x]}</b></button>`).join("")}</div>`
       : `<div class="muted small">Еды нет — купи во вкладке «🛒 Лавка».</div>`}
     <div class="small muted mt">Погладь — просто нажми на питомца.</div>
+    ${petLifeBlock(p, t)}
+    ${petCareBlock(p, t)}
     ${petBattleCard(p, t)}
     <div class="section-title">Характер</div>
     <div class="card pet-info">
       <div><span class="muted">Нрав</span><b>${esc(t.temper)} · ${esc(soc.name)}</b></div><div class="small muted">${esc(soc.desc)}</div>
-      <div><span class="muted">Хобби</span><b>${esc(t.hobby)}</b></div>
-      <div><span class="muted">Странность</span><b>${esc(t.quirk)}</b></div>
+      <div><span class="muted">Хобби</span><b>${Pets.HOBBY_FX[t.hobbyIdx][0]} ${esc(t.hobby)}</b></div><div class="small fx-line">↳ ${esc(Pets.HOBBY_FX[t.hobbyIdx][1])}</div>
+      <div><span class="muted">Странность</span><b>${esc(t.quirk)}</b></div><div class="small fx-line">↳ ${esc(Pets.QUIRK_FX[t.quirkIdx])}</div>
       ${t.partner ? `<div><span class="muted">Второй — ${esc(t.partner.name)}</span><b>${esc(t.partner.temper)}, ${esc(t.partner.hobby)}</b></div>` : ""}
       <div><span class="muted">Обожает</span><b>${k.fav ? `${Pets.FOOD_EMOJI[t.fav]} ${esc(petFood(t.fav).name)}` : "??? — узнаешь, когда угадаешь"}</b></div>
       <div><span class="muted">Терпеть не может</span><b>${k.dis ? `${Pets.FOOD_EMOJI[t.dis]} ${esc(petFood(t.dis).name)}` : "???"}</b></div>
@@ -126,6 +132,11 @@ function petHatchSheet(id) {
   const p = Api.state && Api.state.pets.find((x) => x.id === id);
   if (!p) return "";
   const t = Pets.traits(p.dna);
+  if (t.collect) return `<div class="center hatch"><div class="gift-head">${p.from === "tour" ? "🏆 Приз турнира!" : "🎁 Подарок от администратора!"}</div>
+    <div class="pet-stage r${p.rarity} big collect">${Pets.sprite(petCode(p), 200)}</div>
+    <h2>${esc(t.name)}</h2><span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span>
+    <div class="small mt">${p.from === "tour" ? "Ты победил в турнире и забираешь коллекционного питомца." : "Администратор подарил тебе коллекционного питомца."}</div>
+    <div class="card small mt">✦ Он единственный в мире, не голодает и останется с тобой навсегда.<br>${esc(t.collect.desc)}</div></div>`;
   return `<div class="center hatch"><div class="small muted">Скорлупа треснула…</div>
     <div class="pet-stage r${p.rarity} big">${Pets.sprite(petCode(p), 200)}</div>
     <h2>${esc(t.name)}</h2><span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span>
@@ -134,11 +145,56 @@ function petHatchSheet(id) {
     <div class="small mt">Не забывай кормить каждый день — иначе он умрёт навсегда.</div></div>`;
 }
 
+// коллекционный: единственный в мире
+function petCollectBlock(p, t) {
+  if (!t.collect) return "";
+  const c = t.collect, set = Pets.COLLECT_SETS[c.set], mine = (Api.state.pets || []).filter((x) => x.alive && x.collect && Pets.collectOf(x.dna) && Pets.collectOf(x.dna).set === c.set).length;
+  const total = Pets.COLLECT.filter((x) => x.set === c.set).length;
+  return `<div class="card collect-box"><div class="cl-head">✦ Коллекционный · ${set.emoji} ${esc(set.name)} <span class="muted">${mine}/${total}</span></div>
+    <div class="small">${esc(c.desc)}</div>
+    <div class="small muted mt">Сложность получения: ${"★".repeat(c.hard)}${"☆".repeat(5 - c.hard)} · ${p.from === "tour" ? "приз турнира" : "подарок администратора"}</div>
+    <div class="small muted">Единственный в мире. Не голодает, не умирает, его нельзя отдать в обмен.</div>
+    <div class="small mt">🎖 ${esc(set.bonus)}</div></div>`;
+}
+// рост
+function petGrowLine(p) {
+  const st = petStage(p);
+  if (!st) return "";
+  const left = p.grown - petNow();
+  return `<div class="pstat grow-line"><span>${Pets.STAGES[st].emoji} ${Pets.STAGES[st].name} · вырастет через ${petTime(left)}</span><b>${st === "b" ? "1/3" : "2/3"}</b></div>
+    <div class="small muted">${esc(Pets.STAGES[st].care)}. Каждая кормёжка ускоряет рост на 2 часа, бутылочка роста 🍼 — на 6 часов</div>`;
+}
+// домик, мутагены, мини-игры
+function petCareBlock(p, t) {
+  const mgs = (Api.state.inv || []).filter((x) => x.startsWith("mg:")).length;
+  return `<div class="section-title">Уход</div><div class="card">
+    <div class="row case-btns"><button class="btn small" data-a="pet-fun" ${p.den ? "disabled" : ""}>🎮 Мини-игры</button>
+      <button class="btn ghost small" data-a="pet-den" data-v="${p.den ? 0 : 1}">${p.den ? "☀️ Разбудить" : "🏠 В домик"}</button>
+      ${p.receptive ? `<button class="btn ghost small" data-a="pet-mg-open">💉 Мутаген ${(p.mg || []).length}/2</button>` : ""}</div>
+    <div class="small muted mt">${p.den ? "Спит в домике: голодает вчетверо медленнее, настроение не портится. Но не играет и не дерётся." : "Домик — для тех, кого сейчас некогда кормить: там он почти не голодает, но не играет и не дерётся."}</div>
+    <div class="small muted">🎮 Хочет играть ${Pets.funWant(p.dna, petStage(p))} раз${Pets.funWant(p.dna, petStage(p)) === 1 ? "" : "а"} в день${p.fun ? ` · сегодня уже ${p.fun}` : ""}${t.social === 0 ? " — любит тишину, не зови слишком часто" : t.social === 2 ? " — обожает внимание" : ""}</div>
+    ${p.receptive ? `<div class="small mt">🧬 Принимает мутагены: можно уколоть ещё ${2 - (p.mg || []).length}${mgs ? ` · у тебя шприцов: ${mgs}` : " · шприцов пока нет (турниры и редко — «Питомник»)"}</div>` : ""}
+    ${(p.mg || []).length ? `<div class="small muted">💉 Уколото: ${p.mg.map((k) => { const it = Shop.byKey(k); return it ? "«" + esc(it.name) + "»" : ""; }).join(", ")}</div>` : ""}</div>`;
+}
+// выбор мутагена
+function petMgSheet() {
+  const p = Api.state && Api.state.pets.find((x) => x.id === S.petSel);
+  if (!p) return "";
+  const list = (Api.state.inv || []).filter((x) => x.startsWith("mg:")).map((k) => Shop.byKey(k)).filter(Boolean);
+  const used = (p.mg || []).length;
+  return `<h2>💉 Мутагены</h2><p class="muted small">Укол меняет облик навсегда. Не больше двух на питомца (уколото ${used}/2). Мутация той же группы заменит старую.</p>
+    ${!p.receptive ? `<div class="card">Этот питомец не принимает мутагены — у него нет значка 🧬</div>` : used >= 2 ? `<div class="card">Уже уколото два мутагена — больше нельзя</div>`
+      : list.length ? `<div class="mg-list">${list.map((it) => { const m = Pets.MUTATIONS.find((x) => x.key === it.mg);
+        return `<button class="card mg-row" data-a="pet-mg-inject" data-v="mg:${it.id}">${Pets.syringe(40)}<div class="grow"><b>«${esc(it.name)}»</b><div class="small">${m.emoji} ${esc(m.name)}</div><div class="small muted">${esc(m.desc)}</div></div><span class="muted">›</span></button>`; }).join("")}</div>`
+      : `<div class="card muted small">Шприцов нет. Их дают за турниры, а в кейсе «Питомник» — шанс 0,01%.</div>`}`;
+}
+
 // бой: характеристики, энергия, победы
 function petBattleCard(p, t) {
-  const s = Pets.stats(p.dna, p.rarity), sk = Pets.skills(p.dna), buff = { atk: "🍫 +15% атаки", def: "🥫 +4 защиты", spd: "🌶️ +4 скорости" }[p.buff];
+  const s0 = Pets.stats(p.dna, p.rarity), gm = Pets.STAGES[petStage(p)].mul, s = gm === 1 ? s0 : { hp: Math.round(s0.hp * gm), atk: Math.round(s0.atk * gm), def: Math.round(s0.def * gm), spd: s0.spd }, sk = Pets.skills(p.dna), buff = { atk: "🍫 +15% атаки", def: "🥫 +4 защиты", spd: "🌶️ +4 скорости" }[p.buff];
   return `<div class="section-title">Бой</div><div class="card">
     <div class="bstats"><span>❤️ <b>${s.hp}</b></span><span>⚔️ <b>${s.atk}</b></span><span>🛡 <b>${s.def}</b></span><span>💨 <b>${s.spd}</b></span></div>
+    ${gm < 1 ? `<div class="small muted mt">${Pets.STAGES[petStage(p)].emoji} Пока ${Pets.STAGES[petStage(p)].name.toLowerCase()} — сила ${Math.round(gm * 100)}%. Вырастет — станет сильнее.</div>` : ""}
     <div class="pstat mt"><span>⚡ Энергия</span><b>${p.energy}%</b></div>${bar(p.energy, "energy")}
     <div class="small muted mt">🏆 Побед: ${p.wins} · поражений: ${p.losses}${p.streak > 1 ? ` · ${p.streak} подряд` : ""}${buff ? ` · усиление: ${buff}` : ""}</div>
     ${sk.length ? `<div class="small mt">${sk.map((x) => `${x.emoji} ${esc(x.text)}`).join(" · ")}</div>` : ""}
@@ -155,10 +211,10 @@ function petMutBlock(t, short) {
 
 // маленькая плашка питомца для профиля и чужой карточки
 function petBadge(code, mine) {
-  if (!code || !/^[0-4][0-9a-f]{32}(?:[0-9a-f]{2}){0,3}$/.test(code)) return "";
-  const r = Number(code[0]);
-  return `<div class="card pet-badge" ${mine ? 'data-a="tab" data-v="pets"' : ""}>${Pets.sprite(code, 56)}<div class="grow"><b>${esc(Pets.name(code.slice(1)))}</b>
-    <div><span class="rar r${r}">${Pets.rarityName(r, code.slice(1))}</span> ${Pets.muts(code.slice(1)).map((m) => m.emoji).join("")}</div></div>${mine ? '<span class="muted">›</span>' : ""}</div>`;
+  if (!code || !/^[0-4][0-9a-f]{32}(?:[0-9a-f]{2}){0,5}(?:\.[bt])?(?:-[a-z]{2,12})?$/.test(code)) return "";
+  const r = Number(code[0]), dna = code.slice(1).split("-")[0].split(".")[0];
+  return `<div class="card pet-badge" ${mine ? 'data-a="tab" data-v="pets"' : ""}>${Pets.sprite(code, 56)}<div class="grow"><b>${esc(Pets.name(dna))}</b>
+    <div><span class="rar r${r}">${Pets.rarityName(r, dna)}</span> ${Pets.muts(dna).map((m) => m.emoji).join("")}</div></div>${mine ? '<span class="muted">›</span>' : ""}</div>`;
 }
 
 function petFx(text) {
@@ -169,6 +225,21 @@ function petFx(text) {
     el.textContent = text; el.style.left = 20 + Math.random() * 60 + "%"; el.style.animationDelay = i * .12 + "s";
     box.appendChild(el); setTimeout(() => el.remove(), 1600);
   }
+}
+
+// короткая анимация на сцене и реплика в облачке
+function petJump(cls) {
+  const el = document.querySelector("#pet-stage .pet-act");
+  if (!el) return;
+  el.classList.remove("jump-" + cls); void el.offsetWidth; el.classList.add("jump-" + cls);
+  setTimeout(() => el.classList.remove("jump-" + cls), 1200);
+}
+function petSay(text) {
+  const st = document.getElementById("pet-stage");
+  if (!st) return;
+  let b = st.querySelector(".pet-bubble");
+  if (!b) { b = document.createElement("div"); b.className = "pet-bubble"; st.appendChild(b); }
+  b.textContent = text; b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
 }
 
 // после каждого ответа сервера: показать вылупившихся, перерисовать экран
@@ -212,10 +283,16 @@ const PET_ACTIONS = {
   "pets-grave": () => { S.petGrave = !S.petGrave; render(); },
   "pet-pet": () => {
     haptic();
+    const p = Api.state.pets.find((x) => x.id === S.petSel), q = p ? Pets.traits(p.dna).quirkIdx : -1;
     Api.act("/api/pet/pet", { pet: S.petSel }).then((st) => {
       const r = st.reaction;
-      petFx(r === "annoyed" ? "💢" : r === "happy" ? "❤" : "✨");
-      if (r === "annoyed") toast("Ему не нравится, когда тискают так часто");
+      if (r === "asleep") { petFx("💤"); return toast("Тсс… он спит"); }
+      petJump(r === "annoyed" ? "act-shake" : "act-hop");
+      if (r === "annoyed" && q === 5) { petFx("💢"); return toast("Только не уши!"); }
+      petFx(r === "annoyed" ? "💢" : r === "happy" ? (q === 0 ? "🤧" : "❤") : "✨");
+      if (r === "happy" && q === 0) petSay("апчхи! 🤧");
+      else if (q === 4 && r !== "annoyed") petSay("пузико! ещё!");
+      if (r === "annoyed") toast(q === 5 ? "Только не уши!" : "Ему не нравится, когда тискают так часто");
     }).catch(petErr);
   },
   "pet-feed": (item) => {
@@ -227,9 +304,25 @@ const PET_ACTIONS = {
       if (st.reaction === "fav") { k.fav = 1; saveProfile(); notify("success"); toast(`${t.name} обожает это! ❤`); }
       else if (st.reaction === "dis") { k.dis = 1; saveProfile(); toast(`${t.name} морщится… съел, но без радости`); }
       else { haptic("medium"); toast("Ням!"); }
-      setTimeout(() => petFx(st.reaction === "dis" ? "🤢" : st.reaction === "fav" ? "😍" : "🍖"), 60);
+      setTimeout(() => { petFx(st.reaction === "dis" ? "🤢" : st.reaction === "fav" ? "😍" : "🍖"); petJump("act-chew"); if (t.quirkIdx === 10) setTimeout(() => petSay("ик!"), 900); }, 60);
     }).catch(petErr);
   },
+  "pet-careall": () => Api.act("/api/pet/careall", {}).then((st) => {
+    const c = st.care; haptic("medium");
+    toast(c.fed || c.petted ? `🤲 Накормлено: ${c.fed}, поглажено: ${c.petted}${c.hungry ? ` · не хватило еды для ${c.hungry}` : ""}` : c.hungry ? "Еды не хватило — купи в лавке" : "Все сыты и довольны");
+  }).catch(petErr),
+  "pet-den": (v) => Api.act("/api/pet/den", { pet: S.petSel, on: v === "1" }).then(() => { haptic("medium"); toast(v === "1" ? "🏠 Спит в домике" : "☀️ Проснулся!"); }).catch(petErr),
+  "pet-mg-open": () => { S.sheet = { type: "pet-mg" }; renderOverlay(); },
+  "pet-mg-inject": (k) => {
+    const go = () => Api.act("/api/pet/inject", { pet: S.petSel, item: k }).then((st) => {
+      S.sheet = null; renderOverlay(); notify("success"); coinRain();
+      toast(`💉 Мутация: ${st.inject.name}${st.inject.replaced.length ? " (заменила прежнюю)" : ""}`); setTimeout(() => petFx("🧬"), 80);
+    }).catch(petErr);
+    const q = "Уколоть мутаген? Это навсегда.";
+    if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
+  },
+  "pet-fun": () => { S.funPet = S.petSel; S.fun = null; S.funFrom = "pets"; S.screen = "petfun"; render(); window.scrollTo(0, 0); },
+  "food-buy10": (item) => Api.act("/api/food/buy", { item, qty: 10 }).then(() => { haptic("medium"); toast(`Куплено оптом: ${petFood(item).name} ×10 (−20%)`); }).catch(petErr),
   "pet-main": () => Api.act("/api/pet/main", { pet: S.petSel }).then(() => { syncProfile(); toast("Теперь он в твоём профиле ★"); }).catch(petErr),
   "food-buy": (item) => Api.act("/api/food/buy", { item, qty: 1 }).then(() => { haptic("medium"); toast(`Куплено: ${petFood(item).name}`); }).catch(petErr),
   promo: () => {

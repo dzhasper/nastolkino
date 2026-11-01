@@ -45,20 +45,22 @@ const anyCase = (k) => Shop.caseByKey(k) || (Shop.seasonByKey(k) ? Object.assign
 const seasonLeft = () => { const se = Api.on && Api.state && Api.state.season; return se ? se.until - (Date.now() + (Api.state.skew || 0)) / 1000 : 0; };
 const fmtLeft = (sec) => `${Math.floor(Math.max(0, sec) / 60)}:${String(Math.floor(Math.max(0, sec) % 60)).padStart(2, "0")}`;
 const caseFree = (key) => (Api.on && Api.state && Api.state.cases && Api.state.cases[key]) || 0;
-const invCount = () => Shop.ITEMS.filter((it) => (it.price || it.excl || it.season) && Shop.owns(it)).length;
+const invCount = () => Shop.ITEMS.filter((it) => (it.price || it.excl || it.season || it.petcase || it.mg) && Shop.owns(it)).length;
+const shardPill = () => (Api.on && Api.state ? `<span class="pill shard-pill" data-a="shop-tab" data-v="craft">✨ ${Api.state.shards || 0}</span>` : "");
 const tierTag = (t) => `<span class="tier-tag" style="--tc:${Shop.TIERS[t].color}">${Shop.TIERS[t].name}</span>`;
 
 function viewShop() {
   const tab = S.shopTab || "cases";
   return `<div class="fade-in">
-    <div class="pxscene shop-scene" style="background-image:url(${Pixel.scene("shop")})"><div class="shop-sign">${tab === "inv" ? "Инвентарь" : "Кейсы"}</div></div>
-    <div class="top"><div class="grow"><h1>${tab === "inv" ? "Инвентарь" : "Кейсы"}</h1><div class="muted small">${tab === "inv" ? "Всё выбитое — здесь. Нажми, чтобы примерить" : "Вещи только выбиваются — открывай за монеты"}</div></div>${coinPill()}</div>
+    <div class="pxscene shop-scene" style="background-image:url(${Pixel.scene("shop")})"><div class="shop-sign">${tab === "inv" ? "Инвентарь" : tab === "craft" ? "Мастерская" : "Кейсы"}</div></div>
+    <div class="top"><div class="grow"><h1>${tab === "inv" ? "Инвентарь" : tab === "craft" ? "Мастерская" : "Кейсы"}</h1><div class="muted small">${tab === "inv" ? "Всё выбитое — здесь. Нажми, чтобы примерить" : tab === "craft" ? "Осколки и переделка вещей" : "Вещи только выбиваются — открывай за монеты"}</div></div>${shardPill()}${coinPill()}</div>
     ${Shop.chestReady() ? `<button class="card chest" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Раз в день: от 15 до 60 монет</div></div><span class="pill on">Открыть</span></button>` : ""}
-    <div class="seg mt">
+    <div class="seg seg3 mt">
       <button class="${tab === "cases" ? "on" : ""}" data-a="shop-tab" data-v="cases">🎁 Кейсы</button>
-      <button class="${tab === "inv" ? "on" : ""}" data-a="shop-tab" data-v="inv">🎒 Инвентарь <span class="seg-n">${invCount()}</span></button>
+      <button class="${tab === "inv" ? "on" : ""}" data-a="shop-tab" data-v="inv">🎒 Вещи <span class="seg-n">${invCount()}</span></button>
+      <button class="${tab === "craft" ? "on" : ""}" data-a="shop-tab" data-v="craft">⚒ Мастерская</button>
     </div>
-    ${tab === "inv" ? viewInv() : viewCaseList()}
+    ${tab === "inv" ? viewInv() : tab === "craft" ? viewCraft() : viewCaseList()}
   </div>${tabs()}`;
 }
 
@@ -118,21 +120,75 @@ function viewInv() {
   const tryIt = S.shopTry && S.shopTry.cat === cat ? Shop.byId(cat, S.shopTry.id) : null;
   const lookNow = Object.assign({}, p.look, tryIt && tryIt.cat !== "ava" ? { [cat]: tryIt.id } : {});
   const worn = (it) => (it.cat === "ava" ? p.avatar === it.emoji : p.look[it.cat] === it.id);
-  const ranked = (it) => it.price || it.excl || it.season;
+  const ranked = (it) => it.price || it.excl || it.season || it.petcase || it.mg;
   let bar = "";
   if (tryIt && Shop.owns(tryIt)) {
-    const t = Shop.tier(tryIt), src = tryIt.excl ? "👑 набор Создателя" : tryIt.season ? "🌙 " + (Shop.seasonByKey(tryIt.season) || {}).name : "";
-    bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${ranked(tryIt) ? tierTag(t) : ""} ${src ? esc(src) : worn(tryIt) ? "Надето" : "Есть у тебя"}</div></div>
-      ${worn(tryIt) ? `<button class="btn small" disabled>Надето ✓</button>` : `<button class="btn small" data-a="shop-equip">Надеть</button>`}</div>`;
+    const t = Shop.tier(tryIt), src = tryIt.excl ? (tryIt.cat === "title" && tryIt.desc ? "🐉 " + tryIt.desc : "👑 набор Создателя") : tryIt.season ? "🌙 " + (Shop.seasonByKey(tryIt.season) || {}).name : "";
+    const m = tryIt.mg ? Pets.MUTATIONS.find((x) => x.key === tryIt.mg) : null;
+    const act = tryIt.cat === "toy" ? `<span class="small muted">Питомцы сами выбирают игрушки</span>` : tryIt.cat === "hat" || tryIt.cat === "mg" ? `<button class="btn small" data-a="case-pets">🐾 К питомцам</button>`
+      : worn(tryIt) ? `<button class="btn small" disabled>Надето ✓</button>` : `<button class="btn small" data-a="shop-equip">Надеть</button>`;
+    bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${ranked(tryIt) ? tierTag(t) : ""} ${m ? `${m.emoji} ${esc(m.name)} — уколи питомцу со значком 🧬` : tryIt.cat === "hat" ? "Надевается питомцу в его карточке, снимается там же" : src ? esc(src) : worn(tryIt) ? "Надето" : "Есть у тебя"}</div></div>
+      ${act}</div>`;
   }
-  return `<div class="shop-preview">${cat === "ava" ? `<div class="sp-big">${av(Object.assign({}, p, tryIt ? { avatar: tryIt.emoji, photo: null } : {}), "huge")}</div>` : myCard(lookNow)}</div>
+  const petCat = ["toy", "hat", "mg"].includes(cat);
+  return `<div class="shop-preview">${petCat ? `<div class="sp-big">${tryIt ? shopPreview(tryIt) : `<div class="muted small">${cat === "mg" ? "💉 Мутагены меняют облик питомца навсегда" : cat === "toy" ? "🧸 Игрушки для питомцев" : "🎩 Приколы на голову питомцу"}</div>`}</div>` : cat === "ava" ? `<div class="sp-big">${av(Object.assign({}, p, tryIt ? { avatar: tryIt.emoji, photo: null } : {}), "huge")}</div>` : myCard(lookNow)}</div>
     <div class="cats">${Shop.CATS.map((c) => { const have = Shop.ITEMS.filter((x) => x.cat === c.key && ranked(x) && Shop.owns(x)).length;
       return `<button class="pill ${c.key === cat ? "on" : ""}" data-a="shop-cat" data-v="${c.key}">${c.icon} ${c.name}${have ? ` <span class="seg-n">${have}</span>` : ""}</button>`; }).join("")}</div>
     <div class="shop-grid ${cat}">${items.map((it) => { const t = Shop.tier(it);
       return `<button class="shop-item ${tryIt === it ? "sel" : ""} ${worn(it) ? "worn" : ""}" style="--tc:${ranked(it) ? Shop.TIERS[t].color : "transparent"}" data-a="shop-try" data-v="${it.id}">
         ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${worn(it) ? "✓ надето" : ranked(it) ? Shop.TIERS[t].name : "есть"}</span></button>`; }).join("")}</div>
-    ${items.filter(ranked).length ? "" : `<div class="card small muted center mt">Здесь пока только стартовое. Всё, что выбьешь в кейсах, появится тут.</div>`}
+    ${items.filter(ranked).length ? "" : `<div class="card small muted center mt">${cat === "mg" ? "Шприцов пока нет. Их дают за турниры, а в «Питомнике» — шанс 0,01%" : petCat ? "Пока пусто — это выпадает из кейса «Питомник»" : "Здесь пока только стартовое. Всё, что выбьешь в кейсах, появится тут."}</div>`}
     ${bar}`;
+}
+
+/* ---------------------------------------------------------------- мастерская: осколки → вещи. Цены — как на сервере (/api/craft) */
+const CRAFT = { up: [20, 50, 120], swap: [8, 20, 50, 120], make: [40, 100, 250, 700], brk: [4, 10, 25, 60] };
+function viewCraft() {
+  if (!Api.on) return `<div class="card mt">Мастерская работает через сервер — открой Настолкино из бота.</div>`;
+  const st = Api.state; if (!st) return `<div class="card center mt"><div class="spinner" style="margin:10px auto"></div></div>`;
+  const sh = st.shards || 0, inv = st.inv || [];
+  const items = inv.map((k) => Shop.byKey(k)).filter((it) => it && !it.excl && !it.mg && (it.price || it.season || it.petcase)).sort((a, b) => Shop.tier(b) - Shop.tier(a));
+  const sel = S.craftSel && inv.includes(S.craftSel) ? Shop.byKey(S.craftSel) : null;
+  let panel = "";
+  if (sel) {
+    const t = Shop.tier(sel), seas = !!sel.season, worn = S.profile.look[sel.cat] === sel.id || (sel.cat === "ava" && S.profile.avatar === sel.emoji);
+    panel = `<div class="card craft-panel"><div class="row"><div class="cp-prev">${shopPreview(sel)}</div><div class="grow"><b>${esc(sel.name)}</b><div>${tierTag(t)}</div>${worn ? `<div class="small muted">Сейчас надета — после переделки снимется</div>` : ""}</div></div>
+      <div class="craft-ops">
+        <button class="btn small" data-a="craft-op" data-v="up" ${seas || t >= 3 || sh < CRAFT.up[t] ? "disabled" : ""}>⬆️ Улучшить${t < 3 && !seas ? ` · ✨${CRAFT.up[t]}` : ""}</button>
+        <button class="btn ghost small" data-a="craft-op" data-v="swap" ${seas || sh < CRAFT.swap[t] ? "disabled" : ""}>🔄 Перековать${seas ? "" : ` · ✨${CRAFT.swap[t]}`}</button>
+        <button class="btn ghost small" data-a="craft-op" data-v="break">🔨 Разобрать · +✨${CRAFT.brk[t] * (seas ? 3 : 1)}</button></div>
+      <div class="small muted mt">⬆️ — вещь исчезнет, взамен случайная из того же раздела редкостью выше (5% — через ступень!). 🔄 — случайная другая той же редкости. ${seas ? "Сезонные можно только разобрать — зато втрое дороже." : ""}</div></div>`;
+  }
+  return `<div class="card craft-head"><div class="ch-n">✨ ${sh}</div><div class="small">Осколки дают: повторы из кейсов, горсти осколков в кейсах, разбор вещей, победы в боях (+2) и колесо фортуны.</div></div>
+    <div class="section-title">Создать из осколков</div>
+    <div class="craft-make">${[0, 1, 2, 3].map((t) => `<button class="craft-t" style="--tc:${Shop.TIERS[t].color}" data-a="craft-make" data-v="${t}" ${sh < CRAFT.make[t] ? "disabled" : ""}>
+      <b>${Shop.TIERS[t].name}</b><span>✨ ${CRAFT.make[t]}</span></button>`).join("")}</div>
+    <div class="small muted mt">Случайная вещь, которой у тебя ещё нет.</div>
+    <div class="section-title">Переделать свою вещь</div>
+    ${panel}
+    ${items.length ? `<div class="shop-grid craft-grid">${items.map((it) => `<button class="shop-item ${S.craftSel === it.cat + ":" + it.id ? "sel" : ""}" style="--tc:${Shop.TIERS[Shop.tier(it)].color}" data-a="craft-sel" data-v="${it.cat}:${it.id}">
+      ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${Shop.TIERS[Shop.tier(it)].name}</span></button>`).join("")}</div>` : `<div class="card small muted center">Вещей для переделки пока нет — открой пару кейсов</div>`}`;
+}
+function craftUnwear(k) {
+  const it = Shop.byKey(k);
+  if (it && store.look && store.look[it.cat] === it.id) { store.look[it.cat] = Shop.DEFAULT[it.cat]; saveProfile(); syncProfile(); }
+}
+function craftDo(body) {
+  Api.act("/api/craft", body).then((st) => {
+    const c = st.craft; S.craftSel = null;
+    if (c.from) craftUnwear(c.from);
+    if (c.op === "break") { haptic("medium"); toast(`🔨 Разобрано: +${c.shards} ✨`); render(); return; }
+    notify("success"); coinRain();
+    S.sheet = { type: "craft-done", item: c.item, crit: c.crit }; renderOverlay(); render();
+  }).catch((e) => { notify("error"); toast(e.message); });
+}
+function craftDoneSheet() {
+  const it = Shop.byKey(S.sheet.item); if (!it) return "";
+  const t = Shop.tier(it);
+  return `<div class="center"><h2>${S.sheet.crit ? "💥 Удачная ковка!" : "⚒ Готово!"}</h2><div class="cl-prize">${shopPreview(it)}</div>
+    <div class="cl-name" style="color:${Shop.TIERS[t].color}">${esc(it.name)}</div>${tierTag(t)}
+    ${S.sheet.crit ? `<div class="small mt">Вещь получилась сразу через ступень редкости!</div>` : ""}
+    ${["toy", "hat"].includes(it.cat) ? "" : `<button class="btn mt2" data-a="case-equip" data-v="${it.cat}:${it.id}">Надеть</button>`}</div>`;
 }
 
 /* ---------------------------------------------------------------- открытие: лента с предметами */
@@ -142,17 +198,21 @@ function caseThumb(d) {
   if (d.type === "mystery") return `<div class="ct-ico mystery">❔</div>`;
   if (d.type === "egg") return `<div class="ct-ico egg">🥚</div>`;
   if (d.type === "food") return `<div class="ct-ico">${Pets.FOOD_EMOJI[d.item] || "🍖"}</div>`;
+  if (d.type === "shards") return `<div class="ct-ico">✨</div>`;
   const it = Shop.byKey(d.item);
   if (!it) return "";
   if (it.cat === "frame") return `<div class="ct-av">${av(Object.assign({}, S.profile, { look: { frame: it.id } }), "")}</div>`;
   if (it.cat === "bg") return `<div class="ct-bg" style="background-image:url(${Pixel.scene(it.id)})"></div>`;
   if (it.cat === "style") return `<div class="ct-ico">🪪</div>`;
+  if (it.cat === "toy") return `<div class="ct-ico">${it.emoji}</div>`;
+  if (it.cat === "hat") return `<div class="ct-ico">${Pets.sprite("2" + "8c3a9c51e2b84d06a1c3f5e7092b4d6e-" + it.id, 44)}</div>`;
+  if (it.cat === "mg") return `<div class="ct-ico">${Pets.syringe(40)}</div>`;
   if (it.cat === "title") return `<div class="ct-title">«${esc(it.text)}»</div>`;
   if (it.cat === "fx") return `<div class="ct-fx">${Shop.nameFx(String(S.profile.name || "Имя").slice(0, 7), it.id)}</div>`;
   return `<div class="ct-ico">${emo(it.emoji, 32)}</div>`;
 }
 const dropTier = (d) => (d.type === "mystery" ? d.tier : d.type === "item" ? Shop.tier(Shop.byKey(d.item)) : d.type === "egg" ? 3 : 0);
-const dropName = (d) => (d.type === "mystery" ? "???" : d.type === "egg" ? "Яйцо питомца" : d.type === "food" ? (Api.state && Api.state.foods && Api.state.foods[d.item] ? Api.state.foods[d.item].name : "Еда") + " ×" + d.qty : (Shop.byKey(d.item) || {}).name || "");
+const dropName = (d) => (d.type === "mystery" ? "???" : d.type === "shards" ? `Осколки ×${d.qty}` : d.type === "egg" ? "Яйцо питомца" : d.type === "food" ? (Api.state && Api.state.foods && Api.state.foods[d.item] ? Api.state.foods[d.item].name : "Еда") + " ×" + d.qty : (Shop.byKey(d.item) || {}).name || "");
 const caseCell = (d) => `<div class="rc" style="--tc:${Shop.TIERS[dropTier(d)].color}">${caseThumb(d)}<span>${esc(dropName(d))}</span></div>`;
 
 function caseLayerOpen(c) {
@@ -173,7 +233,7 @@ function caseSpin(c, drop) {
     if (i === WIN) { cells.push(drop); continue; }
     if (c.food && Math.random() < c.food * .6) { cells.push({ type: "food", item: Pets.FOOD_KEYS[Math.floor(Math.random() * Pets.FOOD_KEYS.length)], qty: 2 }); continue; }
     if (c.season) { cells.push({ type: "mystery", tier: Shop.rollTier(c.w) }); continue; }     // сезонные вещи держим в секрете
-    const it = Shop.rollItem(Shop.rollTier(c.w));
+    const it = Shop.rollItem(Shop.rollTier(c.w), c);
     cells.push({ type: "item", item: it.cat + ":" + it.id });
   }
   el.innerHTML = `<div class="cl-box"><div class="cl-title">${esc(c.name)}</div>
@@ -208,8 +268,13 @@ function caseResult(c, drop) {
   let prize = "", info = "", main = "";
   if (it) {
     prize = `<div class="cl-prize">${shopPreview(it)}</div>`;
-    info = drop.dup ? `<div class="cl-dup">Повтор — уже есть. Превратилось в <b>+${drop.refund} 🪙</b></div>` : `<div class="small muted">Уже в инвентаре</div>`;
-    if (!drop.dup) main = `<button class="btn" data-a="case-equip" data-v="${esc(drop.item)}">Надеть</button>`;
+    info = drop.dup ? `<div class="cl-dup">Повтор — уже есть. Превратилось в <b>${drop.shards != null ? `+${drop.shards} ✨ осколков` : `+${drop.refund} 🪙`}</b></div>`
+      : it.mg ? `<div class="small">💉 Мутаген! Уколи питомцу со значком 🧬 — облик изменится навсегда</div>` : `<div class="small muted">Уже в инвентаре</div>`;
+    if (!drop.dup) main = ["toy", "hat", "mg"].includes(it.cat) ? `<button class="btn" data-a="case-pets">🐾 К питомцам</button>` : `<button class="btn" data-a="case-equip" data-v="${esc(drop.item)}">Надеть</button>`;
+  } else if (drop.type === "shards") {
+    prize = `<div class="cl-prize big-emo">✨</div>`;
+    info = `<div class="small">Осколки — для мастерской: из них создают и улучшают вещи</div>`;
+    main = `<button class="btn" data-a="case-craft">⚒ В мастерскую</button>`;
   } else if (drop.type === "food") {
     prize = `<div class="cl-prize big-emo">${Pets.FOOD_EMOJI[drop.item] || "🍖"}</div>`;
     info = `<div class="small muted">Лежит в кладовке питомцев</div>`;
@@ -258,10 +323,20 @@ const CASE_ACTIONS = {
   "case-again": (key) => { caseLayerClose(); caseOpen(key); },
   "case-close": () => { caseLayerClose(); render(); },
   "case-odds": (key) => { S.sheet = { type: "case-odds", key }; renderOverlay(); },
+  "case-craft": () => { caseLayerClose(); S.screen = "shop"; S.shopTab = "craft"; render(); window.scrollTo(0, 0); },
+  "craft-sel": (k) => { S.craftSel = S.craftSel === k ? null : k; haptic(); render(); },
+  "craft-make": (t) => craftDo({ op: "make", tier: Number(t) }),
+  "craft-op": (op) => {
+    const k = S.craftSel; if (!k) return;
+    const it = Shop.byKey(k), q = op === "break" ? `Разобрать «${it.name}» на осколки?` : op === "up" ? `Улучшить «${it.name}»? Она исчезнет, взамен — вещь редкостью выше.` : `Перековать «${it.name}» в другую вещь той же редкости?`;
+    const go = () => craftDo({ op, item: k });
+    if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
+  },
   "case-pets": () => { caseLayerClose(); S.screen = "pets"; S.petSel = null; render(); window.scrollTo(0, 0); },
   "case-equip": (k) => {
     const it = Shop.byKey(k);
     if (it && Shop.equip(it)) { saveProfile(); syncProfile(); notify("success"); toast(`Надето: ${it.name} ✓`); }
+    if (S.sheet && S.sheet.type === "craft-done") { S.sheet = null; renderOverlay(); }
     caseLayerClose(); render();
   },
 };

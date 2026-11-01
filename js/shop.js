@@ -11,6 +11,9 @@ const Shop = (() => {
     { key: "title", name: "Титулы", icon: "🏷️" },
     { key: "fx", name: "Эффекты", icon: "✨" },
     { key: "ava", name: "Аватары", icon: "🐉" },
+    { key: "toy", name: "Игрушки", icon: "🧸" },
+    { key: "hat", name: "Приколы", icon: "🎩" },
+    { key: "mg", name: "Мутагены", icon: "💉" },
   ];
   const I = (cat, id, name, price, extra = {}) => Object.assign({ cat, id, name, price }, extra);
   const ITEMS = [
@@ -29,6 +32,11 @@ const Shop = (() => {
     I("frame", "lava", "Лава", 560, { fresh: 1, strip: 4, speed: .7 }), I("frame", "galaxy", "Галактика", 750, { fresh: 1, strip: 6, speed: 1.2 }),
     I("frame", "plasma", "Плазма", 1000, { fresh: 1, strip: 6, speed: .8 }), I("frame", "dragon", "Драконья чешуя", 1000, { fresh: 1, strip: 4, speed: 1 }),
     I("frame", "royal", "Королевская", 2000, { fresh: 1, strip: 6, speed: 1.1 }),
+    I("frame", "bubbles", "Пузыри", 140, { fresh: 1, strip: 4, speed: 1.2 }), I("frame", "hearts", "Сердечки", 180, { fresh: 1, strip: 4, speed: .8 }),
+    I("frame", "glass", "Витраж", 220, { fresh: 1 }), I("frame", "confetti", "Конфетти", 280, { fresh: 1, strip: 4, speed: .6 }),
+    I("frame", "gears", "Шестерёнки", 320, { fresh: 1, strip: 4, speed: .8 }), I("frame", "eyes", "Глаза", 450, { fresh: 1, strip: 4, speed: 1.6 }),
+    I("frame", "snake", "Радужный змей", 600, { fresh: 1, strip: 6, speed: 1 }), I("frame", "aquarium", "Аквариум", 700, { fresh: 1, strip: 6, speed: 1.4 }),
+    I("frame", "portal", "Портал", 900, { fresh: 1, strip: 6, speed: .9 }),
     // набор Создателя: только у администратора, из кейсов не выпадает (можно лишь подарить обменом)
     I("frame", "bwfire", "Чёрно-белое пламя", 0, { excl: 1, strip: 6, speed: .7 }),
     I("bg", "throne", "Трон Создателя", 0, { excl: 1 }),
@@ -36,6 +44,14 @@ const Shop = (() => {
     I("title", "creator", "Создатель Настолкино", 0, { excl: 1, text: "Создатель Настолкино" }),
     I("fx", "bwflame", "Чёрно-белое пламя", 0, { excl: 1 }),
     I("ava", "key", "Ключ Создателя", 0, { excl: 1, emoji: "🗝️" }),
+    // титулы за собранные коллекции питомцев (выдаёт сервер)
+    I("title", "dragonlord", "Повелитель драконов", 0, { excl: 1, text: "Повелитель драконов", desc: "Все 6 коллекционных драконов" }),
+    I("title", "elements", "Хранитель стихий", 0, { excl: 1, text: "Хранитель стихий", desc: "Все 4 стихийных духа" }),
+    // мутагены: 200 шприцов (только от администратора и 0,01% из «Питомника»)
+    ...(typeof Pets !== "undefined" && Pets.MG_COUNT ? Array.from({ length: Pets.MG_COUNT }, (_, i) => I("mg", String(i + 1), Pets.mgName(i + 1), 0, { mg: Pets.mgMut(i + 1).key })) : []),
+    // кейс «Питомник»: игрушки (питомцы сами выбирают) и приколы на голову. Списки — из js/pets.js
+    ...(typeof Pets !== "undefined" ? Pets.TOYS.map(([id, name, emoji, tier]) => I("toy", id, name, 0, { petcase: 1, tier, emoji }))
+      .concat(Pets.HATS.map(([id, name, tier]) => I("hat", id, name, 0, { petcase: 1, tier }))) : []),
     // сезонные кейсы: каждая вещь выпадает только из своего кейса (tier: 0 обычная … 3 легендарная)
     ...[["s_ice", [["title", "s_ice1", "Дитя метели", 0, { text: "Дитя метели" }], ["ava", "s_ice1", "Снеговик", 0, { emoji: "☃️" }], ["frame", "s_snow", "Снежинки", 1],
         ["title", "s_ice2", "Повелитель льда", 1, { text: "Повелитель льда" }], ["ava", "s_ice2", "Ледышка", 1, { emoji: "🧊" }], ["bg", "s_ice", "Северное сияние", 2],
@@ -51,7 +67,7 @@ const Shop = (() => {
         ["fx", "s_dragon", "Золото дракона", 2], ["frame", "s_gdragon", "Золотой дракон", 3, { strip: 6, speed: 1.2 }], ["style", "s_dragon", "Свиток императора", 3, { desc: "Красный лак, золото и печать дракона" }]]],
     ].flatMap(([season, list]) => list.map(([cat, id, name, tier, extra]) => I(cat, id, name, 0, Object.assign({ season, tier }, extra || {})))),
 
-    I("bg", "rpg", "Замок", 0), I("bg", "arcade", "Аркада", 80), I("bg", "office", "Офис", 100), I("bg", "classic", "Нуар", 100),
+    I("bg", "none", "Без фона", 0), I("bg", "rpg", "Замок", 90), I("bg", "arcade", "Аркада", 80), I("bg", "office", "Офис", 100), I("bg", "classic", "Нуар", 100),
     I("bg", "90s", "Район 90-х", 100), I("bg", "halloween", "Кладбище", 120), I("bg", "bunker", "Бункер", 120), I("bg", "west", "Салун", 120),
     I("bg", "shop", "Лавка", 150), I("bg", "winter", "Зимний лес", 160), I("bg", "sakura", "Сакура", 180), I("bg", "ocean", "Подводный мир", 180),
     I("bg", "dungeon", "Подземелье", 200), I("bg", "space", "Космос", 220),
@@ -81,6 +97,7 @@ const Shop = (() => {
 
     I("fx", "none", "Обычное имя", 0), I("fx", "glow", "Сияние", 120), I("fx", "wave", "Волна", 160), I("fx", "gold", "Золотое имя", 180),
     I("fx", "glitch", "Глитч", 220), I("fx", "rainbow", "Радуга", 250), I("fx", "fire", "Пламя", 300),
+    I("fx", "shake", "Дрожь", 180, { fresh: 1 }), I("fx", "toxic", "Радиоактив", 260, { fresh: 1 }), I("fx", "ghosty", "Призрачное", 320, { fresh: 1 }),
     I("fx", "frost", "Иней", 350, { fresh: 1 }), I("fx", "bloody", "Кровавое", 600, { fresh: 1 }), I("fx", "royal", "Королевское", 1000, { fresh: 1 }),
 
     I("ava", "dragon", "Дракон", 40, { emoji: "🐉" }), I("ava", "dino", "Динозавр", 40, { emoji: "🦖" }), I("ava", "invader", "Пришелец", 50, { emoji: "👾" }),
@@ -97,12 +114,14 @@ const Shop = (() => {
   const TIERS = [
     { name: "Обычная", color: "#9aa4b8" }, { name: "Редкая", color: "#4fa8ff" },
     { name: "Эпическая", color: "#b05cff" }, { name: "Легендарная", color: "#ffb020" }, { name: "Эксклюзив", color: "#f2f2f2" },
+    { name: "Мутаген", color: "#4dff88" },
   ];
-  const tier = (it) => (it.excl ? 4 : it.tier != null ? it.tier : it.price >= 750 ? 3 : it.price >= 300 ? 2 : it.price >= 150 ? 1 : 0);
+  const tier = (it) => (it.mg ? 5 : it.excl ? 4 : it.tier != null ? it.tier : it.price >= 750 ? 3 : it.price >= 300 ? 2 : it.price >= 150 ? 1 : 0);
   const CASES = [
     { key: "basement", name: "Подвальный кейс", price: 100, w: [70, 24, 5, 1], food: .25, egg: 0, desc: "В основном обычные вещи, иногда еда для питомцев" },
     { key: "dark", name: "Тёмный кейс", price: 300, w: [30, 42, 22, 6], food: .1, egg: .003, desc: "Редкие и эпические вещи, бывает легендарка" },
     { key: "legend", name: "Легендарный кейс", price: 1000, w: [0, 35, 45, 20], food: 0, egg: .015, desc: "Без обычных вещей, каждая пятая — легендарка" },
+    { key: "zoo", name: "Кейс «Питомник»", price: 250, w: [55, 28, 13, 4], food: 0, egg: .004, pool: "pet", desc: "Игрушки, приколы на голову и бутылочки роста. Только здесь. Шанс 0,01% — мутаген" },
   ];
   const DUP = [25, 60, 150, 400];                                 // повтор превращается в монеты
   // сезонные кейсы: появляются на несколько минут (раз в день или по команде админа). Таблицы — такие же в server/worker.js (SEASONS)
@@ -118,8 +137,9 @@ const Shop = (() => {
   const caseByKey = (k) => CASES.find((c) => c.key === k);
   const rnd = () => crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296;
   function rollTier(w) { let r = rnd() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { r -= w[i]; if (r < 0) return i; } return w.length - 1; }
-  const rollItem = (t) => { const list = POOL.filter((x) => tier(x) === t); return list[Math.floor(rnd() * list.length)]; };
-  const DEFAULT = { frame: "none", bg: "rpg", style: "rpg", title: "none", fx: "none" };
+  const poolOf = (c) => (c && c.pool === "pet" ? ITEMS.filter((x) => x.petcase) : POOL);
+  const rollItem = (t, c) => { const list = poolOf(c).filter((x) => tier(x) === t); return list[Math.floor(rnd() * list.length)]; };
+  const DEFAULT = { frame: "none", bg: "none", style: "rpg", title: "none", fx: "none" };
   const REWARD = { game: 20, win: 30, alive: 10 };
 
   /* ---------------------------------------------------------------- рамки: пиксельный рисунок 48×48, аватар в центре 8..40 */
@@ -146,6 +166,8 @@ const Shop = (() => {
     const corners = (fn) => [[A - 3, A - 3], [B + 2, A - 3], [A - 3, B + 2], [B + 2, B + 2]].forEach(([x, y], i) => fn(x, y, i));
     return { P, Rr, ring, bevel, star, corners };
   }
+  // точка на периметре рамки: u от 0 до 1 по часовой, o — отступ от аватара
+  const PER = (u, o = 3) => { const L = A - o, M = B + o - 1, w = M - L, p = (((u % 1) + 1) % 1) * 4, k = Math.floor(p), q = p - k; return [[L + q * w, L], [M, L + q * w], [M - q * w, M], [L, M - q * w]][k]; };
   const FRAMES = {
     wood(t) { t.ring(4, (x, y, d, u, s) => d === 0 || d === 3 ? "#2a1408" : ((s === "t" || s === "b" ? x : y) * 7 + d * 3) % 11 < 2 ? "#6a3a18" : d === 1 ? "#b8743a" : "#9a5a28");
       t.corners((x, y) => { t.P(x, y, "#e8d8b0"); }); },
@@ -255,6 +277,33 @@ const Shop = (() => {
       for (let i = 0; i < 6; i++) { const k = (i * 7 + f * 3) % 32; t.P(A + k, A + ((i * 5 + f) % 3), "#ffffffaa"); t.P(B - 1 - ((i * 3 + f) % 3), A + ((k + 9) % 32), "#ffffff88"); }   // искры по краю аватара
       t.corners((x, y, i) => { t.Rr(x - 1, y - 1, 3, 3, "#000"); t.P(x, y, (i + f) % 2 ? "#ffffff" : "#7a7a7a"); });
     },
+    // ---- необычные рамки обычных кейсов
+    bubbles(t, R, f, n) { t.ring(3, (x, y, d) => (d === 0 ? "#0a3a6a" : d === 1 ? "#3a9ae8" : "#1a6ab8"));
+      for (let i = 0; i < 10; i++) { const [x, y] = PER(i / 10 + f / n / 10, 5 + ((i + f) % 3)); t.P(x, y, "#bfefff"); t.P(x + 1, y, "#ffffff88"); if (i % 3 === 0) { t.P(x, y - 1, "#bfefff"); t.P(x - 1, y, "#bfefff"); t.P(x + 1, y + 1, "#7ad8ff"); } } },
+    hearts(t, R, f) { t.ring(3, (x, y, d) => (d === 0 || d === 2 ? "#8a0a3a" : "#ff5a9a"));
+      const heart = (x, y, big) => { const c = "#ff2a6a"; t.Rr(x - 2, y - 1, 2, 2, c); t.Rr(x + 1, y - 1, 2, 2, c); t.Rr(x - 2, y, 5, 2, c); t.Rr(x - 1, y + 2, 3, 1, c); t.P(x, y + 3, c); if (big) { t.P(x - 3, y, c); t.P(x + 3, y, c); } t.P(x - 1, y - 1, "#ffc0d8"); };
+      t.corners((x, y, i) => heart(x, y, (i + f) % 2 === 0)); [[24, A - 4], [24, B + 3]].forEach(([x, y], i) => heart(x, y, (i + f) % 2 === 1)); },
+    glass(t) { const C = ["#e8203a", "#2a6ae8", "#ffd23f", "#3ac84a", "#a83ae8", "#ff8a1a"];
+      t.ring(5, (x, y, d, u) => (d === 0 || d === 4 || Math.floor(u * 48) % 4 === 0 ? "#141018" : C[Math.floor(u * 12) % C.length] + (d === 1 ? "" : "cc"))); },
+    confetti(t, R, f, n) { t.ring(3, (x, y, d) => (d === 1 ? "#ffffff" : "#1a1a2a"));
+      const C = ["#ff3355", "#ffd23f", "#3ec8ff", "#7aff6a", "#c86aff", "#ff8a1a"];
+      for (let i = 0; i < 26; i++) { const x = (i * 37) % 48, y = ((i * 13) % 48 + f * 4) % 48; if (x > A - 1 && x < B && y > A - 1 && y < B) continue; t.Rr(x, y, (i % 2) + 1, 1 + (i % 3 === 0), C[i % C.length]); } },
+    gears(t, R, f, n) { t.ring(4, (x, y, d, u) => (d === 0 || d === 3 ? "#2a1a08" : (Math.floor(u * 64 + f) % 4 < 2) ? "#c8903a" : "#8a5a1a"));
+      for (let i = 0; i < 24; i++) { const [x, y] = PER(i / 24 + f / n / 24, 5); if (i % 2) t.Rr(x, y, 2, 2, "#c8903a"); }
+      t.corners((x, y) => { t.Rr(x - 2, y - 2, 5, 5, "#8a5a1a"); t.Rr(x - 1, y - 1, 3, 3, "#c8903a"); t.P(x, y, "#2a1a08"); }); },
+    eyes(t, R, f, n) { t.ring(4, (x, y, d) => (d === 0 || d === 3 ? "#0a0410" : d === 1 ? "#3a1450" : "#2a0a3a"));
+      [[A - 3, A - 3], [24, A - 3], [B + 2, A - 3], [A - 3, 24], [B + 2, 24], [A - 3, B + 2], [24, B + 2], [B + 2, B + 2]].forEach(([x, y], i) => {
+        if ((i + f) % 4 === 3) { t.Rr(x - 2, y, 5, 1, "#ff3b6b"); return; }                              // моргнул
+        t.Rr(x - 2, y - 1, 5, 3, "#f4f0e0"); t.Rr(x - 1, y - 1, 3, 3, "#c8101e"); t.P(x + ((f + i) % 3) - 1, y, "#000000"); t.P(x - 2, y - 1, "#3a1450"); t.P(x + 2, y + 1, "#3a1450"); }); },
+    snake(t, R, f, n) { t.ring(4, (x, y, d) => (d === 0 || d === 3 ? "#0a0a14" : "#16162a"));
+      const C = ["#ff3355", "#ff8a1a", "#ffd23f", "#4aff7a", "#3ec8ff", "#6a5aff", "#c86aff"];
+      for (let i = 0; i < 70; i++) { const [x, y] = PER(f / n - i / 160, 2.5); t.Rr(x, y, 2, 2, C[Math.floor(i / 10) % C.length]); }
+      const [hx, hy] = PER(f / n, 2.5); t.Rr(hx - 1, hy - 1, 4, 4, "#ff3355"); t.P(hx, hy, "#ffffff"); t.P(hx + 2, hy, "#ffffff"); },
+    aquarium(t, R, f, n) { t.ring(6, (x, y, d) => (d === 0 || d === 5 ? "#0a2a4a" : (y + f) % 7 === 0 ? "#5ac8ff" : d < 3 ? "#1a7ac8" : "#1a5aa8"));
+      for (let i = 0; i < 4; i++) { const [x, y] = PER(f / n + i / 4, 3); const c = ["#ff8a1a", "#ffd23f", "#ff3b6b", "#7aff6a"][i]; t.Rr(x - 1, y, 3, 2, c); t.P(x - 2, y, c); t.P(x - 2, y + 1, c); t.P(x + 1, y, "#000"); }
+      for (let i = 0; i < 6; i++) { const [x, y] = PER(i / 6 + .05, 5); t.P(x, y - ((f + i) % 3), "#bfefff"); } },
+    portal(t, R, f, n) { t.ring(6, (x, y, d, u) => { const v = Math.sin(u * Math.PI * 16 + d * 1.3 - f / n * Math.PI * 2); return d === 0 ? "#05020a" : v > .6 ? "#b8ff3a" : v > 0 ? "#6a1ae8" : v > -.6 ? "#3a0a8a" : "#12042a"; });
+      for (let i = 0; i < 8; i++) { const [x, y] = PER(i / 8 - f / n / 4, 7); t.P(x, y, i % 2 ? "#b8ff3a" : "#c88aff"); } },
     // ---- сезонные рамки
     s_snow(t) { t.bevel("#e8fbff", "#9be3ff", "#3a8ac8"); [[A - 3, A - 3], [24, A - 3], [B + 2, A - 3], [A - 3, 24], [B + 2, 24], [A - 3, B + 2], [24, B + 2], [B + 2, B + 2]].forEach(([x, y]) => t.star(x, y, "#ffffff", "#7ad8ff")); },
     s_aurora(t, R, f, n) {                                       // северное сияние бежит по кругу, мерцают звёзды
@@ -327,7 +376,7 @@ const Shop = (() => {
     store.owned = Array.isArray(store.owned) ? store.owned : [];
     store.look = Object.assign({}, DEFAULT, store.look || {});
   }
-  const owns = (it) => (it.price === 0 && !it.excl && !it.season) || store.owned.includes(it.cat + ":" + it.id);
+  const owns = (it) => (it.price === 0 && !it.excl && !it.season && !it.petcase && !it.mg) || store.owned.includes(it.cat + ":" + it.id);
   const look = () => Object.assign({}, DEFAULT, store.look);
   function buy(it) {
     if (owns(it)) return { ok: true };
@@ -348,7 +397,7 @@ const Shop = (() => {
     if (!c) return { error: "Нет такого кейса" };
     if (store.coins < c.price) return { error: `Не хватает ${c.price - store.coins} монет` };
     store.coins -= c.price;
-    const t = rollTier(c.w), it = rollItem(t), k = it.cat + ":" + it.id, dup = store.owned.includes(k);
+    const t = rollTier(c.w), it = rollItem(t, c), k = it.cat + ":" + it.id, dup = store.owned.includes(k);
     if (dup) store.coins += DUP[t]; else store.owned.push(k);
     return { type: "item", item: k, tier: t, dup, refund: dup ? DUP[t] : 0 };
   }
@@ -386,8 +435,8 @@ const Shop = (() => {
     const lv = level(p.games), rate = p.games ? Math.round((p.wins / p.games) * 100) : 0;
     const title = titleText(lk) || rank(lv);
     const name = nameFx(p.name, lk.fx);
-    const scene = typeof Pixel !== "undefined" ? Pixel.scene(lk.bg) : "";
-    const bg = `<div class="pc-scene" style="background-image:url(${scene})"></div>`;
+    const scene = lk.bg && lk.bg !== "none" && typeof Pixel !== "undefined" ? Pixel.scene(lk.bg) : "";
+    const bg = scene ? `<div class="pc-scene" style="background-image:url(${scene})"></div>` : `<div class="pc-scene empty"></div>`;
     const avatar = `<div class="pc-av">${p.avatarHtml}</div>`;
     const bar = (v, n = 10) => "█".repeat(Math.round(v * n)) + "░".repeat(n - Math.round(v * n));
     const xp = ((p.games || 0) % 5) / 5;
@@ -450,6 +499,6 @@ const Shop = (() => {
     if (typeof saveProfile === "function") { saveProfile(); if (typeof syncProfile === "function") syncProfile(); }
   }
 
-  return { CATS, ITEMS, DEFAULT, REWARD, TIERS, CASES, DUP, POOL, SEASONS, seasonByKey, seasonPool, tier, caseByKey, rollTier, rollItem, openCaseLocal, byKey, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl,
+  return { CATS, ITEMS, DEFAULT, REWARD, TIERS, CASES, DUP, POOL, poolOf, SEASONS, seasonByKey, seasonPool, tier, caseByKey, rollTier, rollItem, openCaseLocal, byKey, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl,
     card, nameFx, level, rank, titleText, demo, get coins() { return store ? store.coins : 0; } };
 })();

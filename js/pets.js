@@ -12,7 +12,7 @@
   // порядок еды обязан совпадать с server/worker.js (FOODS)
   const FOOD_KEYS = ["korm", "zhuk", "kasha", "sup", "konfeta", "yagody", "ryba", "syr", "pirog", "kotleta"];
   const FOOD_EMOJI = { korm: "🥣", zhuk: "🪲", kasha: "🍚", sup: "🍲", konfeta: "🍬", yagody: "🫐", ryba: "🐟", syr: "🧀", pirog: "🥟", kotleta: "🍖", zoloto: "🍏",
-    pechenka: "🍪", morozhenoe: "🍦", tort: "🍰", energetik: "🥤", baton: "🍫", bronya: "🥫", perets: "🌶️", pyl: "✨" };
+    pechenka: "🍪", morozhenoe: "🍦", tort: "🍰", energetik: "🥤", baton: "🍫", bronya: "🥫", perets: "🌶️", pyl: "✨", rost: "🍼", rost2: "🧃" };
   const NAME_A = ["Шур", "Бул", "Мяк", "Хрум", "Пух", "Тоф", "Зю", "Бяк", "Кус", "Моч", "Фыр", "Жуж", "Плюх", "Тык", "Бор", "Гиз", "Чух", "Вин", "Ляп", "Ням", "Шмыг", "Бубл", "Крак", "Тяп"];
   const NAME_B = ["ик", "ша", "зя", "ок", "уся", "ыш", "он", "ка", "ля", "ёнок", "мяк", "ус", "ня", "бас"];
   const SOCIAL = [
@@ -27,6 +27,23 @@
   const QUIRK = ["чихает, когда радуется", "боится огурцов", "храпит громче хозяина", "обижается на будильник", "любит, когда чешут пузо",
     "не любит, когда трогают уши", "засыпает посреди игры", "ревнует к телефону", "приносит подарки (обычно мусор)",
     "смотрит в одну точку по полчаса", "икает после еды", "здоровается с холодильником"];
+  // что хобби и странность дают в игре (те же числа — в server/worker.js)
+  const HOBBY_FX = [
+    ["🔘", "Бронежилет из пуговиц: +2 к защите в бою"], ["🌧", "Философ: настроение падает на четверть медленнее"],
+    ["✨", "Звездочёт: +5% к криту, ночью +10%"], ["🍞", "Ничего не пропадает: еда сытнее на 10%"],
+    ["🧦", "Охотник: +5% к атаке"], ["🎵", "Поёт в бою: противник заслушивается и пропускает ход"],
+    ["🌀", "Колобок: +4% к уклонению"], ["📦", "Прячется в коробку: первый удар по нему — мимо"],
+    ["🌸", "Ценитель: лакомства радуют на 30% сильнее"], ["✏️", "Острые зубки: +3% к атаке и +2% к криту"],
+    ["⏰", "Пунктуальный: +2 к скорости"], ["·", "Шустрик: энергия копится на четверть быстрее"],
+    ["⌨️", "Соня: энергия копится быстрее, но может задремать в бою"], ["🍬", "Фантиковед: лакомства ещё и сытные (+10)"],
+    ["🖐", "Художник: игры с игрушками радуют на 25% сильнее"], ["👤", "«БУ!»: в начале боя пугает врага — его атака −5%"],
+  ];
+  const QUIRK_FX = [
+    "Когда счастлив — чихает", "Огурец среди игрушек — ужас и −10 к настроению", "Храпит во сне — слышно на весь экран",
+    "Утром (7–9 по Москве) ворчит на будильник", "Гладить — радость сильнее (+6)", "Иногда обижается, если задеть уши",
+    "Может уснуть посреди боя", "Ревнует к телефону", "Раз в день приносит подарок: мусор, монеты или еду",
+    "Иногда зависает и смотрит в одну точку", "После еды икает", "Здоровается с холодильником",
+  ];
   const SHAPES = ["Колобок", "Шарик", "Бобик", "Грушка", "Призрачок", "Кубик", "Капелька"];
 
   // мутации: номер (байт в ДНК) обязан совпадать с server/worker.js (MUTS)
@@ -62,11 +79,129 @@
     [50, "cerberus", "twin", "🐕", "Цербер", "три головы, у каждой по три глаза. Ему не нужна еда — никогда"],
     [47, "phoenixfire", "element", "🔥", "Белое пламя феникса", "бело-серое пламя, из которого он рождается снова и снова"],
     [51, "phoenix", "creature", "🐦", "Феникс", "огненная птица: сгорает и возрождается из пепла — умереть насовсем не может"],
+    // только от мутагенов (шприцы)
+    [22, "threeeyes", "eyes", "👁", "Третий глаз", "глаз во лбу видит то, что скрыто: +5% к криту"],
+    [60, "albino", "color", "🤍", "Альбинос", "белоснежный, с красными глазами"],
+    [61, "melanist", "color", "🖤", "Меланист", "угольно-чёрный, только глаза горят"],
+    [62, "golden", "color", "🥇", "Золотой", "шкура блестит чистым золотом"],
+    [63, "rainbow", "color", "🌈", "Радужный", "переливается всеми цветами радуги"],
+    [64, "antennae", "head", "📡", "Антенны", "ловит сигналы из космоса: +2 к скорости"],
+    [65, "mushroom", "head", "🍄", "Грибница", "на макушке выросли грибы: +8 к здоровью"],
+    [66, "horns", "head", "🦌", "Рога", "ветвистые рога: +2 к атаке"],
+    [67, "slime", "slime", "🟢", "Слизень", "весь в слизи — по нему сложно попасть"],
+    [68, "spikes", "spikes", "🦔", "Иглы", "на спине иглы: +2 к защите"],
+    [69, "mustache", "face", "🥸", "Усач", "пышные усы, как у дворецкого"],
   ].map(([id, key, group, emoji, name, desc]) => ({ id, key, group, emoji, name, desc }));
+  // коллекционные питомцы: каждый — в одном экземпляре на весь мир, не голодают, их нельзя потерять. Выдаёт только администратор.
+  // Номера и бонусы обязаны совпадать с server/worker.js (COLLECT)
+  const COLLECT = [
+    [112, "dragon_gold", "dragons", 4, 5, "🐉", "Золотой дракон", "Сокровищница: раз в день приносит подарок. В бою +3 к атаке и +15 к здоровью", { hp: 15, atk: 3 }],
+    [113, "dragon_black", "dragons", 4, 5, "🖤", "Чёрный дракон", "Тьма: +15% к уклонению, поджигает чёрным пламенем, ночью бьёт сильнее", { dodge: .15, burn: .2, night: .1 }],
+    [114, "dragon_white", "dragons", 3, 4, "🤍", "Белый дракон", "Священный свет: +4 к защите, каждые три хода лечится", { def: 4, regen: .1 }],
+    [115, "dragon_emerald", "dragons", 3, 4, "💚", "Изумрудный дракон", "Хранитель леса: +20 к здоровью, лечится, энергия копится вдвое быстрее", { hp: 20, regen: .05 }],
+    [116, "dragon_ice", "dragons", 2, 3, "🧊", "Ледяной дракон", "Ледяное дыхание: +3 к скорости, часто замораживает", { spd: 3, freeze: .3 }],
+    [117, "dragon_fire", "dragons", 2, 3, "🔥", "Огненный дракон", "Пламя: +2 к атаке, поджигает чаще всех", { atk: 2, burn: .35 }],
+    [118, "spirit_fire", "spirits", 2, 2, "🔥", "Дух огня", "Пляшущее пламя: +2 к скорости, поджигает", { spd: 2, burn: .25 }],
+    [119, "spirit_water", "spirits", 2, 2, "💧", "Дух воды", "Всегда спокоен: настроение не падает, в бою лечится", { regen: .08 }],
+    [120, "spirit_earth", "spirits", 3, 3, "🪨", "Дух земли", "Каменная кожа: +6 к защите, +10 к здоровью", { def: 6, hp: 10 }],
+    [121, "spirit_wind", "spirits", 3, 3, "🌪", "Дух ветра", "Неуловимый: +5 к скорости, +15% к уклонению", { spd: 5, dodge: .15 }],
+  ].map(([id, key, set, rarity, hard, emoji, name, desc, fx]) => ({ id, key, set, rarity, hard, emoji, name, desc, fx }));
+  const COLLECT_SETS = {
+    dragons: { name: "Драконы", emoji: "🐉", bonus: "3 дракона у хозяина — все его драконы бьют на 5% сильнее. Все 6 — титул «Повелитель драконов»" },
+    spirits: { name: "Стихийные духи", emoji: "🌀", bonus: "Все 4 — титул «Хранитель стихий»" },
+  };
+  COLLECT.forEach((c) => MUTATIONS.push({ id: c.id, key: c.key, group: "collect", emoji: c.emoji, name: c.name, desc: c.desc }));
   const MUT_ID = Object.fromEntries(MUTATIONS.map((m) => [m.id, m]));
+  const collectOf = (dna) => { const s = String(dna).slice(32); for (let i = 0; i + 2 <= s.length; i += 2) { const c = COLLECT.find((x) => x.id === parseInt(s.slice(i, i + 2), 16)); if (c) return c; } return null; };
+  // мутагены: 200 шприцов, у каждого своё название и своя мутация (так же считает server/worker.js)
+  const MG_EFFECTS = ["giant", "tiny", "pirate", "ninja", "wizard", "hero", "cyborg", "zombie", "mummy", "ghost", "skeleton", "vampire", "werewolf", "demon", "angel", "cthulhu", "glitch",
+    "sixeyes", "bigeye", "threeeyes", "twins", "fire", "ice", "storm", "shadow", "crystal", "cosmic", "albino", "melanist", "golden", "rainbow", "antennae", "mushroom", "horns", "slime", "spikes", "mustache"];
+  const MG_ADJ = ["Багровый", "Ледяной", "Тёмный", "Звёздный", "Кислотный", "Древний", "Безумный", "Лунный", "Ржавый", "Хрустальный"];
+  const MG_NOUN = ["туман", "коктейль", "эликсир", "яд", "нектар", "раствор", "концентрат", "серум", "бульон", "сок", "штамм", "вирус", "ген", "катализатор", "реагент", "экстракт", "дистиллят", "фермент", "вихрь", "импульс"];
+  const MG_COUNT = 200;
+  const mgMut = (n) => MUTATIONS.find((m) => m.key === MG_EFFECTS[((n - 1) * 7) % MG_EFFECTS.length]);
+  const mgName = (n) => `${MG_ADJ[(n - 1) % 10]} ${MG_NOUN[Math.floor((n - 1) / 10) % MG_NOUN.length]}`;
+  // шприц: одна текстура на все мутагены
+  const syringe = (size = 40) => `<svg class="mg-syr" width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges"><g transform="rotate(40 8 8)">
+    <rect x="5" y="0" width="6" height="1" fill="#cfd6e0"/><rect x="7" y="1" width="2" height="3" fill="#8a94a6"/><rect x="4" y="4" width="8" height="1" fill="#cfd6e0"/>
+    <rect x="5" y="5" width="6" height="7" fill="#24303f"/><rect x="6" y="5" width="4" height="7" fill="#e8f2ff"/><rect x="6" y="8" width="4" height="4" fill="#4dff88"/><rect x="6" y="8" width="1" height="4" fill="#b8ffd0"/>
+    <rect x="9" y="6" width="1" height="1" fill="#8a94a6"/><rect x="9" y="9" width="1" height="1" fill="#2a9a52"/><rect x="7" y="12" width="2" height="1" fill="#8a94a6"/><rect x="7.5" y="13" width="1" height="3" fill="#dfe6ee"/></g></svg>`;
 
+  // игрушки и «приколы» на голову: выбиваются только из кейса «Питомник». Порядок обязан совпадать с server/worker.js
+  const TOYS = [["ball", "Мячик", "⚽", 0], ["mouse", "Мышка на верёвочке", "🐭", 0], ["yarn", "Клубок", "🧶", 0], ["bone", "Косточка", "🦴", 0], ["sock", "Носок", "🧦", 0],
+    ["bell", "Колокольчик", "🔔", 0], ["duck", "Резиновая уточка", "🦆", 1], ["feather", "Перо на палочке", "🪶", 1], ["frisbee", "Фрисби", "🥏", 1], ["box", "Коробка", "📦", 1],
+    ["cucumber", "Огурец", "🥒", 1], ["teddy", "Плюшевый мишка", "🧸", 2], ["yoyo", "Йо-йо", "🪀", 2], ["kite", "Воздушный змей", "🪁", 2], ["laser", "Лазерная указка", "🔴", 3], ["rocket", "Космо-ракета", "🚀", 3]];
+  const HATS = [["party", "Колпак", 0], ["bow", "Бантик", 0], ["flower", "Цветочек", 0], ["ushanka", "Ушанка", 1], ["tophat", "Цилиндр", 1], ["propeller", "Кепка с пропеллером", 1],
+    ["chef", "Поварской колпак", 1], ["bucket", "Ведро", 2], ["viking", "Шлем викинга", 2], ["kingcrown", "Корона короля питомцев", 3]];
+  // «фишки»: особенности с настоящим влиянием на игру. Порядок обязан совпадать с server/worker.js
+  const PERKS = [
+    ["glutton", "Обжора", "🍗", "еда насыщает его меньше — проголодается быстро, корми чаще (зато каждая кормёжка радует)"],
+    ["picky", "Малоежка", "🥄", "наедается маленькой порцией — еда сытнее в 1,4 раза"],
+    ["sweet", "Сладкоежка", "🍬", "лакомства радуют вдвое сильнее и сытные, обычной еде не рад"],
+    ["gourmet", "Гурман", "🧀", "любимая еда — вдвое лучше, остальная его не впечатляет"],
+    ["fidget", "Непоседа", "⚡", "энергия восстанавливается в полтора раза быстрее"],
+    ["lazy", "Лежебока", "🛋", "силы копит медленно, зато в бою толще: +5% здоровья"],
+    ["bully", "Задира", "👊", "в бою бьёт на 8% сильнее"],
+    ["coward", "Трусишка", "🙈", "бьёт слабее, зато ловко уворачивается"],
+    ["lucky", "Везунчик", "🍀", "чаще бьёт критом"],
+    ["cuddly", "Ласковый", "🤗", "от поглаживаний вдвое больше радости"],
+    ["prickly", "Колючка", "🌵", "не любит, когда гладят, зато в бою +3 защиты"],
+    ["player", "Игрун", "🎾", "игрушки радуют в полтора раза сильнее, реже скучает"],
+    ["calm", "Тихоня", "🤫", "грустит вдвое медленнее"],
+    ["drama", "Драма", "🎭", "все чувства — в полтора раза сильнее, и радость, и обида"],
+  ].map(([key, name, emoji, desc]) => ({ key, name, emoji, desc }));
+  const PERK_CLASH = [["glutton", "picky"], ["bully", "coward"], ["cuddly", "prickly"], ["fidget", "lazy"]];
   const byte = (dna, i) => parseInt(String(dna).slice(i * 2, i * 2 + 2), 16) || 0;
+  function perks(dna) {
+    const a = PERKS[byte(dna, 0) % PERKS.length], out = [a];
+    if (byte(dna, 1) % 3 === 0) { const b = PERKS[(byte(dna, 1) >> 2) % PERKS.length]; if (b !== a && !PERK_CLASH.some((c) => c.includes(a.key) && c.includes(b.key))) out.push(b); }
+    return out;
+  }
+  // как питомец относится к игрушкам (так же считает сервер)
+  function toyPrefs(dna) {
+    const v = byte(dna, 13) >> 4, fav = TOYS[byte(dna, 6) % TOYS.length][0];
+    const mode = v < 4 ? "one" : v < 9 ? "easy" : v < 13 ? "some" : "lots";
+    const dislikes = [];
+    for (let k = 1; dislikes.length < 3 && k < 12; k++) { const t = TOYS[(byte(dna, 7) + k * 5) % TOYS.length][0]; if (t !== fav && !dislikes.includes(t)) dislikes.push(t); }
+    if (byte(dna, 13) % 12 === 1 && fav !== "cucumber" && !dislikes.includes("cucumber")) dislikes.push("cucumber");   // боится огурцов
+    const memory = Math.max(0, { one: 0, easy: 0, some: 2, lots: 4 }[mode] - (perks(dna).some((p) => p.key === "player") ? 1 : 0));
+    return { fav, mode, memory, dislikes };
+  }
+  // режим сна: совы спят днём, жаворонки — ночью (время московское). Так же считает сервер.
+  const CHRONO = [{ key: "owl", name: "Сова", desc: "днём спит (8:00–18:00), ночью бодрствует" }, { key: "lark", name: "Жаворонок", desc: "ночью спит (22:00–7:00), днём бодр" },
+    { key: "any", name: "Как придётся", desc: "спит, когда захочет" }];
+  const chrono = (dna) => CHRONO[Math.min(2, byte(dna, 10) % 5)];
+  function sleepState(dna, t = Date.now() / 1000) {
+    const h = Math.floor((t / 3600 + 3) % 24), c = chrono(dna).key;
+    if (c === "owl" && h >= 8 && h < 18) return { asleep: true, wake: 18 };
+    if (c === "lark" && (h >= 22 || h < 7)) return { asleep: true, wake: 7 };
+    return { asleep: false };
+  }
   const name = (dna) => NAME_A[byte(dna, 0) % NAME_A.length] + NAME_B[byte(dna, 1) % NAME_B.length];
+  const receptive = (dna) => (byte(dna, 4) >> 2) % 5 === 0 && !collectOf(dna);   // принимает мутагены (значок 🧬) — каждый пятый
+  // во сне не голодает; в домике голодает вчетверо медленнее (так же считает сервер)
+  const SLEEP_WIN = [[8, 18], [22, 31]];
+  function asleepSec(dna, a, b) {
+    if (b <= a) return 0;
+    const c = Math.min(2, byte(dna, 10) % 5);
+    if (c === 2) return 0;
+    const [s, e] = SLEEP_WIN[c], H = 3600, D = 86400, d0 = Math.floor((a + 3 * H) / D) - 1, d1 = Math.floor((b + 3 * H) / D);
+    let sum = 0;
+    for (let d = d0; d <= d1 && d - d0 < 400; d++) { const ws = d * D - 3 * H + s * H, we = d * D - 3 * H + e * H; sum += Math.max(0, Math.min(b, we) - Math.max(a, ws)); }
+    return sum;
+  }
+  const hungerAt = (dna, fullAt, den, t = Date.now() / 1000) => Math.max(0, Math.min(100, Math.round(100 - (t - fullAt - asleepSec(dna, fullAt, t)) * (den ? .25 : 1) / 864)));
+  // сколько раз в день сам хочет поиграть в мини-игры (компанейские — много, одиночки — раз)
+  function funWant(dna, stage) {
+    const s = byte(dna, 4) % 3, pk = perks(dna).map((p) => p.key);
+    let w = (s === 2 ? 5 : s === 1 ? 3 : 1) + (stage === "b" ? 2 : stage === "t" ? 1 : 0);
+    if (pk.includes("player")) w += 2;
+    if (pk.includes("calm") || pk.includes("lazy")) w = Math.max(1, w - 1);
+    return w;
+  }
+  // рост: малыш → подросток → взрослый (grown — когда станет взрослым)
+  const STAGES = { b: { name: "Малыш", emoji: "🍼", mul: .7, care: "скучает в полтора раза быстрее и хочет играть чаще" }, t: { name: "Подросток", emoji: "🌱", mul: .85, care: "скучает чуть быстрее взрослых" }, "": { name: "Взрослый", emoji: "", mul: 1, care: "" } };
+  const stageOf = (grown, t = Date.now() / 1000) => (!grown || t >= grown ? "" : t >= grown - 2 * 86400 ? "t" : "b");
   function muts(dna) {
     const s = String(dna).slice(32), out = [];
     for (let i = 0; i + 2 <= s.length; i += 2) { const m = MUT_ID[parseInt(s.slice(i, i + 2), 16)]; if (m && !out.includes(m)) out.push(m); }
@@ -79,18 +214,20 @@
     return s;
   }
   function fullName(dna) {
+    const cl = collectOf(dna); if (cl) return cl.name;
     const ks = muts(dna).map((m) => m.key);
     return ks.includes("phoenix") ? "Феникс" : ks.includes("cerberus") ? "Цербер" : ks.includes("pair") ? `${name(dna)} & ${name(partner(dna))}` : ks.includes("twins") ? `${name(dna)}-${name(dna)}` : name(dna);
   }
   function traits(dna) {
     const fav = FOOD_KEYS[byte(dna, 5) % FOOD_KEYS.length];
     const dis = FOOD_KEYS[(FOOD_KEYS.indexOf(fav) + 1 + (byte(dna, 6) % (FOOD_KEYS.length - 1))) % FOOD_KEYS.length];
-    const ms = muts(dna), pair = ms.some((m) => m.key === "pair"), p2 = pair ? partner(dna) : null;
+    const all = muts(dna), ms = all.filter((m) => m.group !== "collect"), pair = ms.some((m) => m.key === "pair"), p2 = pair ? partner(dna) : null, cl = collectOf(dna);
     return {
       name: fullName(dna), social: byte(dna, 4) % 3, fav, dis, shape: SHAPES[byte(dna, 2) % SHAPES.length],
       temper: TEMPER[byte(dna, 12) % TEMPER.length], hobby: HOBBY[byte(dna, 11) % HOBBY.length], quirk: QUIRK[byte(dna, 13) % QUIRK.length],
       code: String(dna).slice(0, 4).toUpperCase() + "-" + String(dna).slice(28, 32).toUpperCase(),
-      muts: ms, element: ms.find((m) => m.group === "element") || null, immortal: ms.some((m) => m.key === "cerberus"), reborn: ms.some((m) => m.key === "phoenix"),
+      perks: perks(dna), quirkIdx: byte(dna, 13) % QUIRK.length, hobbyIdx: byte(dna, 11) % HOBBY.length, chrono: chrono(dna), toys: toyPrefs(dna),
+      muts: ms, element: ms.find((m) => m.group === "element") || null, immortal: !!cl || ms.some((m) => m.key === "cerberus"), collect: cl, reborn: ms.some((m) => m.key === "phoenix"),
       partner: p2 ? { name: name(p2), temper: TEMPER[byte(p2, 12) % TEMPER.length], hobby: HOBBY[byte(p2, 11) % HOBBY.length] } : null,
     };
   }
@@ -105,6 +242,12 @@
     if (ks.includes("hero")) { hp += 6; atk += 1; def += 1; spd += 1; }
     if (ks.includes("cerberus")) { hp = Math.round(hp * 1.15); atk += 2; }
     if (ks.includes("phoenix")) { atk += 2; spd += 3; }
+    if (ks.includes("horns")) atk += 2;
+    if (ks.includes("spikes")) def += 2;
+    if (ks.includes("mushroom")) hp += 8;
+    if (ks.includes("antennae")) spd += 2;
+    const cl = collectOf(dna);
+    if (cl) { hp += cl.fx.hp || 0; atk += cl.fx.atk || 0; def += cl.fx.def || 0; spd += cl.fx.spd || 0; }
     return { hp, atk, def, spd };
   }
   // что умеет в бою (из мутаций и стихии)
@@ -113,9 +256,10 @@
     cosmic: "подлечивается звёздами", vampire: "пьёт здоровье", zombie: "встаёт один раз после поражения", angel: "лечится, когда плохо",
     werewolf: "звереет на половине здоровья", cthulhu: "оглушает щупальцами", twins: "бьёт дважды", pair: "бьёт дважды", wizard: "магия пробивает защиту",
     cerberus: "кусает тремя пастями", phoenix: "раз за бой возрождается из пепла", phoenixfire: "поджигает белым пламенем", bwfire: "поджигает чёрно-белым огнём", ghost: "уворачивается", ninja: "уворачивается", tiny: "юркий", glitch: "телепортируется от ударов", sixeyes: "меткий", bigeye: "меткий",
+    threeeyes: "меткий", slime: "скользкий — уворачивается", horns: "бодается", spikes: "колючий", mushroom: "крепкий", antennae: "быстрый",
   };
-  const skills = (dna) => muts(dna).filter((m) => SKILLS[m.key]).map((m) => ({ emoji: m.emoji, text: SKILLS[m.key] }));
-  const rarityName = (rarity, dna) => { const el = muts(dna).find((m) => m.group === "element"); return RARITY[rarity].name + (el ? " · " + el.name : ""); };
+  const skills = (dna) => muts(dna).filter((m) => SKILLS[m.key] || m.group === "collect").map((m) => ({ emoji: m.emoji, text: SKILLS[m.key] || m.desc }));
+  const rarityName = (rarity, dna) => { const cl = collectOf(dna); if (cl) return RARITY[rarity].name + " · коллекция «" + COLLECT_SETS[cl.set].name + "»"; const el = muts(dna).find((m) => m.group === "element"); return RARITY[rarity].name + (el ? " · " + el.name : ""); };
 
   /* ---------------------------------------------------------------- цвета */
   const hsl = (h, s, l) => `hsl(${((h % 360) + 360) % 360} ${Math.max(0, Math.min(100, s))}% ${Math.max(0, Math.min(100, l))}%)`;
@@ -123,7 +267,7 @@
     const hue = Math.round(byte(dna, 3) * 360 / 256), hue2 = hue + 140 + (byte(dna, 14) % 80);
     const sat = [42, 62, 74, 80, 88][rarity], fluke = byte(dna, 15);
     let base = { h: hue, s: sat, l: 58 }, skin = "normal";
-    const over = M.cerberus ? { h: 0, s: 0, l: 17 } : M.zombie ? { h: 95, s: 24, l: 52 } : M.vampire ? { h: 265, s: 14, l: 84 } : M.mummy ? { h: 40, s: 34, l: 76 }
+    const over = M.albino ? { h: hue, s: 8, l: 92 } : M.melanist ? { h: hue, s: 22, l: 13 } : M.golden ? { h: 44, s: 92, l: 56 } : M.cerberus ? { h: 0, s: 0, l: 17 } : M.zombie ? { h: 95, s: 24, l: 52 } : M.vampire ? { h: 265, s: 14, l: 84 } : M.mummy ? { h: 40, s: 34, l: 76 }
       : M.ghost ? { h: 195, s: 45, l: 86 } : M.skeleton ? { h: 250, s: 14, l: 22 } : M.werewolf ? { h: 26, s: 26, l: 44 }
       : M.demon ? { h: 356, s: 70, l: 46 } : M.angel ? { h: 46, s: 60, l: 90 } : M.cthulhu ? { h: 168, s: 40, l: 44 }
       : M.ice ? { h: 194, s: 72, l: 74 } : M.shadow ? { h: 265, s: 34, l: 16 } : M.cosmic ? { h: 238, s: 58, l: 20 } : null;
@@ -131,16 +275,17 @@
     else if (fluke >= 252 - rarity * 3) { skin = "albino"; base = { h: hue, s: 8, l: 90 }; }          // редкие окрасы
     else if (fluke < 3 + rarity * 2) { skin = "shadow"; base = { h: hue, s: 30, l: 16 }; }
     else if (rarity >= 3 && fluke % 7 === 0) { skin = "gold"; base = { h: 44, s: 92, l: 56 }; }
-    const rainbow = rarity === 4 && skin === "normal", dark = base.l < 30;
+    const rainbow = M.rainbow || (rarity === 4 && skin === "normal"), dark = base.l < 30 && !rainbow;
+    const step = M.rainbow ? 55 : 14;                                          // мутаген «Радужный» — вся радуга сверху вниз
     return {
       skin, hue, hue2,
-      body: (dy) => (rainbow ? hsl(hue + dy * 14, 85, 62) : hsl(base.h, base.s, base.l)),
-      light: (dy) => (rainbow ? hsl(hue + dy * 14, 90, 78) : hsl(base.h, base.s - 6, base.l + (dark ? 10 : 14))),
-      dark: (dy) => (rainbow ? hsl(hue + dy * 14, 70, 44) : hsl(base.h, base.s + 4, base.l - (dark ? 8 : 18))),
+      body: (dy) => (rainbow ? hsl(hue + dy * step, 85, 62) : hsl(base.h, base.s, base.l)),
+      light: (dy) => (rainbow ? hsl(hue + dy * step, 90, 78) : hsl(base.h, base.s - 6, base.l + (dark ? 10 : 14))),
+      dark: (dy) => (rainbow ? hsl(hue + dy * step, 70, 44) : hsl(base.h, base.s + 4, base.l - (dark ? 8 : 18))),
       line: M.cerberus ? "#ededed" : dark ? hsl(M.shadow ? 275 : hue, 70, 55) : hsl(base.h, Math.min(60, base.s), 14),
       accent: hsl(hue2, Math.max(50, sat), 60), accentDark: hsl(hue2, Math.max(50, sat), 42),
-      eye: M.cerberus ? "#ffffff" : M.vampire ? "#ff2b3b" : M.werewolf || M.demon || M.mummy ? "#ffd23b" : M.shadow || skin === "shadow" ? hsl(M.shadow ? 280 : hue2, 100, 70) : dark ? "#f4f0ff" : "#14121c",
-      glow: M.cerberus || M.bwfire ? "#ffffff" : RARITY[rarity].color,
+      eye: M.albino ? "#ff2b4b" : M.cerberus ? "#ffffff" : M.vampire ? "#ff2b3b" : M.werewolf || M.demon || M.mummy ? "#ffd23b" : M.shadow || skin === "shadow" ? hsl(M.shadow ? 280 : hue2, 100, 70) : dark ? "#f4f0ff" : "#14121c",
+      glow: M.golden ? "#ffd23f" : M.cerberus || M.bwfire ? "#ffffff" : RARITY[rarity].color,
     };
   }
 
@@ -170,7 +315,7 @@
   }
 
   /* ---------------------------------------------------------------- Феникс: белая огненная птица, поднятые крылья машут, хвост струится, горит бело-серым пламенем */
-  function phoenixFrame(dna, f, dead) {
+  function phoenixFrame(dna, f, dead, sleep) {
     const g = Array.from({ length: W }, () => Array(W).fill(null));
     const solid = Array.from({ length: W }, () => Array(W).fill(false));
     const put = (x, y, c, s = true) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < W) { g[y][x] = c; if (s) solid[y][x] = true; } };
@@ -179,7 +324,7 @@
     const tint = [[0, 0], [220, 10], [40, 9], [260, 8]][byte(dna, 3) % 4];       // гены: чистый, холодный, тёплый или лунный оттенок белого
     const G = (l) => hsl(tint[0], tint[1], l);
     const C = { line: G(9), dark: G(34), mid: G(56), light: G(78), white: G(95) };
-    const live = !dead, cx = 19.5, bob = live ? [0, -1, -1, 0, 1, 1][f] : 0, flap = live ? [0, 1, 2, 1, 0, -1][f] : 0;
+    const live = !dead, cx = 19.5, bob = live && !sleep ? [0, -1, -1, 0, 1, 1][f] : 0, flap = live && !sleep ? [0, 1, 2, 1, 0, -1][f] : -2;
     const by = 22 + bob, hy = 12 + bob;
     // хвост: широкий веер из пяти перьев, струится
     [-2, -1, 0, 1, 2].forEach((k) => {
@@ -236,21 +381,165 @@
     // глаза и клюв
     [[cx - 2.5, hy], [cx + 1.5, hy]].forEach(([x, y]) => {
       if (dead) { put(x, y - 1, C.line); put(x + 1, y, C.line); put(x, y + 1, C.line); return; }
-      if (f === 5) { put(x, y, C.line); put(x + 1, y, C.line); return; }
+      if (f === 5 || sleep) { put(x, y, C.line); put(x + 1, y, C.line); return; }
       put(x - 1, y, C.dark); put(x + 2, y, C.dark); put(x - 1, y - 1, C.dark); put(x, y - 1, C.dark); put(x + 1, y - 1, C.dark); put(x + 2, y - 1, C.dark);   // «маска»
       put(x, y, "#ffffff"); put(x + 1, y, "#101018"); put(x, y + 1, "#101018"); put(x + 1, y + 1, "#101018");
     });
     put(cx - .5, hy + 2, C.dark); put(cx + .5, hy + 2, C.dark); put(cx - .5, hy + 3, C.line);
     const fx = [];
     if (live) for (let i = 0; i < 5; i++) fx.push([[5, 34, 9, 30, 3, 36][(f + i * 2) % 6], [6, 10, 3, 4, 15, 8][(f * 2 + i) % 6] + (i % 2) * 3, i % 2 ? "#dcdce6" : "#ffffff"]);
-    return { g, fx, glow: live ? "#ffffff" : null, ghost: false, glitch: false };
+    return { g, fx, glow: live ? "#ffffff" : null, ghost: false, glitch: false, hatAt: hatPoint(solid, cx) };
+  }
+
+  /* ---------------------------------------------------------------- коллекционные: драконы */
+  const DRAGON_PAL = {
+    dragon_gold: { body: "#f2b818", dark: "#a86e06", light: "#ffe27a", belly: "#fff1b8", wing: "#c97f0a", memb: "#ffcf4a", horn: "#fff6d8", eye: "#e8301a", line: "#4a2a00", glow: "#ffd23f", fx: ["#fff6b0", "#ffd23f"] },
+    dragon_black: { body: "#2c2438", dark: "#130d1b", light: "#4a3c62", belly: "#5c4a78", wing: "#1a1226", memb: "#5a2a8a", horn: "#d8d0e8", eye: "#c04aff", line: "#000000", glow: "#8a4aff", fx: ["#b07aff", "#4a1a7a"] },
+    dragon_white: { body: "#eceff8", dark: "#a4adc8", light: "#ffffff", belly: "#ffffff", wing: "#b8c4e0", memb: "#dbe8ff", horn: "#8aa0c8", eye: "#2aa8ff", line: "#4a5070", glow: "#ffffff", fx: ["#ffffff", "#c8e4ff"] },
+    dragon_emerald: { body: "#2fae5a", dark: "#17673a", light: "#6fe08a", belly: "#d0f0a0", wing: "#1b7a40", memb: "#86eca4", horn: "#f0e6b0", eye: "#ffd23f", line: "#0a2a14", glow: "#6aff8a", fx: ["#a8ff7a", "#2fae5a"] },
+    dragon_ice: { body: "#8fd8ff", dark: "#3a86c8", light: "#e0f8ff", belly: "#ffffff", wing: "#4aa0dc", memb: "#c4eeff", horn: "#ffffff", eye: "#1a3a98", line: "#0a2a50", glow: "#8fe0ff", fx: ["#ffffff", "#bff0ff"] },
+    dragon_fire: { body: "#e2401c", dark: "#8a1a0a", light: "#ff8a3a", belly: "#ffd04a", wing: "#9a1c08", memb: "#ff9a3a", horn: "#2a1a10", eye: "#ffe14d", line: "#2a0800", glow: "#ff6a2a", fx: ["#fff3a0", "#ff8a1f"] },
+  };
+  function dragonFrame(key, dna, f, dead, sleep) {
+    const c = DRAGON_PAL[key];
+    const g = Array.from({ length: W }, () => Array(W).fill(null)), solid = Array.from({ length: W }, () => Array(W).fill(false));
+    const put = (x, y, col, s = true) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < W) { g[y][x] = col; if (s) solid[y][x] = true; } };
+    const empty = (x, y) => { x = Math.round(x); y = Math.round(y); return x >= 0 && y >= 0 && x < W && y < W && !g[y][x]; };
+    const side = (fn) => { fn(-1); fn(1); };
+    const live = !dead, calm = sleep || dead, cx = 19.5, bob = calm ? 0 : [0, -1, -1, 0, 1, 1][f], flap = calm ? -3 : [0, 1, 2, 1, 0, -1][f];
+    const by = 28 + bob, hy = 14 + bob;
+    // крылья (сзади): кость от плеча к кончику, перепонка, два «пальца»
+    side((s) => {
+      const sx = cx + s * 4, sy = by - 6, a = (38 + flap * 9) * Math.PI / 180, len = calm ? 10 : 14;
+      const tx = sx + s * Math.cos(a) * len, ty = sy - Math.sin(a) * len, lx = cx + s * 15, ly = by + 2;
+      const inTri = (x, y) => { const d = (x1, y1, x2, y2) => (x - x2) * (y1 - y2) - (x1 - x2) * (y - y2); const d1 = d(sx, sy, tx, ty), d2 = d(tx, ty, lx, ly), d3 = d(lx, ly, sx, sy); return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0)); };
+      for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (inTri(x + .5, y + .5)) put(x, y, (x + y) % 5 === 0 ? c.light : c.memb);
+      for (let j = 0; j <= len; j++) { put(sx + s * Math.cos(a) * j, sy - Math.sin(a) * j, c.wing); put(sx + s * Math.cos(a) * j, sy - Math.sin(a) * j + 1, c.wing); }
+      [[.45, .55], [.8, .9]].forEach(([k1, k2]) => { const fx0 = tx + (lx - tx) * k1, fy0 = ty + (ly - ty) * k1; for (let j = 0; j <= 10; j++) { const t = j / 10; put(tx + (fx0 - tx) * t * 1 + 0, ty + (fy0 - ty) * t, c.wing); } void k2; });
+      put(tx, ty - 1, c.horn);                                                          // коготок на сгибе
+    });
+    // хвост: изгибается вправо и вверх, на конце — пика
+    let tx2 = 0, ty2 = 0;
+    for (let j = 0; j < 12; j++) {
+      const x = cx + 5 + j * 1.05, y = by + 5 - j * .7 + (live && !sleep ? Math.sin(j * .6 + f * 1.05) * 1.1 : 0);
+      put(x, y, c.body); if (j < 8) put(x, y + 1, c.dark); tx2 = x; ty2 = y;
+    }
+    [[1, 0], [2, 0], [1, -1], [2, -1], [3, -1], [1, 1], [2, -2], [2, 1]].forEach(([a, b]) => put(tx2 + a, ty2 + b, c.dark));
+    // лапки
+    side((s) => { const fx = Math.round(cx + s * 4.5); for (let k = 0; k < 3; k++) { put(fx - 1, by + 5 + k, c.dark); put(fx, by + 5 + k, c.body); put(fx + 1, by + 5 + k, c.dark); } [-1, 0, 1].forEach((a) => put(fx + a, by + 8, c.horn)); });
+    // туловище с брюшком
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const u = (x + .5 - cx) / 7.2, v = (y + .5 - by) / 7; if (u * u + v * v > 1) continue;
+      const lit = -(u * .5 + v * .7);
+      let col = lit > .5 ? c.light : lit < -.5 ? c.dark : c.body;
+      const bu = (x + .5 - cx) / 3.6, bv = (y + .5 - by - 1) / 5.6;
+      if (bu * bu + bv * bv <= 1) col = y % 2 ? c.belly : c.light;
+      put(x, y, col);
+    }
+    for (let y = hy + 4; y <= by - 5; y++) for (let x = -2; x <= 2; x++) put(cx + x - .5, y, x === 2 ? c.dark : x === -2 ? c.light : c.body);   // шея
+    // голова и морда
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const u = (x + .5 - cx) / 6.6, v = (y + .5 - hy) / 5.6; if (u * u + v * v > 1) continue;
+      const lit = -(u * .5 + v * .7); put(x, y, lit > .5 ? c.light : lit < -.55 ? c.dark : c.body);
+    }
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { const u = (x + .5 - cx) / 4.2, v = (y + .5 - hy - 3.6) / 2.6; if (u * u + v * v <= 1) put(x, y, v < -.2 ? c.light : c.belly); }
+    // рога и гребень
+    side((s) => { const bx = cx + s * 3.6; [[0, 0], [s * .5, -1], [s, -2], [s * 1.6, -3], [s * 2.4, -4], [s * 3.4, -4.4]].forEach(([a, b], i) => { put(bx + a, hy - 4 + b, c.horn); if (i < 3) put(bx + a + s, hy - 4 + b, c.horn); }); });
+    [[-.5, 0], [-.5, -1], [.5, -1]].forEach(([a, b]) => put(cx + a, hy - 5.5 + b, c.dark));
+    // контур
+    const out = [];
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (!solid[y][x] && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => solid[y + b] && solid[y + b][x + a])) out.push([x, y]);
+    out.forEach(([x, y]) => put(x, y, c.line, false));
+    // особенности вида
+    if (key === "dragon_gold") { const y0 = hy - 7; [[-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [-2, -1], [0, -1], [2, -1], [-2, -2], [0, -2], [2, -2]].forEach(([a, b]) => put(cx - .5 + a, y0 + b, b === 0 ? "#c8900a" : "#ffe14d", false)); put(cx - .5, y0, "#e8203a", false); }
+    if (key === "dragon_emerald") side((s) => { const bx = cx + s * 6.4, y0 = hy - 8; put(bx, y0, "#5ad84a", false); put(bx + s, y0, "#2a9a2a", false); put(bx, y0 - 1, "#8aff6a", false); });
+    if (key === "dragon_ice") [-3, -1, 1, 3].forEach((a, i) => { for (let k = 0; k < 2 + (i % 2); k++) put(cx - .5 + a, hy + 6.5 + k, k ? "#ffffff" : "#c8f0ff", false); });
+    if (key === "dragon_black") side((s) => { put(cx + s * 7.5, by - 2, c.memb, false); put(cx + s * 8, by - 1, c.memb, false); });
+    // глаза: вертикальный зрачок
+    [[cx - 3.5, hy - .5], [cx + 2.5, hy - .5]].forEach(([x, y]) => {
+      if (dead) { put(x - .5, y - 1, c.line); put(x + 1.5, y + 1, c.line); put(x + 1.5, y - 1, c.line); put(x - .5, y + 1, c.line); put(x + .5, y, c.line); return; }
+      if (sleep || f === 5) { put(x - .5, y, c.line); put(x + .5, y, c.line); put(x + 1.5, y, c.line); return; }
+      put(x - .5, y - 1, c.eye); put(x + .5, y - 1, c.eye); put(x + 1.5, y - 1, c.eye); put(x - .5, y, c.eye); put(x + 1.5, y, c.eye); put(x - .5, y + 1, c.eye); put(x + 1.5, y + 1, c.eye);
+      put(x + .5, y, "#08060c"); put(x + .5, y + 1, "#08060c"); put(x + .5, y - 1, "#08060c"); put(x - .5, y - 1, "#ffffff");
+    });
+    put(cx - 2, hy + 3, c.dark); put(cx + 1, hy + 3, c.dark);                                    // ноздри
+    if (!dead) { for (let a = -2; a <= 2; a++) put(cx + a - .5, hy + 5, c.line); put(cx + 1.5, hy + 6, "#ffffff"); put(cx - 2.5, hy + 6, "#ffffff"); }
+    // эффекты (без контура)
+    const fx = [];
+    if (live && !sleep) {
+      if (key === "dragon_gold" || key === "dragon_white") for (let i = 0; i < 3; i++) fx.push([[3, 36, 5, 34, 2, 37][(f + i * 2) % 6], [30, 34, 26, 31, 36, 28][(f * 2 + i) % 6], c.fx[i % 2]]);
+      if (key === "dragon_fire" || key === "dragon_black") [-2, 1].forEach((a, i) => { for (let k = 0; k < 2 + ((f + i) % 3); k++) if (empty(cx + a + (k % 2 ? .5 : 0), hy + 2 - k)) put(cx + a + (k % 2 ? 1 : 0), hy + 1 - k - 2, k ? c.fx[1] : c.fx[0], false); });
+      if (key === "dragon_ice" || key === "dragon_white") fx.push([[6, 33, 10, 29, 5, 34][f], [24, 30, 20, 26, 32, 22][f], "#ffffff"]);
+      if (key === "dragon_emerald") fx.push([[7, 30, 12, 27, 5, 33][f], 2 + f * 5, f % 2 ? "#8aff6a" : "#2fae5a"]);
+    }
+    return { g, fx, glow: live ? c.glow : null, ghost: false, glitch: false, hatAt: hatPoint(solid, cx) };
+  }
+
+  /* ---------------------------------------------------------------- коллекционные: стихийные духи */
+  const SPIRIT_PAL = {
+    spirit_fire: { a: "#ff4a1f", b: "#ff9a2a", c: "#fff3a0", line: "#6a1400", eye: "#2a0800", glow: "#ff8a2a", fx: ["#ffd23f", "#ff6a1f"] },
+    spirit_water: { a: "#1a6ad8", b: "#3ab4ff", c: "#c8f0ff", line: "#0a2a6a", eye: "#08143a", glow: "#3ab4ff", fx: ["#ffffff", "#8fe0ff"] },
+    spirit_earth: { a: "#6a4a2a", b: "#8a6a3a", c: "#c8a870", line: "#2a1a08", eye: "#1a1008", glow: "#a8d85a", fx: ["#5aa83a", "#a88a5a"] },
+    spirit_wind: { a: "#7accb8", b: "#bff0e2", c: "#ffffff", line: "#2a6a5a", eye: "#123a32", glow: "#c8f4e8", fx: ["#ffffff", "#bff0e2"] },
+  };
+  function spiritFrame(key, dna, f, dead, sleep) {
+    const c = SPIRIT_PAL[key];
+    const g = Array.from({ length: W }, () => Array(W).fill(null)), solid = Array.from({ length: W }, () => Array(W).fill(false));
+    const put = (x, y, col, s = true) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < W) { g[y][x] = col; if (s) solid[y][x] = true; } };
+    const side = (fn) => { fn(-1); fn(1); };
+    const live = !dead, calm = sleep || dead, cx = 19.5, bob = calm ? 1 : [0, -1, -2, -1, 0, 1][f], cy = 25 + bob, r = 8.5;
+    const sway = calm ? 0 : Math.sin(f * 1.05) * 2.6, tipY = cy - (key === "spirit_earth" ? 11 : 17);
+    for (let y = Math.floor(tipY); y <= Math.ceil(cy + r); y++) {
+      let hw, shift = 0;
+      if (y >= cy) hw = Math.sqrt(Math.max(0, r * r - (y - cy) * (y - cy)));
+      else { const t = (cy - y) / (cy - tipY); hw = r * Math.pow(1 - t, key === "spirit_earth" ? .6 : 1.3); shift = sway * t * t; }
+      for (let x = Math.floor(cx - hw + shift); x <= Math.ceil(cx + hw + shift); x++) {
+        const d = Math.abs(x + .5 - cx - shift) / Math.max(.6, hw), dy = (y - cy) / r;
+        if (d > 1) continue;
+        let col = d < .35 && dy > -.9 ? c.c : d < .7 ? c.b : c.a;
+        if (key === "spirit_earth") col = ((x * 3 + y * 5) % 7 === 0) ? c.c : ((x + y) % 3 === 0 ? c.a : c.b);
+        if (key === "spirit_fire" && live && y < cy - 6 && (x + y + f) % 4 === 0) col = c.c;
+        put(x, y, col);
+      }
+    }
+    if (key === "spirit_earth") for (let x = -4; x <= 4; x++) put(cx + x, Math.round(tipY) + (Math.abs(x) > 2 ? 2 : 0) + (x % 2 ? 1 : 0), x % 2 ? "#4a9a2a" : "#6ac83a");   // мох
+    side((s) => { put(cx + s * (r + .5), cy + 1, c.a); put(cx + s * (r + 1.5), cy + (live && !sleep ? (f + (s > 0 ? 3 : 0)) % 2 : 1), c.b); });       // ручки
+    const out = [];
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (!solid[y][x] && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => solid[y + b] && solid[y + b][x + a])) out.push([x, y]);
+    out.forEach(([x, y]) => put(x, y, c.line, false));
+    // большие глаза и ротик
+    [[cx - 3.5, cy - 1], [cx + 2.5, cy - 1]].forEach(([x, y]) => {
+      if (dead) { put(x, y, c.eye); put(x + 1, y + 1, c.eye); put(x + 1, y - 1, c.eye); return; }
+      if (sleep || f === 5) { put(x - .5, y + 1, c.eye); put(x + .5, y + 1, c.eye); put(x + 1.5, y + 1, c.eye); return; }
+      for (let a = 0; a < 2; a++) for (let b = -1; b < 2; b++) put(x + a, y + b, "#ffffff");
+      put(x + 1, y, c.eye); put(x + 1, y + 1, c.eye); put(x, y + 1, c.eye);
+    });
+    if (!dead) { put(cx - .5, cy + 3, c.line); put(cx + .5, cy + 3, c.line); put(cx - .5, cy + 4, sleep ? c.line : "#ff7a9a"); }
+    const fx = [];
+    if (live && !sleep) for (let i = 0; i < 5; i++) {
+      const k = (f + i * 2) % 6;
+      if (key === "spirit_fire") fx.push([Math.round(cx - 6 + ((i * 7 + f * 3) % 13)), Math.round(tipY - 1 - ((f + i) % 4) * 2), c.fx[i % 2]]);
+      else if (key === "spirit_water") fx.push([[6, 32, 9, 30, 5, 34][k], 34 - ((f * 5 + i * 7) % 28), c.fx[i % 2]]);
+      else if (key === "spirit_earth") fx.push([Math.round(cx + Math.cos((f + i * 1.25) * 1.05) * 13), Math.round(cy - 4 + Math.sin((f + i * 1.25) * 1.05) * 4), c.fx[i % 2]]);
+      else fx.push([Math.round(cx + Math.cos((f * 1.05) + i * 1.3) * (10 + i)), Math.round(cy - 6 + i * 3 - (f % 3)), c.fx[i % 2]]);
+    }
+    return { g, fx, glow: live ? c.glow : null, ghost: key === "spirit_wind" && live, glitch: false, hatAt: hatPoint(solid, cx + sway * .4) };
+  }
+  // куда сажать шапку: верх головы над центром
+  function hatPoint(solid, cx) {
+    let best = W;
+    for (let x = Math.round(cx) - 1; x <= Math.round(cx) + 1; x++) for (let y = 0; y < W; y++) if (solid[y] && solid[y][x]) { best = Math.min(best, y); break; }
+    return [cx, best];
   }
 
   /* ---------------------------------------------------------------- один кадр */
-  function frame(code, f, dead) {
+  function frame(code, f, dead, sleep, stage) {
     const rarity = Math.max(0, Math.min(4, Number(code[0]) || 0)), dna = code.slice(1);
     const M = {}; muts(dna).forEach((m) => { M[m.key] = true; });
-    if (M.phoenix) return phoenixFrame(dna, f, dead);
+    if (M.phoenix) return phoenixFrame(dna, f, dead, sleep);
+    const cl = collectOf(dna);
+    if (cl) return cl.set === "dragons" ? dragonFrame(cl.key, dna, f, dead, sleep) : spiritFrame(cl.key, dna, f, dead, sleep);
+    if (sleep && !dead) f = f % 2 ? 1 : 0;                                       // спит: только медленное дыхание
     const g = Array.from({ length: W }, () => Array(W).fill(null));
     const solid = Array.from({ length: W }, () => Array(W).fill(false));
     const put = (x, y, c, s = true) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < W) { g[y][x] = c; if (s) solid[y][x] = true; } };
@@ -258,7 +547,8 @@
     const isSolid = (x, y) => solid[Math.round(y)] && solid[Math.round(y)][Math.round(x)];
     const side = (fn) => { fn(-1); fn(1); };
     const live = !dead, wave = live ? f % 2 : 0;
-    const scale = (M.giant ? 1.15 : M.tiny ? .7 : 1) * (M.cerberus ? 1 : M.twins || M.pair ? .82 : 1.1);
+    const baby = stage === "b", teen = stage === "t";                          // малыш: маленькое пухлое тело, огромные глаза; подросток — между
+    const scale = (M.giant ? 1.15 : M.tiny ? .7 : 1) * (M.cerberus ? 1 : M.twins || M.pair ? .82 : 1.1) * (baby ? .64 : teen ? .82 : 1);
     const bottom = 36.5 - (M.ghost && live ? [1, 2, 3, 2, 1, 0][f] + 1 : 0);
     const genes = M.cerberus ? [{ dna, cx: 8.5, s: .72, lift: 4 }, { dna: partner(dna), cx: 19.5, s: .84, lift: 9 }, { dna: partner(partner(dna)), cx: 30.5, s: .72, lift: 4 }]
       : M.twins || M.pair ? [{ dna, cx: 13.5 }, { dna: M.pair ? partner(dna) : dna, cx: 25.5 }] : [{ dna, cx: 19.5 }];
@@ -394,6 +684,19 @@
       }
       if (M.demon) side((s) => { const bx = Math.round(cx + s * ex * .9); [[0, 0], [0, -1], [s, -2], [s, -3], [2 * s, -4]].forEach(([a, b], i) => { put(bx + a, top + b, i < 2 ? "#3a0a10" : "#1a0408"); if (i < 2) put(bx + a + s, top + b, "#5a1018"); }); });
       if (M.ice) [[-3, 3], [0, 4], [3, 3], [-6, 2], [5, 2]].forEach(([a, h]) => { const x = Math.round(cx + a * (rx / 8)); let y = 0; while (y < W && !isSolid(x, y)) y++; for (let i = 1; i <= h; i++) put(x, y - i, i === h ? "#ffffff" : i > h / 2 ? "#d6f6ff" : "#8fe0ff"); });
+      if (M.antennae) side((s) => { const bx = Math.round(cx + s * Math.max(2, ex - 1)); for (let i = 1; i <= 4; i++) put(bx + (i > 2 ? s : 0), top - i, P.line); const bc = (f + (s > 0 ? 1 : 0)) % 2 ? "#7affd0" : "#ff5ad8"; [[0, 0], [1, 0], [0, -1], [1, -1]].forEach(([a, b]) => put(bx + s + a - (s < 0 ? 1 : 0), top - 5 + b, bc)); });
+      if (M.mushroom) [[-3, 1], [3, 0]].forEach(([dx, big]) => {
+        const x = Math.round(cx + dx); put(x, top - 1, "#f4ecd8"); if (big) put(x, top - 2, "#f4ecd8");
+        const y = top - (big ? 3 : 2), w = big ? 2 : 1;
+        for (let a = -w; a <= w; a++) put(x + a, y, a === -w || a === w ? "#b01c24" : "#e8343a");
+        for (let a = -w + 1; a <= w - 1; a++) put(x + a, y - 1, "#e8343a");
+        if (big) { put(x, y - 2, "#e8343a"); put(x - 1, y - 1, "#ffffff"); put(x + 1, y, "#ffffff"); } else put(x, y - 1, "#ffffff");
+      });
+      if (M.horns) side((s) => { const bx = Math.round(cx + s * Math.max(2, ex * .8));
+        [[0, 0], [0, -1], [s, -2], [s, -3], [2 * s, -4], [2 * s, -5], [3 * s, -6]].forEach(([a, b]) => put(bx + a, top + b, "#d9b380"));
+        [[0, -4], [-s, -5], [3 * s, -4], [4 * s, -4]].forEach(([a, b]) => put(bx + a, top + b, "#9a7448")); });
+      if (M.spikes) [-.62, -.3, 0, .3, .62].forEach((k) => { const x = Math.round(cx + k * rx); let y = 0; while (y < W && !isSolid(x, y)) y++; if (y >= W) return; put(x, y - 1, P.dark(0)); put(x, y - 2, P.dark(-2)); put(x - 1, y - 1, P.dark(0)); put(x, y - 3, "#ffffff"); });
+      if (M.slime) [[-.5, .1], [.35, -.35], [.1, .5], [-.2, -.6]].forEach(([a, b]) => { const x = cx + a * rx, y = cy + b * ry; if (inB(x, y)) { put(x, y, "#8dff6a"); if (inB(x + 1, y)) put(x + 1, y, "#4fd13a"); } });
       if (M.cthulhu) [-1.5, -.5, .5, 1.5].forEach((k, n) => {
         const L = Math.round(ry * .8) + 3 + (n % 2);
         for (let j = 0; j < L; j++) { const x = Math.round(cx + k * 1.7 + Math.sin((j + f + n * 2) * .9) * (j > 2 ? 1 : 0)), y = mY - 1 + j; put(x, y, j === L - 1 ? "#0b2622" : j % 3 === 2 ? "#a8f0d8" : "#123f38"); }
@@ -409,7 +712,7 @@
     if (M.cosmic && live) B.forEach(({ G, dna: d }) => { for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (G.inside(x, y) && ((x * 7 + y * 13 + byte(d, (x + y) % 16)) % 19) === 0) put(x, y, (x + y + f) % 3 === 0 ? "#ffffff" : (x + f) % 2 ? "#9fb0ff" : "#ffe9a8", false); });
 
     // ---- мордочки
-    const blink = live && f === 5;
+    const blink = live && (f === 5 || sleep);
     B.forEach(({ G, P, dna: d }) => {
       const { cx, eyeY, eX, mY } = G, E = P.eye;
       const dot = (x, y, col = E) => {
@@ -424,6 +727,8 @@
         if (kind === "big") { [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].forEach(([a, b]) => put(x + a, y + b, "#ffffff")); put(x, y, "#14121c"); put(x, y + 1, "#14121c"); return; }
         if (kind === "star") { put(x, y, "#ffe14d"); put(x - 1, y, "#ffe14d"); put(x + 1, y, "#ffe14d"); put(x, y - 1, "#ffe14d"); put(x, y + 1, "#ffe14d"); return; }
         if (kind === "heart") { put(x - 1, y - 1, "#ff3b6b"); put(x + 1, y - 1, "#ff3b6b"); put(x - 1, y, "#ff3b6b"); put(x, y, "#ff3b6b"); put(x + 1, y, "#ff3b6b"); put(x, y + 1, "#ff3b6b"); return; }
+        if (kind === "baby") { for (let b = -1; b <= 1; b++) { put(x, y + b, E); put(x + 1, y + b, E); } put(x, y - 1, "#ffffff"); put(x + 1, y + 1, P.light(0)); return; }
+        if (kind === "teen") { for (let b = -1; b <= 1; b++) { put(x, y + b, E); put(x + 1, y + b, E); } put(x, y - 1, "#ffffff"); return; }
         if (kind === "slit") { put(x - 1, y, "#ffffff"); put(x, y, "#ffffff"); put(x + 1, y, "#ffffff"); return; }
         if (kind === "socket") { [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].forEach(([a, b]) => put(x + a, y + b, "#0a0810")); put(x, y, wave ? "#ffffff" : "#c8c8ff"); return; }
         if (kind === "laser") { put(x, y, "#ff2020"); put(x + 1, y, "#ffb0b0"); put(x, y + 1, "#c00000"); put(x + 1, y + 1, "#ff2020"); return; }
@@ -432,7 +737,8 @@
       };
       let kind = ["dot", "big", "sleepy", "cyclops", "three", "angry", rarity >= 2 ? "star" : "big", rarity >= 3 ? "heart" : "dot"][byte(d, 8) % 8];
       if (M.vampire || M.werewolf || M.demon || M.shadow || M.zombie || M.mummy || M.cyborg || M.pirate) kind = kind === "three" ? "three" : "dot";
-      if (M.cerberus) kind = "three";
+      if (M.cerberus || M.threeeyes) kind = "three";
+      else if (baby || teen) kind = baby ? "baby" : kind === "big" || kind === "heart" || kind === "star" ? kind : "teen";
       if (M.sixeyes) {
         [Math.round(cx) - 5, Math.round(cx) - 1, Math.round(cx) + 3].forEach((x) => { dot(x, eyeY - 2); dot(x, eyeY + 1); });
       } else if (M.bigeye) {
@@ -471,7 +777,14 @@
         else if (mouth === 4) { put(cx - 1.5, mY - 1, "#ffa424"); put(cx - .5, mY - 1, "#ffa424"); put(cx + .5, mY - 1, "#ffa424"); put(cx - .5, mY, "#d97a00"); }
         else if (mouth === 5) { put(cx - 2.5, mY - 1, L); put(cx - 1.5, mY, L); put(cx - .5, mY - 1, L); put(cx + .5, mY, L); put(cx + 1.5, mY - 1, L); }
       }
-      if (live && byte(d, 13) % 2 && !(M.cerberus || M.skeleton || M.zombie || M.mummy || M.ninja || M.shadow || M.cosmic || M.sixeyes)) { put(cx - eX - 2.5, mY - 1, "#ff8fab"); put(cx + eX + 1.5, mY - 1, "#ff8fab"); }
+      if (M.mustache && !M.ninja) {                                                 // усы-«руль»: толстые под носом, тонкие закрученные кончики
+        const MU = "#2a180c", HI = "#7a5030", y0 = mY + 1;
+        const px = [[-1, -1], [0, -1], [-4, 0], [-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0], [-5, 1], [-4, 1], [-3, 1], [-2, 1], [1, 1], [2, 1], [3, 1], [4, 1],
+          [-6, 1], [5, 1], [-7, 0], [6, 0], [-7, -1], [6, -1], [-6, -2], [5, -2]];
+        px.forEach(([k, b]) => put(cx - .5 + k, y0 + b, MU));
+        [[-3, 0], [2, 0], [-1, -1]].forEach(([k, b]) => put(cx - .5 + k, y0 + b, HI));
+      }
+      if (live && (byte(d, 13) % 2 || baby) && !(M.cerberus || M.skeleton || M.zombie || M.mummy || M.ninja || M.shadow || M.cosmic || M.sixeyes)) { put(cx - eX - 2.5, mY - 1, "#ff8fab"); put(cx + eX + 1.5, mY - 1, "#ff8fab"); }
     });
 
     // ---- стихии и свечение (поверх, без контура)
@@ -497,6 +810,7 @@
       }
       if (M.shadow) for (let i = 0; i < 9; i++) { const x = Math.round(cx - rx - 3 + ((i * 11 + byte(d, i)) % Math.round(rx * 2 + 6))), y = Math.round(bt - ((i * 5 + f * 2) % Math.round(ry * 2 + 2))); if (empty(x, y)) put(x, y, i % 3 ? "#3a1f5c" : "#6a3fa0", false); }
       if (M.ice) fx.push([[4, 35, 7, 33, 3, 36][f], [10, 16, 26, 6, 21, 12][f], "#e8fbff"]);
+      if (M.slime) [[-.55, 0], [.4, 3]].forEach(([a, o]) => { const x = Math.round(cx + a * rx), y = Math.round(bt) + ((f + o) % 4); if (empty(x, y)) put(x, y, "#7dff6a", false); if (empty(x, y - 1) && (f + o) % 4) put(x, y - 1, "#4fd13a", false); });
       if (M.crystal) fx.push([Math.round(cx + [-.55, .05, .6][f % 3] * rx), G.top - 3 - (f % 3), "#ffffff"]);
       if (M.angel) {
         let y = 0; while (y < W && !g[y][Math.round(cx)]) y++;
@@ -513,20 +827,44 @@
         fx.push([[4, 35, 6, 34, 3, 36][(k + byte(dna, i)) % 6], [8, 12, 24, 6, 17, 26][(k * 5 + i) % 6], rarity === 4 ? hsl(P0.hue + k * 60, 100, 75) : P0.glow]);
       }
     }
-    return { g, fx, glow: live && rarity >= 3 ? P0.glow : null, ghost: !!M.ghost, glitch: !!M.glitch && live };
+    const hb = M.cerberus ? B[1] : B[0];
+    return { g, fx: sleep ? [] : fx, glow: live && rarity >= 3 ? P0.glow : null, ghost: !!M.ghost, glitch: !!M.glitch && live && !sleep, hatAt: hatPoint(solid, hb.G.cx) };
+  }
+
+  /* ---------------------------------------------------------------- «приколы» на голову: маленькие пиксельные шапки */
+  const HAT_ART = {
+    party: [["    w    ", "    y    ", "   rry   ", "   ryr   ", "  ryrry  ", "  rryry  ", " ryrryrr ", "wwwwwwwww"], { r: "#e8204a", y: "#ffd23f", w: "#ffffff" }],
+    bow: [["pp   pp", "pPp pPp", "pPPkPPp", "pPp pPp", "pp   pp"], { p: "#ff4d8a", P: "#ff9ac0", k: "#c0104a" }],
+    flower: [[" p p ", "ppcpp", " pcp ", "  g  ", " gg  "], { p: "#ff9ad0", c: "#ffd23f", g: "#3aa84a" }],
+    ushanka: [["  bbbbb  ", " bBBBBBb ", "bBBBBBBBb", "fffffffff", "f       f", "f       f"], { b: "#5a3a20", B: "#7a5030", f: "#e0d0b0" }],
+    tophat: [["  kkkkk  ", "  gkkkk  ", "  gkkkk  ", "  rrrrr  ", "kkkkkkkkk"], { k: "#1a1a22", g: "#4a4a5a", r: "#c0103a" }],
+    propeller: [["rrrr rrrr", "    k    ", "  bbbbb  ", " bbybbbb ", "bbbbbbbbb", "    bbbbbb"], { r: "#ff3b4a", k: "#1a1a22", b: "#2a7ae8", y: "#ffd23f" },
+      ["  rr rr  ", "    k    ", "  bbbbb  ", " bbybbbb ", "bbbbbbbbb", "    bbbbbb"]],
+    chef: [[" www www ", "wwwwwwwww", "wwwwwwwww", " wwwwwww ", " ggggggg "], { w: "#ffffff", g: "#d0d0dc" }],
+    bucket: [["  mmmmm  ", " mMMMMMm ", " mMMMMMm ", "mMMMMMMMm", "mmmmmmmmm"], { m: "#6a7484", M: "#a8b4c4" }],
+    viking: [["h       h", "h       h", "hh mmm hh", " hmMMMmh ", " mMMMMMm ", "mmmmmmmmm"], { h: "#efe6cf", m: "#7a7a88", M: "#b4b4c4" }],
+    kingcrown: [["y   y   y", "yy yry yy", "yyyyyyyyy", "yRyyByyGy", "YYYYYYYYY"], { y: "#ffd23f", Y: "#c8900a", r: "#ffffff", R: "#ff2a4a", B: "#3ec8ff", G: "#7aff6a" }],
+  };
+  function drawHat(x, ox, at, hat, f) {
+    const art = HAT_ART[hat];
+    if (!art || !at || at[1] >= W) return;
+    const rows = art[2] && f % 2 ? art[2] : art[0], pal = art[1], w = rows[0].length;
+    const x0 = Math.round(at[0] - (w - 1) / 2), y0 = at[1] + 1 - rows.length;
+    rows.forEach((row, j) => [...row].forEach((ch, i) => { if (pal[ch]) { x.fillStyle = pal[ch]; x.fillRect(ox + x0 + i, y0 + j, 1, 1); } }));
+    if (hat === "kingcrown" && f % 3 === 0) { x.fillStyle = "#ffffff"; x.fillRect(ox + x0 + 4, y0 - 2, 1, 1); }
   }
 
   /* ---------------------------------------------------------------- в картинку */
   const cache = {};
   const FR = 6;
-  function stripUrl(code, dead) {
-    const key = code + (dead ? ":dead" : "");
+  function stripUrl(code, dead, sleep, hat, stage) {
+    const key = code + (stage ? "." + stage : "") + (dead ? ":dead" : "") + (sleep ? ":zz" : "") + (hat ? ":" + hat : "");
     if (cache[key]) return cache[key];
     if (typeof document === "undefined") return "";
     const c = document.createElement("canvas"); c.width = W * FR; c.height = W;
     const x = c.getContext("2d");
     for (let f = 0; f < FR; f++) {
-      const fr = frame(code, dead ? 0 : f, dead);
+      const fr = frame(code, dead ? 0 : f, dead, sleep, stage);
       const ox = f * W;
       if (fr.glow) {                                                    // мягкое свечение вокруг легендарных
         x.globalAlpha = [.55, .4, .3, .4, .55, .45][f]; x.fillStyle = fr.glow;
@@ -543,6 +881,7 @@
         x.clearRect(ox - 2, 0, 2, W); x.clearRect(ox + W, 0, 2, W);
         x.globalAlpha = .7; x.fillStyle = "#ff00d4"; x.fillRect(ox + 8, y0 - 1, 6, 1); x.fillStyle = "#00f0ff"; x.fillRect(ox + 24, y0 + 4, 7, 1); x.globalAlpha = 1;
       }
+      if (hat) drawHat(x, ox, fr.hatAt, hat, f);
     }
     if (dead) {                                                         // серым
       const img = x.getImageData(0, 0, c.width, c.height), d = img.data;
@@ -574,14 +913,15 @@
     return (cache[key] = c.toDataURL());
   }
 
-  // HTML: живой анимированный спрайт. code = цифра редкости + ДНК (+ мутации)
+  // HTML: живой анимированный спрайт. code = цифра редкости + ДНК (+ мутации) [+ ".b" малыш | ".t" подросток] [+ "-" шапка]
   const sprite = (code, size = 96, opts = {}) => {
     if (!code) return "";
-    const url = opts.egg ? eggUrl(code.slice(1)) : stripUrl(code, opts.dead);
-    return `<i class="pet-spr ${opts.dead ? "dead" : ""} ${opts.cls || ""}" style="width:${size}px;height:${size}px;background-image:url(${url})"></i>`;
+    const [base0, hat] = String(code).split("-"), [base, stage] = base0.split(".");
+    const url = opts.egg ? eggUrl(base.slice(1)) : stripUrl(base, opts.dead, opts.sleep, opts.dead ? null : opts.hat || hat || null, stage);
+    return `<i class="pet-spr ${opts.dead ? "dead" : ""} ${stage && !opts.egg ? "grow-" + stage : ""} ${opts.cls || ""}" style="width:${size}px;height:${size}px;background-image:url(${url})"></i>`;
   };
 
-  const api = { RARITY, FOOD_KEYS, FOOD_EMOJI, SOCIAL, TEMPER, MUTATIONS, stats, skills, traits, name: fullName, muts, partner, rarityName, sprite, frame };
+  const api = { COLLECT, COLLECT_SETS, collectOf, asleepSec, hungerAt, funWant, RARITY, FOOD_KEYS, FOOD_EMOJI, SOCIAL, TEMPER, HOBBY, QUIRK, HOBBY_FX, QUIRK_FX, MUTATIONS, MG_EFFECTS, MG_COUNT, mgMut, mgName, syringe, receptive, STAGES, stageOf, TOYS, HATS, CHRONO, PERKS, perks, toyPrefs, chrono, sleepState, stats, skills, traits, name: fullName, muts, partner, rarityName, sprite, frame };
   root.Pets = api;
   if (typeof module !== "undefined") module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

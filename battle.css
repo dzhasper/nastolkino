@@ -112,3 +112,86 @@ button.game-hero { display: block; width: 100%; text-align: left; color: inherit
 .sbj-res.win, .sbj-res.bj { color: #ffd23b; } .sbj-res.lose, .sbj-res.bust { color: #ff7b86; } .sbj-res.push { color: #cfd6e6; }
 .hilo-card { display: flex; justify-content: center; margin-top: 18px; transform: scale(1.6); transform-origin: top center; height: 130px; }
 .hilo-streak { text-align: center; font-size: 16px; margin-top: 4px; }
+
+/* ---- одиночные игры: меню */
+.solo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.solo-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px; border-radius: 16px; background: var(--card); color: var(--text);
+  border: 1px solid var(--line); text-align: left; font-family: inherit; min-height: 92px; }
+.solo-tile:active { transform: scale(.97); }
+.solo-tile .st-e, .fun-list .st-e { font-size: 26px; }
+.solo-tile.pet { background: linear-gradient(135deg, rgba(79,209,139,.18), rgba(79,168,255,.1)); }
+.wheel-card { display: flex !important; align-items: center; gap: 12px; width: 100%; text-align: left; margin-top: 10px; }
+.wheel-card.ready { border: 1px solid rgba(255,210,63,.5); background: linear-gradient(135deg, rgba(255,210,63,.16), rgba(255,90,95,.1)); }
+.wc-e { font-size: 34px; }
+.petfun-hero { background: linear-gradient(135deg, #1f6b5a, #183a5a); }
+
+/* ---- колесо фортуны */
+.wheel-wrap { position: relative; width: min(86vw, 340px); aspect-ratio: 1; margin: 18px auto 6px; }
+.wheel-disc { position: absolute; inset: 0; border-radius: 50%; border: 6px solid #fff3; box-shadow: 0 10px 30px rgba(0,0,0,.4), inset 0 0 0 3px rgba(0,0,0,.25);
+  transition: transform 4.2s cubic-bezier(.12,.72,.08,1); overflow: hidden; }
+.wheel-lbl { position: absolute; left: 50%; top: 50%; --r: min(43vw, 170px); transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(var(--r) * -.66)) rotate(90deg);
+  font-size: 13px; font-weight: 900; white-space: nowrap; color: #1a1020; text-shadow: 0 1px 0 rgba(255,255,255,.55); }
+body.pixel .wheel-lbl { font-size: 9px; }
+.wheel-ptr { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); z-index: 2; font-size: 26px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+.wheel-hub { position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px; border-radius: 50%; background: #1b1430; display: flex; align-items: center; justify-content: center; font-size: 26px; border: 3px solid #fff4; }
+
+/* ---- напёрстки */
+.cups { position: relative; height: 150px; margin: 24px 0 8px; }
+.cup { position: absolute; bottom: 10px; width: 30%; height: 120px; background: none; border: 0; transition: left .3s ease-in-out; font-family: inherit; }
+.cup-body { position: absolute; left: 12%; right: 12%; bottom: 0; height: 96px; transition: transform .35s; z-index: 2;
+  background: linear-gradient(90deg, #8a1a24, #e8404c 35%, #ff8a8a 48%, #c8303c 70%, #6a1018); clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); border-radius: 6px; }
+.cup-body i { position: absolute; left: 0; right: 0; bottom: 10px; height: 8px; background: rgba(255,255,255,.35); }
+.cup.up .cup-body { transform: translateY(-46px); }
+.cup-ball { position: absolute; left: 50%; bottom: 6px; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #ff5a5f 45%, #a0141a); z-index: 1; }
+
+/* ---- мемори, реакция, тир, змейка */
+.memo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.memo-card { aspect-ratio: 1; border-radius: 12px; border: 2px solid var(--line); background: linear-gradient(135deg, #3a2a6a, #1a1a3a); color: #fff; font-size: 22px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center; transition: transform .2s; }
+.memo-card.open { background: rgba(255,255,255,.08); transform: rotateY(0); }
+.memo-card.done { border-color: #7aff6a; opacity: .75; }
+.react-pad { width: 100%; height: 52vh; max-height: 380px; margin-top: 12px; border-radius: 22px; border: 0; color: #fff; font-family: inherit; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px; padding: 16px; font-size: 20px; background: #2a2a4a; }
+.react-pad.wait { background: #a8202a; } .react-pad.go { background: #1fa84a; } .react-pad.early { background: #5a3a10; } .react-pad.end { background: #3a2a7a; }
+.shoot-area { position: relative; height: 56vh; max-height: 420px; margin-top: 10px; border-radius: 20px; overflow: hidden;
+  background: radial-gradient(circle at 50% 120%, #3a2a1a, #141018); border: 1px solid var(--line); }
+.shoot-t { position: absolute; transform: translate(-50%, -50%); font-size: 40px; background: none; border: 0; transition: left .12s, top .12s; line-height: 1; }
+.snake-cv { display: block; width: min(90vw, 330px); aspect-ratio: 1; margin: 10px auto 0; border-radius: 14px; image-rendering: pixelated; touch-action: none; }
+.snake-pad { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 10px; }
+.snake-pad div { display: flex; gap: 60px; }
+.snake-pad button { width: 64px; height: 50px; border-radius: 14px; border: 1px solid var(--line); background: var(--card2); color: #fff; font-size: 20px; }
+
+/* ---- игры с питомцем */
+.fun-pets { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0; margin-top: 8px; }
+.fun-pets button { flex: none; padding: 4px; border-radius: 12px; border: 2px solid transparent; background: var(--card); line-height: 0; }
+.fun-pets button.on { border-color: var(--accent); }
+.fun-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.fetch-field { position: relative; height: 150px; margin-top: 14px; border-radius: 18px; background: linear-gradient(180deg, #2a5aa8 0 55%, #3aa84a 55%); overflow: hidden; }
+.fun-pet { position: absolute; left: 10%; bottom: 6px; line-height: 0; transition: left .6s ease-in-out; }
+.fun-pet.run { animation: fetchRun 1.2s ease-in-out; }
+@keyframes fetchRun { 0% { left: 10%; } 45% { left: 72%; } 55% { left: 72%; transform: scaleX(-1); } 100% { left: 10%; transform: scaleX(-1); } }
+.fun-pet.miss { animation: actShake .3s 3; }
+.fetch-ball { position: absolute; left: 22%; bottom: 40px; font-size: 26px; opacity: 0; }
+.fetch-ball.run { animation: ballFly 1.2s ease-out; }
+.fetch-ball.miss { animation: ballMiss 1.2s ease-out; }
+@keyframes ballFly { 0% { opacity: 1; left: 22%; bottom: 40px; } 40% { left: 78%; bottom: 20px; opacity: 1; } 100% { left: 18%; bottom: 30px; opacity: 0; } }
+@keyframes ballMiss { 0% { opacity: 1; left: 22%; bottom: 40px; } 50% { left: 98%; bottom: 120px; opacity: 1; } 100% { left: 110%; opacity: 0; } }
+.fetch-meter { position: relative; height: 22px; margin-top: 12px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
+.fetch-meter .zone { position: absolute; top: 0; bottom: 0; background: rgba(90,209,106,.55); }
+.fetch-meter b { position: absolute; top: -2px; bottom: -2px; width: 6px; margin-left: -3px; background: #fff; border-radius: 3px; box-shadow: 0 0 8px #fff; }
+.hide-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 26px 0 10px; }
+.hide-box { width: 74px; height: 74px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); font-size: 44px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+.hide-box.open { background: rgba(255,210,63,.14); }
+.bub-area { position: relative; height: 56vh; max-height: 420px; margin-top: 10px; border-radius: 20px; overflow: hidden; background: linear-gradient(180deg, #1a3a6a, #0e1a3a); }
+.bub-area .fun-pet { left: 50%; margin-left: -44px; }
+.fun-pet.jump { animation: actHop .5s; }
+.bubble { position: absolute; bottom: -40px; font-size: 34px; background: none; border: 0; animation: bubUp 2.8s linear forwards; }
+.bubble.pop { animation: none; transform: scale(1.6); opacity: 0; transition: .2s; }
+@keyframes bubUp { to { bottom: 105%; transform: translateX(14px); } }
+
+.trade-grid { grid-template-columns: repeat(3, 1fr); }
+.trade-grid .shop-item { position: relative; }
+.pick-ok { position: absolute; top: 4px; right: 6px; z-index: 2; color: #7aff6a; font-weight: 900; }
+.tchip.item { display: inline-flex; align-items: center; gap: 6px; }
+.ti-prev { width: 34px; height: 34px; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
+.ti-prev > * { transform: scale(.4); transform-origin: center; flex: none; }

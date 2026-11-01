@@ -589,7 +589,7 @@
   function lookOf(l) {
     const out = {};
     if (l && typeof l === "object") ["frame", "bg", "style", "title", "fx", "lv", "g", "w", "c"].forEach((k) => { if (typeof l[k] === "string" && /^[a-z0-9_-]{1,24}$/.test(l[k])) out[k] = l[k]; });
-    if (l && typeof l.pet === "string" && /^[0-4][0-9a-f]{32}(?:[0-9a-f]{2}){0,3}$/.test(l.pet)) out.pet = l.pet;      // главный питомец: редкость + ДНК
+    if (l && typeof l.pet === "string" && /^[0-4][0-9a-f]{32}(?:[0-9a-f]{2}){0,5}(?:\.[bt])?(?:-[a-z]{2,12})?$/.test(l.pet)) out.pet = l.pet;      // главный питомец: редкость + ДНК
     return out;
   }
 

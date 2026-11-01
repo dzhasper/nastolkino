@@ -129,6 +129,7 @@ function saveProfile() {
   try { if (tg && tg.CloudStorage) tg.CloudStorage.setItem(PROFILE_KEY, data); } catch (e) { /* старый клиент */ }
   S.profile = profileView();
   Api.sync();                                              // разница монет уходит на сервер (если он подключён)
+  if (Api.pushProfile && S.profile) Api.pushProfile(S.profile);
 }
 
 function loadProfile(done) {
@@ -197,6 +198,7 @@ function boot() {
     Api.start();
     const bcode = qs.get("battle") || (startParam && /^b_[0-9A-F]{8}$/i.test(startParam) ? startParam.slice(2) : null);
     const tcode = qs.get("trade") || (startParam && /^t_[0-9A-F]{8}$/i.test(startParam) ? startParam.slice(2) : null);
+    if (S.registered && qs.get("u") && Api.on) setTimeout(() => openPlayer(qs.get("u")), 300);
     if (S.registered && qs.get("tour")) tourOpen(qs.get("tour"));
     else if (S.registered && bcode) battleOpen(bcode);
     else if (S.registered && tcode) tradeOpen(tcode);
@@ -271,12 +273,14 @@ function render() {
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
-  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
+  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
   $app.innerHTML = (screens[S.screen] || viewLoading)();
   renderOverlay();
   if (PX()) Pixel.apply();
   drawMount();
   rouMount();
+  if (S.screen === "solo-snake") snakeDraw();
+  if (S.screen === "petfun" && S.fun && S.fun.game === "fetch" && S.fun.phase === "play") { const m = document.getElementById("fetch-mark"); if (m) m.style.left = fetchPos() + "%"; }
   updateBack();
   if (tg) {
     const bg = getComputedStyle(document.body).getPropertyValue("--bg").trim() || "#0b0b14";
@@ -286,7 +290,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
+  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -366,7 +370,13 @@ function viewHome() {
     <button class="game-hero solo-hero mt2" data-a="go" data-v="solo" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
       <div class="pill" style="background:rgba(60,20,80,.7)">👤 один · против бота</div>
       <h2 class="mt">Одиночные игры</h2>
-      <p>Блэкджек с дилером и «Выше или ниже». Немного монет каждый день, когда друзей нет рядом</p>
+      <p>Колесо фортуны, блэкджек, «Выше или ниже», напёрстки — на монеты. Мемори, реакция, тир и змейка — просто так</p>
+      <span class="btn">Играть ▶</span>
+    </button>
+    <button class="game-hero petfun-hero mt2" data-a="pet-games" ${PX() ? `style="background-image:url(${Pixel.scene("studio")})"` : ""}>
+      <div class="pill" style="background:rgba(20,70,60,.7)">🐾 ты и питомец</div>
+      <h2 class="mt">Игры с питомцем</h2>
+      <p>Апорт, прятки и пузыри. Компанейские питомцы обожают играть, а одиночки любят тишину</p>
       <span class="btn">Играть ▶</span>
     </button>
     <div class="section-title">Есть код комнаты?</div>
@@ -407,7 +417,11 @@ function viewProfile() {
 function shopPreview(it) {
   const p = S.profile;
   if (it.cat === "frame") return `<div class="sp-av">${av(Object.assign({}, p, { look: { frame: it.id } }), "big")}</div>`;
-  if (it.cat === "bg") return `<div class="sp-bg" style="background-image:url(${Pixel.scene(it.id)})"></div>`;
+  if (it.cat === "bg") return it.id === "none" ? `<div class="sp-bg empty">пусто</div>` : `<div class="sp-bg" style="background-image:url(${Pixel.scene(it.id)})"></div>`;
+  if (it.cat === "toy") return `<div class="sp-ava sp-toy">${it.emoji}</div>`;
+  if (it.cat === "mg") return `<div class="sp-ava sp-mg">${Pets.syringe(64)}</div>`;
+  if (it.cat === "hat") { const st = Api.state, mp = st && st.pets.find((x) => x.id === st.main_pet && x.alive && !x.egg) || (st && st.pets.find((x) => x.alive && !x.egg));
+    return `<div class="sp-ava">${Pets.sprite((mp ? mp.rarity + mp.dna : "27f3a9c51e2b84d06a1c3f5e7092b4d6e") + "-" + it.id, 64)}</div>`; }
   if (it.cat === "style") return `<div class="sp-style">${Shop.card({ name: p.name, games: p.games, wins: p.wins, avatarHtml: av(p, "sm") }, Object.assign({}, p.look, { style: it.id }), { mini: true })}</div>`;
   if (it.cat === "title") return `<div class="sp-title">${it.text ? esc(it.text) : "—"}</div>`;
   if (it.cat === "fx") return `<div class="sp-fx">${Shop.nameFx(p.name, it.id)}</div>`;
@@ -415,6 +429,28 @@ function shopPreview(it) {
 }
 
 // экран кейсов и инвентаря — в js/cases-ui.js (viewShop)
+
+// чужой профиль по команде /profile в боте (?u=ID): только посмотреть
+function playerSheet(d) {
+  if (!d) return `<div class="center"><div class="spinner" style="margin:10px auto"></div><div class="muted small">Загружаю профиль…</div></div>`;
+  if (d.error) return `<h2>😕 ${esc(d.error)}</h2>`;
+  const pr = d.profile || {}, pl = { name: d.name, avatar: pr.avatar || "🙂", photo: pr.photo || null, look: pr.look || {} };
+  const main = d.pets.find((p) => p.id === d.main_pet) || d.pets[0];
+  const code = (p) => p.rarity + p.dna + (p.stage ? "." + p.stage : "") + (p.hat ? "-" + p.hat : "");
+  return `<div class="center small muted">👀 Профиль игрока — только посмотреть</div>
+    ${Shop.card({ name: d.name, games: pr.games || 0, wins: pr.wins || 0, avatarHtml: av(pl, "huge") }, Object.assign({}, Shop.DEFAULT, pr.look || {}))}
+    ${d.username ? `<div class="center small muted">@${esc(d.username)}</div>` : ""}
+    <div class="section-title">Питомцы · ${d.pets.length}</div>
+    ${d.pets.length ? `<div class="pet-grid">${d.pets.map((p) => { const t = Pets.traits(p.dna);
+      return `<div class="pet-card ${main && p.id === main.id ? "main" : ""}">${main && p.id === main.id ? '<span class="pet-star">★</span>' : ""}${t.collect ? '<span class="pet-cl">✦</span>' : ""}${Pets.sprite(code(p), 72)}
+        <b>${esc(t.name)}</b><span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span><span class="small muted">🏆 ${p.wins} · 💉 ${p.mg}/2</span></div>`; }).join("")}</div>` : `<div class="muted small">Питомцев пока нет</div>`}
+    <div class="small muted center mt">Вещей в инвентаре: ${d.items} · с нами с ${new Date(d.since * 1000).toLocaleDateString("ru-RU")}</div>`;
+}
+function openPlayer(q) {
+  S.sheet = { type: "player", data: null }; renderOverlay();
+  Api.call("/api/profile/view", { q: String(q) }).then((r) => { if (S.sheet && S.sheet.type === "player") { S.sheet.data = r.player; renderOverlay(); } })
+    .catch((e) => { if (S.sheet && S.sheet.type === "player") { S.sheet.data = { error: e.message }; renderOverlay(); } });
+}
 
 function peekSheet(pl) {
   const lk = pl.look || {};
@@ -780,6 +816,14 @@ function renderOverlay() {
     body = tradePickSheet();
   } else if (S.sheet.type === "case-odds") {
     body = caseOddsSheet(S.sheet.key);
+  } else if (S.sheet.type === "pet-mg") {
+    body = petMgSheet();
+  } else if (S.sheet.type === "craft-done") {
+    body = craftDoneSheet();
+  } else if (S.sheet.type === "player") {
+    body = playerSheet(S.sheet.data);
+  } else if (S.sheet.type === "pet-hat") {
+    body = petHatSheet();
   } else if (S.sheet.type === "hatch") {
     body = petHatchSheet(S.sheet.id);
   } else if (S.sheet.type === "peek") {
@@ -898,7 +942,8 @@ const actions = {
   peek: (v) => { S.sheet = { type: "peek", id: v }; haptic(); renderOverlay(); },
   "cancel-join": () => { Net.stop(); S.screen = "home"; render(); },
   tab: (v) => { S.screen = v; S.regName = ""; S.regAvatar = null; if (v === "shop") S.shopTry = null; render(); window.scrollTo(0, 0); },
-  go: (v) => { S.screen = v; render(); },
+  go: (v) => { S.screen = v; if (v === "petfun") { S.funFrom = "solo"; S.fun = null; } render(); window.scrollTo(0, 0); },
+  "pet-games": () => { S.funFrom = "home"; S.fun = null; S.screen = "petfun"; render(); window.scrollTo(0, 0); },
   theme: (v) => { S.setup.theme = v; haptic(); render(); },
   roles: (v) => { S.sheet = { type: "roles", theme: v }; renderOverlay(); },
   create: () => {
@@ -969,7 +1014,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
+Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");
@@ -1020,7 +1065,8 @@ if (tg) {
     else if (S.screen === "pets" && S.battleCode) actions["battle-back"]();
     else if (S.screen === "pets" && S.tradeCode) actions["trade-back"]();
     else if (S.screen === "pets" && S.tourId) actions["tour-back"]();
-    else if (S.screen === "solo-bj" || S.screen === "solo-hilo") { S.screen = "solo"; render(); }
+    else if (S.screen.startsWith("solo-")) { S.screen = "solo"; render(); }
+    else if (S.screen === "petfun") { if (S.fun) { S.fun = null; render(); } else { S.screen = S.funFrom || "solo"; render(); } }
     else if (S.screen === "pets" && S.petSel) actions["pets-back"]();
     else { S.screen = "home"; render(); }
   });

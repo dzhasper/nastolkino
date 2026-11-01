@@ -20,7 +20,7 @@ function offerChips(o) {
   const chips = [];
   o.pets.forEach((p) => chips.push(`<span class="tchip pet">${p.egg ? Pets.sprite(petCode(p), 36, { egg: true }) : Pets.sprite(petCode(p), 36)}${p.egg ? "Яйцо" : esc(Pets.name(p.dna))}
     <i class="rar r${p.rarity}">${p.egg ? "?" : Pets.RARITY[p.rarity].name}</i></span>`));
-  o.items.forEach((k) => { const it = Shop.byKey(k); if (it) chips.push(`<span class="tchip" style="--tc:${Shop.TIERS[Shop.tier(it)].color}">${it.cat === "ava" ? it.emoji + " " : ""}${esc(it.name)}</span>`); });
+  o.items.forEach((k) => { const it = Shop.byKey(k); if (it) chips.push(`<span class="tchip item" style="--tc:${Shop.TIERS[Shop.tier(it)].color}"><span class="ti-prev">${shopPreview(it)}</span>${esc(it.name)}</span>`); });
   Object.entries(o.food).forEach(([k, n]) => chips.push(`<span class="tchip">${Pets.FOOD_EMOJI[k] || "🍽"} ${esc(petFood(k).name)} ×${n}</span>`));
   Object.entries(o.cases).forEach(([k, n]) => { const c = Shop.caseByKey(k); chips.push(`<span class="tchip">${caseImg(k, 28)} ${esc(c ? c.name : k)} ×${n}</span>`); });
   return `<div class="tchips">${chips.join("")}</div>`;
@@ -63,7 +63,7 @@ function tradeScreen() {
 function tradePickSheet() {
   const st = Api.state, pk = S.pick;
   if (!st || !pk) return "";
-  const pets = st.pets.filter((p) => p.alive), food = st.food || {}, cases = st.cases || {};
+  const pets = st.pets.filter((p) => p.alive && !p.collect), food = st.food || {}, cases = st.cases || {};
   const items = (st.inv || []).map((k) => Shop.byKey(k)).filter(Boolean).sort((a, b) => Shop.tier(b) - Shop.tier(a));
   const step = (kind, k, n, max) => `<span class="stepper"><button data-a="pick-step" data-v="${kind}|${k}|-1" ${n ? "" : "disabled"}>−</button><b>${n}</b><button data-a="pick-step" data-v="${kind}|${k}|1" ${n < max ? "" : "disabled"}>+</button></span>`;
   return `<h2>Что отдаёшь</h2>
@@ -71,8 +71,11 @@ function tradePickSheet() {
     ${pets.length ? `<div class="pick-grid">${pets.map((p) => `<button class="pick ${pk.pets.includes(p.id) ? "on" : ""}" data-a="pick-pet" data-v="${p.id}">
       ${p.egg ? Pets.sprite(petCode(p), 48, { egg: true }) : Pets.sprite(petCode(p), 48)}<span>${p.egg ? "Яйцо" : esc(Pets.name(p.dna))}</span></button>`).join("")}</div>` : `<div class="muted small">Нет</div>`}
     <div class="section-title">Вещи</div>
-    ${items.length ? `<div class="tchips">${items.map((it) => { const k = it.cat + ":" + it.id;
-      return `<button class="tchip ${pk.items.includes(k) ? "on" : ""}" style="--tc:${Shop.TIERS[Shop.tier(it)].color}" data-a="pick-item" data-v="${k}">${it.cat === "ava" ? it.emoji + " " : ""}${esc(it.name)}</button>`; }).join("")}</div>` : `<div class="muted small">Инвентарь пуст</div>`}
+    ${items.length ? Shop.CATS.map((c) => { const list = items.filter((it) => it.cat === c.key); if (!list.length) return "";
+      return `<div class="small muted mt">${c.icon} ${c.name}</div><div class="shop-grid trade-grid">${list.map((it) => { const k = it.cat + ":" + it.id;
+        return `<button class="shop-item ${pk.items.includes(k) ? "sel" : ""}" style="--tc:${Shop.TIERS[Shop.tier(it)].color}" data-a="pick-item" data-v="${k}">${pk.items.includes(k) ? '<span class="pick-ok">✓</span>' : ""}
+          ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${Shop.TIERS[Shop.tier(it)].name}</span></button>`; }).join("")}</div>`; }).join("")
+      : `<div class="muted small">Вещей пока нет — они выпадают из кейсов. Стартовые (бесплатные) вещи есть у всех, их не передать</div>`}
     <div class="section-title">Еда</div>
     ${Object.keys(food).filter((k) => food[k] > 0).map((k) => `<div class="pick-row"><span>${Pets.FOOD_EMOJI[k] || "🍽"} ${esc(petFood(k).name)} <span class="muted small">из ${food[k]}</span></span>${step("food", k, pk.food[k] || 0, food[k])}</div>`).join("") || `<div class="muted small">Нет</div>`}
     <div class="section-title">Кейсы</div>

@@ -43,7 +43,7 @@
       st.skew = (st.now || Date.now()) - Date.now();
       Api.state = st;
       const main = st.pets.find((p) => p.id === st.main_pet && p.alive && !p.egg);
-      store.pet = main ? main.rarity + main.dna : "";
+      store.pet = main ? (typeof petCode === "function" ? petCode(main) : main.rarity + main.dna) : "";
     }
     save();
     if (Api.onState) Api.onState(st);
@@ -92,11 +92,20 @@
   };
   Api.call = (path, body) => call(path, body);
   // заработок в одиночных играх: отдельный дневной лимит на сервере
-  Api.solo = (n) => {
+  Api.solo = (n, reason = "solo") => {
     store.q = store.q || [];
     store.coins += n;
-    store.q.push(["s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), n, "solo"]);
+    store.q.push(["s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), n, reason]);
     save();
+  };
+  // публичный профиль (его смотрят по команде /profile в боте): отправляем, только если изменился, не чаще раза в 5 секунд
+  let profT = null, profLast = "";
+  Api.pushProfile = (p) => {
+    if (!on || !Api.ready) return;
+    const data = JSON.stringify({ avatar: p.avatar, look: p.look, games: p.games, wins: p.wins, photo: p.photo || null });
+    if (data === profLast) return;
+    clearTimeout(profT);
+    profT = setTimeout(() => { profLast = data; call("/api/profile/save", { profile: JSON.parse(data) }).catch(() => { profLast = ""; }); }, 5000);
   };                     // запрос без обновления баланса (бои, обмены)
   Api.refresh = () => (Api.ready ? call("/api/me", {}).then(applyState) : Api.start());
   // действия с питомцами и едой — ответ всегда содержит полное новое состояние

@@ -343,3 +343,11 @@ body[data-screen="profile"][data-pstyle="s_ice"] { --bg: #06142a; --card: #0e244
 body[data-screen="profile"][data-pstyle="s_moon"] { --bg: #160206; --card: #2a060c; --card2: #3a0a12; --bd: #ff3b4a; --accent: #d0202e; --text: #ffe8e8; --muted: #c88a8a; --btn-ink: #fff; background: #160206 !important; }
 body[data-screen="profile"][data-pstyle="s_neon"] { --bg: #07040f; --card: #120a22; --card2: #1c1036; --bd: #00e5ff; --accent: #ff2bd6; --text: #e8f8ff; --muted: #9a8ac8; --btn-ink: #fff; background: #07040f !important; }
 body[data-screen="profile"][data-pstyle="s_dragon"] { --bg: #2a0608; --card: #4a0a10; --card2: #5e1016; --bd: #ffd23f; --accent: #ffd23f; --text: #fff4d0; --muted: #e0a888; --btn-ink: #3a0408; background: #2a0608 !important; }
+/* новые эффекты имени */
+.fx-shake i { display: inline-block; font-style: normal; animation: fx-shake .25s steps(2) infinite; }
+.fx-shake { animation: fx-shake .3s steps(2) infinite; }
+@keyframes fx-shake { 0% { transform: translate(0, 0); } 50% { transform: translate(1px, -1px); } 100% { transform: translate(-1px, 1px); } }
+.fx-toxic { color: #b8ff3a !important; text-shadow: 0 0 4px #7aff2a, 0 0 10px #3aff2a !important; animation: fx-toxic 1.4s ease-in-out infinite; }
+@keyframes fx-toxic { 50% { color: #ecffb0; text-shadow: 0 0 10px #7aff2a, 0 0 22px #3aff2a; } }
+.fx-ghosty { color: #e8f0ff !important; text-shadow: 0 0 6px #9ab8ff !important; animation: fx-ghosty 2.4s ease-in-out infinite; }
+@keyframes fx-ghosty { 50% { opacity: .25; filter: blur(1px); } }

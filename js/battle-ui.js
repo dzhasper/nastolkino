@@ -11,7 +11,7 @@ function shareLink(link, text) {
   else if (navigator.share) navigator.share({ text, url: link }).catch(() => {});
   else { navigator.clipboard && navigator.clipboard.writeText(`${text}\n${link}`); toast("Ссылка скопирована"); }
 }
-const fightCode = (f) => f.rarity + f.dna;
+const fightCode = (f) => f.rarity + f.dna + (f.stage ? "." + f.stage : "") + (f.hat ? "-" + f.hat : "");
 const statLine = (s) => `<div class="bstats small"><span>❤️ ${s.hp}</span><span>⚔️ ${s.atk}</span><span>🛡 ${s.def}</span><span>💨 ${s.spd}</span></div>`;
 const teamNames = (t) => (t || []).map((f) => f.name).join(" + ") || "?";
 const myFighters = () => (Api.state ? Api.state.pets : []).filter((p) => p.alive && !p.egg);
@@ -125,6 +125,8 @@ const LOG_TEXT = {
   drain: (A, D, d) => `🧛 ${A} пьёт здоровье: +${d}`, shield: (A, D, d) => `💎 Щит ${A} гасит ${d}`, double: (A) => `👯 ${A} бьёт ещё раз!`,
   revive: (A) => `🧟 ${A} поднимается с 1 здоровьем!`, rebirth: (A, D, d) => `🔥 ${A} возрождается из пепла: +${d}!`, revenge: (A) => `😤 ${A} жаждет реванша: +10% к атаке`,
   out: (A) => `💤 ${A} выбывает`, in: (A) => `➡️ На арену выходит ${A}!`,
+  sleep: (A) => `💤 ${A} уснул посреди боя!`, sing: (A, D) => `🎵 ${A} запел — ${D} заслушался`, charmed: (A) => `🎶 ${A} всё ещё слушает песню и пропускает ход`,
+  box: (A) => `📦 ${A} спрятался в коробку — удар мимо!`, boo: (A, D) => `👻 ${A} крикнул «БУ!» — ${D} испугался`,
 };
 function replayStep() {
   const b = S.battle, r = S.replay;
@@ -140,7 +142,7 @@ function replayStep() {
   const hit = ["hit", "crit"].includes(e.t);
   if (me && foe) {
     if (hit || e.t === "double") { me.classList.remove("lunge"); void me.offsetWidth; me.classList.add("lunge"); }
-    const target = ["burn", "heal", "drain", "frozen", "revive", "rebirth", "revenge", "shield", "out"].includes(e.t) ? me : foe;
+    const target = ["burn", "heal", "drain", "frozen", "revive", "rebirth", "revenge", "shield", "out", "sleep", "charmed", "box", "sing", "boo"].includes(e.t) ? me : foe;
     if (hit || e.t === "burn") { target.classList.remove("hurt"); void target.offsetWidth; target.classList.add("hurt"); }
     if (e.t === "out") target.classList.add("faint");
     if (e.d) floatNum(target, (["heal", "drain", "rebirth"].includes(e.t) ? "+" : "−") + e.d, e.t);
