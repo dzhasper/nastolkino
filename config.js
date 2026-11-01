@@ -8,6 +8,6 @@ window.APP_CONFIG = {
   app: "Настолкино",
   bot: "nastolkino_bot",
   miniapp: "play",
-  api: "",
+  api: "https://nastolkino.nastolkino-server.workers.dev",
   peer: null,
 };
