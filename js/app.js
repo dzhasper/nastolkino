@@ -120,7 +120,7 @@ function profileView() {
   return { name: store.name, avatar: store.avatar || "🙂", photo: store.use_photo !== false && store.tg_photo ? store.tg_photo : null,
     has_tg_photo: !!store.tg_photo, use_photo: store.use_photo !== false, games: store.games || 0, wins: store.wins || 0,
     favorite_role: fav ? fav[0] : null, coins: store.coins || 0,
-    look: Object.assign(Shop.look(), { lv: String(Shop.level(store.games)), g: String(store.games || 0), w: String(store.wins || 0), c: String(Math.max(0, store.coins || 0)) }) };
+    look: Object.assign(Shop.look(), { lv: String(Shop.level(store.games)), g: String(store.games || 0), w: String(store.wins || 0), c: String(Math.max(0, store.coins || 0)) }, store.pet ? { pet: store.pet } : {}) };
 }
 
 function saveProfile() {
@@ -128,6 +128,7 @@ function saveProfile() {
   try { localStorage.setItem(PROFILE_KEY, data); } catch (e) { /* приватный режим */ }
   try { if (tg && tg.CloudStorage) tg.CloudStorage.setItem(PROFILE_KEY, data); } catch (e) { /* старый клиент */ }
   S.profile = profileView();
+  Api.sync();                                              // разница монет уходит на сервер (если он подключён)
 }
 
 function loadProfile(done) {
@@ -140,6 +141,7 @@ function loadProfile(done) {
       if (user.photo_url) store.tg_photo = user.photo_url;
     }
     Shop.attach(store);
+    Api.attach(store, saveProfile);
     saveProfile();
     done();
   };
@@ -188,6 +190,10 @@ function boot() {
     const startParam = tg && tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
     if (startParam && /^[A-Z0-9]{4}$/i.test(startParam)) S.pendingRoom = startParam;
     S.screen = S.registered ? "home" : "register";
+    const qs = new URLSearchParams(location.search);
+    if (S.registered && (qs.get("tab") === "pets" || startParam === "pets")) { S.screen = "pets"; S.petSel = Number(qs.get("pet")) || null; }
+    Api.onState = petOnState;
+    Api.start();
     const snapshot = Net.loadSnapshot();
     if (snapshot && !S.pendingRoom) { resumeHost(snapshot); return render(); }
     if (S.registered && S.pendingRoom) joinRoom(S.pendingRoom);
@@ -259,7 +265,7 @@ function render() {
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
-  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
+  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
   $app.innerHTML = (screens[S.screen] || viewLoading)();
   renderOverlay();
   if (PX()) Pixel.apply();
@@ -274,7 +280,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
+  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || (S.screen === "room" && S.room && ["lobby", "end"].includes(S.room.phase));
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -311,8 +317,9 @@ function viewRegister() {
 }
 
 function tabs() {
-  const b = (k, label) => `<button class="${S.screen === k ? "on" : ""}" data-a="tab" data-v="${k}">${label}</button>`;
-  return `<div class="tabs">${b("home", "🎲 Игры")}${b("shop", `🛒 Магазин${Shop.chestReady() ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤 Профиль")}</div>`;
+  const hungry = Api.state && Api.state.pets.some((p) => p.alive && !p.egg && petLive(p).hunger < 25);
+  const b = (k, ic, label) => `<button class="${S.screen === k ? "on" : ""}" data-a="tab" data-v="${k}"><span class="ti">${ic}</span><span>${label}</span></button>`;
+  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🛒", `Магазин${Shop.chestReady() ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
 }
 const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 
@@ -370,6 +377,7 @@ function viewProfile() {
   return `<div class="fade-in">
     <div class="top"><div class="grow"><h1>Профиль</h1><div class="muted small">${S.me.startsWith("tg") ? "Вход через Telegram" : "Гостевой профиль"}</div></div>${coinPill()}</div>
     ${myCard()}
+    ${petBadge(store.pet, true)}
     <div class="row mt2"><button class="btn grow" data-a="tab" data-v="shop">🛒 Магазин приколов</button></div>
     ${Shop.chestReady() ? `<button class="card chest mt" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Открой и забери монеты</div></div><span class="pill on">Открыть</span></button>` : ""}
     ${p.favorite_role ? `<div class="card mt"><span class="muted small">Чаще всего играешь</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
@@ -425,7 +433,7 @@ function viewShop() {
 
 function peekSheet(pl) {
   const lk = pl.look || {};
-  return `${Shop.card({ name: pl.name, games: Number(lk.g || 0), wins: Number(lk.w || 0), avatarHtml: av(pl, "huge") }, lk)}`;
+  return `${Shop.card({ name: pl.name, games: Number(lk.g || 0), wins: Number(lk.w || 0), avatarHtml: av(pl, "huge") }, lk)}${petBadge(lk.pet)}`;
 }
 
 function viewMafia() {
@@ -781,6 +789,8 @@ function renderOverlay() {
     body = rouSettingsSheet();
   } else if (S.sheet.type === "draw-settings") {
     body = drawSettingsSheet();
+  } else if (S.sheet.type === "hatch") {
+    body = petHatchSheet(S.sheet.id);
   } else if (S.sheet.type === "peek") {
     const pl = player(S.sheet.id);
     body = pl ? peekSheet(pl) : "";
@@ -889,6 +899,12 @@ const actions = {
   },
   "shop-equip": () => { const it = Shop.byId(S.shopTry.cat, S.shopTry.id); if (Shop.equip(it)) { saveProfile(); syncProfile(); haptic("medium"); toast("Надето ✓"); render(); } },
   chest: () => {
+    if (Api.on && Api.ready) {                               // сундук на сервере: монеты и крошечный шанс на яйцо
+      return Api.act("/api/chest", {}).then((st) => {
+        store.chest = new Date().toISOString().slice(0, 10); saveProfile();
+        notify("success"); toast(st.egg ? `Сундук: +${st.got} монет и… ЯЙЦО! 🥚` : `Сундук: +${st.got} монет!`); coinRain(); render();
+      }).catch((e) => { store.chest = new Date().toISOString().slice(0, 10); saveProfile(); toast(e.message); render(); });
+    }
     const sum = Shop.openChest();
     if (!sum) return;
     saveProfile(); notify("success"); toast(`Сундук: +${sum} монет!`);
@@ -965,7 +981,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS);
+Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");
@@ -989,6 +1005,7 @@ document.addEventListener("submit", (e) => {
 });
 document.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && e.target.id === "join-code") actions.join();
+  if (e.key === "Enter" && e.target.id === "promo-code") actions.promo();
 });
 
 setInterval(() => {
