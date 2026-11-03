@@ -170,3 +170,30 @@ body.pixel .btn.fire[disabled] { background: #3a1a16 !important; color: #7a5a4a 
 .rr-count { display: flex; justify-content: center; gap: 16px; font-size: 16px; }
 .rr-count .c-live { color: #ff4050; } .rr-count .c-blank { color: #f0e8d8; }
 body.pixel .rr-count { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 11px; }
+
+/* ---------- подвал: выбор режима */
+.bm-modes { display: grid; gap: 12px; margin-top: 12px; }
+.bm-mode { padding: 14px; background: linear-gradient(160deg, rgba(60, 10, 10, .55), rgba(10, 6, 4, .9)); box-shadow: 0 0 0 2px #4a2018; }
+.bm-mode.revolver { background: linear-gradient(160deg, rgba(70, 40, 10, .5), rgba(10, 6, 4, .9)); box-shadow: 0 0 0 2px #5a4020; }
+.bm-mode p { margin: 10px 0 12px; line-height: 1.45; color: #d8c8b8; }
+.bm-head { display: flex; gap: 12px; align-items: center; }
+.bm-head b { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 13px; letter-spacing: .5px; color: #f0e0cc; }
+.bm-ico { width: 46px; height: 46px; display: grid; place-items: center; font-size: 26px; background: #140a08; box-shadow: inset 0 0 0 2px #3a2018; }
+details.rou-rules summary { cursor: pointer; list-style: none; } details.rou-rules summary::-webkit-details-marker { display: none; }
+details.rou-rules summary::after { content: " ▾"; color: #8a6e5a; } details.rou-rules[open] summary { margin-bottom: 10px; }
+.odds { color: #e8c8a8; margin: -4px 0 10px; } .odds b { color: #ff4050; }
+.stake-own { display: flex; gap: 8px; } .stake-own .input { flex: 1; min-width: 0; }
+.stage.rev .drum .d-of { font-style: normal; }
+
+/* ---------- кубики при двойном рикошете */
+.rou-dice { position: fixed; left: 0; right: 0; top: 34%; z-index: 8600; display: flex; justify-content: center; padding: 0 16px; animation: rrin .35s steps(5); pointer-events: none; }
+.rou-dice .rd-card { max-width: 360px; width: 100%; padding: 14px; background: rgba(10, 8, 14, .95); box-shadow: 0 0 0 3px #8ac8e8, 0 0 40px rgba(140, 200, 240, .4); text-align: center; }
+.rou-dice .rd-t { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 14px; color: #c8ecff; }
+.rou-dice .rd-s { font-size: 12px; color: #a8b8c8; margin: 8px 0 10px; line-height: 1.35; }
+.rou-dice .rd-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 10px; margin-top: 6px; background: #16141c; transition: background .2s, opacity .3s; }
+.rou-dice .rd-n { font-size: 14px; color: #e8e0d8; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rou-dice .rd-v { font-family: "NkDigits", "Press Start 2P", monospace; font-size: 20px; color: #ffd23f; min-width: 2.4em; text-align: right; }
+.rou-dice .rd-row.win { background: #6a0810; box-shadow: 0 0 0 2px #ff3040; } .rou-dice .rd-row.win .rd-v { color: #fff; }
+.rou-dice .rd-row.lose { opacity: .55; }
+.rou-dice.fade { transition: opacity .5s; opacity: 0; }
+.stage.rev { aspect-ratio: 4 / 3.7; }

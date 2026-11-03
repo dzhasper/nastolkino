@@ -21,11 +21,13 @@ const Bots = (() => {
   function add() {
     const h = hub();
     if (!h || !allowed()) return toast("Ботов добавляет только хост — в своей комнате");
+    if (h.room.settings && h.room.settings.tour) return toast("В турнире ботов нет — только живые соперники");
+    if (h.room.kind === "draw" || h.room.kind === "spy") return toast(h.room.kind === "spy" ? "В «Шпионе» ботов нет — тут нужно живое общение" : "В рисовалке ботов нет — только живые художники");
     const room = h.room, used = room.order.map((p) => room.members[p].name);
     const id = "bot_" + Date.now().toString(36) + (seq++);
     const name = NAMES.find((x) => !used.includes(x)) || "Бот №" + (room.order.length + 1);
     h.handle(id, { t: "hello", profile: { name, avatar: pick(AVA), look: { c: "999", frame: pick(["none", "wood", "gold", "neon"]) } } });
-    if (["blackjack", "roulette"].includes(room.kind) && room.settings.stake) { room.updateSettings({ stake: 0 }); toast("С ботами — только на интерес, без монет"); }
+    if (["blackjack", "roulette", "revolver"].includes(room.kind) && room.settings.stake) { room.updateSettings({ stake: 0 }); toast("С ботами — только на интерес, без монет"); }
     h.push(); start();
   }
   function removeAll() {
@@ -45,6 +47,7 @@ const Bots = (() => {
       try {
         if (room.kind === "draw") drawBot(h, room, id);
         else if (room.kind === "roulette") rouletteBot(h, room, id);
+        else if (room.kind === "revolver") revolverBot(h, room, id);
         else if (room.kind === "blackjack") bjBot(h, room, id);
         else mafiaBot(h, room, id);
       } catch (e) { think(id, 2500, 3500); if (Bots.debug) console.error(e); }
@@ -538,6 +541,48 @@ const Bots = (() => {
     act(h, id, { slot: "shoot", target }, 1200, 2000);
   }
 
+  /* ================================================================ русская рулетка: шанс виден всем — бот считает его и держит паузу */
+  function revolverBot(h, room, id) {
+    if (room.phase !== "play" || room.turn !== id || !(room.hp[id] > 0)) return;
+    const m = mem(room, id), name = (p) => room.members[p].name;
+    const tk = room.gameNo + ":" + room.loads + ":" + room.fired + ":" + room.left + ":" + id;
+    if (m.turnKey !== tk) { m.turnKey = tk; m.plan = null; m.said = false; }
+    m.grudge = m.grudge || {};
+    room.events.slice(-6).forEach((e) => { if (e.kind === "shot" && e.target === id && e.who !== id && !m["g" + e.n]) { m["g" + e.n] = 1; m.grudge[e.who] = (m.grudge[e.who] || 0) + 1; } });
+    const line = (t) => { if (!m.said && t) { m.said = true; say(h, room, id, t); } };
+    const p = 1 / room.left;                                              // шанс, что выстрелит сейчас
+    const others = room.seats.filter((q) => q !== id && room.canTarget(id, q));
+    if (!m.plan) {
+      // крутить барабан — когда шанс большой, а стрелять придётся в себя (все остальные — храбрецы)
+      if (!room.spun[id] && !others.length && p >= 1 / 3) { line(pick(["Нет-нет, крутанём", "Сначала покрутим", "Удача, крутись"])); return act(h, id, { slot: "spin" }, 1500, 2600); }
+      // в себя — ради «храбреца», пока шанс маленький; в остальных — по обидам и по слабым
+      const self = !others.length || (p <= 1 / 5 && chance(.5)) || (p <= 1 / 4 && chance(.25)) || (p <= 1 / 3 && chance(.06));
+      let target = id;
+      if (!self) {
+        const sc = (q) => (m.grudge[q] || 0) * 1.4 + (room.hp[q] <= 1 ? .6 : 0) + Math.random() * 1.5;
+        target = others.slice().sort((a, b) => sc(b) - sc(a))[0];
+      }
+      const alive = room.seats.filter((q) => room.hp[q] > 0), steps = [];
+      const fakes = chance(.25) ? 0 : 1 + (chance(.35) ? 1 : 0) + (p >= .5 && chance(.5) ? 1 : 0);
+      for (let i = 0; i < fakes; i++) { const pool = alive.filter((q) => q !== target && q !== steps[steps.length - 1] && room.canTarget(id, q)); if (pool.length) steps.push(pick(pool)); }
+      steps.push(target);
+      m.plan = { steps, i: 0, target, slow: chance(.2 + p * .4) };
+      if (m.plan.slow) { if (chance(.4)) line(pick(["Хм…", "Так…", "Дайте собраться", p >= .5 ? "Тут уже горячо" : "Кто же сегодня…"])); return think(id, 3000, 6500); }
+    }
+    const plan = m.plan, left = room.deadline ? room.deadline - room.clock() : 99;
+    if (left < 6) { if (room.aim !== plan.target) { h.handle(id, { t: "act", slot: "aim", target: plan.target }); return think(id, 500, 800); } return act(h, id, { slot: "shoot", target: plan.target }, 600, 900); }
+    if (plan.i < plan.steps.length) {
+      const to = plan.steps[plan.i++], last = plan.i === plan.steps.length;
+      if (room.aim !== to) h.handle(id, { t: "act", slot: "aim", target: to });
+      if (!last) { if (chance(.2)) line(to === id ? "А может, в себя?.." : pick([`${name(to)}?..`, "Не дёргайся", "Кто же, кто же…"])); return think(id, 1100, 2600); }
+      if (chance(.35)) line(plan.target === id ? pick(["Ну, удача…", "Смотрите внимательно", "Рискну"]) : (m.grudge[plan.target] ? pick([`${name(plan.target)}, это за прошлый раз`, "Ничего личного… хотя нет, личное"]) : pick([`Прости, ${name(plan.target)}`, `${name(plan.target)}, не моргай`, "Посмотрим…"])));
+      return think(id, 1400, p >= .5 ? 4200 : 3000);                    // палец на спуске
+    }
+    if (room.aim !== plan.target) { h.handle(id, { t: "act", slot: "aim", target: plan.target }); return think(id, 700, 1200); }
+    m.plan = null;
+    act(h, id, { slot: "shoot", target: plan.target }, 1200, 2000);
+  }
+
   /* ================================================================ блэкджек: играет от открытых карт соперников */
   const val = (c) => { const r = c.slice(0, -1); return r === "A" ? 11 : ["J", "Q", "K"].includes(r) ? 10 : Number(r); };
   const bjTotal = (cards) => { let t = 0, a = 0; cards.forEach((c) => { if (c.slice(0, -1) === "A") a++; t += val(c); }); while (t > 21 && a) { t -= 10; a--; } return t; };
@@ -566,9 +611,9 @@ const Bots = (() => {
 
   // кнопки в лобби: у хоста своей комнаты
   function bar(room) {
-    if (!allowed() || !Net.isHost() || !room || !["lobby", "end"].includes(room.phase)) return "";
+    if (!allowed() || !Net.isHost() || !room || room.game === "draw" || room.game === "spy" || (room.settings && room.settings.tour) || !["lobby", "end"].includes(room.phase)) return "";
     const n = room.players ? room.players.filter((p) => isBot(p.id)).length : 0;
-    return `<div class="card bot-bar"><div class="grow small">🤖 <b>Боты</b> — если не хватает игроков${n ? ` · ботов: ${n}` : ""}${n && ["blackjack", "roulette"].includes(room.game) ? "<br><span class=\"muted\">с ботами — без ставок</span>" : ""}</div>
+    return `<div class="card bot-bar"><div class="grow small">🤖 <b>Боты</b> — если не хватает игроков${n ? ` · ботов: ${n}` : ""}${n && ["blackjack", "roulette", "revolver"].includes(room.game) ? "<br><span class=\"muted\">с ботами — без ставок</span>" : ""}<br><span class=\"muted\">Победишь — по 🪙5 за каждого бота</span></div>
       <button class="btn small" data-a="bot-add">＋ Бот</button>${n ? `<button class="btn ghost small" data-a="bot-clear">Убрать</button>` : ""}</div>`;
   }
 

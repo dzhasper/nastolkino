@@ -48,7 +48,7 @@ function bjLobby() {
       <div class="muted small">${r.players.length} из ${Blackjack.MAX_PLAYERS} мест</div></div>${coinPill()}</div>
     <div class="card code-card"><div class="muted small">КОД СТОЛА</div><div class="code">${r.code}</div>
       <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
-      <button class="btn small grow" data-a="share">📨 Позвать</button></div></div>
+      <button class="btn small grow" data-a="share">📨 Позвать</button></div>${groupBtn(S.room)}</div>
     <div class="section-title">За столом</div>${playerTiles(r.players, { kick: isHost(), peek: true })}
     <div class="section-title">Ставки</div>
     <div class="card"><div class="row"><div class="grow">${s.stake ? `🪙 <b>На монеты: ${s.stake} с каждого за раздачу</b><div class="small muted">Банк раздачи забирает лучший. Нужно иметь хотя бы ${s.stake} монет.</div>` : `🎲 <b>На интерес</b><div class="small muted">Без монет — просто кто кого.</div>`}</div>
@@ -129,11 +129,24 @@ function bjSettingsSheet() {
   return `<h2>⚙️ Ставки</h2>
     <div class="section-title">С каждого игрока за раздачу</div>
     <div class="chips">${Blackjack.STAKES.map((v) => `<button class="pill ${s.stake === v ? "on" : ""}" data-a="bj-set" data-v="${v}">${v ? `🪙 ${v}` : "на интерес"}</button>`).join("")}</div>
+    ${stakeOwnRow(s.stake, Blackjack.STAKE_MAX, Blackjack.STAKES)}
     <div class="small muted mt">Ставят все одинаково. Монеты — те, что нафармлены в играх и сундуках.</div>`;
 }
 
 /* ---------------------------------------------------------------- монеты: ставка списывается при раздаче, выигрыш приходит при вскрытии */
+// с ботами: ставок нет, но выигранная раздача — по 5 монет за каждого бота в ней
+function bjBotWin(r) {
+  const me = r.players.find((p) => p.id === S.me), bots = r.players.filter((p) => /^bot_/.test(p.id) && p.playing).length;
+  if (!bots || !me || !me.playing || r.phase !== "show" || !r.results || !r.results.winners.includes(S.me)) return;
+  const key = "bjb:" + r.code + ":" + r.game_no + ":" + r.handNo;
+  if (store.bjBotPaid === key) return;
+  store.bjBotPaid = key;
+  const add = BOT_COIN * bots;
+  if (Api.on && Api.ready) Api.solo(add, "bots"); else { store.coins += add; saveProfile(); }
+  coinRain(); toast(`Обыграл ботов: +${add} 🪙`);
+}
 function bjCoins(r) {
+  bjBotWin(r);
   if (!r.settings.stake) return;
   const me = r.players.find((p) => p.id === S.me);
   const tbl = Api.table(r);

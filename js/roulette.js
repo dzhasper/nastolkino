@@ -8,12 +8,14 @@
   const { GameError } = Engine;
 
   const MIN_PLAYERS = 2, MAX_PLAYERS = 4, MAX_ITEMS = 6, CHAT_LIMIT = 80;
-  const LOAD_SECONDS = 20, SHOT_PAUSE = 2.2;
-  const HP_OPTIONS = [2, 3, 4, 5], TURN_TIMES = [20, 30, 45, 60], ITEM_OPTIONS = [0, 1, 2, 3], STAKES = [0, 10, 25, 50, 100, 250];
+  const LOAD_SECONDS = 20, SHOT_PAUSE = 2.4, DICE_PAUSE = 6.2, CHAR_N = 10;
+  const HP_OPTIONS = [2, 3, 4, 5], TURN_TIMES = [20, 30, 45, 60], ITEM_OPTIONS = [0, 1, 2, 3], STAKES = [0, 10, 25, 50, 100, 250, 500, 1000], STAKE_MAX = 10000;
+  // своя ставка: любое целое от 0 до STAKE_MAX (кнопки — только подсказки)
+  const okStake = (v) => Number.isInteger(v) && v >= 0 && v <= STAKE_MAX;
   const ITEMS = {
     flashlight: { name: "Фонарик", emoji: "🔦", desc: "Подсветить один случайный патрон в магазине — узнаешь, боевой ли он" },
     spin: { name: "Встряска", emoji: "🔄", desc: "Встряхнуть дробовик: оставшиеся патроны перемешаются" },
-    mirror: { name: "Зеркальце", emoji: "🪞", desc: "Следующий боевой выстрел в тебя от соперника уйдёт обратно в стрелка" },
+    mirror: { name: "Зеркальце", emoji: "🪞", desc: "Следующий боевой выстрел в тебя от соперника уйдёт обратно в стрелка. Если зеркальце есть и у стрелка — пуля мечется по столу, и кубики (1–50) решают, в кого она попадёт" },
     vest: { name: "Жилет", emoji: "🦺", desc: "Поглотит одно попадание" },
     freeze: { name: "Бутылка", emoji: "🍾", desc: "Швырнуть бутылку сопернику в голову: над ним закружатся звёздочки, и он пропустит свой следующий ход", target: true },
     medkit: { name: "Аптечка", emoji: "💉", desc: "Вернуть одно сердце" },
@@ -44,7 +46,7 @@
 
     resetGame() {
       this.seats = []; this.hp = {}; this.items = {}; this.status = {}; this.notes = {}; this.stakes = {};
-      this.sawed = false;
+      this.sawed = false; this.chars = {}; this.wounds = {}; this.deaths = {};
       this.drum = []; this.loadTotal = 0; this.house = 0; this.contrib = {}; this.loads = 0;
       this.peek = {}; this.heard = {};                             // что каждый знает сейчас: патроны по местам, кто что зарядил
       this.liveTotal = 0; this.blankTotal = 0; this.fired = { live: 0, blank: 0 };   // состав магазина — его видят все
@@ -63,7 +65,7 @@
       if (HP_OPTIONS.includes(Number(s.hp))) this.settings.hp = Number(s.hp);
       if (TURN_TIMES.includes(Number(s.turnTime))) this.settings.turnTime = Number(s.turnTime);
       if (ITEM_OPTIONS.includes(Number(s.items))) this.settings.items = Number(s.items);
-      if (STAKES.includes(Number(s.stake)) && !(Number(s.stake) && this.order.some((p) => /^bot_/.test(p)))) this.settings.stake = Number(s.stake);   // с ботами — без ставок
+      if (s.stake != null && okStake(Number(s.stake)) && !(Number(s.stake) && this.order.some((p) => /^bot_/.test(p)))) this.settings.stake = Number(s.stake);   // с ботами — без ставок
       this.touch();
     }
 
@@ -80,7 +82,7 @@
       else if (this.phase === "end") this.members[pid].online = false;   // сидевший за столом остаётся в итогах
       else {
         this.members[pid].online = false;
-        if (this.hp[pid] > 0) { this.hp[pid] = 0; this.event({ kind: "left", who: pid, text: `${this.name(pid)} встаёт из-за стола и уходит` }); this.afterDamage(); }
+        if (this.hp[pid] > 0) { this.hp[pid] = 0; (this.deaths = this.deaths || {})[pid] = "left"; this.event({ kind: "left", who: pid, text: `${this.name(pid)} встаёт из-за стола и уходит` }); this.afterDamage(); }
       }
       this.touch();
     }
@@ -109,7 +111,9 @@
       this.resetGame();
       this.gameNo = (this.gameNo || 0) + 1;                       // номер партии — чтобы телефоны поняли, что стол новый
       this.seats = online.slice(0, MAX_PLAYERS);
-      this.seats.forEach((p) => { this.hp[p] = this.settings.hp; this.items[p] = []; this.status[p] = {}; this.notes[p] = []; });
+      this.seats.forEach((p) => { this.hp[p] = this.settings.hp; this.items[p] = []; this.status[p] = {}; this.notes[p] = []; this.wounds[p] = 0; });
+      const looks = shuffle(Array.from({ length: CHAR_N }, (_, i) => i));          // каждому — свой случайный персонаж
+      this.seats.forEach((p, i) => { this.chars[p] = looks[i % CHAR_N]; });
       this.chat = { all: [] };
       this.turn = pick(this.seats);
       this.event({ kind: "start", text: "Дверь подвала закрылась. Лампа качается над столом." });
@@ -249,29 +253,40 @@
         const k = {}; Object.entries(this.peek[p]).forEach(([i, t]) => { if (+i > 0) k[+i - 1] = t; }); this.peek[p] = k;
       });
       const live = shell === "live";
-      let hit = target, redirected = false, absorbed = false;
+      let hit = target, redirected = false, absorbed = false, dice = null;
       const dmg = this.sawed ? 2 : 1;
       this.sawed = false;                                         // обрез — на один выстрел, даже если холостой
       if (live) {
-        if (hit !== pid && this.status[hit].mirror) { this.status[hit].mirror = false; redirected = true; hit = pid; }
+        const tm = hit !== pid && this.status[hit].mirror, sm = hit !== pid && this.status[pid].mirror;
+        if (tm && sm) {                                           // два зеркала: пуля отскакивает в стрелка, от его зеркала — в случайного
+          this.status[hit].mirror = false; this.status[pid].mirror = false; redirected = true;
+          const pool = this.alive().filter((p) => p !== pid);
+          for (let k = 0; k < 12; k++) {                          // кубики 1–50 у каждого; ничья — бросаем заново
+            dice = {}; pool.forEach((p) => { dice[p] = 1 + Math.floor(Math.random() * 50); });
+            const best = Math.max(...Object.values(dice)), top = pool.filter((p) => dice[p] === best);
+            if (top.length === 1 || k === 11) { hit = top[Math.floor(Math.random() * top.length)]; dice[hit] = best; if (top.length > 1) top.forEach((p) => { if (p !== hit) dice[p] = Math.max(1, best - 1); }); break; }
+          }
+        } else if (tm) { this.status[hit].mirror = false; redirected = true; hit = pid; }
         if (this.status[hit].vest) { this.status[hit].vest = false; absorbed = true; }
-        else this.hp[hit] = Math.max(0, this.hp[hit] - dmg);
+        else { this.hp[hit] = Math.max(0, this.hp[hit] - dmg); this.wounds[hit] = (this.wounds[hit] || 0) + dmg; }
       }
-      const self = target === pid;
+      const self = target === pid, out = live && !absorbed && this.hp[hit] === 0;
+      if (out) this.deaths[hit] = Math.random() < .5 ? "table" : "head";          // как падает: лицом в стол или назад с простреленной головой
       const who = this.name(pid), tn = this.name(target);
       const text = !live ? (self ? `${who} стреляет в себя… щёлк. Холостой — ещё один ход` : `${who} стреляет в ${tn}… щёлк. Холостой`)
+        : dice ? `${who} стреляет в ${tn} — два зеркала! Пуля мечется по столу, кубики решили: ${this.name(hit)}${absorbed ? ", но жилет спасает" : out ? " — и он(а) падает" : ""}`
         : redirected ? `${who} стреляет в ${tn} — зеркальце! Пуля уходит в самого стрелка${absorbed ? ", но жилет спасает" : ""}`
         : absorbed ? `${who} стреляет в ${self ? "себя" : tn} — БАХ! Жилет принял удар`
         : `${who} стреляет в ${self ? "себя" : tn}${dmg > 1 ? " из обреза" : ""} — БАХ! ${this.hp[hit] > 0 ? (dmg > 1 ? "Минус два сердца" : "Минус сердце") : `${this.name(hit)} падает со стула`}`;
-      this.event({ kind: "shot", who: pid, target, hit, live, redirected, absorbed, self, dmg, out: this.hp[hit] === 0, text });
-      this.afterShot(pid, !live && self);
+      this.event({ kind: "shot", who: pid, target, hit, live, redirected, absorbed, self, dmg, out, death: out ? this.deaths[hit] : null, dice, text });
+      this.afterShot(pid, !live && self, dice ? DICE_PAUSE : SHOT_PAUSE);
     }
 
-    afterShot(pid, again) {
+    afterShot(pid, again, pause = SHOT_PAUSE) {
       if (this.checkWin()) return;
-      // небольшая пауза, чтобы все увидели выстрел, потом следующий ход
+      // пауза, пока у всех доиграет анимация выстрела, потом следующий ход
       this.pending = { next: again && this.hp[pid] > 0 ? pid : this.nextAfter(pid) };
-      this.phase = "shot"; this.setTimer(SHOT_PAUSE); this.touch();
+      this.phase = "shot"; this.setTimer(pause); this.touch();
     }
 
     afterDamage() {
@@ -334,13 +349,14 @@
         const m = this.members[id];
         return { id, name: m.name, avatar: m.avatar, photo: m.photo || null, look: m.look || {}, online: m.online, host: id === this.host,
           seat: this.seats.indexOf(id), hp: this.hp[id] || 0, alive: this.phase === "lobby" || this.hp[id] > 0,
-          items: this.items[id] || [], status: this.status[id] || {}, loaded: !!this.contrib[id], stakes: (this.stakes || {})[id] || 0 };
+          items: (this.items[id] || []).slice(), status: Object.assign({}, this.status[id] || {}), loaded: !!this.contrib[id], stakes: (this.stakes || {})[id] || 0,
+          char: (this.chars || {})[id] != null ? this.chars[id] : null, wounds: (this.wounds || {})[id] || 0, death: (this.deaths || {})[id] || null };
       });
       return {
-        game: "roulette", game_no: this.gameNo || 0, code: this.code, host: this.host, version: this.version, now: Math.round(this.clock() * 1000),
+        game: "roulette", mode: "shotgun", game_no: this.gameNo || 0, code: this.code, host: this.host, version: this.version, now: Math.round(this.clock() * 1000),
         theme: { key: "roulette", title: "Последний заряд", emoji: "🎯", accent: "#c0141f", accent2: "#3a0a0a" },
         settings: this.settings, phase: this.phase, deadline: this.deadline ? Math.round(this.deadline * 1000) : null, total: this.total,
-        players, seats: this.seats, sawed: !!this.sawed, stake: this.settings.stake || 0, pot: (this.settings.stake || 0) * this.seats.length, turn: this.turn, aim: this.phase === "play" ? this.aim || null : null, winner: this.winner, maxHp: this.settings.hp,
+        players, seats: this.seats.slice(), sawed: !!this.sawed, stake: this.settings.stake || 0, pot: (this.settings.stake || 0) * this.seats.length, turn: this.turn, aim: this.phase === "play" ? this.aim || null : null, winner: this.winner, maxHp: this.settings.hp,
         drum: { left: this.drum.length, total: this.loadTotal, house: this.house, live: this.liveTotal || 0, blank: this.blankTotal || 0,
           liveLeft: Math.max(0, (this.liveTotal || 0) - ((this.fired || {}).live || 0)), blankLeft: Math.max(0, (this.blankTotal || 0) - ((this.fired || {}).blank || 0)) },
         my_load: this.contrib[pid] || null, notes: (this.notes[pid] || []).slice(), events: this.events.slice(-12),
@@ -351,7 +367,7 @@
     }
   }
 
-  const api = { RouletteRoom, ITEMS, KEYS, HP_OPTIONS, TURN_TIMES, ITEM_OPTIONS, STAKES, MIN_PLAYERS, MAX_PLAYERS };
+  const api = { RouletteRoom, ITEMS, KEYS, HP_OPTIONS, TURN_TIMES, ITEM_OPTIONS, STAKES, STAKE_MAX, CHAR_N, MIN_PLAYERS, MAX_PLAYERS };
   root.Roulette = api;
   Engine.RouletteRoom = RouletteRoom;
   if (typeof module !== "undefined") module.exports = api;

@@ -272,3 +272,20 @@ body.pixel .toy-hold, body.pixel .toy-news .tn, body.pixel .toy-give-row { borde
 .gp-i { font-size: 26px; flex: none; }
 @keyframes gpRow { from { opacity: 0; transform: translateY(10px); } }
 body.pixel .gp-row { border-radius: 0; }
+
+/* лига недели */
+.league-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; margin-top: 10px; color: var(--text); background: linear-gradient(120deg, rgba(255, 210, 63, .14), var(--card)); }
+.league-card .lg-ico { font-size: 30px; }
+.lg-mine { display: flex; align-items: center; gap: 14px; background: linear-gradient(120deg, rgba(255, 210, 63, .18), var(--card)); }
+.lg-mine .lg-big { font-size: 38px; min-width: 44px; text-align: center; font-weight: 800; }
+.lg-prizes { display: flex; flex-direction: column; gap: 6px; }
+.lg-prize { display: flex; gap: 10px; align-items: center; font-size: 13px; }
+.lg-prize b { min-width: 52px; }
+.lg-table { display: flex; flex-direction: column; gap: 2px; padding: 6px; }
+.lg-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; }
+.lg-row:nth-child(-n+3) { background: rgba(255, 210, 63, .08); }
+.lg-row.me { box-shadow: inset 0 0 0 2px var(--accent); }
+.lg-rank { min-width: 26px; text-align: center; font-weight: 800; font-size: 15px; }
+.lg-pet { width: 36px; height: 36px; display: grid; place-items: center; }
+.lg-pts { font-size: 18px; color: #ffd23f; }
+body.pixel .lg-row, body.pixel .league-card { border-radius: 0; }

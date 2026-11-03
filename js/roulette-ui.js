@@ -47,52 +47,79 @@ const Sfx = (() => {
     load: () => { tone(300, .06, .2, "square"); setTimeout(() => tone(220, .08, .2, "square"), 90); },
     thud: () => tone(55, .4, .7, "sine", .6),
     saw: () => { for (let i = 0; i < 6; i++) setTimeout(() => noise(.12, 4000 - (i % 2) * 1500, .35, 1), i * 140); },
+    cock: () => { tone(900, .03, .3, "square"); setTimeout(() => tone(500, .04, .3, "square"), 60); },          // взвёл курок
+    revClick: () => { tone(2200, .025, .35, "square"); noise(.04, 4000, .3, 2); setTimeout(() => tone(700, .03, .15, "square"), 40); },
+    revBang: () => { noise(.7, 2600, 1.2, 3.4); tone(110, .35, .9, "sine", .35); },
+    cylSpin: () => { for (let i = 0; i < 14; i++) setTimeout(() => tone(1400 - i * 40, .015, .1, "square"), i * 45 + i * i * 2); },
+    dice: () => { for (let i = 0; i < 16; i++) setTimeout(() => tone(600 + Math.random() * 900, .02, .08, "square"), i * 100 + Math.random() * 40); },
     bottle: () => { setTimeout(() => { tone(180, .12, .5, "square", .5); noise(.35, 6000, .45, 2); for (let i = 0; i < 5; i++) setTimeout(() => tone(2400 + Math.random() * 2400, .08, .08, "sine"), 40 + i * 50); }, 650); },   // бац и звон стекла
   };
 })();
-document.addEventListener("pointerdown", () => { if (S.screen === "room" && S.room && S.room.game === "roulette") Sfx.unlock(); }, { passive: true });
+document.addEventListener("pointerdown", () => { if (S.screen === "room" && S.room && ["roulette", "revolver"].includes(S.room.game)) Sfx.unlock(); }, { passive: true });
 
 const RI = () => Roulette.ITEMS;
 const rouMe = () => (S.room ? S.room.players.find((p) => p.id === S.me) : null);
 const hearts = (n, max) => Array.from({ length: max }, (_, i) => `<i class="hrt ${i < n ? "on" : ""}"></i>`).join("");
 
-/* ---------------------------------------------------------------- меню */
+/* ---------------------------------------------------------------- меню подвала: выбор режима */
 function viewRouletteMenu() {
   const it = Object.values(RI());
   return `<div class="fade-in">
     <div class="pxscene big" style="background-image:url(${Pixel.scene("cellar")})"></div>
-    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Последний заряд</h1>
-      <div class="muted small">Подвал, стол, один дробовик · ${Roulette.MIN_PLAYERS}–${Roulette.MAX_PLAYERS} игрока</div></div></div>
-    <div class="card rou-rules">
+    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Подвал</h1>
+      <div class="muted small">Стол, лампа и оружие. Выбери, во что играть</div></div></div>
+    <div class="bm-modes">
+      <div class="card bm-mode shotgun">
+        <div class="bm-head"><div class="bm-ico">💥</div><div class="grow"><b>Последний заряд</b><div class="tiny muted">дробовик · ${Roulette.MIN_PLAYERS}–${Roulette.MAX_PLAYERS} игрока · предметы</div></div></div>
+        <p class="small">Каждый тайно кладёт в дробовик патрон — боевой или холостой. Стреляешь в себя или в соперника, пользуешься предметами. Последний за столом забирает всё.</p>
+        <button class="btn" data-a="rou-create" data-v="roulette">Сесть за стол</button>
+      </div>
+      <div class="card bm-mode revolver">
+        <div class="bm-head"><div class="bm-ico">🔫</div><div class="grow"><b>Русская рулетка</b><div class="tiny muted">револьвер · ${Revolver.MIN_PLAYERS}–${Revolver.MAX_PLAYERS} игроков · большой круглый стол</div></div></div>
+        <p class="small">В барабане на ${Revolver.CHAMBERS} гнёзд — один патрон. По кругу: выбираешь, в кого стрелять, и жмёшь на спуск. Выстрелило — барабан перезаряжается. Последний живой забирает банк.</p>
+        <button class="btn" data-a="rou-create" data-v="revolver">Сесть за стол</button>
+      </div>
+    </div>
+    <details class="card rou-rules mt"><summary><b>Правила «Последнего заряда»</b></summary>
       <p>Перед каждой зарядкой <b>каждый тайно заряжает в дробовик один патрон</b> — боевой или холостой. Подвал докладывает ещё несколько своих.</p>
       <p>Потом все видят, <b>сколько всего патронов и сколько из них боевых и холостых</b> — но не порядок и не то, кто что положил. Если все патроны вышли холостыми, подвал перезаряжает свои.</p>
       <p>В свой ход целишься <b>в себя или в соперника</b>. Холостой в себя — ходишь ещё раз. Боевой — минус сердце.</p>
-      <p>Последний, кто остался за столом, забирает всё.</p>
-    </div>
-    <div class="section-title">Предметы на столе</div>
-    <div class="rou-items">${it.map((x) => `<div class="ri">${emo(x.emoji, 24)}<div><b>${esc(x.name)}</b><div class="small muted">${esc(x.desc)}</div></div></div>`).join("")}</div>
-    <button class="btn mt2" data-a="rou-create">Спуститься в подвал</button>
+      <p>🪞 Зеркальце возвращает пулю в стрелка. Если зеркальце есть и у стрелка — пуля мечется по столу, а кубики 1–50 решают, кому она достанется.</p>
+      <div class="rou-items mt">${it.map((x) => `<div class="ri">${emo(x.emoji, 24)}<div><b>${esc(x.name)}</b><div class="small muted">${esc(x.desc)}</div></div></div>`).join("")}</div>
+    </details>
+    <details class="card rou-rules mt"><summary><b>Правила «Русской рулетки»</b></summary>
+      <p>Револьвер на ${Revolver.CHAMBERS} гнёзд, патрон один, где он — не знает никто. Ходят по кругу.</p>
+      <p>В свой ход выбираешь цель — <b>себя или любого за столом</b> — и жмёшь на спуск. Чем больше пустых щелчков подряд, тем ближе патрон: шанс виден на экране.</p>
+      <p>🎖 <b>Храбрец.</b> Выстрелил(а) в себя и выжил(а) — до твоего следующего хода в тебя целиться нельзя.</p>
+      <p>🔄 Раз за зарядку можно <b>крутануть барабан</b> — шансы снова 1 из ${Revolver.CHAMBERS}.</p>
+      <p>Выстрелило — минус сердце (обычно оно одно), барабан перезаряжается, игра идёт дальше. Последний живой забирает банк.</p>
+    </details>
     <div class="section-title">Или войди по коду</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
       <button class="btn" data-a="join">Войти</button></div>
   </div>`;
 }
 
-/* ---------------------------------------------------------------- комната */
+/* ---------------------------------------------------------------- комната (оба режима подвала) */
+const isRev = (r) => !!r && r.game === "revolver";
 function viewRouletteRoom() {
-  const r = S.room;
+  const r = S.room, rv = isRev(r);
   rouStake(r);
-  const panels = { lobby: rouLobby, load: rouLoad, play: () => rouInspect() + rouPlay(), shot: () => rouInspect() + rouPlay(), end: rouEnd };
-  const fade = S.rouFade !== r.code + r.phase; S.rouFade = r.code + r.phase;
+  const panels = rv ? { lobby: rouLobby, play: revPlay, shot: revPlay, reload: revPlay, end: rouEnd }
+    : { lobby: rouLobby, load: rouLoad, play: () => rouInspect() + rouPlay(), shot: () => rouInspect() + rouPlay(), end: rouEnd };
+  const fk = r.code + (r.phase === "lobby" ? ":l" : r.phase === "end" ? ":e" : ":g");   // плавно — только вход в игру и итог, не каждый выстрел
+  const fade = S.rouFade !== fk; S.rouFade = fk;
+  const hud = r.phase === "lobby" ? "ПОДВАЛ" : rv ? (r.phase === "reload" ? "ПЕРЕЗАРЯДКА…" : `<span class="d-live">🎯 1/${r.cyl.left}</span> <i class="d-of">щелчков: ${r.cyl.fired}</i>`)
+    : r.phase === "load" ? "ЗАРЯДКА…" : `<span class="d-live">🔴${r.drum.liveLeft}</span> <span class="d-blank">⚪${r.drum.blankLeft}</span> <i class="d-of">из ${r.drum.total}</i>`;
   return `${netBanner()}<div class="${fade ? "fade-in" : ""}">
-    <div class="stage" id="stage"><div class="stage-hud">
-      <div class="drum">${r.pot ? `<span class="pot">🪙${r.pot}</span> ` : ""}${r.phase === "lobby" ? "ПОДВАЛ" : r.phase === "load" ? "ЗАРЯДКА…" : `<span class="d-live">🔴${r.drum.liveLeft}</span> <span class="d-blank">⚪${r.drum.blankLeft}</span> <i class="d-of">из ${r.drum.total}</i>`}</div>
+    <div class="stage ${rv ? "rev" : ""}" id="stage"><div class="stage-hud">
+      <div class="drum">${r.pot ? `<span class="pot">🪙${r.pot}</span> ` : ""}${hud}</div>
       ${r.deadline && ["play", "load"].includes(r.phase) ? `<div class="stage-timer" id="timer" data-total="${r.total}"><span id="timer-num">${fmtTime(remaining())}</span></div>` : ""}
-      ${["play", "shot", "load"].includes(r.phase) ? `<button class="snd" data-a="rou-view">${S.rouView === "table" ? "↩" : "🔍"}</button>` : ""}
+      ${!rv && ["play", "shot", "load"].includes(r.phase) ? `<button class="snd" data-a="rou-view">${S.rouView === "table" ? "↩" : "🔍"}</button>` : ""}
       <button class="snd" data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button>
     </div><div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">загрузка подвала…</div>
     ${["play", "shot"].includes(r.phase) && S.rouView !== "table" ? `<div class="turn-tag ${r.turn === S.me ? "me" : ""}">${r.turn === S.me ? "ТВОЙ ХОД" : `ХОДИТ: ${esc((r.players.find((p) => p.id === r.turn) || {}).name || "")}`}</div>` : ""}</div>
-    ${r.phase !== "lobby" ? statusBar() : ""}
+    ${r.phase !== "lobby" ? (rv ? revStatusBar() : statusBar()) : ""}
     ${(panels[r.phase] || rouLobby)()}
     ${r.phase !== "lobby" ? `<div class="section-title">За столом</div>${rouSeats()}` : ""}
     ${r.phase !== "lobby" ? `<div class="section-title">Что происходит</div><div class="card rou-log">${(r.events || []).filter((e) => !rouSecret(e)).slice().reverse().slice(0, 7).map((e, i) =>
@@ -105,27 +132,28 @@ function rouSeats() {
   const r = S.room;
   return `<div class="seats">${r.seats.map((id) => { const p = r.players.find((x) => x.id === id); if (!p) return "";
     const st = p.status || {};
-    const canAim = r.phase === "play" && r.turn === S.me && p.alive;
+    const canAim = r.phase === "play" && r.turn === S.me && p.alive && !BQ.busy && !(isRev(r) && p.brave && id !== S.me);
     return `<div class="seat ${r.turn === id && ["play", "shot"].includes(r.phase) ? "turn" : ""} ${p.alive ? "" : "dead"} ${id === S.me ? "me" : ""} ${r.aim === id ? "aimed" : ""}" ${canAim ? `data-a="rou-aim" data-v="${id}"` : ""}>
-      ${av(p, "sm")}<div class="grow"><b>${id === S.me ? "Вы" : nm(p)}</b><div class="hearts">${hearts(p.hp, r.maxHp)}</div>
-      <div class="inv">${p.items.map((k) => `<span title="${esc(RI()[k].name)}">${RI()[k].emoji}</span>`).join("") || '<span class="muted">пусто</span>'}</div>
-      <div class="st">${st.vest ? "🦺" : ""}${st.mirror ? "🪞" : ""}${st.frozen ? "💫" : ""}${p.stakes ? `🪙×${p.stakes}` : ""}${r.phase === "load" && p.alive ? (p.loaded ? " ✓ зарядил(а)" : " …") : ""}</div></div></div>`; }).join("")}</div>`;
+      ${av(p, "sm")}<div class="grow"><b>${id === S.me ? "Вы" : nm(p)}</b><div class="hearts">${r.maxHp > 1 || !isRev(r) ? hearts(p.hp, r.maxHp) : ""}</div>
+      ${isRev(r) ? `<div class="st">${p.brave && p.alive ? "🎖 храбрец" : ""}${p.spun ? " 🔄" : ""}${!p.alive ? "выбыл(а)" : ""}</div>`
+        : `<div class="inv">${p.items.map((k) => `<span title="${esc(RI()[k].name)}">${RI()[k].emoji}</span>`).join("") || '<span class="muted">пусто</span>'}</div>
+      <div class="st">${st.vest ? "🦺" : ""}${st.mirror ? "🪞" : ""}${st.frozen ? "💫" : ""}${p.stakes ? `🪙×${p.stakes}` : ""}${r.phase === "load" && p.alive ? (p.loaded ? " ✓ зарядил(а)" : " …") : ""}</div>`}</div></div>`; }).join("")}</div>`;
 }
 
 function rouLobby() {
-  const r = S.room, s = r.settings;
-  const enough = r.players.filter((p) => p.online).length >= Roulette.MIN_PLAYERS;
-  return `<div class="top"><button class="avatar" data-a="leave">←</button><div class="grow"><h1>Подвал</h1>
-      <div class="muted small">${r.players.length} из ${Roulette.MAX_PLAYERS} мест за столом</div></div></div>
+  const r = S.room, s = r.settings, rv = isRev(r), M = rv ? Revolver : Roulette;
+  const enough = r.players.filter((p) => p.online).length >= M.MIN_PLAYERS;
+  return `<div class="top"><button class="avatar" data-a="leave">←</button><div class="grow"><h1>${rv ? "Русская рулетка" : "Последний заряд"}</h1>
+      <div class="muted small">Подвал · ${r.players.length} из ${M.MAX_PLAYERS} мест за столом</div></div></div>
     <div class="card code-card"><div class="muted small">КОД ДВЕРИ</div><div class="code">${r.code}</div>
       <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
-      <button class="btn small grow" data-a="share">📨 Позвать</button></div></div>
+      <button class="btn small grow" data-a="share">📨 Позвать</button></div>${groupBtn(r)}</div>
     <div class="section-title">За столом</div>${playerTiles(r.players, { kick: isHost(), peek: true })}
     <div class="section-title">Правила стола</div>
-    <div class="card"><div class="row"><div class="grow small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, выживший забирает банк ${s.stake * Math.min(r.players.length, Roulette.MAX_PLAYERS)}<br>` : "🎲 На интерес<br>"}❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🎒 Предметов за зарядку: <b>${s.items}</b></div>
+    <div class="card"><div class="row"><div class="grow small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, выживший забирает банк ${s.stake * Math.min(r.players.length, M.MAX_PLAYERS)}<br>` : "🎲 На интерес<br>"}❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b>${rv ? ` · 🔫 ${Revolver.CHAMBERS} гнёзд, 1 патрон` : ` · 🎒 Предметов за зарядку: <b>${s.items}</b>`}</div>
       ${isHost() ? `<button class="btn ghost small" data-a="rou-settings">⚙️</button>` : ""}</div></div>
     ${Bots.bar(S.room)}
-    ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Закрыть дверь и начать" : `Ждём игроков (минимум ${Roulette.MIN_PLAYERS})`}</button>`
+    ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Закрыть дверь и начать" : `Ждём игроков (минимум ${M.MIN_PLAYERS})`}</button>`
       : `<div class="card center mt2 muted">⏳ Ждём, когда хост закроет дверь…</div>`}`;
 }
 
@@ -211,14 +239,22 @@ function rouEnd() {
 }
 
 function rouSettingsSheet() {
-  const s = S.room.settings;
+  const s = S.room.settings, rv = isRev(S.room), M = rv ? Revolver : Roulette;
   const opt = (key, list, fmt) => `<div class="chips">${list.map((v) => `<button class="pill ${s[key] === v ? "on" : ""}" data-a="rou-set" data-v="${key}:${v}">${fmt(v)}</button>`).join("")}</div>`;
   return `<h2>⚙️ Правила стола</h2>
-    <div class="section-title">Сердец у каждого</div>${opt("hp", Roulette.HP_OPTIONS, (v) => "❤️".repeat(v))}
-    <div class="section-title">Время на ход</div>${opt("turnTime", Roulette.TURN_TIMES, (v) => `${v} с`)}
-    <div class="section-title">Предметов за каждую зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметов"))}
-    <div class="section-title">Ставка (монеты, которые ты нафармил)</div>${opt("stake", Roulette.STAKES, (v) => (v ? `🪙 ${v}` : "на интерес"))}
+    <div class="section-title">Сердец у каждого</div>${opt("hp", M.HP_OPTIONS, (v) => "❤️".repeat(v))}
+    <div class="section-title">Время на ход</div>${opt("turnTime", M.TURN_TIMES, (v) => `${v} с`)}
+    ${rv ? "" : `<div class="section-title">Предметов за каждую зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметов"))}`}
+    <div class="section-title">Ставка (монеты, которые ты нафармил)</div>${opt("stake", M.STAKES, (v) => (v ? `🪙 ${v}` : "на интерес"))}
+    ${stakeOwnRow(s.stake, M.STAKE_MAX, M.STAKES)}
     <div class="small muted mt">Каждый за столом ставит одинаково. Выживший забирает весь банк.</div>`;
+}
+
+// своя сумма ставки — больше, чем на кнопках (общая для подвала и блэкджека)
+function stakeOwnRow(cur, max, presets) {
+  return `<div class="stake-own mt"><input class="input" id="stake-own" type="number" inputmode="numeric" min="1" max="${max}" step="1" placeholder="Своя ставка: 1–${max}" value="${cur && !presets.includes(cur) ? cur : ""}">
+    <button class="btn small" data-a="stake-own" data-v="${max}">Поставить</button></div>
+    ${cur && !presets.includes(cur) ? `<div class="tiny muted mt">Сейчас своя ставка: 🪙 ${cur}</div>` : ""}`;
 }
 
 /* ---------------------------------------------------------------- строка состояния, как в старых шутерах */
@@ -233,6 +269,36 @@ function statusBar() {
     <div class="dcell"><b class="big">${seated ? me.items.length : "—"}</b><span>ПРЕДМЕТЫ</span></div>
     <div class="dcell"><b class="big">${r.seats.filter((id) => { const p = r.players.find((x) => x.id === id); return p && p.alive; }).length}</b><span>ИГРОКОВ</span></div>
   </div>`;
+}
+
+function revStatusBar() {
+  const r = S.room, me = rouMe(), seated = me && r.seats.includes(S.me);
+  const alive = r.seats.filter((id) => { const p = r.players.find((x) => x.id === id); return p && p.alive; }).length;
+  return `<div class="dbar">
+    <div class="dcell"><b class="big">${seated ? (me.alive ? (r.maxHp > 1 ? me.hp : "ЖИВ") : "✝") : "—"}</b><span>${r.maxHp > 1 ? "СЕРДЦА" : "ТЫ"}</span></div>
+    <div class="dcell dshells"><b class="big"><i class="c-live">1</i><i class="c-sep">/</i><i class="c-blank">${r.cyl.left}</i></b><span>ШАНС</span></div>
+    <div class="dface"><canvas id="dface" width="24" height="24"></canvas></div>
+    <div class="dcell"><b class="big">${seated ? (me.spun ? "✗" : "✓") : "—"}</b><span>КРУТКА</span></div>
+    <div class="dcell"><b class="big">${alive}</b><span>ИГРОКОВ</span></div>
+  </div>`;
+}
+
+function revPlay() {
+  const r = S.room, me = rouMe();
+  if (!me || me.seat < 0) return `<div class="card center turn-wait">👀 Ты смотришь эту партию. Следующую сыграешь за столом.</div>`;
+  if (r.phase === "reload") return `<div class="card center turn-wait">🔄 Барабан перезаряжают: снова один патрон из ${r.cyl.chambers}…</div>`;
+  const turnP = r.players.find((p) => p.id === r.turn) || {};
+  if (r.turn !== S.me || r.phase !== "play") return `<div class="card center turn-wait">${r.phase === "shot" ? "…" : `Ходит <b>${esc(turnP.name || "")}</b> · шанс выстрела 1 из ${r.cyl.left}`}${!me.alive ? `<div class="muted small mt">Ты выбыл(а). Смотри, чем кончится</div>` : me.brave ? `<div class="small mt">🎖 Ты храбрец: до твоего хода в тебя не целятся</div>` : ""}
+      <div class="tiny muted mt">👀 Проведи пальцем по сцене влево-вправо, чтобы оглядеться, или нажми на игрока — посмотришь на него</div></div>`;
+  const opps = r.seats.map((id) => r.players.find((p) => p.id === id)).filter((p) => p && p.id !== S.me && p.alive);
+  const aim = r.aim, aimP = r.players.find((p) => p.id === aim), odds = r.cyl.left, busy = BQ.busy;
+  return `<div class="your-turn">${aim ? (aim === S.me ? "СТВОЛ У ТВОЕГО ВИСКА" : `ЦЕЛЬ: ${esc(aimP.name).toUpperCase()}`) : "ТВОЙ ХОД — В КОГО СТРЕЛЯТЬ?"}</div>
+    <div class="odds center small">Шанс, что выстрелит сейчас: <b>1 из ${odds}</b> · ${Math.round(100 / odds)}%</div>
+    <div class="targets"><button class="btn small ${aim === S.me ? "on" : "ghost"}" data-a="rou-aim" data-v="${S.me}">🎯 Себя</button>
+      ${opps.map((p) => p.brave ? `<button class="btn small ghost" disabled title="Храбрец">🎖 ${esc(p.name)}</button>` : `<button class="btn small ${aim === p.id ? "on" : "ghost"}" data-a="rou-aim" data-v="${p.id}">🎯 ${esc(p.name)}</button>`).join("")}</div>
+    <button class="btn fire mt" data-a="rou-fire" ${aim && !busy ? "" : "disabled"}>💥 Нажать на спуск</button>
+    ${me.spun ? "" : `<button class="btn ghost mt" data-a="rev-spin" ${busy ? "disabled" : ""}>🔄 Крутануть барабан — шанс снова 1 из ${r.cyl.chambers}</button>`}
+    <div class="small muted center mt">Выстрелишь в себя и выживешь — станешь 🎖 храбрецом: до твоего следующего хода в тебя не целятся. Цель можно выбрать, нажав на игрока за столом.</div>`;
 }
 
 // лицо в строке состояния: чем меньше сердец, тем больше крови
@@ -270,7 +336,7 @@ function rouMount() {
   const el = document.getElementById("stage");
   if (!el) { if (typeof Cellar !== "undefined") Cellar.unmount(); return; }
   Cellar.mount(el, (err) => {
-    if (!S.room || S.room.game !== "roulette" || document.getElementById("stage") !== el) return;   // экран уже сменился
+    if (!S.room || !["roulette", "revolver"].includes(S.room.game) || document.getElementById("stage") !== el) return;   // экран уже сменился
     const ld = document.getElementById("stage-loading");
     if (err) { if (ld) ld.textContent = err.message; return; }
     if (ld) ld.remove();
@@ -280,33 +346,96 @@ function rouMount() {
   drawFace();
 }
 
+/* ---------------------------------------------------------------- очередь: стол меняется только когда доиграла анимация
+   Пришло новое состояние с выстрелом — сначала играем выстрел (на экране ещё старые сердца, патроны, звёздочки),
+   и только когда пуля долетела и кровь упала, показываем новое состояние. Следующие состояния ждут своей очереди. */
+const BQ = { q: [], busy: false, timer: 0 };
+const bqKey = (r) => r.code + ":" + (r.game_no || 0) + (r.phase === "lobby" ? ":lobby" : "");
+function bqHold(m) {                                                    // true — сообщение придержано
+  const r = m.room;
+  if (!r || !["roulette", "revolver"].includes(r.game)) return false;
+  const shown = S.room;
+  if (S.screen !== "room" || !shown || shown.code !== r.code || typeof Cellar === "undefined" || !Cellar.ready() || S.rouGame !== bqKey(r) || !document.getElementById("stage")) { bqFlush(); return false; }
+  const top = (x) => { const e = x.events || []; return e.length ? e[e.length - 1].n : 0; };
+  const last = BQ.q[BQ.q.length - 1], fresh = top(r) > (last ? top(last.room) : S.rouSeen || 0);
+  if (!fresh && last && !last._fresh) BQ.q[BQ.q.length - 1] = m;       // подряд состояния без событий (наводка, чат) — нужен только последний
+  else { m._fresh = fresh; BQ.q.push(m); }
+  if (!BQ.busy) bqNext();
+  return true;
+}
+function bqFlush() { clearTimeout(BQ.timer); const q = BQ.q; BQ.q = []; BQ.busy = false; return q; }
+function bqNext() {
+  const m = BQ.q.shift();
+  if (!m) { BQ.busy = false; return; }
+  const r = m.room, evs = (r.events || []).filter((e) => e.n > (S.rouSeen || 0));
+  if (evs.length) S.rouSeen = evs[evs.length - 1].n;
+  const fast = BQ.q.filter((x) => x._fresh).length >= 4;               // сильно отстали — догоняем без анимаций
+  let t = 0;
+  if (!fast) evs.forEach((e) => { const at = t; if (at <= 0) rouPlay1(e, r); else setTimeout(() => rouPlay1(e, r), at * 1000); t += Cellar.timing(e).hold; });
+  if (t <= 0) { BQ.busy = BQ.q.length > 0; onMessage(m, true); return bqNext(); }
+  const was = BQ.busy; BQ.busy = true;
+  if (!was) render();                                                    // кнопки «выстрел» и т. п. — неактивны, пока идёт анимация
+  BQ.timer = setTimeout(() => { BQ.busy = BQ.q.length > 0; onMessage(m, true); bqNext(); }, t * 1000);
+}
+
 function rouEvents() {
   const r = S.room;
   const evs = r.events || [];
   const top = evs.length ? evs[evs.length - 1].n : 0;
-  const gameKey = r.code + ":" + (r.game_no || 0) + (r.phase === "lobby" ? ":lobby" : "");
+  const gameKey = bqKey(r);
   if (S.rouGame !== gameKey) {                                          // новая партия — чистый стол, без старых анимаций
     S.rouGame = gameKey; S.rouSeen = top; S.rouItem = null; S.rouSteal = null; S.rouInspect = null; S.rouView = null;
     Cellar.reset(); Cellar.setView(null); Cellar.sync(r, S.me); return;
   }
-  evs.filter((e) => e.n > (S.rouSeen || 0)).forEach((e) => {
-    Cellar.event(e, r);
-    const msg = document.getElementById("stage-msg");
-    if (e.kind === "shot") {
-      setTimeout(() => {
-        const meHit = e.live && e.hit === S.me && !e.absorbed;
-        if (meHit) rouHurt(e);
-        else if (e.live) { Sfx.bang(); notify("warning"); try { tg && tg.HapticFeedback.impactOccurred("heavy"); } catch (x) { /* нет */ } }
-        else Sfx.click();
-        const m = document.getElementById("stage-msg");
-        if (m) { m.className = "stage-msg show " + (e.live ? "bang" : "blank") + (e.live && (e.absorbed || e.redirected) ? " long" : ""); m.textContent = e.live ? (e.absorbed ? "БАХ! ЖИЛЕТ" : e.redirected ? "ЗЕРКАЛО!" : e.dmg > 1 ? "БАХ! ×2" : "БАХ!") : "щёлк"; }
-        if (e.live && e.out) setTimeout(Sfx.thud, 600);
-      }, 700);
-    } else if (e.kind === "load") { Sfx.spin(); if (msg) { msg.className = "stage-msg show load"; msg.textContent = `${e.total} патронов`; } setTimeout(() => rouLoadReveal(e), 400); }
-    else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); if (e.item === "freeze") Sfx.bottle(); if (["flashlight", "box", "ear", "spin", "thief"].includes(e.item)) setTimeout(() => rouReveal(e), e.item === "spin" || e.item === "thief" ? 600 : 1600); }
-    else if (e.kind === "win") Sfx.thud();
-  });
-  S.rouSeen = top;
+  evs.filter((e) => e.n > (S.rouSeen || 0)).forEach((e) => rouPlay1(e, r));
+  S.rouSeen = Math.max(S.rouSeen || 0, top);
+}
+
+// одно событие: 3D-анимация, звук и надпись — звук выстрела ровно в момент удара
+function rouPlay1(e, r) {
+  Cellar.event(e, r);
+  const rv = isRev(r), tm = Cellar.timing(e);
+  const msg = (cls, text) => { const m = document.getElementById("stage-msg"); if (m) { m.className = "stage-msg show " + cls; m.textContent = text; } };
+  if (e.kind === "shot") {
+    if (e.dice) setTimeout(() => rouDice(e, r), 1050);
+    if (rv && e.self) setTimeout(() => Sfx.cock(), 250);
+    setTimeout(() => {
+      const meHit = e.live && e.hit === S.me && !e.absorbed;
+      if (meHit) rouHurt(e);
+      else if (e.live) { (rv ? Sfx.revBang : Sfx.bang)(); notify("warning"); try { tg && tg.HapticFeedback.impactOccurred("heavy"); } catch (x) { /* нет */ } }
+      else (rv ? Sfx.revClick : Sfx.click)();
+      msg((e.live ? "bang" : "blank") + (e.live && (e.absorbed || e.redirected) ? " long" : ""),
+        e.live ? (e.absorbed ? "БАХ! ЖИЛЕТ" : e.dice ? "РИКОШЕТ!" : e.redirected ? "ЗЕРКАЛО!" : e.dmg > 1 ? "БАХ! ×2" : "БАХ!") : "щёлк");
+      if (e.live && e.out) setTimeout(Sfx.thud, e.death === "head" ? 950 : 600);
+    }, tm.when * 1000);
+  } else if (e.kind === "load") {
+    Sfx.spin();
+    if (rv) msg("load", "1 патрон из " + (e.chambers || 6));
+    else { msg("load", `${e.total} патронов`); setTimeout(() => rouLoadReveal(e), 400); }
+  } else if (e.kind === "spin") { Sfx.cylSpin(); msg("load", "барабан раскручен"); }
+  else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); if (e.item === "freeze") Sfx.bottle(); if (["flashlight", "box", "ear", "spin", "thief"].includes(e.item)) setTimeout(() => rouReveal(e), e.item === "spin" || e.item === "thief" ? 600 : 1600); }
+  else if (e.kind === "win") Sfx.thud();
+}
+
+// два зеркала: пуля мечется по столу, а у каждого (кроме стрелка) катится кубик 1–50
+function rouDice(e, r) {
+  const ids = Object.keys(e.dice || {}); if (!ids.length) return;
+  const nm = (id) => (id === S.me ? "Ты" : ((r.players.find((p) => p.id === id) || {}).name || "?"));
+  const old = document.getElementById("rou-dice"); if (old) old.remove();
+  const d = document.createElement("div"); d.id = "rou-dice"; d.className = "rou-dice";
+  d.innerHTML = `<div class="rd-card"><div class="rd-t">🪞🪞 Двойной рикошет!</div><div class="rd-s">Пуля мечется между зеркалами. Кубики 1–50: у кого больше — в того и попадёт</div>
+    ${ids.map((id) => `<div class="rd-row" data-id="${esc(id)}"><span class="rd-n">${esc(nm(id))}</span><b class="rd-v">?</b></div>`).join("")}</div>`;
+  document.body.appendChild(d);
+  Sfx.dice();
+  const rows = [...d.querySelectorAll(".rd-row")];
+  const iv = setInterval(() => rows.forEach((row) => { row.querySelector(".rd-v").textContent = 1 + Math.floor(Math.random() * 50); }), 70);
+  setTimeout(() => {
+    clearInterval(iv);
+    rows.forEach((row) => { const id = row.dataset.id; row.querySelector(".rd-v").textContent = e.dice[id]; row.classList.add(id === e.hit ? "win" : "lose"); });
+    Sfx.blip();
+  }, 1800);
+  setTimeout(() => d.classList.add("fade"), 2900);
+  setTimeout(() => d.remove(), 3400);
 }
 
 // фонарик, шкатулка, подслушка — тайное дело: остальные видят только анимацию на столе, без надписей
@@ -415,7 +544,7 @@ function recordRoulette(room) {
   store.games = (store.games || 0) + 1;
   const won = room.winner === S.me;
   if (won) store.wins = (store.wins || 0) + 1;
-  let sum = Shop.reward(won, me.alive);
+  let sum = gameReward(room, won, me.alive);
   if (won && room.pot) { if (Api.table(room)) [4000, 9000].forEach((ms) => setTimeout(() => Api.coins().then(() => render()).catch(() => {}), ms)); else store.coins += room.pot; sum += room.pot; }   // банк выжившему (с сервера — переводом)
   if (won && me.stakes) { store.coins += me.stakes * 15; sum += me.stakes * 15; }
   store.lastGame = key; S.reward = { key, sum };
@@ -423,10 +552,18 @@ function recordRoulette(room) {
 }
 
 const ROU_ACTIONS = {
-  "rou-create": () => {
+  "rou-create": (v) => {
     haptic("medium"); Sfx.unlock();
     S.screen = "connecting"; S.joining = ""; render();
-    Net.host({ game: "roulette" }).catch((e) => { toast(e.message); S.screen = "roulette"; render(); });
+    Net.host({ game: v === "revolver" ? "revolver" : "roulette" }).catch((e) => { toast(e.message); S.screen = "roulette"; render(); });
+  },
+  "rev-spin": () => { if (!S.room || S.room.turn !== S.me || BQ.busy) return; send({ t: "act", slot: "spin" }); haptic("medium"); },
+  "stake-own": (v) => {                                                 // своя ставка: проверяем, хватает ли своих монет
+    const max = Number(v) || 10000, el = document.getElementById("stake-own"), n = Math.floor(Number(el && el.value));
+    if (!(n >= 1 && n <= max)) return toast(`Ставка — целое число от 1 до ${max}`);
+    const have = (Api.state && Api.state.coins != null) ? Api.state.coins : store.coins || 0;
+    if (n > have) return toast(`У тебя только ${have} монет`);
+    send({ t: "settings", settings: { stake: n } }); haptic("medium"); S.sheet = null; renderOverlay();
   },
   "rou-settings": () => { S.sheet = { type: "rou-settings" }; renderOverlay(); },
   "rou-set": (v) => { const [k, val] = v.split(":"); send({ t: "settings", settings: { [k]: Number(val) } }); },
@@ -436,8 +573,8 @@ const ROU_ACTIONS = {
   "rou-use": (v) => { const [i, target, pick] = v.split(":"); const me = rouMe(); S.rouItem = null; S.rouSteal = null; S.rouInspect = null;
     send({ t: "act", slot: "item", index: Number(i), key: me && me.items[Number(i)], target: target || null, pick: pick == null || pick === "" ? null : Number(pick) }); haptic("medium"); render(); },
   "rou-view": () => { S.rouView = S.rouView === "table" ? null : "table"; S.rouInspect = null; Cellar.setView(S.rouView); haptic(); render(); },
-  "rou-aim": (v) => { if (!S.room || S.room.turn !== S.me || S.room.phase !== "play") return; send({ t: "act", slot: "aim", target: v }); haptic(); },
-  "rou-fire": () => { if (S.room && S.room.aim) { S.rouItem = null; send({ t: "act", slot: "shoot", target: S.room.aim }); haptic("heavy"); } },
+  "rou-aim": (v) => { if (!S.room || S.room.turn !== S.me || S.room.phase !== "play" || BQ.busy) return; send({ t: "act", slot: "aim", target: v }); haptic(); },
+  "rou-fire": () => { if (S.room && S.room.aim && !BQ.busy) { S.rouItem = null; send({ t: "act", slot: "shoot", target: S.room.aim }); haptic("heavy"); } },
   "rou-shoot": (v) => { S.rouItem = null; send({ t: "act", slot: "shoot", target: v }); haptic("heavy"); },
   "rou-sound": () => { S.sound = S.sound === false; store.sound = S.sound; saveProfile(); Sfx.unlock(); render(); },
 };

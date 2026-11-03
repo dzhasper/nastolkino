@@ -273,3 +273,115 @@ input { font: inherit; color: inherit; }
   width: 52px; height: 52px; border-radius: 50%; background: rgba(20, 16, 24, .85); color: var(--text); font-size: 20px; line-height: 1; box-shadow: 0 0 0 1px var(--line), 0 10px 26px -8px #000; }
 .leave-fab span { font-size: 8.5px; margin-top: 2px; opacity: .8; }
 body.pixel .leave-fab { border-radius: 0; box-shadow: 0 0 0 3px #000, inset 0 0 0 2px var(--line); }
+.ref-card .ref-ico { font-size: 30px; margin-right: 10px; }
+
+/* сезонный пропуск */
+.pass-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; color: var(--text); background: linear-gradient(120deg, rgba(176, 92, 255, .22), var(--card)); }
+.pass-card .pc-ico { font-size: 30px; }
+.pc-ready { color: #ffd23f; }
+.pc-bar { height: 8px; border-radius: 6px; background: rgba(255, 255, 255, .1); overflow: hidden; margin-top: 6px; }
+.pc-bar.big { height: 12px; margin: 8px 0 6px; }
+.pc-bar i { display: block; height: 100%; background: linear-gradient(90deg, #b05cff, #ffd23f); border-radius: 6px; transition: width .6s; }
+.pass-head { display: flex; align-items: center; gap: 14px; }
+.ph-lv { display: flex; flex-direction: column; align-items: center; min-width: 64px; padding: 8px; border-radius: 14px; background: linear-gradient(160deg, #b05cff, #5a1aa8); }
+.ph-lv b { font-size: 30px; line-height: 1; } .ph-lv span { font-size: 10px; opacity: .85; }
+.pass-list { display: flex; flex-direction: column; gap: 5px; }
+.pass-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--card); }
+.pass-row .pr-lv { min-width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--card2); font-weight: 800; font-size: 13px; }
+.pass-row.open { box-shadow: inset 0 0 0 2px #ffd23f; } .pass-row.open .pr-lv { background: #ffd23f; color: #1a1200; }
+.pass-row.have { opacity: .6; } .pass-row.lock { opacity: .78; }
+.pass-row.big { background: linear-gradient(120deg, rgba(176, 92, 255, .25), var(--card)); }
+.pass-row .pr-st { font-size: 18px; min-width: 24px; text-align: center; }
+.pass-row .pr-prev { flex: none; } .pass-row .pr-prev .avatar { width: 46px; height: 46px; font-size: 24px; }
+.pass-row .pr-title { font-size: 11px; color: #ffd23f; max-width: 90px; }
+.pass-how div { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.pass-how b { color: #b05cff; }
+.pass-friend { font-size: 13px; }
+body.pixel .pass-row, body.pixel .pass-card, body.pixel .ph-lv, body.pixel .pc-bar, body.pixel .pc-bar i { border-radius: 0; }
+.pass-row .btn { flex: none; white-space: nowrap; }
+
+/* шпион */
+.spy-home { background: linear-gradient(150deg, #1b2a41, #2ec4b6 160%); }
+.spy-hero { height: 120px; display: grid; place-items: center; font-size: 80px; background: radial-gradient(circle at 50% 70%, #2ec4b655, transparent 70%); }
+.spy-flip { perspective: 1200px; height: 320px; max-width: 300px; margin: 12px auto; cursor: pointer; }
+.spy-flip .flip-in { position: relative; width: 100%; height: 100%; transition: transform .8s cubic-bezier(.2, .8, .2, 1); transform-style: preserve-3d; }
+.spy-flip.open .flip-in { transform: rotateY(180deg); }
+.spy-back { background: repeating-linear-gradient(45deg, #1b2a41, #1b2a41 12px, #22344f 12px 24px) !important; }
+.spy-back .sb-mark { font-size: 90px; }
+.spy-card { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 8px; padding: 12px; }
+.spy-card .sc-emo { font-size: 64px; } .spy-card.big .sc-emo { font-size: 90px; }
+.spy-card .sc-loc { font-family: var(--font-head); font-size: 22px; line-height: 1.2; }
+.spy-card .sc-role { font-size: 14px; opacity: .9; }
+.spy-card.spy .sc-loc { color: #ff4f6a; }
+.spy-mini { display: block; width: 100%; margin-top: 10px; padding: 12px; border-radius: 14px; background: var(--card2); color: var(--text); text-align: center; }
+.spy-mini .spy-card { height: auto; padding: 4px; } .spy-mini .sc-emo { font-size: 38px; } .spy-mini .sc-loc { font-size: 16px; }
+.spy-mini > span { display: block; }
+.spy-acc { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.spy-pl { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 12px; background: var(--card); color: var(--text); font-size: 12px; }
+.spy-pl.on { box-shadow: inset 0 0 0 2px var(--accent); } .spy-pl b { position: absolute; top: 4px; right: 8px; color: var(--accent); }
+.spy-pl[disabled] { opacity: .45; }
+.spy-locs { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 5px; }
+.spy-loc { display: flex; align-items: center; gap: 5px; padding: 7px 6px; border-radius: 10px; background: var(--card); color: var(--text); font-size: 11.5px; text-align: left; line-height: 1.2; }
+.spy-loc span { font-size: 16px; flex: none; }
+.spy-loc.x { opacity: .32; text-decoration: line-through; }
+.spy-vote h2 { margin-top: 8px; } .sv-who { display: flex; justify-content: center; }
+.sv-list { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.spy-res { text-align: center; } .spy-res .sr-big { font-family: var(--font-head); font-size: 20px; }
+.spy-res.spywin .sr-big { color: #ff4f6a; } .spy-res.townwin .sr-big { color: #4ade80; }
+.spy-res .sr-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; text-align: left; }
+.spy-res .sr-loc { font-size: 22px; margin-top: 10px; font-weight: 700; }
+body.pixel .spy-pl, body.pixel .spy-loc, body.pixel .spy-mini { border-radius: 0; }
+
+/* ---------- сезонный пропуск: дорожка уровней */
+.pass-hero { display: flex; align-items: center; gap: 14px; background: linear-gradient(120deg, rgba(176, 92, 255, .3), rgba(40, 20, 70, .6)); box-shadow: inset 0 0 0 2px rgba(176, 92, 255, .5); }
+.pass-hero .ph-lv { min-width: 64px; height: 64px; display: grid; place-items: center; align-content: center; border-radius: 16px; background: #1a0f2e; box-shadow: inset 0 0 0 2px #b05cff; }
+.pass-hero .ph-lv b { font-family: "NkDigitsHead", sans-serif; font-size: 26px; line-height: 1; color: #ffd23f; } .pass-hero .ph-lv span { font-size: 10px; color: var(--muted); }
+.pass-track { position: relative; overflow-x: auto; overflow-y: hidden; margin: 14px -16px 0; padding: 0 16px 20px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.pass-track::-webkit-scrollbar { display: none; }
+.pass-track .pt-line { position: absolute; left: 16px; height: 6px; top: 134px; width: 2824px; border-radius: 3px; background: rgba(255, 255, 255, .1); }
+.pass-track .pt-line i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #b05cff, #ffd23f); }
+.pt-row { display: flex; gap: 8px; align-items: flex-end; width: max-content; }
+.pass-tile { position: relative; width: 84px; height: 112px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 18px 4px 22px;
+  border: 0; border-radius: 14px; color: var(--text); background: var(--card); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .08); cursor: pointer; }
+.pass-tile.mile { width: 96px; height: 128px; background: linear-gradient(170deg, rgba(255, 210, 63, .22), var(--card)); box-shadow: inset 0 0 0 2px rgba(255, 210, 63, .55); }
+.pass-tile.open { box-shadow: inset 0 0 0 2px #ffd23f, 0 0 16px rgba(255, 210, 63, .35); animation: ptGlow 1.6s ease-in-out infinite; }
+.pass-tile.have { opacity: .55; } .pass-tile.lock .pt-ico, .pass-tile.lock .pt-num, .pass-tile.lock .pt-prev { filter: grayscale(.7) brightness(.75); }
+.pass-tile.sel { outline: 3px solid #b05cff; outline-offset: 2px; }
+.pass-tile .pt-lv { position: absolute; top: 5px; left: 0; right: 0; text-align: center; font-family: "NkDigitsHead", sans-serif; font-size: 11px; color: var(--muted); }
+.pass-tile.mile .pt-lv { color: #ffd23f; }
+.pass-tile .pt-ico { font-size: 30px; line-height: 1; } .pass-tile.mile .pt-ico { font-size: 38px; }
+.pass-tile .pt-ico canvas.pix { width: 30px !important; height: 30px !important; }
+.pass-tile .pt-num { font-family: "NkDigits", sans-serif; font-size: 14px; color: #ffd23f; } .pass-tile.k-shards .pt-num { color: #8ad8ff; }
+.pass-tile .pt-prev .avatar { width: 52px; height: 52px; font-size: 26px; }
+.pass-tile .pt-st { position: absolute; bottom: 5px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: 800; letter-spacing: .3px; color: var(--muted); }
+.pass-tile.open .pt-st { color: #ffd23f; } .pass-tile.have .pt-st { color: #7ad07a; font-size: 14px; }
+@keyframes ptGlow { 50% { box-shadow: inset 0 0 0 2px #ffd23f, 0 0 26px rgba(255, 210, 63, .6); } }
+.pass-detail { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.pass-detail .pd-lv { min-width: 48px; text-align: center; font-family: "NkDigitsHead", sans-serif; font-size: 22px; color: #b05cff; line-height: 1; } .pass-detail .pd-lv span { display: block; font-size: 9px; color: var(--muted); font-family: inherit; }
+.pass-detail.mile { box-shadow: inset 0 0 0 2px rgba(255, 210, 63, .5); } .pass-detail .btn { flex: none; white-space: nowrap; }
+details.pass-how summary { cursor: pointer; list-style: none; margin-bottom: 6px; } details.pass-how summary::-webkit-details-marker { display: none; } details.pass-how summary::after { content: " ▾"; color: var(--muted); }
+body.pixel .pass-tile, body.pixel .pass-hero .ph-lv, body.pixel .pass-track .pt-line, body.pixel .pass-track .pt-line i { border-radius: 0; }
+.btn.wide { width: 100%; display: block; }
+
+/* ---------- турниры по играм */
+.cup-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; color: var(--text); margin-bottom: 10px; background: linear-gradient(120deg, rgba(255, 190, 40, .22), var(--card)); box-shadow: inset 0 0 0 2px rgba(255, 190, 40, .45); }
+.cup-card.big { background: linear-gradient(120deg, rgba(255, 120, 40, .3), rgba(120, 40, 160, .3)); box-shadow: inset 0 0 0 2px #ffb020, 0 0 18px rgba(255, 176, 32, .35); }
+.cup-card.play { animation: ptGlow 1.8s ease-in-out infinite; }
+.cup-card .cc-ico { font-size: 30px; }
+.cup-hero { background: linear-gradient(150deg, rgba(255, 190, 40, .18), var(--card)); } .cup-hero.big { box-shadow: inset 0 0 0 2px #ffb020; }
+.cup-hero > b { font-size: 16px; display: block; margin-bottom: 6px; }
+.cup-prizes div { font-size: 13px; padding: 3px 0; border-bottom: 1px dashed var(--line); } .cup-prizes div:last-child { border: 0; }
+.cup-reg { display: flex; align-items: center; gap: 14px; }
+.cup-reg .cr-time { min-width: 82px; text-align: center; } .cup-reg .cr-time b { display: block; font-family: "NkDigitsHead", sans-serif; font-size: 18px; color: #ffd23f; } .cup-reg .cr-time span { font-size: 10px; color: var(--muted); }
+.cup-mine { box-shadow: inset 0 0 0 2px #ffd23f; }
+.cup-seats { display: flex; flex-wrap: wrap; gap: 6px; } .cup-seats span { padding: 4px 9px; border-radius: 10px; background: var(--card2); font-size: 13px; } .cup-seats span.me { box-shadow: inset 0 0 0 2px #b05cff; } .cup-seats span.host { color: #ffd23f; }
+.cup-bracket { display: flex; gap: 10px; overflow-x: auto; margin: 0 -16px; padding: 0 16px 8px; scrollbar-width: none; } .cup-bracket::-webkit-scrollbar { display: none; }
+.cb-col { flex: none; width: 150px; display: flex; flex-direction: column; gap: 8px; justify-content: space-around; }
+.cb-h { text-align: center; font-weight: 800; font-size: 12px; color: #ffd23f; letter-spacing: .5px; text-transform: uppercase; }
+.cb-t { background: var(--card); border-radius: 12px; padding: 7px 8px; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .07); }
+.cb-t.mine { box-shadow: inset 0 0 0 2px #b05cff; } .cb-t.play { box-shadow: inset 0 0 0 2px rgba(255, 210, 63, .6); }
+.cb-n { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+.cb-p { font-size: 13px; padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cb-p.win { color: #ffd23f; font-weight: 800; } .cb-p.lose { opacity: .45; text-decoration: line-through; } .cb-p.me { color: #c8a0ff; }
+.cup-stand div { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--line); font-size: 14px; } .cup-stand div.me { color: #c8a0ff; } .cup-stand div span:last-child { font-family: "NkDigits", sans-serif; color: #ffd23f; }
+.cup-prize { box-shadow: inset 0 0 0 2px #ffd23f; }
+body.pixel .cup-card, body.pixel .cb-t, body.pixel .cup-seats span { border-radius: 0; }

@@ -69,7 +69,7 @@
     return { ok: true };
   }
 
-  const MIN_PLAYERS = 2, MAX_PLAYERS = 6, STAKES = [0, 10, 25, 50, 100, 250], CHAT_LIMIT = 80;
+  const MIN_PLAYERS = 2, MAX_PLAYERS = 6, STAKES = [0, 10, 25, 50, 100, 250, 500, 1000], STAKE_MAX = 10000, CHAT_LIMIT = 80;
   const BET_SECONDS = 20, TURN_SECONDS = 25, SHOW_SECONDS = 12;
   const coinsOf = (m) => Number((m.look || {}).c || 0);
 
@@ -102,7 +102,7 @@
     online() { return this.order.filter((p) => this.members[p].online); }
     stakeOf(pid) { return this.settings.stake * (this.hands[pid] && this.hands[pid].doubled ? 2 : 1); }
 
-    updateSettings(s) { if (STAKES.includes(Number(s.stake)) && !(Number(s.stake) && this.order.some((p) => /^bot_/.test(p)))) this.settings.stake = Number(s.stake); this.touch(); }   // с ботами — без ставок
+    updateSettings(s) { const v = Number(s.stake); if (s.stake != null && Number.isInteger(v) && v >= 0 && v <= STAKE_MAX && !(v && this.order.some((p) => /^bot_/.test(p)))) this.settings.stake = v; this.touch(); }   // своя ставка до STAKE_MAX; с ботами — без ставок
 
     join(m) {
       if (this.members[m.id]) { Object.assign(this.members[m.id], { online: true, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); this.touch(); return; }
@@ -281,7 +281,7 @@
     }
   }
 
-  const api = { BlackjackRoom, sha256, randomHex, shuffleDeck, freshDeck, total, isBlackjack, verify, STAKES, MIN_PLAYERS, MAX_PLAYERS };
+  const api = { BlackjackRoom, sha256, randomHex, shuffleDeck, freshDeck, total, isBlackjack, verify, STAKES, STAKE_MAX, MIN_PLAYERS, MAX_PLAYERS };
   root.Blackjack = api;
   Engine.BlackjackRoom = BlackjackRoom;
   if (typeof module !== "undefined") module.exports = api;

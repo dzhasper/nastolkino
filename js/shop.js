@@ -107,6 +107,25 @@ const Shop = (() => {
     I("ava", "scorpion", "Скорпион", 60, { emoji: "🦂", fresh: 1 }), I("ava", "snake", "Змей", 90, { emoji: "🐍", fresh: 1 }), I("ava", "eagle", "Орёл", 120, { emoji: "🦅", fresh: 1 }),
     I("ava", "orb", "Шар судьбы", 200, { emoji: "🔮", fresh: 1 }), I("ava", "joker", "Джокер", 300, { emoji: "🃏", fresh: 1 }), I("ava", "jolly", "Весёлый Роджер", 500, { emoji: "☠️", fresh: 1 }),
   ];
+  // сезонный пропуск: на каждый месяц — своя рамка и два титула (выдаёт сервер на 15-м и 30-м уровне). Названия — как в server/worker.js (PASS_THEMES)
+  const PASS_THEMES = [["Ледяной венец", "#e8f8ff", "#8ad8ff", "#2a5a9a", "#ffffff"], ["Вьюга", "#f0f4ff", "#a8b8e8", "#3a4a8a", "#c8e8ff"], ["Первоцвет", "#f4ffe0", "#9ae07a", "#2a6a2a", "#ffe066"],
+    ["Капель", "#e0f4ff", "#6ac8f0", "#1a5a8a", "#ffffff"], ["Цветущий сад", "#fff0f8", "#ff9ad0", "#8a2a6a", "#fff4a0"], ["Солнцестояние", "#fffbe0", "#ffd23f", "#b86a10", "#ff5a2a"],
+    ["Зной", "#fff0d0", "#ff9a3a", "#8a2a0a", "#ffe066"], ["Звездопад", "#e8e0ff", "#8a7aff", "#1a1050", "#ffe066"], ["Листопад", "#fff0d8", "#e08a3a", "#6a2a0a", "#c8301a"],
+    ["Тыквенная ночь", "#ffd8a0", "#ff7a18", "#2a1006", "#7aff6a"], ["Туманный", "#eef0f4", "#a8b0c0", "#3a4050", "#d8e8ff"], ["Снегопад", "#ffffff", "#c8e0ff", "#4a6a9a", "#ff3355"]];
+  const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
+  const passFrame = ([, light, mid, dark, acc]) => (t, R, f, n) => {
+    t.bevel(light, mid, dark);
+    const shine = f / n;                                               // блик бежит по кругу
+    t.ring(1, (x, y, d, u) => (Math.abs(((u - shine + 1) % 1)) < .08 ? "#ffffff" : null), 1);
+    t.corners((x, y, i) => t.star(x, y, i % 2 ? acc : light, dark));
+    t.Rr(19, 0, 10, 5, dark); t.Rr(20, 1, 8, 3, mid); t.star(24, 2, acc, dark);
+  };
+  for (let y = 26; y <= 30; y++) for (let m = 1; m <= 12; m++) {
+    const tag = String(y) + String(m).padStart(2, "0"), th = PASS_THEMES[m - 1], when = `сезонный пропуск · ${MONTHS[m - 1]} 20${y}`;
+    ITEMS.push(I("frame", "ps" + tag, th[0], 0, { excl: 1, strip: 4, speed: 1.6, pass: tag, desc: when }),
+      I("title", "pt" + tag + "a", `Сезон «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Сезон «${th[0]}»`, desc: when + " · 15-й уровень" }),
+      I("title", "pt" + tag + "b", `Покоритель сезона «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Покоритель «${th[0]}»`, desc: when + " · 30-й уровень" }));
+  }
   const byId = (cat, id) => ITEMS.find((x) => x.cat === cat && x.id === id);
   const byKey = (k) => { const [c, i] = String(k).split(":"); return byId(c, i); };
 
@@ -346,6 +365,7 @@ const Shop = (() => {
       const sx = 15 + f * 3; t.P(sx, 2, "#ffffff"); t.P(sx - 1, 2, "#ffffffaa"); t.P(sx + 1, 2, "#ffffffaa"); t.P(sx, 1, "#ffffffaa"); t.P(sx, 3, "#ffffffaa");
     },
   });
+  ITEMS.filter((x) => x.cat === "frame" && x.pass).forEach((x) => { FRAMES[x.id] = passFrame(PASS_THEMES[Number(x.pass.slice(2)) - 1]); });   // рамки пропуска
   const frameCache = {};
   function frameUrl(key) {
     if (!FRAMES[key]) return "";

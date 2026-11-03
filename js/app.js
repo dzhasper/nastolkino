@@ -47,7 +47,7 @@ const SKINS = {
     team: { mafia: "Конкуренты", town: "Команда", solo: "Фрилансер", bounty: "Фрилансер" } },
 };
 const SOLO_SKINS = ["draw", "roulette", "blackjack"];
-const skinKey = () => (S.screen === "room" && S.room ? (SOLO_SKINS.includes(S.room.game) ? S.room.game : S.room.settings.theme)
+const skinKey = () => (S.screen === "room" && S.room ? (S.room.game === "revolver" ? "roulette" : SOLO_SKINS.includes(S.room.game) ? S.room.game : S.room.settings.theme)
   : S.screen === "mafia" ? S.setup.theme : SOLO_SKINS.includes(S.screen) ? S.screen : "app");
 const SK = () => SKINS[skinKey()] || SKINS.classic;
 
@@ -166,10 +166,21 @@ function recordGame(room) {
   if ((room.winners || []).includes(S.me)) store.wins = (store.wins || 0) + 1;
   store.roles = store.roles || {};
   store.roles[room.my.role.name] = (store.roles[room.my.role.name] || 0) + 1;
-  S.reward = { key: store.lastGame, sum: Shop.reward((room.winners || []).includes(S.me), !!room.my.alive) };
+  S.reward = { key: store.lastGame, sum: gameReward(room, (room.winners || []).includes(S.me), !!room.my.alive) };
   saveProfile();
   syncProfile();
   return key;
+}
+
+// игра с ботами: ставок нет. Только ты и боты — обычной награды нет, зато за победу 5 монет за каждого бота (дневной лимит на сервере).
+// Если за столом есть и живые люди — обычная награда плюс бонус за ботов при победе
+const BOT_COIN = 5;
+const botCount = (room) => ((room && room.players) || []).filter((p) => /^bot_/.test(p.id)).length;
+function gameReward(room, won, alive) {
+  const n = botCount(room), people = ((room && room.players) || []).filter((p) => !/^bot_/.test(p.id) && p.id !== S.me).length;
+  let sum = !n || people ? Shop.reward(won, alive) : 0;
+  if (n && won) { const add = BOT_COIN * n; if (Api.on && Api.ready) Api.solo(add, "bots"); else store.coins += add; sum += add; }
+  return sum;
 }
 
 /* ---------------------------------------------------------------- связь (js/net.js) */
@@ -194,6 +205,10 @@ function boot() {
     const qs = new URLSearchParams(location.search);
     if (S.registered && (qs.get("tab") === "pets" || startParam === "pets")) { S.screen = "pets"; S.petSel = Number(qs.get("pet")) || null; }
     if (S.registered && (qs.get("tab") === "shop" || startParam === "cases")) S.screen = "shop";
+    if (S.registered && qs.get("tab") === "league") S.screen = "league";
+    if (S.registered && qs.get("tab") === "pass") S.screen = "pass";
+    const cupQ = qs.get("cup") || (startParam && /^cup_\d+$/.test(startParam) ? startParam.slice(4) : null);
+    if (S.registered && cupQ) { S.screen = "cup"; S.cupWant = Number(cupQ) || null; }
     Api.onState = petOnState;
     Api.start();
     let lastRefresh = Date.now();
@@ -230,13 +245,16 @@ function netBanner() {
   return `<div id="net-banner" class="net-banner">${S.net === "lost" ? "📡 Связь с хостом потеряна — ждём его и переподключаемся…" : "🔌 Подключаемся…"}</div>`;
 }
 
-function onMessage(m) {
+function onMessage(m, queued) {
+  if (m.t === "state" && !queued && typeof bqHold === "function" && bqHold(m)) return;   // подвал: новое состояние ждёт, пока доиграет анимация
+  if (m.t !== "state" && typeof bqFlush === "function") bqFlush();
   if (m.t === "state") {
     const prev = S.room;
     if (m.room.game === "draw") drawOnState(m.room);
-    if (m.room.game === "roulette") { S.room = m.room; rouTurnReset(); }
+    if (m.room.game === "roulette" || m.room.game === "revolver") { S.room = m.room; rouTurnReset(); }
     const keep = m.room.game === "draw" && S.screen === "room" && (drawKeepScreen(m.room, prev)
       || (m.room.phase === "guess" && prev && prev.phase === "guess" && document.activeElement && document.activeElement.id === "guess-input"));
+    if (prev && prev.code === m.room.code && prev.phase === "lobby" && m.room.phase !== "lobby" && (S.groupPosted || {})[m.room.code] != null) groupDone(m.room.code, "start");   // в группе — «закрыто»
     S.room = m.room;
     S.offset = m.room.now - Date.now();
     S.screen = "room";
@@ -245,13 +263,14 @@ function onMessage(m) {
     if (key !== S.lastPhaseKey) {
       S.lastPhaseKey = key;
       S.sel = { ability: 0, target: null, duel: false };
-      if (m.room.phase === "reveal") S.flipOpen = false;
+      if (m.room.phase === "reveal") { S.flipOpen = false; S.spyOpen = false; S.spyPeek = false; S.spyCross = {}; }
       if (prev && prev.phase !== m.room.phase) notify(m.room.phase === "end" ? "success" : "warning");
-      if (m.room.game !== "roulette") window.scrollTo({ top: 0, behavior: "smooth" });
+      if (m.room.game !== "roulette" && m.room.game !== "revolver") window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    if (m.room.phase === "end" && m.room.game !== "blackjack") (m.room.game === "draw" ? recordDraw : m.room.game === "roulette" ? recordRoulette : recordGame)(m.room);
+    if (m.room.phase === "end" && m.room.game !== "blackjack") (m.room.game === "draw" ? recordDraw : m.room.game === "spy" ? recordSpy : m.room.game === "roulette" || m.room.game === "revolver" ? recordRoulette : recordGame)(m.room);
     render();
     renderChat();
+    if (typeof cupRoom === "function") cupRoom(m.room);                 // турнирный стол: автостарт, итог партии
   } else if (m.t === "ink") {
     drawOnInk(m);
   } else if (m.t === "closed" || m.t === "left" || m.t === "kicked") S.sheet = null;
@@ -277,7 +296,7 @@ function render() {
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
-  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, mafia: viewMafia, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
+  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, league: viewLeague, pass: viewPass, cup: viewCup, mafia: viewMafia, spy: viewSpyMenu, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
   $app.innerHTML = (screens[S.screen] || viewLoading)();
   renderOverlay();
   MChat.sync();                                                   // мафия в виде чата живёт поверх экрана
@@ -285,6 +304,7 @@ function render() {
   drawMount();
   rouMount();
   if (S.screen === "solo-snake") snakeDraw();
+  if (S.screen === "pass") passMount();
   if (S.screen === "petfun" && S.fun && S.fun.game === "fetch" && S.fun.phase === "play") { const m = document.getElementById("fetch-mark"); if (m) m.style.left = fetchPos() + "%"; }
   updateBack();
   if (tg) {
@@ -295,7 +315,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || (S.screen === "room" && !!S.room);   // во время партии «Назад» = выйти из игры (с подтверждением)
+  const back = S.screen === "mafia" || S.screen === "spy" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || S.screen === "league" || S.screen === "pass" || S.screen === "cup" || (S.screen === "room" && !!S.room);   // во время партии «Назад» = выйти из игры (с подтверждением)
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -338,16 +358,13 @@ function tabs() {
 }
 const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 
-const SOON = [["🐊", "Крокодил", "Покажи слово без слов"], ["🎩", "Шляпа", "Объясни как можно больше слов"],
-  ["🤔", "Кто я?", "Угадай, кто написан у тебя на лбу"], ["🔥", "Правда или действие", "Классика вечеринок"],
-  ["💡", "Ассоциации", "Найди общее у разных слов"]];
-
 function viewHome() {
   const p = S.profile;
   return `<div class="fade-in">
     <div class="top"><div class="logo">${PX() ? Pixel.sprite("dice", 3) : "🎲"}</div><div class="grow"><h1>${esc(S.catalog.app)}</h1>
       <div class="muted small">Привет, ${esc(p.name)}!</div></div>${coinPill()}</div>
     ${dailyCard("mb")}
+    ${cupCard()}${passCard("mb")}
     <div class="game-hero" data-a="go" data-v="mafia" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
       ${PX() ? `<div class="big-emoji">${Pixel.emoji("🕴️", 40)}</div>` : '<div class="big-emoji">🕴️</div>'}
       <div class="pill" style="background:rgba(255,255,255,.15)">🔥 ${S.catalog.min}–${S.catalog.max} игроков</div>
@@ -362,9 +379,9 @@ function viewHome() {
       <button class="btn">Рисовать ▶</button>
     </div>
     <div class="game-hero rou-hero mt2" data-a="go" data-v="roulette" ${PX() ? `style="background-image:url(${Pixel.scene("cellar")})"` : ""}>
-      <div class="pill" style="background:rgba(120,0,10,.55)">🩸 3D · ${Roulette.MIN_PLAYERS}–${Roulette.MAX_PLAYERS} игрока</div>
-      <h2 class="mt">Последний заряд</h2>
-      <p>Подвал, стол и один дробовик. Каждый тайно заряжает свой патрон</p>
+      <div class="pill" style="background:rgba(120,0,10,.55)">🩸 3D · 2 режима · до ${Revolver.MAX_PLAYERS} игроков</div>
+      <h2 class="mt">Подвал</h2>
+      <p>«Последний заряд» — дробовик и тайные патроны. «Русская рулетка» — револьвер, один патрон, большой стол</p>
       <button class="btn">Спуститься ▶</button>
     </div>
     <div class="game-hero bj-hero mt2" data-a="go" data-v="blackjack" ${PX() ? `style="background-image:url(${Pixel.scene("casino")})"` : ""}>
@@ -372,6 +389,12 @@ function viewHome() {
       <h2 class="mt">Блэкджек</h2>
       <p>Игроки против игроков. Честная раздача: колода проверяется на твоём телефоне</p>
       <button class="btn">За стол ▶</button>
+    </div>
+    <div class="game-hero spy-home mt2" data-a="go" data-v="spy">
+      <div class="pill" style="background:rgba(20,60,70,.7)">🕵️ Новинка · ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS} игроков</div>
+      <h2 class="mt">Шпион</h2>
+      <p>Все знают, где вы находитесь. Кроме одного. Вычислите шпиона по ответам</p>
+      <button class="btn">Играть ▶</button>
     </div>
     <button class="game-hero solo-hero mt2" data-a="go" data-v="solo" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
       <div class="pill" style="background:rgba(60,20,80,.7)">👤 один · против бота</div>
@@ -388,9 +411,6 @@ function viewHome() {
     <div class="section-title">Есть код комнаты?</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
       <button class="btn" data-a="join">Войти</button></div>
-    <div class="section-title">Скоро</div>
-    <div class="games">${SOON.map(([e, n, d]) => `<div class="game-tile"><span class="soon">СКОРО</span><div class="e">${emo(e)}</div>
-      <b>${n}</b><span class="muted small">${d}</span></div>`).join("")}</div>
   </div>${tabs()}`;
 }
 
@@ -408,6 +428,16 @@ function dailyCard(cls = "") {
   return Shop.chestReady() ? `<button class="card chest ${cls}" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Открой и забери монеты</div></div><span class="pill on">Открыть</span></button>` : "";
 }
 
+// пригласить друга: +500 за каждого, кто пришёл по ссылке и зашёл в игру
+const refUrl = () => (S.bot && /^tg\d+$/.test(S.me) ? `https://t.me/${S.bot}?start=ref_${S.me.slice(2)}` : "");
+function refCard() {
+  const link = refUrl(); if (!Api.on || !link) return "";
+  const r = (Api.state && Api.state.ref) || { count: 0, waiting: 0, coins: 500 };
+  return `<div class="card ref-card mt"><div class="row"><span class="ref-ico">👥</span><div class="grow"><b>Пригласи друга — +${r.coins} 🪙</b>
+    <div class="small muted">Друг нажмёт «Старт» по твоей ссылке и один раз зайдёт в игру — монеты придут тебе. Пришло друзей: <b>${r.count}</b>${r.waiting ? ` · ждём ещё ${r.waiting}` : ""}</div></div></div>
+    <div class="row mt"><button class="btn small grow" data-a="ref-share">📨 Отправить другу</button><button class="btn ghost small" data-a="ref-copy">📋</button></div></div>`;
+}
+
 function viewProfile() {
   const p = S.profile;
   return `<div class="fade-in">
@@ -416,6 +446,7 @@ function viewProfile() {
     ${petBadge(store.pet, true)}
     <div class="row mt2"><button class="btn grow" data-a="tab" data-v="shop">🎁 Кейсы и инвентарь</button></div>
     ${dailyCard("mt")}
+    ${refCard()}
     ${p.favorite_role ? `<div class="card mt"><span class="muted small">Чаще всего играешь</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
     <div class="section-title">Изменить профиль</div>
     <input class="input" id="reg-name" maxlength="20" value="${esc(S.regName || p.name)}">
@@ -454,6 +485,7 @@ function playerSheet(d) {
   return `<div class="center small muted">👀 Профиль игрока — только посмотреть</div>
     ${Shop.card({ name: d.name, games: pr.games || 0, wins: pr.wins || 0, avatarHtml: av(pl, "huge") }, Object.assign({}, Shop.DEFAULT, pr.look || {}))}
     ${d.username ? `<div class="center small muted">@${esc(d.username)}</div>` : ""}
+    ${d.pass ? `<div class="card pass-friend mt">🎫 Сезонный пропуск «${esc(d.pass.name)}»: <b>уровень ${d.pass.level} из 30</b><div class="pc-bar"><i style="width:${Math.round(d.pass.level / 30 * 100)}%"></i></div></div>` : ""}
     <div class="section-title">Питомцы · ${d.pets.length}</div>
     ${d.pets.length ? `<div class="pet-grid">${d.pets.map((p) => { const t = Pets.traits(p.dna);
       return `<div class="pet-card ${main && p.id === main.id ? "main" : ""}">${main && p.id === main.id ? '<span class="pet-star">★</span>' : ""}${t.collect ? '<span class="pet-cl">✦</span>' : ""}${Pets.sprite(code(p), 72)}
@@ -545,10 +577,22 @@ function viewRoom() {
   const r = S.room;
   return viewRoomInner() + (MChat.active() ? "" : leaveFab());
 }
+function groupDone(code, why) {
+  if (!S.groupPosted || S.groupPosted[code] == null) return;
+  delete S.groupPosted[code];
+  Api.call("/api/group/close", { code, why: why === "gone" ? "gone" : "start" }).catch(() => {});
+}
+// «Закинуть в группу»: хост выкладывает приглашение в общую группу бота (кнопка есть, только если группа подключена на сервере)
+function groupBtn(r) {
+  if (!r || !isHost() || r.phase !== "lobby" || !Api.state || !Api.state.group) return "";
+  const posted = (S.groupPosted || {})[r.code];
+  return `<button class="btn ghost small mt wide" data-a="group-post" ${posted ? "disabled" : ""}>${posted ? "📢 Приглашение уже в группе" : `📢 Закинуть в группу ${esc(Api.state.group.title || "")}`}</button>`;
+}
 function viewRoomInner() {
   const r = S.room;
   if (r.game === "draw") return viewDrawRoom();
-  if (r.game === "roulette") return viewRouletteRoom();
+  if (r.game === "spy") return viewSpyRoom();
+  if (r.game === "roulette" || r.game === "revolver") return viewRouletteRoom();
   if (r.game === "blackjack") return viewBlackjackRoom();
   if (MChat.active()) return `<div class="mc-spacer"></div>`;
   const views = { lobby: viewLobby, reveal: viewReveal, night: viewNight, day: viewDay, vote: viewVote, verdict: viewVerdict, end: viewEnd };
@@ -566,7 +610,7 @@ function viewLobby() {
       <div class="muted small">${r.players.length} из ${S.catalog.max} игроков</div></div></div>
     <div class="card code-card"><div class="muted small">КОД КОМНАТЫ</div><div class="code">${r.code}</div>
       <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
-      <button class="btn small grow" data-a="share">📨 Позвать друзей</button></div></div>
+      <button class="btn small grow" data-a="share">📨 Позвать друзей</button></div>${groupBtn(S.room)}</div>
     <div class="section-title">Игроки</div>
     ${playerTiles(r.players, { kick: isHost(), peek: true })}
     <div class="section-title">Сценарий</div>
@@ -830,6 +874,10 @@ function renderOverlay() {
     body = S.room ? bjSettingsSheet() : "";
   } else if (S.sheet.type === "rou-settings") {
     body = rouSettingsSheet();
+  } else if (S.sheet.type === "spy-settings") {
+    body = spySettingsSheet();
+  } else if (S.sheet.type === "spy-guess") {
+    body = spyGuessSheet();
   } else if (S.sheet.type === "draw-settings") {
     body = drawSettingsSheet();
   } else if (S.sheet.type === "battle-setup") {
@@ -846,6 +894,8 @@ function renderOverlay() {
     body = playerSheet(S.sheet.data);
   } else if (S.sheet.type === "pet-hat") {
     body = petHatSheet();
+  } else if (S.sheet.type === "pass-got") {
+    body = passGotSheet();
   } else if (S.sheet.type === "gifts") {
     body = giftsSheet();
   } else if (S.sheet.type === "toy-give") {
@@ -971,7 +1021,7 @@ const actions = {
   peek: (v) => { S.sheet = { type: "peek", id: v }; haptic(); renderOverlay(); },
   "cancel-join": () => { Net.stop(); S.screen = "home"; render(); },
   tab: (v) => { S.screen = v; S.regName = ""; S.regAvatar = null; if (v === "shop") S.shopTry = null; render(); window.scrollTo(0, 0); },
-  go: (v) => { S.screen = v; if (v === "petfun") { S.funFrom = "solo"; S.fun = null; } render(); window.scrollTo(0, 0); },
+  go: (v) => { S.screen = v; if (v === "petfun") { S.funFrom = "solo"; S.fun = null; } if (v === "pass") { S.passX = null; S.passSel = null; } if (v === "cup") { S.cup = null; S.cupAt = 0; S.cupWant = Api.state && Api.state.cup ? Api.state.cup.id : null; } render(); window.scrollTo(0, 0); },
   "pet-games": () => { S.funFrom = "home"; S.fun = null; S.screen = "petfun"; render(); window.scrollTo(0, 0); },
   theme: (v) => { S.setup.theme = v; haptic(); render(); },
   roles: (v) => { S.sheet = { type: "roles", theme: v }; renderOverlay(); },
@@ -985,19 +1035,34 @@ const actions = {
     if (code.length !== 4) return toast("Код — 4 символа");
     joinRoom(code);
   },
+  "group-post": () => {
+    const r = S.room; if (!r) return;
+    const M = { roulette: window.Roulette, revolver: window.Revolver, blackjack: window.Blackjack, draw: window.Draw }[r.game];
+    const max = (M && M.MAX_PLAYERS) || (S.catalog && S.catalog.max) || 12;
+    Api.call("/api/group/room", { code: r.code, game: r.game || "mafia", title: r.theme ? r.theme.title : "", players: r.players.length, max, stake: (r.settings && r.settings.stake) || 0 })
+      .then(() => { (S.groupPosted = S.groupPosted || {})[r.code] = 1; toast("📢 Приглашение в группе"); notify("success"); render(); })
+      .catch((e) => toast(e.message));
+  },
   leave: () => {
-    const go = () => { haptic("medium"); send({ t: "leave" }); };
+    const go = () => { haptic("medium"); if (S.room && S.room.phase === "lobby" && isHost()) groupDone(S.room.code, "gone"); send({ t: "leave" }); };
     if (S.room && !["lobby", "end"].includes(S.room.phase)) {
-      const q = isHost() ? "Ты хост: если выйдешь, игра закончится у всех. Выйти?" : S.room.game === "roulette" ? "Выйти из игры? Ты встанешь из-за стола и выбудешь" : "Выйти из игры?";
+      const q = isHost() ? "Ты хост: если выйдешь, игра закончится у всех. Выйти?" : ["roulette", "revolver"].includes(S.room.game) ? "Выйти из игры? Ты встанешь из-за стола и выбудешь" : "Выйти из игры?";
       if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
     } else go();
   },
+  "ref-share": () => {
+    const link = refUrl(), text = "Го в Настолкино — мафия, питомцы, кейсы! 🎲";
+    if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
+    else if (navigator.share) navigator.share({ title: "Настолкино", text, url: link }).catch(() => {});
+    else { navigator.clipboard && navigator.clipboard.writeText(link); toast("Ссылка скопирована"); }
+  },
+  "ref-copy": () => { navigator.clipboard && navigator.clipboard.writeText(refUrl()); toast("Ссылка скопирована"); haptic(); },
   copy: () => { navigator.clipboard && navigator.clipboard.writeText(S.room.code); toast("Код скопирован"); haptic(); },
   share: () => {
     const code = S.room.code;
     const link = S.bot ? (S.miniapp ? `https://t.me/${S.bot}/${S.miniapp}?startapp=${code}` : `https://t.me/${S.bot}?start=${code}`)
       : `${location.origin}${location.pathname}?room=${code}`;
-    const game = { draw: "Го в рисовалку!", roulette: "Спускайся в подвал. Один дробовик, один стол.", blackjack: "Садись за стол, раздаю!" }[S.room.game] || "Го в мафию!";
+    const game = { draw: "Го в рисовалку!", roulette: "Спускайся в подвал. Один дробовик, один стол.", revolver: "Спускайся в подвал. Револьвер, один патрон, шесть гнёзд.", blackjack: "Садись за стол, раздаю!", spy: "Го в Шпиона! Кто-то из нас не знает, где мы 🕵️" }[S.room.game] || "Го в мафию!";
     const text = `${game} ${S.room.theme.emoji} «${S.room.theme.title}». Код комнаты: ${code}`;
     if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
     else if (navigator.share) navigator.share({ title: S.room.theme.title, text, url: link }).catch(() => {});
@@ -1049,7 +1114,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, MChat.ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
+Object.assign(actions, CUP_ACTIONS, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, MChat.ACTIONS, PASS_ACTIONS, SPY_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");
@@ -1103,6 +1168,8 @@ if (tg) {
     else if (S.screen.startsWith("solo-")) { S.screen = "solo"; render(); }
     else if (S.screen === "petfun") { if (S.fun) { S.fun = null; render(); } else { S.screen = S.funFrom || "solo"; render(); } }
     else if (S.screen === "pets" && S.petSel) actions["pets-back"]();
+    else if (S.screen === "league") { S.screen = "pets"; render(); }
+    else if (S.screen === "pass") { S.screen = "home"; render(); }
     else { S.screen = "home"; render(); }
   });
 }

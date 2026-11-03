@@ -49,6 +49,7 @@ function tradeScreen() {
   return `${back}
     <div class="card trade-head"><div class="grow"><b>Обмен ${t.code}</b><div class="small muted">${t.partner ? "с " + esc(t.partner) : "ждём второго игрока — отправь ему ссылку"}</div></div>
       <button class="btn small" data-a="trade-share">📨 Ссылка</button></div>
+    ${!t.partner && t.side === "a" && t.status === "open" && Api.state && Api.state.group ? `<button class="btn ghost small wide mt" data-a="trade-group" ${(S.tradeGroup || {})[t.code] ? "disabled" : ""}>${(S.tradeGroup || {})[t.code] ? "📢 Обмен уже в группе" : `📢 Закинуть обмен в группу ${esc(Api.state.group.title)}`}</button>` : ""}
     <div class="section-title">Ты отдаёшь ${t.my_ready ? "· ✅ готов" : ""}</div>
     <div class="card tbox">${offerChips(t.me)}<button class="btn ghost small mt" data-a="trade-pick">＋ Выбрать, что отдать</button></div>
     <div class="section-title">Ты получаешь ${t.their_ready ? "· ✅ готов" : ""}</div>
@@ -105,6 +106,7 @@ const TRADE_ACTIONS = {
   "trade-new": () => Api.call("/api/trade/new", {}).then((r) => { S.tradeCode = r.trade.code; S.trade = r.trade; render(); TRADE_ACTIONS["trade-share"](); }).catch(petErr),
   "trade-open": (code) => { haptic(); tradeOpen(code); window.scrollTo(0, 0); },
   "trade-back": () => { S.tradeCode = null; S.trade = null; render(); tradeLoadList(); },
+  "trade-group": () => { if (!S.trade) return; const c = S.trade.code; Api.call("/api/group/trade", { code: c }).then(() => { (S.tradeGroup = S.tradeGroup || {})[c] = 1; toast("📢 Обмен в группе — жди предложений"); notify("success"); render(); }).catch((e) => toast(e.message)); },
   "trade-share": () => { if (S.trade) shareLink(linkFor("t", S.trade.code, "trade"), "🔄 Давай меняться питомцами и вещами в Настолкино!"); },
   "trade-pick": () => {
     const me = S.trade.me;

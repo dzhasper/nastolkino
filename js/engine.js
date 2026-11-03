@@ -48,6 +48,7 @@
       this.phase = "night"; this.day = 0; this.night = 0;
       this.log = []; this.night_actions = {}; this.ready = new Set(); this.votes = {};
       this.winner = null; this.winners = [];
+      this.stats = {};                                       // для турниров: убийства мафии, спасения доктора, найденная мафия, верные голоса
       this.assignRoles();
     }
 
@@ -81,6 +82,7 @@
       const options = this.theme.story[key] || THEMES.classic.story[key] || [""];
       return fmt(rnd.choice(options), kw);
     }
+    stat(pid, k) { const s = (this.stats = this.stats || {})[pid] = (this.stats || {})[pid] || { kills: 0, saves: 0, finds: 0, votes: 0 }; s[k] += 1; }
     say(kind, text, extra) { if (text) this.log.push(Object.assign({ day: this.day, night: this.night, kind, text, ts: Date.now() }, extra || {})); }
     // кто выбыл — для анимации; роль только если её разрешено открывать всем
     gone(q, how) { const r = this.role(q); return { who: q.id, how, role: this.settings.reveal ? { name: r.name, emoji: r.emoji, team: q.team, converted: !!q.converted } : null }; }
@@ -202,11 +204,17 @@
         if (healed.has(t)) { saved = true; return; }
         if (q.armor) { q.armor = false; saved = true; q.private.push("🛡️ Этой ночью на тебя напали, но защита спасла. Второй раз не спасёт."); return; }
         q.alive = false; died.push(q);
+        if (t === teamTarget) Object.keys(votes).forEach((pid) => { if (votes[pid] === t) this.stat(pid, "kills"); });   // убийство клана — тем, кто за него голосовал
+        effective.forEach(([p, k, tt]) => { if (KILL_KINDS.includes(k) && tt === t) this.stat(p.id, "kills"); });
+      });
+      [...new Set(kills)].forEach((t) => {                  // доктор спас мирного: тот был целью, но выжил благодаря лечению
+        const q = this.players[t];
+        if (q.alive && healed.has(t) && q.team !== "mafia") effective.forEach(([p, k, tt]) => { if (k === "heal" && tt === t) this.stat(p.id, "saves"); });
       });
 
       effective.forEach(([p, kind, t]) => {
         const q = this.players[t];
-        if (kind === "check_team") p.private.push(`🔎 Ночь ${this.night}: ${q.name} — ${q.team === "mafia" ? "🔴 " + this.theme.mafia_team : "🟢 не мафия"}.`);
+        if (kind === "check_team") { p.private.push(`🔎 Ночь ${this.night}: ${q.name} — ${q.team === "mafia" ? "🔴 " + this.theme.mafia_team : "🟢 не мафия"}.`); if (q.team === "mafia") this.stat(p.id, "finds"); }
         else if (kind === "check_role") p.private.push(`🔎 Ночь ${this.night}: ${q.name} — ${this.roleTitle(q)}.`);
         else if (kind === "find_sheriff") {
           const found = this.role(q).sheriff && !q.converted;
@@ -268,6 +276,7 @@
       this.phase = "verdict";
       if (out) {
         out.alive = false;
+        if (out.team !== "town") Object.entries(this.votes).forEach(([pid, t]) => { if (t === out.id) this.stat(pid, "votes"); });   // верно голосовали против мафии
         this.say("out", this.pick(this.settings.reveal ? "out" : "out_hidden", { name: out.name, role: this.roleTitle(out) }), this.gone(out, "vote"));
         Object.values(this.players).forEach((b) => {
           if (b.alive && b.bounty_target === out.id && !b.bounty_won) {
@@ -489,7 +498,7 @@
           Object.values(g.votes).forEach((t) => { const k = t || "skip"; counts[k] = (counts[k] || 0) + 1; });
           view.vote_counts = counts;
         }
-        if (ended) { view.winner = g.winner; view.winners = g.winners; }
+        if (ended) { view.winner = g.winner; view.winners = g.winners; view.stats = g.stats || {}; }
       }
       if (me) {
         const r = g.role(me);
@@ -531,8 +540,9 @@
     constructor(send, hostProfile, settings, code, restore) {
       this.send = send;
       const kind = restore ? restore.kind : settings && settings.game;
-      const Kind = { draw: api.DrawRoom, roulette: api.RouletteRoom, blackjack: api.BlackjackRoom }[kind] || Room;   // мафия, рисовалка, рулетка или блэкджек
+      const Kind = { draw: api.DrawRoom, roulette: api.RouletteRoom, revolver: api.RevolverRoom, blackjack: api.BlackjackRoom, spy: api.SpyRoom }[kind] || Room;   // мафия, рисовалка, подвал (дробовик и револьвер), блэкджек или шпион
       this.room = restore ? new Kind(null, null, null, restore) : new Kind(code, member(hostProfile), settings);
+      if (!restore && settings && settings.tour) { this.room.settings.tour = settings.tour; if ("stake" in this.room.settings) this.room.settings.stake = 0; }   // турнирный стол: только свои, без ставок
       this.listeners = [];
     }
 
@@ -545,12 +555,15 @@
           return;
         }
         if (t === "hello" || t === "profile") {
+          const tour = room.settings && room.settings.tour;
+          if (t === "hello" && tour && Array.isArray(tour.players) && !tour.players.includes(pid) && !room.members[pid]) throw new GameError("Это турнирный стол — сесть могут только его участники");
           const m = member(Object.assign({}, msg.profile || {}, { id: pid }));
           if (t === "hello") room.join(m);
           else if (room.members[pid]) { Object.assign(room.members[pid], { name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); room.touch(); }
         } else if (t === "settings") {
           if (pid !== room.host || room.phase !== "lobby") throw new GameError("Настройки меняет хост в лобби");
-          room.updateSettings(msg.settings || {});
+          const ns = Object.assign({}, msg.settings || {}); if (room.settings.tour) delete ns.stake;   // в турнире — без ставок
+          room.updateSettings(ns);
         } else if (t === "start") room.start(pid);
         else if (t === "seen") room.seenRole(pid);
         else if (t === "act") room.act(pid, msg);

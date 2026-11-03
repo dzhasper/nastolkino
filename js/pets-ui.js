@@ -26,6 +26,7 @@ const moodText = (m) => (m > 70 ? "Счастлив" : m > 40 ? "Спокоен"
 const hungerText = (h) => (h > 60 ? "Сыт" : h > 25 ? "Проголодался" : h > 0 ? "Голодает" : "Умирает от голода");
 
 function viewPets() {
+  if (Api.on && Api.ready) leagueLoad();
   const head = `<div class="top"><div class="grow"><h1>🐾 Питомцы</h1><div class="muted small">Каждый — единственный в мире</div></div>${coinPill()}</div>`;
   if (!Api.on) {
     const cfg = window.APP_CONFIG || {};
@@ -54,7 +55,7 @@ function petList() {
   const den = st.den || { rooms: 0, used: 0 };
   const care = live.filter((p) => !p.egg).length >= 2 ? `<div class="care-bar"><button class="btn" data-a="care-open">🤲 Уход за всеми</button>
     <span class="den-pill" title="Комнаты в домике">🏠 ${den.used}/${den.rooms}</span></div>` : "";
-  return `${questsCard()}${care}${toysCard()}${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
+  return `${questsCard()}${leagueCard()}${care}${toysCard()}${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
       : `<div class="card center"><div class="pet-empty">🥚</div><b>Питомцев пока нет</b><div class="muted small mt">Яйца выпадают из промокодов и раздач в боте, а очень редко — из ежедневного сундука.</div></div>`}
     ${live.some((p) => !p.egg && p.hunger < 25) ? `<div class="card warn mt">⚠️ Кто-то голодает. Без еды двое суток — питомец умирает навсегда.</div>` : ""}
     ${petPantry()}
@@ -270,8 +271,35 @@ function petOnState() {
   if (!busy && ["pets", "home", "profile", "shop"].includes(S.screen)) render();
 }
 
+/* ---------------------------------------------------------------- лига недели: таблица лидеров по боям */
+const leagueCard = () => (Api.on ? `<button class="card league-card" data-a="go" data-v="league"><span class="lg-ico">🏆</span><div class="grow"><b>Лига недели</b>
+  <div class="small muted">${S.league && S.league.me ? `Ты на ${S.league.me.rank}-м месте · ${S.league.me.pts} очков` : "Бои с другими игроками — очки, в конце недели призы топ-10"}</div></div><span class="muted">›</span></button>` : "");
+function leagueLoad(force) {
+  if (!Api.on || !Api.ready || S.leagueBusy || (!force && S.leagueAt && Date.now() - S.leagueAt < 30000)) return;
+  S.leagueBusy = true;
+  Api.call("/api/league", {}).then((r) => { S.league = r.league; S.leagueAt = Date.now(); }).catch(() => {}).finally(() => { S.leagueBusy = false; if (["league", "pets"].includes(S.screen)) render(); });
+}
+function fmtLeft2(sec) { const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60); return d ? `${d} дн ${h} ч` : h ? `${h} ч ${m} мин` : `${m} мин`; }
+function viewLeague() {
+  leagueLoad();
+  const L = S.league, medal = (n) => (n === 1 ? "🥇" : n === 2 ? "🥈" : n === 3 ? "🥉" : n);
+  const row = (r) => `<div class="lg-row ${r.uid === Number(S.me.slice(2)) ? "me" : ""}"><span class="lg-rank">${medal(r.rank)}</span><span class="lg-pet">${r.pet ? Pets.sprite(r.pet, 36) : "🐾"}</span>
+    <div class="grow"><b>${esc(r.name)}</b><div class="small muted">${r.wins} побед из ${r.games}</div></div><b class="lg-pts">${r.pts}</b></div>`;
+  return `<div class="fade-in"><div class="top"><button class="avatar" data-a="tab" data-v="pets">←</button><div class="grow"><h1>Лига недели</h1>
+      <div class="muted small">${L ? `До конца недели: ${fmtLeft2(Math.max(0, L.ends - Math.floor(Date.now() / 1000)))}` : "Загружаю…"}</div></div>${coinPill()}</div>
+    ${L && L.me ? `<div class="card lg-mine"><div class="lg-big">${medal(L.me.rank)}</div><div class="grow"><b>Твоё место: ${L.me.rank}</b><div class="small">${L.me.pts} очков · ${L.me.wins} побед из ${L.me.games} боёв</div></div></div>`
+      : `<div class="card small">Ты ещё не дрался на этой неделе. Вызови друга на бой в карточке питомца — каждая победа +3 очка, поражение +1.</div>`}
+    ${L ? `<div class="section-title">Призы</div><div class="card lg-prizes">${L.prizes.map((p) => `<div class="lg-prize"><b>${p.place === "1" ? "🥇" : p.place === "2" ? "🥈" : p.place === "3" ? "🥉" : "🏅 " + p.place}</b><span>${esc(p.text)}</span></div>`).join("")}</div>
+    <div class="section-title">Таблица</div>
+    <div class="card lg-table">${L.top.length ? L.top.map(row).join("") : `<div class="muted small center">Пока никто не дрался — будь первым!</div>`}</div>
+    ${L.last && L.last.length ? `<div class="section-title">Прошлая неделя</div><div class="card lg-table">${L.last.map(row).join("")}</div>` : ""}
+    <div class="small muted mt">Очки — только за бои с другими игроками: победа +3, поражение +1. С одним и тем же соперником за неделю считаются первые ${L.pairCap} боёв. Неделя — с понедельника, призы приходят сами.</div>`
+      : `<div class="card center"><div class="spinner" style="margin:10px auto"></div></div>`}
+  </div>${tabs()}`;
+}
+
 // окно «Тебе подарили»: что пришло и куда посмотреть
-const GIFT_ICO = { coins: "🪙", egg: "🥚", food: "🍖", case: "🎁", mg: "💉", pet: "🐉" }, GIFT_SRC = { admin: "от администратора", tour: "приз за турнир", gw: "из раздачи" };
+const GIFT_ICO = { coins: "🪙", egg: "🥚", food: "🍖", case: "🎁", mg: "💉", pet: "🐉" }, GIFT_SRC = { admin: "от администратора", tour: "приз за турнир", gw: "из раздачи", ref: "за приглашённого друга", league: "приз лиги недели", pass: "сезонный пропуск", welcome: "подарок новичку" };
 function giftsSheet() {
   const list = (S.sheet && S.sheet.list) || [], first = list[0] || {};
   const go = { mg: "gift-go:mg", pet: "gift-go:pets", egg: "gift-go:pets", food: "gift-go:pets", case: "gift-go:cases", coins: "" }[first.kind] || "";

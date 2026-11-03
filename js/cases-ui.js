@@ -98,7 +98,7 @@ function viewCaseList() {
           <button class="btn ghost small" data-a="case-odds" data-v="${c.key}">Шансы</button></div></div></div>`;
   }).join("")}</div>
   <div class="card small muted mt earn">${PX() ? Pixel.sprite("coin", 2) : "🪙"} Монеты: +${Shop.REWARD.game} за партию, +${Shop.REWARD.win} за победу, +${Shop.REWARD.alive} если дожил(а) до конца.
-    ${Api.on ? `Повторная вещь превращается в ✨ осколки: ${[5, 12, 30, 80].map((d, i) => `<b style="color:${Shop.TIERS[i].color}">${d}</b>`).join(" / ")} — из них в мастерской делают новые вещи.` : `Повторная вещь превращается в монеты: ${Shop.DUP.map((d, i) => `<b style="color:${Shop.TIERS[i].color}">${d}</b>`).join(" / ")}.`}</div>`;
+    ${Api.on ? `Повторная вещь не пропадает — копии копятся (×2, ×3…). В мастерской 5 вещей одной редкости меняются на одну — с шансом на редкость выше, а ✨ осколки — на ключи к кейсам.` : `Повторная вещь превращается в монеты: ${Shop.DUP.map((d, i) => `<b style="color:${Shop.TIERS[i].color}">${d}</b>`).join(" / ")}.`}</div>`;
 }
 
 function caseOddsSheet(key) {
@@ -162,58 +162,66 @@ function viewInv() {
       return `<button class="pill ${c.key === cat ? "on" : ""}" data-a="shop-cat" data-v="${c.key}">${c.icon} ${c.name}${have ? ` <span class="seg-n">${have}</span>` : ""}</button>`; }).join("")}</div>
     <div class="shop-grid ${cat}">${items.map((it) => { const t = Shop.tier(it);
       return `<button class="shop-item ${tryIt === it ? "sel" : ""} ${worn(it) ? "worn" : ""}" style="--tc:${ranked(it) ? Shop.TIERS[t].color : "transparent"}" data-a="shop-try" data-v="${it.id}">
-        ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${worn(it) ? "✓ надето" : ranked(it) ? Shop.TIERS[t].name : "есть"}</span>${it.cat === "toy" ? toyTileMarks(it.id) : ""}</button>`; }).join("")}</div>
+        ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${worn(it) ? "✓ надето" : ranked(it) ? Shop.TIERS[t].name : "есть"}</span>${it.cat === "toy" ? toyTileMarks(it.id) : invN(it.cat + ":" + it.id) > 1 ? `<span class="inv-n">×${invN(it.cat + ":" + it.id)}</span>` : ""}</button>`; }).join("")}</div>
     ${items.filter(ranked).length ? "" : `<div class="card small muted center mt">${cat === "mg" ? "Шприцов пока нет. Их дают за турниры, а в «Питомнике» — шанс 0,01%" : petCat ? "Пока пусто — это выпадает из кейса «Питомник»" : "Здесь пока только стартовое. Всё, что выбьешь в кейсах, появится тут."}</div>`}
     ${bar}`;
 }
 
-/* ---------------------------------------------------------------- мастерская: осколки → вещи. Цены — как на сервере (/api/craft) */
-const CRAFT = { up: [20, 50, 120], swap: [8, 20, 50, 120], make: [40, 100, 250, 700], brk: [4, 10, 25, 60] };
+/* ---------------------------------------------------------------- мастерская: ключи за осколки и контракты 5 → 1 (как на сервере: /api/craft) */
+const KEY_COST = 50, KEY_ODDS = [["Подвальный", 40], ["«Питомник»", 22], ["Тёмный", 22], ["Легендарный", 6], ["Сезонный — любой, даже которого нет на витрине", 10]], CONTRACT_UP = [40, 30, 20];
+const invN = (k) => ((Api.state && Api.state.invn) || {})[k] || (store.owned.includes(k) ? 1 : 0);   // сколько копий вещи
+const ctOk = (it) => it && !it.excl && !it.mg && !it.season && (it.price || it.petcase) && Shop.tier(it) < 3;   // что можно положить в контракт
 function viewCraft() {
   if (!Api.on) return `<div class="card mt">Мастерская работает через сервер — открой Настолкино из бота.</div>`;
   const st = Api.state; if (!st) return `<div class="card center mt"><div class="spinner" style="margin:10px auto"></div></div>`;
-  const sh = st.shards || 0, inv = st.inv || [];
-  const items = inv.map((k) => Shop.byKey(k)).filter((it) => it && !it.excl && !it.mg && (it.price || it.season || it.petcase)).sort((a, b) => Shop.tier(b) - Shop.tier(a));
-  const sel = S.craftSel && inv.includes(S.craftSel) ? Shop.byKey(S.craftSel) : null;
-  let panel = "";
-  if (sel) {
-    const t = Shop.tier(sel), seas = !!sel.season, worn = S.profile.look[sel.cat] === sel.id || (sel.cat === "ava" && S.profile.avatar === sel.emoji);
-    panel = `<div class="card craft-panel"><div class="row"><div class="cp-prev">${shopPreview(sel)}</div><div class="grow"><b>${esc(sel.name)}</b><div>${tierTag(t)}</div>${worn ? `<div class="small muted">Сейчас надета — после переделки снимется</div>` : ""}</div></div>
-      <div class="craft-ops">
-        <button class="btn small" data-a="craft-op" data-v="up" ${seas || t >= 3 || sh < CRAFT.up[t] ? "disabled" : ""}>⬆️ Улучшить${t < 3 && !seas ? ` · ✨${CRAFT.up[t]}` : ""}</button>
-        <button class="btn ghost small" data-a="craft-op" data-v="swap" ${seas || sh < CRAFT.swap[t] ? "disabled" : ""}>🔄 Перековать${seas ? "" : ` · ✨${CRAFT.swap[t]}`}</button>
-        <button class="btn ghost small" data-a="craft-op" data-v="break">🔨 Разобрать · +✨${CRAFT.brk[t] * (seas ? 3 : 1)}</button></div>
-      <div class="small muted mt">⬆️ — вещь исчезнет, взамен случайная из того же раздела редкостью выше (5% — через ступень!). 🔄 — случайная другая той же редкости. ${seas ? "Сезонные можно только разобрать — зато втрое дороже." : ""}</div></div>`;
-  }
-  return `<div class="card craft-head"><div class="ch-n">✨ ${sh}</div><div class="small">Осколки дают: повторы из кейсов, горсти осколков в кейсах, разбор вещей, победы в боях (+2) и колесо фортуны.</div></div>
-    <div class="section-title">Создать из осколков</div>
-    <div class="craft-make">${[0, 1, 2, 3].map((t) => `<button class="craft-t" style="--tc:${Shop.TIERS[t].color}" data-a="craft-make" data-v="${t}" ${sh < CRAFT.make[t] ? "disabled" : ""}>
-      <b>${Shop.TIERS[t].name}</b><span>✨ ${CRAFT.make[t]}</span></button>`).join("")}</div>
-    <div class="small muted mt">Случайная вещь, которой у тебя ещё нет.</div>
-    <div class="section-title">Переделать свою вещь</div>
-    ${panel}
-    ${items.length ? `<div class="shop-grid craft-grid">${items.map((it) => `<button class="shop-item ${S.craftSel === it.cat + ":" + it.id ? "sel" : ""}" style="--tc:${Shop.TIERS[Shop.tier(it)].color}" data-a="craft-sel" data-v="${it.cat}:${it.id}">
-      ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${Shop.TIERS[Shop.tier(it)].name}</span></button>`).join("")}</div>` : `<div class="card small muted center">Вещей для переделки пока нет — открой пару кейсов</div>`}`;
+  const sh = st.shards || 0, keys = Object.entries(st.cases || {}).filter(([, n]) => n > 0);
+  const t = S.ctTier || 0, sel = (S.ctSel || []).filter((k) => Shop.tier(Shop.byKey(k)) === t);
+  S.ctSel = sel;
+  const used = (k) => sel.filter((x) => x === k).length;
+  const items = (st.inv || []).map((k) => Shop.byKey(k)).filter((it) => ctOk(it) && Shop.tier(it) === t).sort((a, b) => invN(b.cat + ":" + b.id) - invN(a.cat + ":" + a.id));
+  const nt = Shop.TIERS[t + 1] || {};
+  return `<div class="card craft-head"><div class="ch-n">✨ ${sh}</div><div class="small">Осколки дают горсти в кейсах, колесо фортуны и победы в боях. Повторы из кейсов теперь не превращаются в осколки — они копятся (×2, ×3…) и идут в контракты.</div></div>
+    <div class="section-title">🔑 Ключи</div>
+    <div class="card key-card"><div class="row"><span class="key-ico">🗝</span><div class="grow"><b>Ключ к случайному кейсу</b>
+      <div class="small muted">${KEY_ODDS.map(([n, p]) => `${n} — ${p}%`).join(" · ")}</div></div></div>
+      <button class="btn mt" data-a="craft-key" ${sh < KEY_COST ? "disabled" : ""}>🔑 Выковать ключ · ✨${KEY_COST}</button></div>
+    ${keys.length ? `<div class="key-list">${keys.map(([k, n]) => { const c = anyCase(k); return c ? `<div class="key-row"><div class="kr-art">${caseImg(k, 44)}</div><div class="grow"><b>${esc(c.name)}</b><div class="small muted">🔑 ключей: ${n}${c.season ? " · сезонный, открывается в любое время" : ""}</div></div><button class="btn small" data-a="case-open" data-v="${k}">Открыть</button></div>` : ""; }).join("")}</div>` : ""}
+    <div class="section-title">📜 Контракт 5 → 1</div>
+    <div class="card ct-card"><div class="small">Сложи <b>5 вещей одной редкости</b> (копии тоже считаются) — получишь одну вещь. С шансом <b>${CONTRACT_UP[t] || 0}%</b> она будет <b style="color:${nt.color || "#fff"}">${esc(nt.name || "")}</b>, иначе — снова ${esc(Shop.TIERS[t].name.toLowerCase())}. Раздел — как у одной из вложенных вещей.</div>
+      <div class="seg ct-tiers mt">${[0, 1, 2].map((x) => `<button class="${x === t ? "on" : ""}" data-a="ct-tier" data-v="${x}" style="--tc:${Shop.TIERS[x].color}">${esc(Shop.TIERS[x].name)}</button>`).join("")}</div>
+      <div class="ct-slots mt">${Array.from({ length: 5 }, (_, i) => { const k = sel[i], it = k && Shop.byKey(k);
+        return `<button class="ct-slot ${it ? "full" : ""}" style="--tc:${Shop.TIERS[t].color}" ${it ? `data-a="ct-del" data-v="${i}"` : "disabled"}>${it ? shopPreview(it) : `<span>${i + 1}</span>`}</button>`; }).join("")}</div>
+      <button class="btn mt" data-a="ct-go" ${sel.length === 5 ? "" : "disabled"}>📜 Подписать контракт${sel.length < 5 ? ` · ещё ${5 - sel.length}` : ""}</button>
+      ${sel.length ? `<button class="btn ghost small mt" data-a="ct-clear">Очистить</button>` : ""}</div>
+    ${items.length ? `<div class="shop-grid craft-grid">${items.map((it) => { const k = it.cat + ":" + it.id, n = invN(k), left = n - used(k);
+      return `<button class="shop-item ${left ? "" : "off"}" style="--tc:${Shop.TIERS[t].color}" ${left ? `data-a="ct-add" data-v="${k}"` : "disabled"}>
+        ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${n > 1 ? `×${n}` : "×1"}${used(k) ? ` · в контракте ${used(k)}` : ""}</span>${n > 1 ? `<span class="inv-n">×${n}</span>` : ""}</button>`; }).join("")}</div>`
+      : `<div class="card small muted center">Вещей этой редкости пока нет — открой пару кейсов</div>`}`;
 }
 function craftUnwear(k) {
   const it = Shop.byKey(k);
-  if (it && store.look && store.look[it.cat] === it.id) { store.look[it.cat] = Shop.DEFAULT[it.cat]; saveProfile(); syncProfile(); }
+  if (it && store.look && store.look[it.cat] === it.id && !Shop.owns(it)) { store.look[it.cat] = Shop.DEFAULT[it.cat]; saveProfile(); syncProfile(); }
 }
 function craftDo(body) {
   Api.act("/api/craft", body).then((st) => {
-    const c = st.craft; S.craftSel = null;
-    if (c.from) craftUnwear(c.from);
-    if (c.op === "break") { haptic("medium"); toast(`🔨 Разобрано: +${c.shards} ✨`); render(); return; }
-    notify("success"); coinRain();
-    S.sheet = { type: "craft-done", item: c.item, crit: c.crit }; renderOverlay(); render();
+    const c = st.craft;
+    if (c.op === "contract") { S.ctSel = []; (c.from || []).forEach(craftUnwear); }
+    notify(c.op === "contract" && !c.up ? "warning" : "success"); haptic("heavy");
+    if (c.op === "key" || c.up) coinRain();
+    S.sheet = Object.assign({ type: "craft-done" }, c); renderOverlay(); render();
   }).catch((e) => { notify("error"); toast(e.message); });
 }
 function craftDoneSheet() {
-  const it = Shop.byKey(S.sheet.item); if (!it) return "";
+  const c = S.sheet;
+  if (c.op === "key") return `<div class="center craft-res"><div class="key-pop">🗝</div><h2>Ключ выкован!</h2>
+    <div class="cl-prize">${caseImg(c.kind, 96)}</div><div class="cl-name">${esc(c.name)}</div>
+    ${c.season ? `<div class="small mt">Сезонный кейс: ключ открывает его в любое время, даже когда кейса нет на витрине</div>` : ""}
+    <button class="btn mt2" data-a="case-open" data-v="${c.kind}">Открыть сейчас</button></div>`;
+  const it = Shop.byKey(c.item); if (!it) return "";
   const t = Shop.tier(it);
-  return `<div class="center"><h2>${S.sheet.crit ? "💥 Удачная ковка!" : "⚒ Готово!"}</h2><div class="cl-prize">${shopPreview(it)}</div>
+  return `<div class="center craft-res ${c.up ? "up" : "same"}"><h2>${c.up ? "📈 Повезло — редкость выше!" : "📜 Контракт исполнен"}</h2><div class="cl-prize">${shopPreview(it)}</div>
     <div class="cl-name" style="color:${Shop.TIERS[t].color}">${esc(it.name)}</div>${tierTag(t)}
-    ${S.sheet.crit ? `<div class="small mt">Вещь получилась сразу через ступень редкости!</div>` : ""}
+    <div class="small muted mt">${c.up ? `Выпал шанс ${Math.round(c.chance * 100)}%` : `Не повезло (шанс был ${Math.round(c.chance * 100)}%) — снова ${esc(Shop.TIERS[t].name.toLowerCase())}`}${c.copy ? ` · теперь таких ×${c.copy}` : ""}</div>
     ${["toy", "hat"].includes(it.cat) ? "" : `<button class="btn mt2" data-a="case-equip" data-v="${it.cat}:${it.id}">Надеть</button>`}</div>`;
 }
 
@@ -294,7 +302,7 @@ function caseResult(c, drop) {
   let prize = "", info = "", main = "";
   if (it) {
     prize = `<div class="cl-prize">${shopPreview(it)}</div>`;
-    info = drop.copy ? `<div class="cl-dup">🧸 Ещё одна копия! Теперь их <b>${drop.copy}</b> — меньше ссор из-за игрушки</div>` : drop.dup ? `<div class="cl-dup">Повтор — уже есть. Превратилось в <b>${drop.shards != null ? `+${drop.shards} ✨ осколков` : `+${drop.refund} 🪙`}</b></div>`
+    info = drop.copy ? `<div class="cl-dup">${it.cat === "toy" ? "🧸" : "📦"} Ещё одна копия! Теперь их <b>×${drop.copy}</b> — ${it.cat === "toy" ? "меньше ссор из-за игрушки" : "пригодятся для контракта 5 → 1 в мастерской"}</div>` : drop.dup ? `<div class="cl-dup">Повтор — уже есть. Превратилось в <b>${drop.shards != null ? `+${drop.shards} ✨ осколков` : `+${drop.refund} 🪙`}</b></div>`
       : it.mg ? `<div class="small">💉 Мутаген! Уколи питомцу со значком 🧬 — облик изменится навсегда</div>` : `<div class="small muted">Уже в инвентаре</div>`;
     if (!drop.dup) main = ["toy", "hat", "mg"].includes(it.cat) ? `<button class="btn" data-a="case-pets">🐾 К питомцам</button>` : `<button class="btn" data-a="case-equip" data-v="${esc(drop.item)}">Надеть</button>`;
   } else if (drop.type === "shards") {
@@ -350,12 +358,16 @@ const CASE_ACTIONS = {
   "case-close": () => { caseLayerClose(); render(); },
   "case-odds": (key) => { S.sheet = { type: "case-odds", key }; renderOverlay(); },
   "case-craft": () => { caseLayerClose(); S.screen = "shop"; S.shopTab = "craft"; render(); window.scrollTo(0, 0); },
-  "craft-sel": (k) => { S.craftSel = S.craftSel === k ? null : k; haptic(); render(); },
-  "craft-make": (t) => craftDo({ op: "make", tier: Number(t) }),
-  "craft-op": (op) => {
-    const k = S.craftSel; if (!k) return;
-    const it = Shop.byKey(k), q = op === "break" ? `Разобрать «${it.name}» на осколки?` : op === "up" ? `Улучшить «${it.name}»? Она исчезнет, взамен — вещь редкостью выше.` : `Перековать «${it.name}» в другую вещь той же редкости?`;
-    const go = () => craftDo({ op, item: k });
+  "craft-key": () => craftDo({ op: "key" }),
+  "ct-tier": (v) => { S.ctTier = Number(v); S.ctSel = []; haptic(); render(); },
+  "ct-add": (k) => { S.ctSel = S.ctSel || []; if (S.ctSel.length < 5) { S.ctSel.push(k); haptic(); render(); } },
+  "ct-del": (i) => { (S.ctSel || []).splice(Number(i), 1); haptic(); render(); },
+  "ct-clear": () => { S.ctSel = []; render(); },
+  "ct-go": () => {
+    const sel = (S.ctSel || []).slice(); if (sel.length !== 5) return;
+    const worn = sel.filter((k) => { const it = Shop.byKey(k); return it && store.look && store.look[it.cat] === it.id && sel.filter((x) => x === k).length >= invN(k); });
+    const q = `Отдать 5 вещей в контракт? Взамен — одна вещь.${worn.length ? " Надетая вещь снимется." : ""}`;
+    const go = () => craftDo({ op: "contract", items: sel });
     if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
   },
   "case-pets": () => { caseLayerClose(); S.screen = "pets"; S.petSel = null; render(); window.scrollTo(0, 0); },
