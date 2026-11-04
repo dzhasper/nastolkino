@@ -5,8 +5,8 @@
 "use strict";
 
 const Bots = (() => {
-  const NAMES = ["Бот Пиксель", "Бот Груша", "Бот Байт", "Бот Кекс", "Бот Тостер", "Бот Мармелад", "Бот Чип", "Бот Дейл", "Бот Шарик", "Бот Вафля", "Бот Ватт", "Бот Бублик",
-    "Бот Сосиска", "Бот Квант", "Бот Пончик", "Бот Гном", "Бот Лимон", "Бот Ёжик", "Бот Мурзик"];
+  const NAMES = ["Бот Піксель", "Бот Груша", "Бот Байт", "Бот Кекс", "Бот Тостер", "Бот Мармелад", "Бот Чип", "Бот Дейл", "Бот Кулька", "Бот Вафелька", "Бот Ват", "Бот Бублик",
+    "Бот Сосиска", "Бот Квант", "Бот Пончик", "Бот Гном", "Бот Лимон", "Бот Їжачок", "Бот Мурчик"];
   const AVA = ["🤖", "👾", "🦾", "🛸", "🧸", "🐙", "🦊", "🐸", "🐼", "🦉"];
   const isBot = (pid) => /^bot_/.test(String(pid));
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -20,14 +20,14 @@ const Bots = (() => {
   const allowed = () => true;                                         // боты доступны всем (раньше — только админу)
   function add() {
     const h = hub();
-    if (!h || !allowed()) return toast("Ботов добавляет только хост — в своей комнате");
-    if (h.room.settings && h.room.settings.tour) return toast("В турнире ботов нет — только живые соперники");
-    if (h.room.kind === "draw" || h.room.kind === "spy") return toast(h.room.kind === "spy" ? "В «Шпионе» ботов нет — тут нужно живое общение" : "В рисовалке ботов нет — только живые художники");
+    if (!h || !allowed()) return toast("Ботів додає лише хост — у своїй кімнаті");
+    if (h.room.settings && h.room.settings.tour) return toast("У турнірі ботів немає — лише живі суперники");
+    if (h.room.kind === "draw" || h.room.kind === "spy") return toast(h.room.kind === "spy" ? "У «Шпигуні» ботів немає — тут потрібне живе спілкування" : "У малювалці ботів немає — лише живі художники");
     const room = h.room, used = room.order.map((p) => room.members[p].name);
     const id = "bot_" + Date.now().toString(36) + (seq++);
     const name = NAMES.find((x) => !used.includes(x)) || "Бот №" + (room.order.length + 1);
     h.handle(id, { t: "hello", profile: { name, avatar: pick(AVA), look: { c: "999", frame: pick(["none", "wood", "gold", "neon"]) } } });
-    if (["blackjack", "roulette", "revolver", "bluff"].includes(room.kind) && room.settings.stake) { room.updateSettings({ stake: 0 }); toast("С ботами — только на интерес, без монет"); }
+    if (["blackjack", "roulette", "revolver", "bluff"].includes(room.kind) && room.settings.stake) { room.updateSettings({ stake: 0 }); toast("З ботами — лише на інтерес, без монет"); }
     h.push(); start();
   }
   function removeAll() {
@@ -56,7 +56,7 @@ const Bots = (() => {
   }
 
   /* ================================================================ мафия */
-  const CLEAN = /не мафи|чист|мирн|доверя|верю|не он|не она|невинов/i, ACCUSE = /мафи|подозр|голосу|убийц|врёт|врет|лжёт|лжет|дон|вампир|оборот|маньяк|казн|он\b|она\b/i;
+  const CLEAN = /не мафі|не мафи|чист|мирн|довір|доверя|вірю|верю|не він|не вона|не он|не она|невинн|невинов/i, ACCUSE = /мафі|мафи|підозр|подозр|голосу|вбивц|убивц|убийц|бреш|бреше|врёт|врет|лжёт|лжет|дон|вампір|вампир|перевер|оборот|маніяк|маньяк|страт|казн|він\b|вона\b|он\b|она\b/i;
   function mafiaKnow(room, id) {
     const g = room.game, me = g.players[id], m = mem(room, id), names = {};
     if (m.game !== g) Object.assign(m, { game: g, sus: {}, known: {}, claims: {}, priv: 0, chat: 0, votedDays: {}, saidDay: 0, said: 0, accusedMe: null, checked: {} });
@@ -65,17 +65,17 @@ const Bots = (() => {
     const theme = g.theme;
     // свои ночные результаты
     me.private.slice(m.priv).forEach((t) => {
-      const r = /Ночь \d+: (.+?) — (.+)$/.exec(t);
+      const r = /Ніч \d+: (.+?) — (.+)$/.exec(t);
       if (!r) return;
       const pid = byName(r[1]); if (!pid) return;
       const res = r[2];
       if (/🔴/.test(res)) m.known[pid] = "mafia";
       else if (/🟢/.test(res)) m.known[pid] = "town";
-      else if (/это .+🎯/.test(res)) m.known[pid] = "sheriff";
+      else if (/це .+🎯/.test(res)) m.known[pid] = "sheriff";
       else if (/^не /.test(res)) m.checked[pid] = true;
       else {                                                     // проверка роли: ищем роль по названию
         const role = Object.values(theme.roles).find((x) => res.includes(x.name));
-        m.known[pid] = /обращён/.test(res) || (role && role.team === "mafia") ? "mafia" : role && role.team === "solo" ? "solo" : "town";
+        m.known[pid] = /навернен/.test(res) || (role && role.team === "mafia") ? "mafia" : role && role.team === "solo" ? "solo" : "town";
       }
       m.checked[pid] = true;
     });
@@ -213,25 +213,25 @@ const Bots = (() => {
     const lastDead = g.log.slice().reverse().find((e) => e.kind === "death");
     if (m.accusedMe && g.players[m.accusedMe] && g.players[m.accusedMe].alive && chance(.8)) {
       const who = nm(m.accusedMe); m.accusedMe = null;
-      return pick([`Я ${mafia ? "мирный" : "мирный"}, ${who}, хватит на меня валить!`, `${who}, а почему ты так рвёшься меня казнить? Подозрительно`, `Не я это. ${who}, лучше объясни, за кого ты голосовал вчера`]);
+      return pick([`Я ${mafia ? "мирний" : "мирний"}, ${who}, годі на мене звалювати!`, `${who}, а чого ти так рвешся мене стратити? Підозріло`, `Не я це. ${who}, краще поясни, за кого ти голосував учора`]);
     }
     if (!mafia) {
       const sure = alive.find((p) => m.known[p.id] === "mafia");
-      if (sure && role.abilities.some((a) => /check/.test(a.kind))) return `Я ${role.name.toLowerCase()}. Проверил ${sure.name} — это ${theme.mafia_team.toLowerCase()}! Голосуем за ${sure.name}`;
+      if (sure && role.abilities.some((a) => /check/.test(a.kind))) return `Я ${role.name.toLowerCase()}. Перевірив ${sure.name} — це ${theme.mafia_team.toLowerCase()}! Голосуємо за ${sure.name}`;
       const clean = alive.find((p) => m.known[p.id] === "town");
-      if (clean && chance(.3)) return `${clean.name} чист, я уверен. Не трогайте его`;
+      if (clean && chance(.3)) return `${clean.name} чистий, я впевнений. Не чіпайте його`;
       const s = mostSus(alive);
-      if (s && sus(s.id) > .8) return pick([`Мне не нравится ${s.name}: голосовал против мирного`, `${s.name} ведёт себя подозрительно — предлагаю голосовать за него`, `Я за ${s.name}. Вспомните, кого он защищал`]);
-      if (lastDead && g.day > 1 && chance(.5)) return pick([`Жаль… Кто-то из нас знает, кто это сделал`, `Мафия убирает самых активных. Кто сегодня молчит?`, `Давайте по порядку: кто за кого голосовал вчера?`]);
-      return pick(["Я мирный. Пока ничего не знаю, слушаю вас", "Предлагаю не торопиться и не казнить наугад", "Кто-нибудь проверял кого-то ночью?"]);
+      if (s && sus(s.id) > .8) return pick([`Мені не подобається ${s.name}: голосував проти мирного`, `${s.name} поводиться підозріло — пропоную голосувати за нього`, `Я за ${s.name}. Згадайте, кого він захищав`]);
+      if (lastDead && g.day > 1 && chance(.5)) return pick([`Шкода… Хтось із нас знає, хто це зробив`, `Мафія прибирає найактивніших. Хто сьогодні мовчить?`, `Давайте по порядку: хто за кого голосував учора?`]);
+      return pick(["Я мирний. Поки нічого не знаю, слухаю вас", "Пропоную не поспішати й не страчувати навмання", "Хтось перевіряв когось уночі?"]);
     }
     // мафия: прикрывает своих, давит на опасных
     const accuser = Object.keys(m.accusedMates || {}).find((p) => g.players[p] && g.players[p].alive && g.players[p].team !== "mafia");
-    if (accuser && chance(.7)) return pick([`${nm(accuser)} слишком уверенно всех обвиняет. Похоже на мафию`, `А мне кажется, ${nm(accuser)} просто отводит от себя подозрения`]);
+    if (accuser && chance(.7)) return pick([`${nm(accuser)} надто впевнено всіх звинувачує. Схоже на мафію`, `А мені здається, ${nm(accuser)} просто відводить від себе підозри`]);
     const victim = alive.filter((p) => p.team !== "mafia").sort((a, b) => sus(b.id) - sus(a.id))[0];
-    if (victim && chance(.6)) return pick([`Голосую за ${victim.name}: он всю игру уходит от ответа`, `${victim.name}, ты вчера проголосовал странно. Объяснись`]);
-    if (mates.length && chance(.3)) return `${pick(mates).name} точно не мафия, я за ним слежу`;
-    return pick(["Я мирный житель, честно", "Давайте послушаем всех, а потом решим", "Ночью я спал, ничего не видел"]);
+    if (victim && chance(.6)) return pick([`Голосую за ${victim.name}: він усю гру ухиляється від відповіді`, `${victim.name}, ти вчора проголосував дивно. Поясни`]);
+    if (mates.length && chance(.3)) return `${pick(mates).name} точно не мафія, я за ним стежу`;
+    return pick(["Я мирний житель, чесно", "Давайте вислухаємо всіх, а потім вирішимо", "Уночі я спав, нічого не бачив"]);
   }
 
   /* ================================================================ рисовалка */
@@ -318,7 +318,7 @@ const Bots = (() => {
     "гитара": () => [S(1, 3, O(70, 108, 32)), S(1, 3, O(92, 78, 22)), F(8, 70, 116), F(8, 92, 74), S(1, 3, O(76, 98, 9)), F(1, 76, 98), S(16, 6, [96, 72, 140, 24]), S(1, 2, [58, 120, 136, 28])],
   };
   const DRAWABLE = Object.keys(SKETCH);
-  const norm = (s) => String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-я0-9]/g, "");
+  const norm = (s) => String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-яіїєґ0-9]/g, "");
   function lev(a, b) {
     const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
     for (let j = 1; j <= b.length; j++) d[0][j] = j;
@@ -457,10 +457,10 @@ const Bots = (() => {
           v += Math.min(1, (m.grudge[o] || 0) * .2) + Math.random() * .3;
           if (!best || v > best.v) best = { o, j, v };
         }));
-        if (best && best.v >= 2) { line(chance(.4) ? `${name(best.o)}, это теперь моё` : ""); return useItem("thief", best.o, best.j); }
+        if (best && best.v >= 2) { line(chance(.4) ? `${name(best.o)}, це тепер моє` : ""); return useItem("thief", best.o, best.j); }
       }
       // кто-то знает порядок патронов, а я — нет: встряхнуть, чтобы его знания сгорели
-      if (has("spin") && !sure && Object.keys(m.peeked).some((o) => room.hp[o] > 0) && chance(.55)) { line(chance(.5) ? "Что вы там подсмотрели? Забудьте" : ""); return useItem("spin"); }
+      if (has("spin") && !sure && Object.keys(m.peeked).some((o) => room.hp[o] > 0) && chance(.55)) { line(chance(.5) ? "Що ви там підгледіли? Забудьте" : ""); return useItem("spin"); }
       if (has("vest") && !me.vest && (hp <= 2 || hp < maxHp || Object.values(m.grudge).some((g) => g >= 3))) return useItem("vest");
       if (has("mirror") && !me.mirror && (hp <= maxHp - 1 || Object.values(m.grudge).some((g) => g >= 2) || chance(.35))) return useItem("mirror");
       if (has("stake") && hp >= Math.ceil(maxHp / 2) && chance(.6)) return useItem("stake");
@@ -479,14 +479,14 @@ const Bots = (() => {
     if (p === 1) selfShot = false;                                      // точно боевой — только в соперника
 
     if (!selfShot && m.acts < 6 && !aiming) {
-      if (!goodT && has("spin") && p >= .6) { line("Нет, так не пойдёт. Перемешаем"); return useItem("spin"); }   // все за зеркалами
+      if (!goodT && has("spin") && p >= .6) { line("Ні, так не піде. Перемішаємо"); return useItem("spin"); }   // все за зеркалами
       if (has("freeze") && others.length >= 1 && p >= .5) {             // бутылкой по голове тому, кто ходит после меня (вдвоём — это лишний ход мне)
         const nx = room.nextAfter(id), tgt = others.length === 1 ? others[0] : (list.find((t) => t.id === nx && t.s > 2) ? nx : others.slice().sort((a, b) => ((m.grudge[b] || 0) + (room.items[b] || []).length) - ((m.grudge[a] || 0) + (room.items[a] || []).length))[0]);
-        if (tgt && !(room.status[tgt] || {}).frozen) { line(chance(.5) ? pick(["Лови!", `${name(tgt)}, поймай-ка`, "Посиди, отдохни"]) : ""); return useItem("freeze", tgt); }
+        if (tgt && !(room.status[tgt] || {}).frozen) { line(chance(.5) ? pick(["Лови!", `${name(tgt)}, спіймай-но`, "Посидь, відпочинь"]) : ""); return useItem("freeze", tgt); }
       }
       if (has("saw") && !room.sawed && p >= .75) {                      // обрез — только когда боевой почти наверняка
         const top = list.filter((t) => t.s > -5).sort((a, b) => b.s - a.s)[0];
-        if (top && !(room.status[top.id] || {}).vest && (room.hp[top.id] >= 2 || p === 1)) { line(chance(.5) ? "Сейчас будет больно" : ""); return useItem("saw"); }
+        if (top && !(room.status[top.id] || {}).vest && (room.hp[top.id] >= 2 || p === 1)) { line(chance(.5) ? "Зараз буде боляче" : ""); return useItem("saw"); }
       }
     } else if (selfShot && m.acts < 6 && !aiming && has("freeze") && others.length > 1 && chance(.35)) {
       const nx = room.nextAfter(id); if (!(room.status[nx] || {}).frozen) { line(chance(.4) ? "Лови!" : ""); return useItem("freeze", nx); }
@@ -518,7 +518,7 @@ const Bots = (() => {
       steps.push(target);
       const slow = chance(.18 + unsure * .25);                              // «долго думает» перед первым движением
       m.aimFor = { key, id: target, steps, i: 0, slow, quick: style < .22 && !slow };
-      if (slow) { if (chance(.4)) line(pick(["Хм…", "Дайте подумать", "Так-так…", "Сложный выбор"])); think(id, 3500, 7500); return; }
+      if (slow) { if (chance(.4)) line(pick(["Хм…", "Дайте подумати", "Так-так…", "Складний вибір"])); think(id, 3500, 7500); return; }
     }
     const plan = m.aimFor;
     if (left < 7) { if (room.aim !== target) { h.handle(id, { t: "act", slot: "aim", target }); think(id, 500, 900); return; } return act(h, id, { slot: "shoot", target }, 600, 900); }
@@ -526,14 +526,14 @@ const Bots = (() => {
       const to = plan.steps[plan.i++], last = plan.i === plan.steps.length;
       if (room.aim !== to || !last) h.handle(id, { t: "act", slot: "aim", target: to });
       if (!last) {
-        if (chance(.22)) line(to === id ? pick(["А может, в себя?..", "Или так…"]) : pick([`${name(to)}?..`, "Кто же, кто же…", "Не дёргайтесь", `Посмотри на меня, ${name(to)}`]));
+        if (chance(.22)) line(to === id ? pick(["А може, в себе?..", "Або так…"]) : pick([`${name(to)}?..`, "Хто ж, хто ж…", "Не смикайтеся", `Подивися на мене, ${name(to)}`]));
         return think(id, plan.quick ? 700 : 1100, plan.quick ? 1300 : 2900);
       }
       if (chance(.3)) {
         const nm = target !== id ? name(target) : "";
-        line(target === id ? (p === 0 ? pick(["Знаю, что делаю", "Там пусто. Смотрите", "Спокойно — холостой"]) : pick(["Чувствую, холостой…", "Рискну. В себя", "Ну, удача, не подведи"]))
-          : m.why === "kill" ? pick([`${nm}, это конец`, `Прощай, ${nm}`, "Добью"]) : m.why === "grudge" ? pick([`${nm}, ты первый начал(а)`, `Это за прошлый раз, ${nm}`, `${nm}, это личное`])
-          : p === 1 ? pick([`${nm}, я знаю, что там`, "Этот точно боевой"]) : pick([`${nm}, ничего личного`, `Прости, ${nm}`, "Посмотрим…"]));
+        line(target === id ? (p === 0 ? pick(["Знаю, що роблю", "Там порожньо. Дивіться", "Спокійно — холостий"]) : pick(["Відчуваю, холостий…", "Ризикну. В себе", "Ну, удаче, не підведи"]))
+          : m.why === "kill" ? pick([`${nm}, це кінець`, `Прощавай, ${nm}`, "Доб’ю"]) : m.why === "grudge" ? pick([`${nm}, ти перший почав(ла)`, `Це за минулий раз, ${nm}`, `${nm}, це особисте`])
+          : p === 1 ? pick([`${nm}, я знаю, що там`, "Цей точно бойовий"]) : pick([`${nm}, нічого особистого`, `Пробач, ${nm}`, "Подивимося…"]));
       }
       return think(id, plan.quick ? 600 : 1300, plan.quick ? 1200 : plan.steps.length > 2 ? 4200 : 3000);   // палец на спуске
     }
@@ -555,7 +555,7 @@ const Bots = (() => {
     const others = room.seats.filter((q) => q !== id && room.canTarget(id, q));
     if (!m.plan) {
       // крутить барабан — когда шанс большой, а стрелять придётся в себя (все остальные — храбрецы)
-      if (!room.spun[id] && !others.length && p >= 1 / 3) { line(pick(["Нет-нет, крутанём", "Сначала покрутим", "Удача, крутись"])); return act(h, id, { slot: "spin" }, 1500, 2600); }
+      if (!room.spun[id] && !others.length && p >= 1 / 3) { line(pick(["Ні-ні, крутнемо", "Спершу покрутимо", "Удаче, крутися"])); return act(h, id, { slot: "spin" }, 1500, 2600); }
       // в себя — ради «храбреца», пока шанс маленький; в остальных — по обидам и по слабым
       const self = !others.length || (p <= 1 / 5 && chance(.5)) || (p <= 1 / 4 && chance(.25)) || (p <= 1 / 3 && chance(.06));
       let target = id;
@@ -568,15 +568,15 @@ const Bots = (() => {
       for (let i = 0; i < fakes; i++) { const pool = alive.filter((q) => q !== target && q !== steps[steps.length - 1] && room.canTarget(id, q)); if (pool.length) steps.push(pick(pool)); }
       steps.push(target);
       m.plan = { steps, i: 0, target, slow: chance(.2 + p * .4) };
-      if (m.plan.slow) { if (chance(.4)) line(pick(["Хм…", "Так…", "Дайте собраться", p >= .5 ? "Тут уже горячо" : "Кто же сегодня…"])); return think(id, 3000, 6500); }
+      if (m.plan.slow) { if (chance(.4)) line(pick(["Хм…", "Так…", "Дайте зібратися", p >= .5 ? "Тут уже гаряче" : "Хто ж сьогодні…"])); return think(id, 3000, 6500); }
     }
     const plan = m.plan, left = room.deadline ? room.deadline - room.clock() : 99;
     if (left < 6) { if (room.aim !== plan.target) { h.handle(id, { t: "act", slot: "aim", target: plan.target }); return think(id, 500, 800); } return act(h, id, { slot: "shoot", target: plan.target }, 600, 900); }
     if (plan.i < plan.steps.length) {
       const to = plan.steps[plan.i++], last = plan.i === plan.steps.length;
       if (room.aim !== to) h.handle(id, { t: "act", slot: "aim", target: to });
-      if (!last) { if (chance(.2)) line(to === id ? "А может, в себя?.." : pick([`${name(to)}?..`, "Не дёргайся", "Кто же, кто же…"])); return think(id, 1100, 2600); }
-      if (chance(.35)) line(plan.target === id ? pick(["Ну, удача…", "Смотрите внимательно", "Рискну"]) : (m.grudge[plan.target] ? pick([`${name(plan.target)}, это за прошлый раз`, "Ничего личного… хотя нет, личное"]) : pick([`Прости, ${name(plan.target)}`, `${name(plan.target)}, не моргай`, "Посмотрим…"])));
+      if (!last) { if (chance(.2)) line(to === id ? "А може, в себе?.." : pick([`${name(to)}?..`, "Не смикайся", "Хто ж, хто ж…"])); return think(id, 1100, 2600); }
+      if (chance(.35)) line(plan.target === id ? pick(["Ну, удаче…", "Дивіться уважно", "Ризикну"]) : (m.grudge[plan.target] ? pick([`${name(plan.target)}, це за минулий раз`, "Нічого особистого… хоча ні, особисте"]) : pick([`Пробач, ${name(plan.target)}`, `${name(plan.target)}, не кліпай`, "Подивимося…"])));
       return think(id, 1400, p >= .5 ? 4200 : 3000);                    // палец на спуске
     }
     if (room.aim !== plan.target) { h.handle(id, { t: "act", slot: "aim", target: plan.target }); return think(id, 700, 1200); }
@@ -599,7 +599,7 @@ const Bots = (() => {
       if (!hand.filter(good).length && hand.length) p += .1;                // самому нечем крыть — проще не поверить
       if (last.n > pool) p = 1;
       if (!hand.length || chance(Math.min(.95, p))) {
-        if (chance(.4)) say(h, room, id, pick(["Не верю!", "Враньё!", "Ну-ка покажи", "Вскрываем", "Блефуешь"]));
+        if (chance(.4)) say(h, room, id, pick(["Не вірю!", "Брехня!", "Ану покажи", "Розкриваємо", "Блефуєш"]));
         return act(h, id, { slot: "call" }, 1500, 2500);
       }
     }
@@ -611,7 +611,7 @@ const Bots = (() => {
       cards = gi.slice(0, k);
       if (cards.length < 3 && bi.length && chance(.18)) cards.push(bi[0]);   // иногда подмешивает лишнюю
     } else cards = bi.slice(0, chance(.75) || bi.length < 2 ? 1 : 2);       // нечем крыть — блефует
-    if (chance(.25)) say(h, room, id, pick(["Честно-честно", "Верь мне", "Держи", "Ну?", "Ваш ход"]));
+    if (chance(.25)) say(h, room, id, pick(["Чесно-чесно", "Повір мені", "Тримай", "Ну?", "Ваш хід"]));
     act(h, id, { slot: "play", cards }, 1300, 2600);
   }
 
@@ -637,7 +637,7 @@ const Bots = (() => {
     else if (mine > need && mine >= 17) move = "stand";
     else if (mine < need) move = soft || bustP < .75 ? "hit" : "stand";       // проигрываю — рискую
     else move = soft || bustP < .4 ? "hit" : "stand";
-    if (chance(.15)) say(h, room, id, move === "hit" ? pick(["Ещё!", "Давай ещё одну", "Рискну"]) : move === "double" ? "Удваиваю!" : pick(["Хватит", "Мне хватит", "Стою"]));
+    if (chance(.15)) say(h, room, id, move === "hit" ? pick(["Ще!", "Давай ще одну", "Ризикну"]) : move === "double" ? "Подвоюю!" : pick(["Досить", "Мені досить", "Стою"]));
     act(h, id, { slot: move }, 1000, 2500);
   }
 
@@ -645,8 +645,8 @@ const Bots = (() => {
   function bar(room) {
     if (!allowed() || !Net.isHost() || !room || room.game === "draw" || room.game === "spy" || (room.settings && room.settings.tour) || !["lobby", "end"].includes(room.phase)) return "";
     const n = room.players ? room.players.filter((p) => isBot(p.id)).length : 0;
-    return `<div class="card bot-bar"><div class="grow small">🤖 <b>Боты</b> — если не хватает игроков${n ? ` · ботов: ${n}` : ""}${n && ["blackjack", "roulette", "revolver", "bluff"].includes(room.game) ? "<br><span class=\"muted\">с ботами — без ставок</span>" : ""}<br><span class=\"muted\">Победишь — по 🪙5 за каждого бота</span></div>
-      <button class="btn small" data-a="bot-add">＋ Бот</button>${n ? `<button class="btn ghost small" data-a="bot-clear">Убрать</button>` : ""}</div>`;
+    return `<div class="card bot-bar"><div class="grow small">🤖 <b>Боти</b> — якщо бракує гравців${n ? ` · ботів: ${n}` : ""}${n && ["blackjack", "roulette", "revolver", "bluff"].includes(room.game) ? "<br><span class=\"muted\">з ботами — без ставок</span>" : ""}<br><span class=\"muted\">Переможеш — по 🪙5 за кожного бота</span></div>
+      <button class="btn small" data-a="bot-add">＋ Бот</button>${n ? `<button class="btn ghost small" data-a="bot-clear">Прибрати</button>` : ""}</div>`;
   }
 
   // после перезапуска приложения хост снова «ведёт» ботов из сохранённой комнаты

@@ -7,16 +7,16 @@ const CellarPeople = (() => {
   "use strict";
   const SKINS = ["#c89068", "#a8704a", "#e2b48c", "#7e5234", "#efc6a2"];
   const LOOKS = [
-    { name: "Громила", skin: 0, wide: 1.16, hair: "bald", top: "tank", topC: "#d8d2c2", pants: "#2a2a30", beard: "stubble", scar: 1, tattoo: 1 },
-    { name: "Пиджак", skin: 4, wide: 1, hair: "slick", hairC: "#1a1410", top: "suit", topC: "#26262e", shirt: "#d6d4cc", tie: "#7a1010", pants: "#1e1e24", mustache: 1 },
+    { name: "Здоровань", skin: 0, wide: 1.16, hair: "bald", top: "tank", topC: "#d8d2c2", pants: "#2a2a30", beard: "stubble", scar: 1, tattoo: 1 },
+    { name: "Піджак", skin: 4, wide: 1, hair: "slick", hairC: "#1a1410", top: "suit", topC: "#26262e", shirt: "#d6d4cc", tie: "#7a1010", pants: "#1e1e24", mustache: 1 },
     { name: "Спортсмен", skin: 2, wide: 1.04, hair: "cap", capC: "#232323", top: "track", topC: "#1e3c8c", stripe: "#e6e6e6", pants: "#1a1a22", beard: "stubble" },
     { name: "Байкер", skin: 1, wide: 1.12, hair: "bandana", capC: "#8a1414", hairC: "#3a2616", top: "leather", topC: "#1a1614", pants: "#2a3040", beard: "full", glasses: "shades" },
-    { name: "Старик", skin: 4, wide: .92, hair: "old", hairC: "#bdbab2", top: "sweater", topC: "#5e4a36", pants: "#3a3228", glasses: "round", wrinkles: 1, mustache: 1 },
-    { name: "Зэк", skin: 2, wide: 1, hair: "buzz", hairC: "#2a2420", top: "robe", topC: "#4c5054", pants: "#3c4044", tattoo: 1, scar: 1 },
-    { name: "Механик", skin: 3, wide: 1.06, hair: "capback", capC: "#c05010", hairC: "#1a1410", top: "overall", topC: "#2a4a7a", shirt: "#b8a888", pants: "#2a4a7a", grease: 1, beard: "goatee" },
-    { name: "Капюшон", skin: 1, wide: 1, hair: "hood", capC: "#38383c", top: "hoodie", topC: "#38383c", pants: "#22242a", mask: "#141414" },
-    { name: "Рыжая", skin: 4, wide: .9, hair: "long", hairC: "#a8380e", top: "jacket", topC: "#6a1616", shirt: "#1a1a1a", pants: "#1a1a20", lips: "#a8101e", lashes: 1 },
-    { name: "Охранник", skin: 3, wide: 1.02, hair: "flatcap", capC: "#1c283a", hairC: "#1a1410", top: "uniform", topC: "#4a5c6e", shirt: "#4a5c6e", tie: "#141c28", pants: "#1c2430", badge: 1 },
+    { name: "Старий", skin: 4, wide: .92, hair: "old", hairC: "#bdbab2", top: "sweater", topC: "#5e4a36", pants: "#3a3228", glasses: "round", wrinkles: 1, mustache: 1 },
+    { name: "В’язень", skin: 2, wide: 1, hair: "buzz", hairC: "#2a2420", top: "robe", topC: "#4c5054", pants: "#3c4044", tattoo: 1, scar: 1 },
+    { name: "Механік", skin: 3, wide: 1.06, hair: "capback", capC: "#c05010", hairC: "#1a1410", top: "overall", topC: "#2a4a7a", shirt: "#b8a888", pants: "#2a4a7a", grease: 1, beard: "goatee" },
+    { name: "Каптур", skin: 1, wide: 1, hair: "hood", capC: "#38383c", top: "hoodie", topC: "#38383c", pants: "#22242a", mask: "#141414" },
+    { name: "Руда", skin: 4, wide: .9, hair: "long", hairC: "#a8380e", top: "jacket", topC: "#6a1616", shirt: "#1a1a1a", pants: "#1a1a20", lips: "#a8101e", lashes: 1 },
+    { name: "Охоронець", skin: 3, wide: 1.02, hair: "flatcap", capC: "#1c283a", hairC: "#1a1410", top: "uniform", topC: "#4a5c6e", shirt: "#4a5c6e", tie: "#141c28", pants: "#1c2430", badge: 1 },
   ];
 
   /* ---------------------------------------------------------------- текстуры, нарисованные кодом */

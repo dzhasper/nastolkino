@@ -62,10 +62,10 @@
 
   // проверка на телефоне игрока: отпечаток совпал и каждая карта лежала в колоде на своём месте
   function verify(reveal) {
-    if (!reveal || !reveal.serverSeed) return { ok: false, why: "Секрет ещё не открыт" };
-    if (sha256(reveal.serverSeed) !== reveal.commit) return { ok: false, why: "Отпечаток колоды не совпал" };
+    if (!reveal || !reveal.serverSeed) return { ok: false, why: "Секрет ще не відкрито" };
+    if (sha256(reveal.serverSeed) !== reveal.commit) return { ok: false, why: "Відбиток колоди не збігся" };
     const deck = shuffleDeck(reveal.serverSeed, reveal.seeds, reveal.handNo);
-    for (const [pid, cards] of Object.entries(reveal.dealt)) for (const [card, i] of cards) if (deck[i] !== card) return { ok: false, why: `Карта ${card} не на своём месте`, pid };
+    for (const [pid, cards] of Object.entries(reveal.dealt)) for (const [card, i] of cards) if (deck[i] !== card) return { ok: false, why: `Карта ${card} не на своєму місці`, pid };
     return { ok: true };
   }
 
@@ -106,27 +106,27 @@
 
     join(m) {
       if (this.members[m.id]) { Object.assign(this.members[m.id], { online: true, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); this.touch(); return; }
-      if (this.order.length >= MAX_PLAYERS) throw new GameError(`За столом только ${MAX_PLAYERS} мест`);
+      if (this.order.length >= MAX_PLAYERS) throw new GameError(`За столом лише ${MAX_PLAYERS} місць`);
       this.members[m.id] = m; this.order.push(m.id); this.touch();       // можно подсесть между раздачами
     }
 
     leave(pid) {
       if (!this.members[pid]) return;
-      if (this.phase === "play" && this.hands[pid] && !this.hands[pid].done) { this.hands[pid].done = true; this.hands[pid].folded = true; this.note(`${this.name(pid)} встаёт из-за стола — сброс`); if (this.turn === pid) this.nextTurn(); }
+      if (this.phase === "play" && this.hands[pid] && !this.hands[pid].done) { this.hands[pid].done = true; this.hands[pid].folded = true; this.note(`${this.name(pid)} встає з-за столу — скидання`); if (this.turn === pid) this.nextTurn(); }
       if (["play", "show"].includes(this.phase) && this.hands[pid]) this.members[pid].online = false;     // карты остаются на столе до конца раздачи
       else { delete this.members[pid]; this.order = this.order.filter((x) => x !== pid); }
       if (this.phase === "bet" && this.betDone()) this.deal();
       this.touch();
     }
 
-    kick(by, pid) { if (by !== this.host || pid === this.host || this.phase !== "lobby") throw new GameError("Нельзя"); this.leave(pid); }
+    kick(by, pid) { if (by !== this.host || pid === this.host || this.phase !== "lobby") throw new GameError("Не можна"); this.leave(pid); }
     setOnline(pid, online) { if (this.members[pid]) { this.members[pid].online = online; this.touch(); } }
     seenRole() {}
 
     start(by) {
-      if (by !== this.host) throw new GameError("Начать может только хост");
-      if (!["lobby", "end"].includes(this.phase)) throw new GameError("Игра уже идёт");
-      if (this.online().length < MIN_PLAYERS) throw new GameError(`Нужно минимум ${MIN_PLAYERS} игрока`);
+      if (by !== this.host) throw new GameError("Почати може лише хост");
+      if (!["lobby", "end"].includes(this.phase)) throw new GameError("Гра вже триває");
+      if (this.online().length < MIN_PLAYERS) throw new GameError(`Потрібно щонайменше ${MIN_PLAYERS} гравці`);
       this.resetGame();
       this.gameNo = (this.gameNo || 0) + 1;
       this.chat = { all: [] };
@@ -143,12 +143,12 @@
     }
 
     bet(pid, d) {
-      if (this.phase !== "bet") throw new GameError("Ставки уже сделаны");
+      if (this.phase !== "bet") throw new GameError("Ставки вже зроблено");
       if (!this.members[pid]) return;
       const seed = String(d.seed || "").replace(/[^0-9a-f]/gi, "").slice(0, 64);
       if (d.play) {
-        if (this.settings.stake && coinsOf(this.members[pid]) < this.settings.stake) throw new GameError(`Не хватает монет: ставка ${this.settings.stake}`);
-        if (seed.length < 16) throw new GameError("Нет случайности для колоды");
+        if (this.settings.stake && coinsOf(this.members[pid]) < this.settings.stake) throw new GameError(`Бракує монет: ставка ${this.settings.stake}`);
+        if (seed.length < 16) throw new GameError("Немає випадковості для колоди");
         this.seeds[pid] = seed; this.joined[pid] = true;
       } else { this.joined[pid] = false; delete this.seeds[pid]; }
       this.touch();
@@ -159,7 +159,7 @@
     deal() {
       const players = this.order.filter((p) => this.joined[p] && this.members[p] && this.members[p].online);
       if (players.length < MIN_PLAYERS) {                         // играть некому — ждём следующую раздачу
-        this.note(`Раздача №${this.handNo}: мало игроков`);
+        this.note(`Роздача №${this.handNo}: замало гравців`);
         this.phase = "wait"; this.deadline = null; this.total = null; this.touch(); return;
       }
       Object.keys(this.seeds).forEach((p) => { if (!players.includes(p)) delete this.seeds[p]; });
@@ -168,7 +168,7 @@
       players.forEach((p) => { this.hands[p] = { cards: [], idx: [], done: false, bust: false, doubled: false, folded: false }; });
       for (let r = 0; r < 2; r++) players.forEach((p) => this.draw(p));
       this.pot = this.settings.stake * players.length;
-      players.forEach((p) => { if (isBlackjack(this.hands[p].cards)) { this.hands[p].done = true; this.note(`${this.name(p)}: блэкджек!`); } });
+      players.forEach((p) => { if (isBlackjack(this.hands[p].cards)) { this.hands[p].done = true; this.note(`${this.name(p)}: блекджек!`); } });
       this.turn = null; this.phase = "play";
       this.nextTurn();
     }
@@ -189,16 +189,16 @@
 
     act(pid, d) {
       if (d.slot === "bet") return this.bet(pid, d);
-      if (this.phase !== "play" || pid !== this.turn) throw new GameError("Сейчас не твой ход");
+      if (this.phase !== "play" || pid !== this.turn) throw new GameError("Зараз не твій хід");
       const h = this.hands[pid];
-      if (d.slot === "hit") { this.draw(pid); this.note(`${this.name(pid)} берёт ещё${h.bust ? " — перебор!" : ""}`); }
-      else if (d.slot === "stand") { h.done = true; this.note(`${this.name(pid)}: хватит`); }
+      if (d.slot === "hit") { this.draw(pid); this.note(`${this.name(pid)} бере ще${h.bust ? " — перебір!" : ""}`); }
+      else if (d.slot === "stand") { h.done = true; this.note(`${this.name(pid)}: досить`); }
       else if (d.slot === "double") {
-        if (h.cards.length !== 2) throw new GameError("Удвоить можно только первым ходом");
-        if (this.settings.stake && coinsOf(this.members[pid]) < this.settings.stake * 2) throw new GameError("Не хватает монет, чтобы удвоить");
+        if (h.cards.length !== 2) throw new GameError("Подвоїти можна лише першим ходом");
+        if (this.settings.stake && coinsOf(this.members[pid]) < this.settings.stake * 2) throw new GameError("Бракує монет, щоб подвоїти");
         h.doubled = true; this.pot += this.settings.stake; this.draw(pid); h.done = true;
-        this.note(`${this.name(pid)} удваивает ставку и берёт одну карту${h.bust ? " — перебор!" : ""}`);
-      } else throw new GameError("Нет такого действия");
+        this.note(`${this.name(pid)} подвоює ставку й бере одну карту${h.bust ? " — перебір!" : ""}`);
+      } else throw new GameError("Немає такої дії");
       if (h.done) this.nextTurn(); else { this.setTimer(TURN_SECONDS); this.touch(); }
     }
 
@@ -218,24 +218,24 @@
       this.results = { winners, payout, best };
       this.reveal = { serverSeed: this.serverSeed, commit: this.commit, seeds: { ...this.seeds }, handNo: this.handNo,
         dealt: Object.fromEntries(this.players.map((p) => [p, this.hands[p].cards.map((c, i) => [c, this.hands[p].idx[i]])])) };
-      this.note(winners.length ? `Раздача №${this.handNo}: ${winners.map((p) => this.name(p)).join(", ")} ${winners.length > 1 ? "делят" : "забирает"} банк` : `Раздача №${this.handNo}: все перебрали, ставки вернулись`);
+      this.note(winners.length ? `Роздача №${this.handNo}: ${winners.map((p) => this.name(p)).join(", ")} ${winners.length > 1 ? "ділять" : "забирає"} банк` : `Роздача №${this.handNo}: усі перебрали, ставки повернулися`);
       this.phase = "show"; this.turn = null; this.setTimer(SHOW_SECONDS); this.touch();
     }
 
     finish(by) {
-      if (by !== this.host) throw new GameError("Закончить может только хост");
-      if (this.phase === "play") throw new GameError("Дождись конца раздачи");
+      if (by !== this.host) throw new GameError("Завершити може лише хост");
+      if (this.phase === "play") throw new GameError("Дочекайся кінця роздачі");
       this.phase = "end"; this.deadline = null; this.total = null; this.touch();
     }
 
     backToLobby(by) {
-      if (by !== this.host || this.phase !== "end") throw new GameError("Нельзя");
+      if (by !== this.host || this.phase !== "end") throw new GameError("Не можна");
       this.order.filter((p) => !this.members[p].online).forEach((p) => { delete this.members[p]; this.order = this.order.filter((x) => x !== p); });
       this.phase = "lobby"; this.resetGame(); this.deadline = null; this.touch();
     }
 
     skip(by) {
-      if (by !== this.host) throw new GameError("Только хост");
+      if (by !== this.host) throw new GameError("Лише хост");
       if (this.phase === "wait" || this.phase === "show") this.newHand();
       else if (this.phase === "bet") { this.online().forEach((p) => { if (!(p in this.joined)) this.joined[p] = false; }); this.deal(); }
       else if (this.phase === "play" && this.turn) { this.hands[this.turn].done = true; this.nextTurn(); }
@@ -244,7 +244,7 @@
     tick() {
       if (!this.deadline || this.clock() < this.deadline) return false;
       if (this.phase === "bet") { this.online().forEach((p) => { if (!(p in this.joined)) this.joined[p] = false; }); this.deal(); }
-      else if (this.phase === "play") { const h = this.hands[this.turn]; h.done = true; this.note(`${this.name(this.turn)} думал(а) слишком долго — хватит`); this.nextTurn(); }
+      else if (this.phase === "play") { const h = this.hands[this.turn]; h.done = true; this.note(`${this.name(this.turn)} думав(ла) надто довго — досить`); this.nextTurn(); }
       else if (this.phase === "show") { if (this.online().length >= MIN_PLAYERS) this.newHand(); else { this.phase = "wait"; this.deadline = null; this.touch(); } }
       return true;
     }
@@ -272,7 +272,7 @@
       });
       return {
         game: "blackjack", game_no: this.gameNo || 0, code: this.code, host: this.host, version: this.version, now: Math.round(this.clock() * 1000),
-        theme: { key: "blackjack", title: "Блэкджек", emoji: "🃏", accent: "#d8b040", accent2: "#0a3a1e" },
+        theme: { key: "blackjack", title: "Блекджек", emoji: "🃏", accent: "#d8b040", accent2: "#0a3a1e" },
         settings: this.settings, phase: this.phase, deadline: this.deadline ? Math.round(this.deadline * 1000) : null, total: this.total,
         players, seats: this.players, turn: this.turn, pot: this.pot, handNo: this.handNo, commit: this.commit, cardsLeft: this.deck.length ? 52 - this.dealtPos : 52,
         my_joined: this.joined[pid], results: this.results, reveal: this.reveal, log: this.log.slice(-8),

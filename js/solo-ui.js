@@ -23,7 +23,7 @@ function soloSetRec(k, v, lower) {
 }
 const soloTop = (title, sub, back = "solo") => `<div class="top"><button class="avatar" data-a="go" data-v="${back}">←</button><div class="grow"><h1>${title}</h1>
   <div class="muted small">${sub}</div></div>${coinPill()}</div>`;
-const capLine = (g) => `<div class="small muted mt center">Сегодня заработано ${soloGot(g)} из ${SOLO_GAMES[g].cap} 🪙</div>`;
+const capLine = (g) => `<div class="small muted mt center">Сьогодні зароблено ${soloGot(g)} з ${SOLO_GAMES[g].cap} 🪙</div>`;
 
 /* ---------------------------------------------------------------- колода */
 const SOLO_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -45,25 +45,25 @@ function handTotal(cards) {
 function viewSolo() {
   const st = Api.on && Api.state, wh = st && st.wheel;
   const tile = (screen, emoji, name, sub, extra = "") => `<button class="solo-tile ${extra}" data-a="go" data-v="${screen}"><span class="st-e">${emoji}</span><b>${name}</b><span class="small muted">${sub}</span></button>`;
-  const recTxt = (k, unit, none = "рекорда нет") => (soloRec(k) != null ? `рекорд: ${soloRec(k)}${unit}` : none);
+  const recTxt = (k, unit, none = "рекорду немає") => (soloRec(k) != null ? `рекорд: ${soloRec(k)}${unit}` : none);
   return `<div class="fade-in">
     <div class="pxscene big" style="background-image:url(${Pixel.scene("solo")})"></div>
-    ${soloTop("Одиночные игры", "Против бота, на рекорд и с питомцем", "home")}
-    <button class="card wheel-card ${wh && wh.ready ? "ready" : ""}" data-a="go" data-v="solo-wheel"><span class="wc-e">🎡</span><div class="grow"><b>Колесо фортуны</b>
-      <div class="small muted">${!Api.on ? "Работает через сервер" : wh && wh.ready ? "Бесплатно раз в день — крути!" : "Уже крутил сегодня — приходи завтра"}</div></div><span class="pill ${wh && wh.ready ? "on" : ""}">${wh && wh.ready ? "Крутить" : "Завтра"}</span></button>
-    <div class="section-title">🪙 На монеты</div>
+    ${soloTop("Одиночні ігри", "Проти бота, на рекорд і з улюбленцем", "home")}
+    <button class="card wheel-card ${wh && wh.ready ? "ready" : ""}" data-a="go" data-v="solo-wheel"><span class="wc-e">🎡</span><div class="grow"><b>Колесо фортуни</b>
+      <div class="small muted">${!Api.on ? "Працює через сервер" : wh && wh.ready ? "Безплатно раз на день — крути!" : "Уже крутив сьогодні — приходь завтра"}</div></div><span class="pill ${wh && wh.ready ? "on" : ""}">${wh && wh.ready ? "Крутити" : "Завтра"}</span></button>
+    <div class="section-title">🪙 На монети</div>
     <div class="solo-grid">
-      ${tile("solo-bj", "🃏", "Блэкджек", `победа 5–8 🪙 · ${soloGot("bj")}/${SOLO_GAMES.bj.cap}`)}
-      ${tile("solo-hilo", "⬆️", "Выше или ниже", `до 10 🪙 · ${soloGot("hilo")}/${SOLO_GAMES.hilo.cap}`)}
-      ${tile("solo-cups", "🥤", "Напёрстки", `3–5 🪙 · ${soloGot("cups")}/${SOLO_GAMES.cups.cap}`)}
-      ${tile("solo-snake", "🐍", "Змейка", `съел ÷ 2 🪙 · ${soloGot("snake")}/${SOLO_GAMES.snake.cap}`)}
-      ${tile("petfun", "🐾", "С питомцем", "радует питомца", "pet")}
+      ${tile("solo-bj", "🃏", "Блекджек", `перемога 5–8 🪙 · ${soloGot("bj")}/${SOLO_GAMES.bj.cap}`)}
+      ${tile("solo-hilo", "⬆️", "Вище чи нижче", `до 10 🪙 · ${soloGot("hilo")}/${SOLO_GAMES.hilo.cap}`)}
+      ${tile("solo-cups", "🥤", "Наперстки", `3–5 🪙 · ${soloGot("cups")}/${SOLO_GAMES.cups.cap}`)}
+      ${tile("solo-snake", "🐍", "Змійка", `з’їв ÷ 2 🪙 · ${soloGot("snake")}/${SOLO_GAMES.snake.cap}`)}
+      ${tile("petfun", "🐾", "З улюбленцем", "радує улюбленця", "pet")}
     </div>
     <div class="section-title">🎈 Просто так</div>
     <div class="solo-grid">
-      ${tile("solo-memo", "🧠", "Мемори", recTxt("memo", " ходов"))}
-      ${tile("solo-react", "⚡", "Реакция", recTxt("react", " мс"))}
-      ${tile("solo-shoot", "🎯", "Тир", recTxt("shoot", " очков"))}
+      ${tile("solo-memo", "🧠", "Меморі", recTxt("memo", " ходів"))}
+      ${tile("solo-react", "⚡", "Реакція", recTxt("react", " мс"))}
+      ${tile("solo-shoot", "🎯", "Тир", recTxt("shoot", " очок"))}
     </div>
   </div>${tabs()}`;
 }
@@ -73,17 +73,17 @@ function viewSoloBj() {
   const g = S.sbj || (S.sbj = { deck: newDeck(), player: [], dealer: [], phase: "bet", stats: { w: 0, l: 0, p: 0 } });
   const hide = g.phase === "play";
   const dealer = g.dealer.map((c, i) => cardHtml(hide && i === 1 ? "??" : c, true)).join("");
-  const res = g.phase === "done" ? `<div class="sbj-res ${g.result}">${{ win: "Победа!", bj: "Блэкджек!", push: "Ничья", lose: "Дилер выиграл", bust: "Перебор!" }[g.result]}${g.got ? ` +${g.got} 🪙` : g.capped ? " (лимит на сегодня)" : ""}</div>` : "";
+  const res = g.phase === "done" ? `<div class="sbj-res ${g.result}">${{ win: "Перемога!", bj: "Блекджек!", push: "Нічия", lose: "Дилер виграв", bust: "Перебір!" }[g.result]}${g.got ? ` +${g.got} 🪙` : g.capped ? " (ліміт на сьогодні)" : ""}</div>` : "";
   return `<div class="fade-in">
-    ${soloTop("Блэкджек", `Счёт: ${g.stats.w} побед · ${g.stats.l} поражений · ${g.stats.p} ничьих`)}
+    ${soloTop("Блекджек", `Рахунок: ${g.stats.w} перемог · ${g.stats.l} поразок · ${g.stats.p} нічиїх`)}
     <div class="sbj-table">
       <div class="sbj-side"><div class="small muted">Дилер${g.dealer.length ? ` · ${hide ? "?" : handTotal(g.dealer)}` : ""}</div><div class="bj-cards">${dealer || '<div class="muted small">—</div>'}</div></div>
       ${res}
-      <div class="sbj-side"><div class="small muted">Ты${g.player.length ? ` · ${handTotal(g.player)}` : ""}</div><div class="bj-cards">${g.player.map((c) => cardHtml(c, true)).join("") || '<div class="muted small">—</div>'}</div></div>
+      <div class="sbj-side"><div class="small muted">Ти${g.player.length ? ` · ${handTotal(g.player)}` : ""}</div><div class="bj-cards">${g.player.map((c) => cardHtml(c, true)).join("") || '<div class="muted small">—</div>'}</div></div>
     </div>
-    ${g.phase === "play" ? `<div class="row mt2"><button class="btn grow" data-a="sbj-hit">Ещё карту</button><button class="btn ghost grow" data-a="sbj-stand">Хватит</button></div>`
-      : `<button class="btn mt2" data-a="sbj-deal">${g.phase === "bet" ? "Раздать" : "Ещё раздача"}</button>`}
-    <div class="small muted mt center">Дилер берёт до 17. Победа — от 5 до 8 🪙, блэкджек — 8 🪙, поражение — ничего.</div>${capLine("bj")}
+    ${g.phase === "play" ? `<div class="row mt2"><button class="btn grow" data-a="sbj-hit">Ще карту</button><button class="btn ghost grow" data-a="sbj-stand">Досить</button></div>`
+      : `<button class="btn mt2" data-a="sbj-deal">${g.phase === "bet" ? "Роздати" : "Ще роздача"}</button>`}
+    <div class="small muted mt center">Дилер бере до 17. Перемога — від 5 до 8 🪙, блекджек — 8 🪙, поразка — нічого.</div>${capLine("bj")}
   </div>`;
 }
 function sbjFinish(g, result) {
@@ -101,17 +101,17 @@ const hiloVal = (c) => { const r = rankOf(c); return r === "A" ? 14 : r === "K" 
 function viewSoloHilo() {
   const g = S.shilo || (S.shilo = { deck: newDeck(), card: null, streak: 0, phase: "start", best: 0 });
   const pay = HILO_PAY[Math.min(g.streak, HILO_PAY.length - 1)];
-  const msg = g.phase === "lost" ? `<div class="sbj-res lose">Мимо! Серия ${g.lostStreak} сгорела</div>` : g.phase === "cashed" ? `<div class="sbj-res win">Забрал${g.got ? ` +${g.got} 🪙` : " (лимит на сегодня)"}</div>`
-    : g.last ? `<div class="sbj-res ${g.last === "same" ? "push" : "win"}">${g.last === "same" ? "Такая же — серия сохраняется" : "Угадал!"}</div>` : "";
+  const msg = g.phase === "lost" ? `<div class="sbj-res lose">Повз! Серія ${g.lostStreak} згоріла</div>` : g.phase === "cashed" ? `<div class="sbj-res win">Забрав${g.got ? ` +${g.got} 🪙` : " (ліміт на сьогодні)"}</div>`
+    : g.last ? `<div class="sbj-res ${g.last === "same" ? "push" : "win"}">${g.last === "same" ? "Така сама — серія зберігається" : "Угадав!"}</div>` : "";
   return `<div class="fade-in">
-    ${soloTop("Выше или ниже", `Лучшая серия: ${g.best}`)}
+    ${soloTop("Вище чи нижче", `Найкраща серія: ${g.best}`)}
     <div class="hilo-card">${g.card ? cardHtml(g.card, true) : '<div class="pcard-x back big"><i></i></div>'}</div>
-    <div class="hilo-streak">Серия: <b>${g.streak}</b>${g.streak >= 3 ? ` · можно забрать <b>${pay} 🪙</b>` : g.phase === "play" ? ` · монеты с серии 3` : ""}</div>
+    <div class="hilo-streak">Серія: <b>${g.streak}</b>${g.streak >= 3 ? ` · можна забрати <b>${pay} 🪙</b>` : g.phase === "play" ? ` · монети із серії 3` : ""}</div>
     ${msg}
-    ${g.phase === "play" ? `<div class="row mt2"><button class="btn grow" data-a="hilo-guess" data-v="hi">⬆️ Выше</button><button class="btn grow" data-a="hilo-guess" data-v="lo">⬇️ Ниже</button></div>
-      ${g.streak >= 3 ? `<button class="btn ghost mt" data-a="hilo-cash">💰 Забрать ${pay} 🪙</button>` : ""}`
-      : `<button class="btn mt2" data-a="hilo-start">${g.phase === "start" ? "Начать" : "Новая серия"}</button>`}
-    <div class="small muted mt center">Туз — старшая карта. Серия 3 — 2 🪙, 5 — 4 🪙, 7 — 6 🪙, 9 и больше — 10 🪙.</div>${capLine("hilo")}
+    ${g.phase === "play" ? `<div class="row mt2"><button class="btn grow" data-a="hilo-guess" data-v="hi">⬆️ Вище</button><button class="btn grow" data-a="hilo-guess" data-v="lo">⬇️ Нижче</button></div>
+      ${g.streak >= 3 ? `<button class="btn ghost mt" data-a="hilo-cash">💰 Забрати ${pay} 🪙</button>` : ""}`
+      : `<button class="btn mt2" data-a="hilo-start">${g.phase === "start" ? "Почати" : "Нова серія"}</button>`}
+    <div class="small muted mt center">Туз — старша карта. Серія 3 — 2 🪙, 5 — 4 🪙, 7 — 6 🪙, 9 і більше — 10 🪙.</div>${capLine("hilo")}
   </div>`;
 }
 
@@ -120,14 +120,14 @@ function viewSoloCups() {
   const g = S.cups || (S.cups = { phase: "start", slot: [0, 1, 2], ball: 1, streak: 0, best: 0 });
   const cup = (i) => `<button class="cup ${g.phase === "show" && i === g.ball ? "up" : ""} ${g.phase === "done" && (i === g.ball || i === g.picked) ? "up" : ""}" id="cup${i}" data-a="cups-pick" data-v="${i}"
       style="left:${4 + g.slot[i] * 33}%" ${g.phase === "pick" ? "" : "disabled"}><span class="cup-body"><i></i></span>${i === g.ball ? '<span class="cup-ball"></span>' : ""}</button>`;
-  const msg = g.phase === "done" ? `<div class="sbj-res ${g.win ? "win" : "lose"}">${g.win ? `Нашёл!${g.got ? ` +${g.got} 🪙` : " (лимит на сегодня)"}` : "Мимо! Шарик был тут"}</div>`
-    : g.phase === "pick" ? `<div class="hilo-streak">Где шарик?</div>` : g.phase === "shuffle" ? `<div class="hilo-streak">Следи…</div>` : "";
+  const msg = g.phase === "done" ? `<div class="sbj-res ${g.win ? "win" : "lose"}">${g.win ? `Знайшов!${g.got ? ` +${g.got} 🪙` : " (ліміт на сьогодні)"}` : "Повз! Кулька була тут"}</div>`
+    : g.phase === "pick" ? `<div class="hilo-streak">Де кулька?</div>` : g.phase === "shuffle" ? `<div class="hilo-streak">Стеж…</div>` : "";
   return `<div class="fade-in">
-    ${soloTop("Напёрстки", `Серия: ${g.streak} · лучшая: ${g.best}`)}
+    ${soloTop("Наперстки", `Серія: ${g.streak} · найкраща: ${g.best}`)}
     <div class="cups">${[0, 1, 2].map(cup).join("")}</div>
     ${msg}
-    ${["start", "done"].includes(g.phase) ? `<button class="btn mt2" data-a="cups-start">${g.phase === "start" ? "Играть" : "Ещё раз"}</button>` : ""}
-    <div class="small muted mt center">Чем длиннее серия — тем быстрее крутятся стаканчики. Угадал: 3 🪙, на серии — 4 и 5 🪙.</div>${capLine("cups")}
+    ${["start", "done"].includes(g.phase) ? `<button class="btn mt2" data-a="cups-start">${g.phase === "start" ? "Грати" : "Ще раз"}</button>` : ""}
+    <div class="small muted mt center">Що довша серія — то швидше крутяться стаканчики. Угадав: 3 🪙, на серії — 4 і 5 🪙.</div>${capLine("cups")}
   </div>`;
 }
 function cupsShuffle() {
@@ -150,18 +150,18 @@ function cupsShuffle() {
 const WHEEL_COLORS = ["#ff5a5f", "#ffb020", "#4fd18b", "#4fa8ff", "#b05cff", "#ff7ac8", "#2ec4b6", "#f4d35e", "#ee6c4d", "#7b8cff", "#9aa4b8", "#c3f73a"];
 function viewSoloWheel() {
   const st = Api.on && Api.state, wh = st && st.wheel, w = S.wheel || (S.wheel = { angle: 0, spinning: false, got: null });
-  if (!wh) return `<div class="fade-in">${soloTop("Колесо фортуны", "Раз в день — бесплатно")}<div class="card mt">Колесо работает через сервер — открой Настолкино из бота.</div></div>`;
+  if (!wh) return `<div class="fade-in">${soloTop("Колесо фортуни", "Раз на день — безплатно")}<div class="card mt">Колесо працює через сервер — відкрий Настолкіно з бота.</div></div>`;
   const n = wh.segs.length, a = 360 / n;
   const grad = wh.segs.map((_, i) => `${WHEEL_COLORS[i % WHEEL_COLORS.length]} ${i * a}deg ${(i + 1) * a}deg`).join(", ");
   return `<div class="fade-in">
-    ${soloTop("Колесо фортуны", "Раз в день — бесплатно")}
+    ${soloTop("Колесо фортуни", "Раз на день — безплатно")}
     <div class="wheel-wrap"><div class="wheel-ptr">▼</div>
       <div class="wheel-disc" id="wheel-disc" style="background:conic-gradient(${grad});transform:rotate(${w.angle}deg)">
         ${wh.segs.map((s, i) => `<span class="wheel-lbl" style="--a:${(i + .5) * a}deg">${esc(s)}</span>`).join("")}</div>
       <div class="wheel-hub">🎡</div></div>
-    ${w.got ? `<div class="sbj-res win">Выпало: ${esc(w.got)}</div>` : ""}
-    <button class="btn mt2" data-a="wheel-spin" ${wh.ready && !w.spinning ? "" : "disabled"}>${w.spinning ? "Крутится…" : wh.ready ? "Крутить!" : "Приходи завтра"}</button>
-    <div class="small muted mt center">Монеты, осколки, еда, кейсы, сундук с монетами — и крошечный шанс на яйцо. Одна попытка в день.</div>
+    ${w.got ? `<div class="sbj-res win">Випало: ${esc(w.got)}</div>` : ""}
+    <button class="btn mt2" data-a="wheel-spin" ${wh.ready && !w.spinning ? "" : "disabled"}>${w.spinning ? "Крутиться…" : wh.ready ? "Крутити!" : "Приходь завтра"}</button>
+    <div class="small muted mt center">Монети, уламки, їжа, кейси, скриня з монетами — і крихітний шанс на яйце. Одна спроба на день.</div>
   </div>`;
 }
 
@@ -170,21 +170,21 @@ function viewSoloMemo() {
   const g = S.memo;
   const done = g && g.cards.every((c) => c.done);
   return `<div class="fade-in">
-    ${soloTop("Мемори", `Найди пары питомцев · рекорд: ${soloRec("memo") != null ? soloRec("memo") + " ходов" : "—"}`)}
-    ${g ? `<div class="hilo-streak">Ходов: <b>${g.moves}</b></div>
+    ${soloTop("Меморі", `Знайди пари улюбленців · рекорд: ${soloRec("memo") != null ? soloRec("memo") + " ходів" : "—"}`)}
+    ${g ? `<div class="hilo-streak">Ходів: <b>${g.moves}</b></div>
       <div class="memo-grid">${g.cards.map((c, i) => `<button class="memo-card ${c.open || c.done ? "open" : ""} ${c.done ? "done" : ""}" data-a="memo-flip" data-v="${i}">
         ${c.open || c.done ? Pets.sprite(c.code, 56) : "<span>?</span>"}</button>`).join("")}</div>
-      ${done ? `<div class="sbj-res win">Все пары за ${g.moves} ходов!${g.rec ? " Новый рекорд 🏆" : ""}</div><button class="btn mt2" data-a="memo-start">Ещё раз</button>` : ""}`
-      : `<div class="card center mt">16 карточек, 8 пар питомцев. Открывай по две и запоминай.</div><button class="btn mt2" data-a="memo-start">Играть</button>`}
+      ${done ? `<div class="sbj-res win">Усі пари за ${g.moves} ходів!${g.rec ? " Новий рекорд 🏆" : ""}</div><button class="btn mt2" data-a="memo-start">Ще раз</button>` : ""}`
+      : `<div class="card center mt">16 карток, 8 пар улюбленців. Відкривай по дві й запам’ятовуй.</div><button class="btn mt2" data-a="memo-start">Грати</button>`}
   </div>`;
 }
 
 /* ---------------------------------------------------------------- реакция */
 function viewSoloReact() {
   const g = S.react || (S.react = { phase: "idle", times: [] });
-  const txt = { idle: "Нажми, чтобы начать", wait: "Жди зелёный…", go: "ЖМИ!", early: "Рано! Нажми, чтобы ещё раз", res: `${g.last} мс — нажми для следующей`, end: `Среднее: ${g.avg} мс${g.rec ? " · рекорд 🏆" : ""}. Ещё?` }[g.phase];
+  const txt = { idle: "Натисни, щоб почати", wait: "Чекай зелений…", go: "ТИСНИ!", early: "Зарано! Натисни, щоб ще раз", res: `${g.last} мс — натисни для наступної`, end: `Середнє: ${g.avg} мс${g.rec ? " · рекорд 🏆" : ""}. Ще?` }[g.phase];
   return `<div class="fade-in">
-    ${soloTop("Реакция", `5 попыток · рекорд: ${soloRec("react") != null ? soloRec("react") + " мс" : "—"}`)}
+    ${soloTop("Реакція", `5 спроб · рекорд: ${soloRec("react") != null ? soloRec("react") + " мс" : "—"}`)}
     <button class="react-pad ${g.phase}" data-a="react-tap"><b>${txt}</b>${g.times.length ? `<span class="small">${g.times.map((x) => x + " мс").join(" · ")}</span>` : ""}</button>
   </div>`;
 }
@@ -196,7 +196,7 @@ function viewSoloShoot() {
     ${soloTop("Тир", `20 секунд · рекорд: ${soloRec("shoot") != null ? soloRec("shoot") : "—"}`)}
     <div class="hilo-streak">Очки: <b id="shoot-score">${g.score}</b> · <span id="shoot-time">${g.phase === "play" ? Math.max(0, Math.ceil((g.end - Date.now()) / 1000)) + " с" : "20 с"}</span></div>
     <div class="shoot-area" id="shoot-area">${g.phase === "play" ? `<button class="shoot-t" id="shoot-t" data-a="shoot-hit" style="left:${g.x}%;top:${g.y}%">🎯</button>` : ""}</div>
-    ${g.phase !== "play" ? `${g.phase === "end" ? `<div class="sbj-res win">${g.score} очков${g.rec ? " — новый рекорд 🏆" : ""}</div>` : ""}<button class="btn mt2" data-a="shoot-start">${g.phase === "start" ? "Начать" : "Ещё раз"}</button>` : ""}
+    ${g.phase !== "play" ? `${g.phase === "end" ? `<div class="sbj-res win">${g.score} очок${g.rec ? " — новий рекорд 🏆" : ""}</div>` : ""}<button class="btn mt2" data-a="shoot-start">${g.phase === "start" ? "Почати" : "Ще раз"}</button>` : ""}
   </div>`;
 }
 function shootMove() {
@@ -209,11 +209,11 @@ const SNAKE_N = 15;
 function viewSoloSnake() {
   const g = S.snake;
   return `<div class="fade-in">
-    ${soloTop("Змейка", `Свайп или кнопки · рекорд: ${soloRec("snake") != null ? soloRec("snake") : "—"} · монеты: съеденное ÷ 2 (сегодня ${soloGot("snake")}/${SOLO_GAMES.snake.cap})`)}
-    <div class="hilo-streak">Съедено: <b id="snake-score">${g ? g.score : 0}</b></div>
+    ${soloTop("Змійка", `Свайп або кнопки · рекорд: ${soloRec("snake") != null ? soloRec("snake") : "—"} · монети: з’їдене ÷ 2 (сьогодні ${soloGot("snake")}/${SOLO_GAMES.snake.cap})`)}
+    <div class="hilo-streak">З’їдено: <b id="snake-score">${g ? g.score : 0}</b></div>
     <canvas class="snake-cv" id="snake-cv" width="300" height="300"></canvas>
     ${g && g.alive ? `<div class="snake-pad"><button data-a="snake-dir" data-v="0,-1">▲</button><div><button data-a="snake-dir" data-v="-1,0">◀</button><button data-a="snake-dir" data-v="1,0">▶</button></div><button data-a="snake-dir" data-v="0,1">▼</button></div>`
-      : `${g ? `<div class="sbj-res ${g.rec || g.coins ? "win" : "lose"}">Съедено: ${g.score}${g.rec ? " — новый рекорд 🏆" : ""}<div class="small">${g.coins ? `+${g.coins} 🪙 (съеденное пополам)` : g.score >= 2 ? "Лимит монет за змейку на сегодня исчерпан" : "Съешь хотя бы 2 — получишь монету"}</div></div>` : ""}<button class="btn mt2" data-a="snake-start">${g ? "Ещё раз" : "Играть"}</button>`}
+      : `${g ? `<div class="sbj-res ${g.rec || g.coins ? "win" : "lose"}">З’їдено: ${g.score}${g.rec ? " — новий рекорд 🏆" : ""}<div class="small">${g.coins ? `+${g.coins} 🪙 (з’їдене навпіл)` : g.score >= 2 ? "Ліміт монет за змійку на сьогодні вичерпано" : "З’їж хоча б 2 — отримаєш монету"}</div></div>` : ""}<button class="btn mt2" data-a="snake-start">${g ? "Ще раз" : "Грати"}</button>`}
   </div>`;
 }
 function snakeDraw() {
@@ -249,46 +249,46 @@ function snakeTick() {
 }
 
 /* ---------------------------------------------------------------- мини-игры с питомцем */
-const FUN_GAMES = { fetch: ["🎾", "Апорт", "Брось мячик точно в зелёную зону — питомец принесёт"], hide: ["📦", "Прятки", "Питомец прячется в коробку — найди его"], bubbles: ["🫧", "Пузыри", "Лопай пузыри вместе с питомцем, пока не кончилось время"] };
+const FUN_GAMES = { fetch: ["🎾", "Апорт", "Кинь м’ячик точно в зелену зону — улюбленець принесе"], hide: ["📦", "Хованки", "Улюбленець ховається в коробку — знайди його"], bubbles: ["🫧", "Бульбашки", "Лускай бульбашки разом з улюбленцем, поки не скінчився час"] };
 function funPets() { return Api.on && Api.state ? Api.state.pets.filter((p) => p.alive && !p.egg && Date.now() / 1000 >= p.hatch) : []; }
 function viewPetFun() {
   const pets = funPets(), st = Api.on && Api.state;
-  const head = `<div class="pxscene big" style="background-image:url(${Pixel.scene("petfun")})"></div>` + soloTop("Игры с питомцем", "Каждый питомец любит игры по-своему", S.funFrom || "solo");
-  if (!Api.on) return `<div class="fade-in">${head}<div class="card mt">Питомцы живут на сервере — открой Настолкино из бота.</div></div>`;
-  if (!pets.length) return `<div class="fade-in">${head}<div class="card center mt">Питомцев пока нет — они вылупляются из яиц</div></div>`;
+  const head = `<div class="pxscene big" style="background-image:url(${Pixel.scene("petfun")})"></div>` + soloTop("Ігри з улюбленцем", "Кожен улюбленець любить ігри по-своєму", S.funFrom || "solo");
+  if (!Api.on) return `<div class="fade-in">${head}<div class="card mt">Улюбленці живуть на сервері — відкрий Настолкіно з бота.</div></div>`;
+  if (!pets.length) return `<div class="fade-in">${head}<div class="card center mt">Улюбленців поки немає — вони вилуплюються з яєць</div></div>`;
   const p = pets.find((x) => x.id === S.funPet) || pets.find((x) => x.id === st.main_pet) || pets[0];
   S.funPet = p.id;
   if (S.fun && S.fun.pet === p.id && S.fun.phase !== "menu") return viewFunGame(p);
   const t = Pets.traits(p.dna), want = Pets.funWant(p.dna, petStage(p)), left = Math.max(0, want - (p.fun || 0)), asleep = Pets.sleepState(p.dna, petNow()).asleep;
-  const stg = petStage(p), mood = (t.social === 0 ? "Любит тишину — не зови слишком часто, иначе разозлится" : t.social === 2 ? "Обожает внимание — готов играть снова и снова" : "Поиграет пару раз, потом устанет")
-    + (stg === "b" ? ". Малыш — ему нужно больше внимания" : stg === "t" ? ". Подросток — играет чуть чаще взрослых" : "");
+  const stg = petStage(p), mood = (t.social === 0 ? "Любить тишу — не клич надто часто, інакше розізлиться" : t.social === 2 ? "Обожнює увагу — готовий грати знову й знову" : "Пограє кілька разів, потім утомиться")
+    + (stg === "b" ? ". Малюк — йому потрібно більше уваги" : stg === "t" ? ". Підліток — грається трохи частіше за дорослих" : "");
   return `<div class="fade-in">${head}
     ${pets.length > 1 ? `<div class="fun-pets">${pets.map((x) => `<button class="${x.id === p.id ? "on" : ""}" data-a="fun-pet" data-v="${x.id}">${Pets.sprite(petCode(x), 44)}</button>`).join("")}</div>` : ""}
     <div class="pet-stage r${p.rarity} small-stage">${Pets.sprite(petCode(p), 130, { sleep: asleep || p.den })}</div>
     <div class="card center"><b>${esc(t.name)}</b><div class="small">${esc(mood)}</div>
-      <div class="small muted mt">${p.den ? "🏠 Спит в домике — разбуди его в карточке" : asleep ? "💤 Спит — поиграете, когда проснётся" : left ? `Хочет поиграть ещё ${left} раз${left === 1 ? "" : "а"} сегодня` : "😮‍💨 На сегодня ему хватит. Позовёшь ещё — настроение испортится"}</div></div>
+      <div class="small muted mt">${p.den ? "🏠 Спить у будиночку — розбуди його в картці" : asleep ? "💤 Спить — пограєте, коли прокинеться" : left ? `Хоче пограти ще ${left} раз${left === 1 ? "" : "и"} сьогодні` : "😮‍💨 На сьогодні йому досить. Покличеш ще — настрій зіпсується"}</div></div>
     <div class="fun-list">${Object.entries(FUN_GAMES).map(([k, [e, n, d]]) => `<button class="card brow" data-a="fun-start" data-v="${k}" ${asleep || p.den ? "disabled" : ""}><span class="st-e">${e}</span><div class="grow"><b>${n}</b><div class="small muted">${d}</div></div><span class="muted">›</span></button>`).join("")}</div>
   </div>`;
 }
 function viewFunGame(p) {
   const g = S.fun, [e, n] = FUN_GAMES[g.game], spr = (cls = "") => `<span class="fun-pet ${cls}" id="fun-pet">${Pets.sprite(petCode(p), 88)}</span>`;
-  const back = `<button class="btn ghost small" data-a="fun-quit">← Другие игры</button>`;
+  const back = `<button class="btn ghost small" data-a="fun-quit">← Інші ігри</button>`;
   if (g.phase === "result") {
-    const r = g.res || {}, txt = { great: "в восторге! 😍", ok: "доволен 🙂", meh: "так себе… 😐", tired: "устал от внимания 😒" }[r.reaction] || "доволен";
-    return `<div class="fade-in">${soloTop(e + " " + n, "Игра окончена", S.funFrom || "solo")}
+    const r = g.res || {}, txt = { great: "у захваті! 😍", ok: "задоволений 🙂", meh: "так собі… 😐", tired: "утомився від уваги 😒" }[r.reaction] || "задоволений";
+    return `<div class="fade-in">${soloTop(e + " " + n, "Гру завершено", S.funFrom || "solo")}
       <div class="pet-stage r${p.rarity} small-stage">${Pets.sprite(petCode(p), 130)}<div class="pet-fx" id="pet-fx"></div></div>
       <div class="card center"><b>Очки: ${g.score}/10</b><div class="mt">${esc(Pets.traits(p.dna).name)} ${txt}</div>
-        ${r.dm != null ? `<div class="small muted">Настроение ${r.dm >= 0 ? "+" : ""}${r.dm}${r.left != null ? ` · хочет ещё ${r.left} раз` : ""}</div>` : ""}</div>
-      <button class="btn mt2" data-a="fun-start" data-v="${g.game}">Ещё раз</button>${back}</div>`;
+        ${r.dm != null ? `<div class="small muted">Настрій ${r.dm >= 0 ? "+" : ""}${r.dm}${r.left != null ? ` · хоче ще ${r.left} раз` : ""}</div>` : ""}</div>
+      <button class="btn mt2" data-a="fun-start" data-v="${g.game}">Ще раз</button>${back}</div>`;
   }
-  if (g.game === "fetch") return `<div class="fade-in">${soloTop(e + " " + n, `Бросок ${Math.min(g.round + 1, 5)} из 5 · попаданий: ${g.hits}`, S.funFrom || "solo")}
+  if (g.game === "fetch") return `<div class="fade-in">${soloTop(e + " " + n, `Кидок ${Math.min(g.round + 1, 5)} із 5 · влучань: ${g.hits}`, S.funFrom || "solo")}
     <div class="fetch-field">${spr(g.anim || "")}<span class="fetch-ball ${g.anim || ""}">🎾</span></div>
     <div class="fetch-meter"><i class="zone" style="left:${g.z0}%;width:${g.z1 - g.z0}%"></i><b id="fetch-mark"></b></div>
-    <button class="btn mt2" data-a="fetch-throw" ${g.busy ? "disabled" : ""}>🎾 Бросить!</button>${back}</div>`;
-  if (g.game === "hide") return `<div class="fade-in">${soloTop(e + " " + n, `Раунд ${Math.min(g.round + 1, 5)} из 5 · нашёл: ${g.found}`, S.funFrom || "solo")}
+    <button class="btn mt2" data-a="fetch-throw" ${g.busy ? "disabled" : ""}>🎾 Кинути!</button>${back}</div>`;
+  if (g.game === "hide") return `<div class="fade-in">${soloTop(e + " " + n, `Раунд ${Math.min(g.round + 1, 5)} із 5 · знайшов: ${g.found}`, S.funFrom || "solo")}
     <div class="hide-row">${Array.from({ length: g.n }, (_, i) => `<button class="hide-box ${g.open === i ? "open" : ""}" data-a="hide-pick" data-v="${i}" ${g.busy ? "disabled" : ""}>
       ${g.open != null && i === g.at ? Pets.sprite(petCode(p), 56) : "📦"}</button>`).join("")}</div>
-    <div class="hilo-streak">${g.busy && g.open == null ? "Закрой глаза… он прячется" : g.open == null ? "В какой коробке?" : g.open === g.at ? "Нашёл! 🎉" : "Пусто…"}</div>${back}</div>`;
+    <div class="hilo-streak">${g.busy && g.open == null ? "Заплющ очі… він ховається" : g.open == null ? "У якій коробці?" : g.open === g.at ? "Знайшов! 🎉" : "Порожньо…"}</div>${back}</div>`;
   return `<div class="fade-in">${soloTop(e + " " + n, `Лопнуто: <span id="bub-n">${g.pops}</span> · <span id="bub-t">${Math.max(0, Math.ceil((g.end - Date.now()) / 1000))}</span> с`, S.funFrom || "solo")}
     <div class="bub-area" id="bub-area">${spr("bub-pet")}</div>${back}</div>`;
 }

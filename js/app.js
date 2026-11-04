@@ -22,8 +22,8 @@ const player = (id) => (S.room ? S.room.players.find((p) => p.id === id) : null)
 const isHost = () => S.room && S.room.host === S.me;
 
 /* ---------------------------------------------------------------- стили сценариев */
-const ORD_F = ["первая", "вторая", "третья", "четвёртая", "пятая", "шестая", "седьмая", "восьмая", "девятая", "десятая"];
-const ORD_M = ["первый", "второй", "третий", "четвёртый", "пятый", "шестой", "седьмой", "восьмой", "девятый", "десятый"];
+const ORD_F = ["перша", "друга", "третя", "четверта", "п’ята", "шоста", "сьома", "восьма", "дев’ята", "десята"];
+const ORD_M = ["перший", "другий", "третій", "четвертий", "п’ятий", "шостий", "сьомий", "восьмий", "дев’ятий", "десятий"];
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"];
 const pad = (n) => String(n).padStart(2, "0");
 const ordF = (n) => ORD_F[n - 1] || `№ ${n}`;
@@ -31,20 +31,20 @@ const ordM = (n) => ORD_M[n - 1] || `№ ${n}`;
 const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 
 const SKINS = {
-  classic: { night: (n) => `Ночь ${ordF(n)}`, day: (n) => `День ${ordM(n)}`, vote: "Приговор", verdict: "Решение города",
-    lobby: "Сходка", discuss: "Обсуждение", nightSub: "Город спит", team: { mafia: "Семья", town: "Город", solo: "Одиночка", bounty: "Одиночка" } },
-  "90s": { night: (n) => `Ночь #${pad(n)}`, day: (n) => `Стрелка #${pad(n)}`, vote: "Сходняк", verdict: "Базар окончен",
-    lobby: "Хата", discuss: "Разборки", nightSub: "Пейджеры молчат", team: { mafia: "Братва", town: "Граждане", solo: "Сам по себе", bounty: "Сам по себе" } },
-  halloween: { night: (n) => `${cap(ordF(n))} ночь`, day: (n) => `${cap(ordM(n))} рассвет`, vote: "Суд деревни", verdict: "Костёр",
-    lobby: "Шабаш", discuss: "Совет у камина", nightSub: "Луна над кладбищем", team: { mafia: "Клан", town: "Деревня", solo: "Зверь", bounty: "Зверь" } },
-  bunker: { night: (n) => `> ЦИКЛ ${pad(n)} :: ОТБОЙ`, day: (n) => `> ЦИКЛ ${pad(n)} :: ПОДЪЁМ`, vote: "> ГОЛОСОВАНИЕ: КАРАНТИН",
-    verdict: "> РЕШЕНИЕ СОВЕТА", lobby: "> ШЛЮЗ ОТКРЫТ", discuss: "СОВЕТ БУНКЕРА", nightSub: "АВАРИЙНОЕ ОСВЕЩЕНИЕ",
-    team: { mafia: "ЗАРАЖЁН", town: "ЧИСТ", solo: "НЕИЗВЕСТНО", bounty: "НЕИЗВЕСТНО" } },
-  west: { night: (n) => `Ночь ${ordF(n)}`, day: (n) => `День ${ordM(n)}`, vote: "Суд города", verdict: "Виселица",
-    lobby: "Салун", discuss: "Разговоры в салуне", nightSub: "Койоты воют", team: { mafia: "Банда", town: "Горожанин", solo: "Чужак", bounty: "Охотник" } },
-  office: { night: (n) => `Ночная смена · ${n}`, day: (n) => `Планёрка · день ${n}`, vote: "Голосование на увольнение",
-    verdict: "Решение руководства", lobby: "Переговорка", discuss: "Обсуждение в общем чате", nightSub: "Офис пуст",
-    team: { mafia: "Конкуренты", town: "Команда", solo: "Фрилансер", bounty: "Фрилансер" } },
+  classic: { night: (n) => `Ніч ${ordF(n)}`, day: (n) => `День ${ordM(n)}`, vote: "Вирок", verdict: "Рішення міста",
+    lobby: "Зібрання", discuss: "Обговорення", nightSub: "Місто спить", team: { mafia: "Сім’я", town: "Місто", solo: "Одинак", bounty: "Одинак" } },
+  "90s": { night: (n) => `Ніч #${pad(n)}`, day: (n) => `Стрілка #${pad(n)}`, vote: "Збіговисько", verdict: "Базар закінчено",
+    lobby: "Хата", discuss: "Розбірки", nightSub: "Пейджери мовчать", team: { mafia: "Братки", town: "Громадяни", solo: "Сам по собі", bounty: "Сам по собі" } },
+  halloween: { night: (n) => `${cap(ordF(n))} ніч`, day: (n) => `${cap(ordM(n))} світанок`, vote: "Суд села", verdict: "Багаття",
+    lobby: "Шабаш", discuss: "Рада біля каміна", nightSub: "Місяць над цвинтарем", team: { mafia: "Клан", town: "Село", solo: "Звір", bounty: "Звір" } },
+  bunker: { night: (n) => `> ЦИКЛ ${pad(n)} :: ВІДБІЙ`, day: (n) => `> ЦИКЛ ${pad(n)} :: ПІДЙОМ`, vote: "> ГОЛОСУВАННЯ: КАРАНТИН",
+    verdict: "> РІШЕННЯ РАДИ", lobby: "> ШЛЮЗ ВІДКРИТО", discuss: "РАДА БУНКЕРА", nightSub: "АВАРІЙНЕ ОСВІТЛЕННЯ",
+    team: { mafia: "ЗАРАЖЕНИЙ", town: "ЧИСТИЙ", solo: "НЕВІДОМО", bounty: "НЕВІДОМО" } },
+  west: { night: (n) => `Ніч ${ordF(n)}`, day: (n) => `День ${ordM(n)}`, vote: "Суд міста", verdict: "Шибениця",
+    lobby: "Салун", discuss: "Розмови в салуні", nightSub: "Койоти виють", team: { mafia: "Банда", town: "Містянин", solo: "Чужинець", bounty: "Мисливець" } },
+  office: { night: (n) => `Нічна зміна · ${n}`, day: (n) => `Планірка · день ${n}`, vote: "Голосування за звільнення",
+    verdict: "Рішення керівництва", lobby: "Переговорна", discuss: "Обговорення в загальному чаті", nightSub: "Офіс порожній",
+    team: { mafia: "Конкуренти", town: "Команда", solo: "Фрилансер", bounty: "Фрилансер" } },
 };
 const SOLO_SKINS = ["draw", "roulette", "blackjack"];
 const skinKey = () => (S.screen === "room" && S.room ? (S.room.game === "revolver" || S.room.game === "bluff" ? "roulette" : SOLO_SKINS.includes(S.room.game) ? S.room.game : S.room.settings.theme)
@@ -108,7 +108,7 @@ let store = {};
 
 function catalog() {
   const c = window.APP_CONFIG || {};
-  return { app: c.app || "Настолкино", min: Engine.MIN_PLAYERS, max: Engine.MAX_PLAYERS, avatars: AVATARS,
+  return { app: c.app || "Настолкіно", min: Engine.MIN_PLAYERS, max: Engine.MAX_PLAYERS, avatars: AVATARS,
     modes: Object.entries(Engine.MODES).map(([key, m]) => Object.assign({ key }, m)),
     themes: Object.entries(Engine.THEMES).map(([key, t]) => ({ key, title: t.title, emoji: t.emoji, tagline: t.tagline, twist: t.twist,
       accent: t.accent, accent2: t.accent2, specials: t.specials.map(([k, n]) => ({ key: k, from: n })),
@@ -117,8 +117,10 @@ function catalog() {
 
 function profileView() {
   const fav = Object.entries(store.roles || {}).sort((a, b) => b[1] - a[1])[0];
-  return { name: store.name, avatar: store.avatar || "🙂", photo: store.use_photo !== false && store.tg_photo ? store.tg_photo : null,
-    has_tg_photo: !!store.tg_photo, use_photo: store.use_photo !== false, games: store.games || 0, wins: store.wins || 0,
+  const owned = Shop.ownedAvatars();
+  if (store.badge === undefined && store.avatar && owned.includes(store.avatar)) store.badge = store.avatar;   // раньше смайлик из кейса стоял аватаркой — теперь он значок у ника
+  const badge = store.badge && owned.includes(store.badge) ? store.badge : "";
+  return { name: Shop.withBadge(store.name, badge), base: store.name, badge, avatar: "👤", photo: store.tg_photo || null, tg: !!store.tg_name, games: store.games || 0, wins: store.wins || 0,
     favorite_role: fav ? fav[0] : null, coins: store.coins || 0,
     look: Object.assign(Shop.look(), { lv: String(Shop.level(store.games)), g: String(store.games || 0), w: String(store.wins || 0), c: String(Math.max(0, store.coins || 0)) }, store.pet ? { pet: store.pet } : {}) };
 }
@@ -137,9 +139,10 @@ function loadProfile(done) {
   const finish = () => {
     const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
     if (user) {                                            // имя и фото из Telegram — без регистрации
-      if (!store.name) store.name = (user.first_name || user.username || "Игрок").slice(0, 20);
-      if (!store.avatar) store.avatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-      if (user.photo_url) store.tg_photo = user.photo_url;
+      // имя — как в аккаунте Telegram, без эмодзи (свои смайлики — значком из кейса в конце ника)
+      store.tg_name = [...(Shop.cleanName([user.first_name, user.last_name].filter(Boolean).join(" ")) || Shop.cleanName(user.username) || "Гравець")].slice(0, 18).join("");
+      store.name = store.tg_name;
+      store.tg_photo = user.photo_url || null;
     }
     Shop.attach(store);
     Api.attach(store, saveProfile);
@@ -245,7 +248,7 @@ function resumeHost(snapshot) {
 
 function netBanner() {
   if (S.screen !== "room" || !S.net || S.net === "ok") return '<div id="net-banner"></div>';
-  return `<div id="net-banner" class="net-banner">${S.net === "lost" ? "📡 Связь с хостом потеряна — ждём его и переподключаемся…" : "🔌 Подключаемся…"}</div>`;
+  return `<div id="net-banner" class="net-banner">${S.net === "lost" ? "📡 Зв’язок із хостом втрачено — чекаємо на нього й перепідключаємося…" : "🔌 Підключаємося…"}</div>`;
 }
 
 function onMessage(m, queued) {
@@ -280,13 +283,13 @@ function onMessage(m, queued) {
     drawOnInk(m);
   } else if (m.t === "closed" || m.t === "left" || m.t === "kicked") S.sheet = null;
   if (m.t === "closed") {
-    toast("Хост закрыл комнату");
+    toast("Хост закрив кімнату");
     S.room = null; S.screen = "home"; S.chatOpen = false; render(); renderChat();
   } else if (m.t === "error") {
     notify("error");
     toast(m.text);
   } else if (m.t === "left" || m.t === "kicked") {
-    if (m.t === "kicked") toast("Хост убрал вас из комнаты");
+    if (m.t === "kicked") toast("Хост прибрав вас із кімнати");
     S.room = null; S.screen = "home"; S.chatOpen = false; render(); renderChat();
   }
 }
@@ -327,40 +330,41 @@ function updateBack() {
 
 function viewConnecting() {
   return `<div class="loading"><div class="center"><div class="spinner" style="margin:0 auto 14px"></div>
-    <div class="display">${esc(S.joining || "")}</div><div class="muted mt">Подключаюсь к комнате…</div>
-    <button class="btn ghost small mt2" data-a="cancel-join">Отмена</button></div></div>`;
+    <div class="display">${esc(S.joining || "")}</div><div class="muted mt">Підключаюся до кімнати…</div>
+    <button class="btn ghost small mt2" data-a="cancel-join">Скасувати</button></div></div>`;
 }
 
 function viewLoading() {
   return `<div class="loading"><div class="center"><div class="spinner" style="margin:0 auto 14px"></div>
-    <div class="muted">Загружаю…</div></div></div>`;
+    <div class="muted">Завантажую…</div></div></div>`;
 }
 
-function avatarGrid(selected) {
-  const list = S.catalog.avatars.concat(S.registered ? Shop.ownedAvatars() : []);
-  return `<div class="avatars">${list.map((a) =>
-    `<button data-a="avatar" data-v="${a}" class="${a === selected ? "sel" : ""}">${emo(a, 24)}</button>`).join("")}</div>`;
+// значок у ника: один смайлик из выбитых в кейсах (или ключ Творца у админа). Без значка — просто имя
+function badgeCard() {
+  const p = S.profile, list = [...new Set(Shop.ownedAvatars())];
+  if (!list.length) return `<div class="card small muted">Значків поки немає — вони випадають із кейсів. Вибитий смайлик стане в кінці твого ніка: <b>${esc(p.base)} 🐉</b></div>`;
+  return `<div class="card"><div class="nick-prev">${nm(p)}</div>
+    <div class="avatars mt"><button data-a="badge" data-v="none" class="nb-none ${p.badge ? "" : "sel"}">✖</button>${list.map((a) =>
+      `<button data-a="badge" data-v="${a}" class="${a === p.badge ? "sel" : ""}">${emo(a, 24)}</button>`).join("")}</div>
+    <div class="small muted mt">Можна поставити лише один. Нові значки випадають із кейсів.</div></div>`;
 }
 
 function viewRegister() {
-  if (S.regAvatar === null) S.regAvatar = S.catalog.avatars[Math.floor(Math.random() * S.catalog.avatars.length)];
   if (!S.regName) S.regName = S.suggest;
   return `<div class="fade-in">
     <div class="hero">${PX() ? `<div class="pxscene title" style="background-image:url(${Pixel.scene("arcade")})"></div>` : ""}<div class="logo">${PX() ? Pixel.sprite("dice", 4) : "🎲"}</div><h1>${esc(S.catalog.app)}</h1>
-      ${PX() ? '<div class="press-start">▶ НАЖМИ СТАРТ</div>' : ""}
-      <p class="muted mt">Настолки с друзьями прямо в Telegram.<br>Мафия, вечеринки и не только.</p></div>
-    <div class="section-title">Как тебя зовут?</div>
-    <input class="input" id="reg-name" maxlength="20" placeholder="Имя или ник" value="${esc(S.regName)}" autocomplete="off">
-    <div class="section-title">Выбери аватар</div>
-    ${avatarGrid(S.regAvatar)}
-    <button class="btn mt2" data-a="register">Поехали 🚀</button>
+      ${PX() ? '<div class="press-start">▶ НАТИСНИ СТАРТ</div>' : ""}
+      <p class="muted mt">Настолки з друзями просто в Telegram.<br>Мафія, вечірки й не тільки.</p></div>
+    <div class="section-title">Як тебе звати?</div>
+    <input class="input" id="reg-name" maxlength="20" placeholder="Ім’я або нік" value="${esc(S.regName)}" autocomplete="off">
+    <button class="btn mt2" data-a="register">Погнали 🚀</button>
   </div>`;
 }
 
 function tabs() {
   const hungry = Api.state && Api.state.pets.some((p) => p.alive && !p.egg && petLive(p).hunger < 25);
   const b = (k, ic, label) => `<button class="${S.screen === k ? "on" : ""}" data-a="tab" data-v="${k}"><span class="ti">${ic}</span><span>${label}</span></button>`;
-  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейсы${dailyReady() || Shop.CASES.some((c) => caseFree(c.key)) || (Api.state && seasonLeft() > 0) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
+  return `<div class="tabs t4">${b("home", "🎲", "Ігри")}${b("pets", "🐾", `Улюбленці${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейси${dailyReady() || Shop.CASES.some((c) => caseFree(c.key)) || (Api.state && seasonLeft() > 0) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профіль")}</div>`;
 }
 const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 
@@ -368,20 +372,20 @@ function viewHome() {
   const p = S.profile, sc = (k) => `style="background-image:url(${Pixel.scene(k)})"`;
   const g = (v, scene, name, pp, cls = "", extra = "", act = "go") => `<button class="tile img ${cls}" data-a="${act}" data-v="${v}" ${sc(scene)}>${pp ? `<span class="t-pp">${pp}</span>` : ""}${extra}<span class="t-nm">${name}</span></button>`;
   return `<div class="fade-in">
-    <div class="home-top"><div class="grow"><small>Привет, ${esc(p.name)} 👋</small><h1>${esc(S.catalog.app)}</h1></div>${coinPill()}</div>
+    <div class="home-top"><div class="grow"><small>Привіт, ${esc(p.name)} 👋</small><h1>${esc(S.catalog.app)}</h1></div>${coinPill()}</div>
     <div class="bento home-bento">
-      <button class="tile img w4 h2 big" data-a="go" data-v="mafia" ${sc("classic")}><span class="t-pp">🔥 ${S.catalog.min}–${S.catalog.max} игроков</span>
-        <span class="t-sub">6 сценариев: Классика, 90-е, Хэллоуин, Бункер, Дикий Запад, Корпоратив</span><span class="t-nm">Мафия</span><span class="t-go">Играть ▶</span></button>
+      <button class="tile img w4 h2 big" data-a="go" data-v="mafia" ${sc("classic")}><span class="t-pp">🔥 ${S.catalog.min}–${S.catalog.max} гравців</span>
+        <span class="t-sub">6 сценаріїв: Класика, 90-ті, Гелловін, Бункер, Дикий Захід, Корпоратив</span><span class="t-nm">Мафія</span><span class="t-go">Грати ▶</span></button>
       ${cupTile()}
-      ${g("roulette", "cellar", "Подвал", `🩸 3D · до ${Revolver.MAX_PLAYERS}`, "w2 h2")}
+      ${g("roulette", "cellar", "Підвал", `🩸 3D · до ${Revolver.MAX_PLAYERS}`, "w2 h2")}
       ${wheelTile()}${petTile()}
-      ${g("blackjack", "casino", "Блэкджек", `🃏 ${Blackjack.MIN_PLAYERS}–${Blackjack.MAX_PLAYERS} · на монеты`, "w2")}
-      ${g("spy", "spy", "Шпион", `🕵️ ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS}`, "w2", '<span class="t-new">NEW</span>')}
+      ${g("blackjack", "casino", "Блекджек", `🃏 ${Blackjack.MIN_PLAYERS}–${Blackjack.MAX_PLAYERS} · на монети`, "w2")}
+      ${g("spy", "spy", "Шпигун", `🕵️ ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS}`, "w2", '<span class="t-new">NEW</span>')}
       ${passHomeTile()}
-      ${g("draw", "studio", "Рисовалка", `✏️ ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS}`, "w2")}
-      ${g("", "petfun", "С питомцем", "🐾 мини-игры", "w2", "", "pet-games")}
-      ${g("solo", "solo", "Соло", "🎯 против бота", "w2")}
-      <div class="tile w2 join"><input class="input" id="join-code" maxlength="4" placeholder="КОД" value="${esc(S.joinCode)}" autocomplete="off"><button class="btn" data-a="join">Войти</button></div>
+      ${g("draw", "studio", "Малювалка", `✏️ ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS}`, "w2")}
+      ${g("", "petfun", "З улюбленцем", "🐾 міні-ігри", "w2", "", "pet-games")}
+      ${g("solo", "solo", "Соло", "🎯 проти бота", "w2")}
+      <div class="tile w2 join"><input class="input" id="join-code" maxlength="4" placeholder="КОД" value="${esc(S.joinCode)}" autocomplete="off"><button class="btn" data-a="join">Увійти</button></div>
     </div>
   </div>${tabs()}`;
 }
@@ -391,42 +395,42 @@ function cupTile() {
   const show = c && (["reg", "play"].includes(c.status) || (c.status === "plan" && c.start_at - cupNow() < 4 * 3600) || (c.status === "done" && c.joined));
   if (show) {
     const left = Math.max(0, c.start_at - cupNow());
-    const v = c.status === "play" ? "Идёт" : c.status === "done" ? "Итоги" : fmtLeft2(left);
-    const s2 = c.status === "reg" ? (c.joined ? "✓ ты записан(а)" : "запись открыта") : c.status === "plan" ? "запись за 40 мин" : c.status === "play" ? (c.joined ? (c.out ? "ты выбыл(а)" : "🔥 ты в игре") : "смотри сетку") : "забери приз";
+    const v = c.status === "play" ? "Триває" : c.status === "done" ? "Підсумки" : fmtLeft2(left);
+    const s2 = c.status === "reg" ? (c.joined ? "✓ ти записаний(а)" : "запис відкрито") : c.status === "plan" ? "запис за 40 хв" : c.status === "play" ? (c.joined ? (c.out ? "ти вибув(ла)" : "🔥 ти в грі") : "дивись сітку") : "забери приз";
     return `<button class="tile w2 cuptile ${c.big ? "big-cup" : ""} ${c.status === "play" ? "live" : ""} ${c.status === "reg" && !c.joined ? "hot" : ""}" data-a="go" data-v="cup">
-      ${c.status === "reg" && !c.joined ? '<span class="t-dot"></span>' : ""}<div class="t-k">${c.big ? "👑 Турнир месяца" : "🏆 Турнир дня"}</div><div class="t-v">${v}</div><div class="t-s">${s2}</div></button>`;
+      ${c.status === "reg" && !c.joined ? '<span class="t-dot"></span>' : ""}<div class="t-k">${c.big ? "👑 Турнір місяця" : "🏆 Турнір дня"}</div><div class="t-v">${v}</div><div class="t-s">${s2}</div></button>`;
   }
   const mt = typeof miniTile === "function" ? miniTile() : ""; if (mt) return mt;   // личный турнир с ботами — пока он открыт
-  if (Api.on) return `<button class="tile w2" data-a="go" data-v="league"><div class="t-k">🏅 Лига недели</div><div class="t-v">Топ-10</div><div class="t-s">бои питомцев · призы</div></button>`;
-  return `<button class="tile w2" data-a="go" data-v="solo"><div class="t-k">🎯 Тренировка</div><div class="t-v">Против бота</div><div class="t-s">рекорды и монеты</div></button>`;
+  if (Api.on) return `<button class="tile w2" data-a="go" data-v="league"><div class="t-k">🏅 Ліга тижня</div><div class="t-v">Топ-10</div><div class="t-s">бої улюбленців · призи</div></button>`;
+  return `<button class="tile w2" data-a="go" data-v="solo"><div class="t-k">🎯 Тренування</div><div class="t-v">Проти бота</div><div class="t-s">рекорди й монети</div></button>`;
 }
 function wheelTile() {
   if (Api.on) { const ready = wheelReady();
-    return `<button class="tile center ${ready ? "hot" : ""}" data-a="go" data-v="solo-wheel">${ready ? '<span class="t-dot"></span>' : ""}<div><div class="t-ico">🎡</div><div class="t-s" style="color:var(--text);font-weight:700">${ready ? "Крутить" : "Завтра"}</div></div></button>`; }
+    return `<button class="tile center ${ready ? "hot" : ""}" data-a="go" data-v="solo-wheel">${ready ? '<span class="t-dot"></span>' : ""}<div><div class="t-ico">🎡</div><div class="t-s" style="color:var(--text);font-weight:700">${ready ? "Крутити" : "Завтра"}</div></div></button>`; }
   const ready = Shop.chestReady();
-  return `<button class="tile center ${ready ? "hot" : ""}" ${ready ? 'data-a="chest"' : ""}>${ready ? '<span class="t-dot"></span>' : ""}<div><div class="t-ico">🎁</div><div class="t-s" style="color:var(--text);font-weight:700">${ready ? "Сундук" : "Завтра"}</div></div></button>`;
+  return `<button class="tile center ${ready ? "hot" : ""}" ${ready ? 'data-a="chest"' : ""}>${ready ? '<span class="t-dot"></span>' : ""}<div><div class="t-ico">🎁</div><div class="t-s" style="color:var(--text);font-weight:700">${ready ? "Скриня" : "Завтра"}</div></div></button>`;
 }
 function petTile() {
   const st = Api.on && Api.state, list = st ? st.pets.filter((x) => x.alive) : [];
   const mp = list.find((x) => x.id === st.main_pet && !x.egg) || list.find((x) => !x.egg) || list[0];
-  if (!mp) return `<button class="tile center" data-a="tab" data-v="pets"><div><div class="t-ico">🐾</div><div class="t-s" style="color:var(--text);font-weight:700">Питомцы</div></div></button>`;
+  if (!mp) return `<button class="tile center" data-a="tab" data-v="pets"><div><div class="t-ico">🐾</div><div class="t-s" style="color:var(--text);font-weight:700">Улюбленці</div></div></button>`;
   if (mp.egg) return `<button class="tile center" data-a="tab" data-v="pets"><span class="t-pet">${Pets.sprite(mp.rarity + mp.dna, 54, { egg: true })}</span></button>`;
   const h = Math.max(0, Math.min(100, Math.round(petLive(mp).hunger))), col = h < 25 ? "#ff4d5e" : h < 50 ? "#ffb020" : "#41d3a5";
   const fdOn = st.feeder && st.feeder.active;
-  return `<button class="tile center" data-a="tab" data-v="pets">${h < 25 && !fdOn ? '<span class="t-dot"></span>' : ""}${fdOn ? '<span class="t-fdr" title="Кормушка работает">🪣</span>' : ""}<span class="t-pet">${Pets.sprite(petCode(mp), 56)}</span><span class="t-bar"><i style="width:${h}%;background:${col}"></i></span></button>`;
+  return `<button class="tile center" data-a="tab" data-v="pets">${h < 25 && !fdOn ? '<span class="t-dot"></span>' : ""}${fdOn ? '<span class="t-fdr" title="Годівничка працює">🪣</span>' : ""}<span class="t-pet">${Pets.sprite(petCode(mp), 56)}</span><span class="t-bar"><i style="width:${h}%;background:${col}"></i></span></button>`;
 }
 function passHomeTile() {
   const p = passState(); if (!p) return "";
   const lv = p.level, into = p.xp - lv * p.step, pct = lv >= p.max ? 100 : Math.round(into / p.step * 100);
-  return `<button class="tile w4" data-a="go" data-v="pass">${p.ready ? '<span class="t-dot"></span>' : ""}<div class="t-k">🎫 Пропуск «${esc(p.name)}» · уровень ${lv} из ${p.max}${p.ready ? ` · 🎁 наград: ${p.ready}` : ""}</div><div class="t-prog"><i style="width:${pct}%"></i></div></button>`;
+  return `<button class="tile w4" data-a="go" data-v="pass">${p.ready ? '<span class="t-dot"></span>' : ""}<div class="t-k">🎫 Перепустка «${esc(p.name)}» · рівень ${lv}/${p.max}${p.ready ? ` · 🎁 нагород: ${p.ready}` : ""}</div><div class="t-prog"><i style="width:${pct}%"></i></div></button>`;
 }
 
 // «подпишись на группу» — пока игрок не подписан, играть нельзя (включает админ в админ-боте)
 function viewGate() {
   const g = Api.state.gate;
   return `<div class="fade-in gate"><div class="gate-card"><img class="gate-ava" src="img/group/avatar.jpg" alt="">
-    <h1>Подпишись на группу</h1><p class="muted mt">Чтобы играть, подпишись на <b>${esc(g.title || "группу")}</b>: там турниры, их раунды и победители, приглашения в комнаты и публичные обмены. Писать туда может только бот — спама не будет.</p>
-    ${g.link ? `<button class="btn mt2" data-a="gate-open">📢 Подписаться</button>` : ""}<button class="btn ghost mt" data-a="gate-check">✅ Я подписался</button></div></div>`;
+    <h1>Підпишись на групу</h1><p class="muted mt">Щоб грати, підпишись на <b>${esc(g.title || "групу")}</b>: там турніри, їхні раунди й переможці, запрошення в кімнати та публічні обміни. Писати туди може тільки бот — спаму не буде.</p>
+    ${g.link ? `<button class="btn mt2" data-a="gate-open">📢 Підписатися</button>` : ""}<button class="btn ghost mt" data-a="gate-check">✅ Я підписався</button></div></div>`;
 }
 
 function myCard(lookOverride) {
@@ -439,8 +443,8 @@ function myCard(lookOverride) {
 const wheelReady = () => !!(Api.on && Api.state && Api.state.wheel && Api.state.wheel.ready);
 const dailyReady = () => (Api.on ? wheelReady() : Shop.chestReady());
 function dailyCard(cls = "") {
-  if (Api.on) return wheelReady() ? `<button class="card chest wheel-daily ${cls}" data-a="go" data-v="solo-wheel"><span class="wd-ico">🎡</span><div class="grow"><b>Колесо фортуны</b><div class="muted small">Раз в день бесплатно: монеты, осколки, еда, кейсы, сундук — и крошечный шанс на яйцо</div></div><span class="pill on">Крутить</span></button>` : "";
-  return Shop.chestReady() ? `<button class="card chest ${cls}" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Ежедневный сундук</b><div class="muted small">Открой и забери монеты</div></div><span class="pill on">Открыть</span></button>` : "";
+  if (Api.on) return wheelReady() ? `<button class="card chest wheel-daily ${cls}" data-a="go" data-v="solo-wheel"><span class="wd-ico">🎡</span><div class="grow"><b>Колесо фортуни</b><div class="muted small">Раз на день безплатно: монети, уламки, їжа, кейси, скриня — і крихітний шанс на яйце</div></div><span class="pill on">Крутити</span></button>` : "";
+  return Shop.chestReady() ? `<button class="card chest ${cls}" data-a="chest">${PX() ? Pixel.sprite("end", 3) : "🎁"}<div class="grow"><b>Щоденна скриня</b><div class="muted small">Відкрий і забери монети</div></div><span class="pill on">Відкрити</span></button>` : "";
 }
 
 // пригласить друга: +500 за каждого, кто пришёл по ссылке и зашёл в игру
@@ -448,28 +452,26 @@ const refUrl = () => (S.bot && /^tg\d+$/.test(S.me) ? `https://t.me/${S.bot}?sta
 function refCard() {
   const link = refUrl(); if (!Api.on || !link) return "";
   const r = (Api.state && Api.state.ref) || { count: 0, waiting: 0, coins: 500 };
-  return `<div class="card ref-card mt"><div class="row"><span class="ref-ico">👥</span><div class="grow"><b>Пригласи друга — +${r.coins} 🪙</b>
-    <div class="small muted">Друг нажмёт «Старт» по твоей ссылке и один раз зайдёт в игру — монеты придут тебе. Пришло друзей: <b>${r.count}</b>${r.waiting ? ` · ждём ещё ${r.waiting}` : ""}</div></div></div>
-    <div class="row mt"><button class="btn small grow" data-a="ref-share">📨 Отправить другу</button><button class="btn ghost small" data-a="ref-copy">📋</button></div></div>`;
+  return `<div class="card ref-card mt"><div class="row"><span class="ref-ico">👥</span><div class="grow"><b>Запроси друга — +${r.coins} 🪙</b>
+    <div class="small muted">Друг натисне «Старт» за твоїм посиланням і раз зайде в гру — монети прийдуть тобі. Прийшло друзів: <b>${r.count}</b>${r.waiting ? ` · чекаємо ще ${r.waiting}` : ""}</div></div></div>
+    <div class="row mt"><button class="btn small grow" data-a="ref-share">📨 Надіслати другу</button><button class="btn ghost small" data-a="ref-copy">📋</button></div></div>`;
 }
 
 function viewProfile() {
   const p = S.profile;
   return `<div class="fade-in">
-    <div class="top"><div class="grow"><h1>Профиль</h1><div class="muted small">${S.me.startsWith("tg") ? "Вход через Telegram" : "Гостевой профиль"}</div></div>${coinPill()}</div>
+    <div class="top"><div class="grow"><h1>Профіль</h1><div class="muted small">${S.me.startsWith("tg") ? "Вхід через Telegram" : "Гостьовий профіль"}</div></div>${coinPill()}</div>
     ${myCard()}
     ${petBadge(store.pet, true)}
-    <div class="row mt2"><button class="btn grow" data-a="tab" data-v="shop">🎁 Кейсы и инвентарь</button></div>
+    <div class="row mt2"><button class="btn grow" data-a="tab" data-v="shop">🎁 Кейси й інвентар</button></div>
     ${dailyCard("mt")}
     ${refCard()}
-    ${p.favorite_role ? `<div class="card mt"><span class="muted small">Чаще всего играешь</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
-    <div class="section-title">Изменить профиль</div>
-    <input class="input" id="reg-name" maxlength="20" value="${esc(S.regName || p.name)}">
-    ${p.has_tg_photo ? `<div class="card mt"><div class="toggle"><span>Фото из Telegram</span>
-      <button class="switch ${p.use_photo ? "on" : ""}" data-a="photo-toggle"></button></div></div>` : ""}
-    <div class="mt">${avatarGrid(S.regAvatar || p.avatar)}</div>
-    <button class="btn mt" data-a="register">Сохранить</button>
-    <div class="card mt2"><div class="toggle"><span>👾 Пиксельный стиль</span><button class="switch ${S.pixel ? "on" : ""}" data-a="pixel-toggle"></button></div></div>
+    ${p.favorite_role ? `<div class="card mt"><span class="muted small">Найчастіше граєш</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
+    <div class="section-title">Значок біля ніка</div>
+    ${badgeCard()}
+    ${p.tg ? `<div class="small muted mt">Ім’я та фото беруться з акаунта Telegram (смайлики з імені не переносяться).</div>`
+      : `<div class="section-title">Ім’я</div><input class="input" id="reg-name" maxlength="18" value="${esc(S.regName || p.base)}"><button class="btn mt" data-a="register">Зберегти</button>`}
+    <div class="card mt2"><div class="toggle"><span>👾 Піксельний стиль</span><button class="switch ${S.pixel ? "on" : ""}" data-a="pixel-toggle"></button></div></div>
   </div>${tabs()}`;
 }
 
@@ -477,7 +479,7 @@ function viewProfile() {
 function shopPreview(it) {
   const p = S.profile;
   if (it.cat === "frame") return `<div class="sp-av">${av(Object.assign({}, p, { look: { frame: it.id } }), "big")}</div>`;
-  if (it.cat === "bg") return it.id === "none" ? `<div class="sp-bg empty">пусто</div>` : `<div class="sp-bg" style="background-image:url(${Shop.sceneUrl(it.id)})"></div>`;
+  if (it.cat === "bg") return it.id === "none" ? `<div class="sp-bg empty">порожньо</div>` : `<div class="sp-bg" style="background-image:url(${Shop.sceneUrl(it.id)})"></div>`;
   if (it.cat === "toy") return `<div class="sp-ava sp-toy">${it.emoji}</div>`;
   if (it.cat === "mg") return `<div class="sp-ava sp-mg">${Pets.syringe(64)}</div>`;
   if (it.cat === "hat") { const st = Api.state, mp = st && st.pets.find((x) => x.id === st.main_pet && x.alive && !x.egg) || (st && st.pets.find((x) => x.alive && !x.egg));
@@ -492,20 +494,20 @@ function shopPreview(it) {
 
 // чужой профиль по команде /profile в боте (?u=ID): только посмотреть
 function playerSheet(d) {
-  if (!d) return `<div class="center"><div class="spinner" style="margin:10px auto"></div><div class="muted small">Загружаю профиль…</div></div>`;
+  if (!d) return `<div class="center"><div class="spinner" style="margin:10px auto"></div><div class="muted small">Завантажую профіль…</div></div>`;
   if (d.error) return `<h2>😕 ${esc(d.error)}</h2>`;
   const pr = d.profile || {}, pl = { name: d.name, avatar: pr.avatar || "🙂", photo: pr.photo || null, look: pr.look || {} };
   const main = d.pets.find((p) => p.id === d.main_pet) || d.pets[0];
   const code = (p) => p.rarity + p.dna + (p.stage ? "." + p.stage : "") + (p.hat ? "-" + p.hat : "");
-  return `<div class="center small muted">👀 Профиль игрока — только посмотреть</div>
+  return `<div class="center small muted">👀 Профіль гравця — лише переглянути</div>
     ${Shop.card({ name: d.name, games: pr.games || 0, wins: pr.wins || 0, avatarHtml: av(pl, "huge") }, Object.assign({}, Shop.DEFAULT, pr.look || {}))}
     ${d.username ? `<div class="center small muted">@${esc(d.username)}</div>` : ""}
-    ${d.pass ? `<div class="card pass-friend mt">🎫 Сезонный пропуск «${esc(d.pass.name)}»: <b>уровень ${d.pass.level} из 30</b><div class="pc-bar"><i style="width:${Math.round(d.pass.level / 30 * 100)}%"></i></div></div>` : ""}
-    <div class="section-title">Питомцы · ${d.pets.length}</div>
+    ${d.pass ? `<div class="card pass-friend mt">🎫 Сезонна перепустка «${esc(d.pass.name)}»: <b>рівень ${d.pass.level} з 30</b><div class="pc-bar"><i style="width:${Math.round(d.pass.level / 30 * 100)}%"></i></div></div>` : ""}
+    <div class="section-title">Улюбленці · ${d.pets.length}</div>
     ${d.pets.length ? `<div class="pet-grid">${d.pets.map((p) => { const t = Pets.traits(p.dna);
       return `<div class="pet-card ${main && p.id === main.id ? "main" : ""}">${main && p.id === main.id ? '<span class="pet-star">★</span>' : ""}${t.collect ? '<span class="pet-cl">✦</span>' : ""}${Pets.sprite(code(p), 72)}
-        <b>${esc(t.name)}</b><span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span><span class="small muted">🏆 ${p.wins} · 💉 ${p.mg}/2</span></div>`; }).join("")}</div>` : `<div class="muted small">Питомцев пока нет</div>`}
-    <div class="small muted center mt">Вещей в инвентаре: ${d.items} · с нами с ${new Date(d.since * 1000).toLocaleDateString("ru-RU")}</div>`;
+        <b>${esc(t.name)}</b><span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span><span class="small muted">🏆 ${p.wins} · 💉 ${p.mg}/2</span></div>`; }).join("")}</div>` : `<div class="muted small">Улюбленців поки немає</div>`}
+    <div class="small muted center mt">Речей в інвентарі: ${d.items} · з нами від ${new Date(d.since * 1000).toLocaleDateString("uk-UA")}</div>`;
 }
 function openPlayer(q) {
   S.sheet = { type: "player", data: null }; renderOverlay();
@@ -521,19 +523,19 @@ function peekSheet(pl) {
 function viewMafia() {
   const th = theme(S.setup.theme);
   return `<div class="fade-in">
-    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>🕴️ Мафия</h1>
-      <div class="muted small">Ведущий автоматический — играют все</div></div></div>
-    <div class="section-title">Выбери сценарий</div>
+    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>🕴️ Мафія</h1>
+      <div class="muted small">Ведучий автоматичний — грають усі</div></div></div>
+    <div class="section-title">Обери сценарій</div>
     <div class="themes">${S.catalog.themes.map((t) => `<button class="theme ${t.key === th.key ? "sel" : ""}" data-a="theme" data-v="${t.key}"
       style="${themeBg(t)}"><div class="e">${emo(t.emoji)}</div><b>${esc(t.title)}</b>
       <span>${esc(t.tagline)}</span></button>`).join("")}</div>
     <div class="card mt"><div class="row"><div style="font-size:30px">${emo(th.emoji, 16)}</div><div class="grow"><b>${esc(th.title)}</b>
       <div class="muted small">${esc(th.twist)}</div></div></div>
-      <button class="btn ghost small mt" data-a="roles" data-v="${th.key}">👥 Все роли сценария</button></div>
-    <button class="btn mt2" data-a="create">Создать комнату</button>
-    <div class="section-title">Или войди по коду</div>
+      <button class="btn ghost small mt" data-a="roles" data-v="${th.key}">👥 Усі ролі сценарію</button></div>
+    <button class="btn mt2" data-a="create">Створити кімнату</button>
+    <div class="section-title">Або увійди за кодом</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
-      <button class="btn" data-a="join">Войти</button></div>
+      <button class="btn" data-a="join">Увійти</button></div>
   </div>`;
 }
 
@@ -580,14 +582,14 @@ function playerTiles(list, opts = {}) {
       ${p.host ? `<span class="tag">👑</span>` : ""}${p.silenced ? `<span class="tagl">🤐</span>` : ""}${p.ready ? `<span class="tagb">✋</span>` : ""}
       ${count ? `<span class="count">${count}</span>` : ""}
       ${opts.kick && !p.host && p.id !== S.me ? `<button class="kick" data-a="kick" data-v="${p.id}">✕</button>` : ""}
-      ${av(p)}<div class="nm">${p.id === S.me ? "Вы" : nm(p)}</div>${role}
+      ${av(p)}<div class="nm">${p.id === S.me ? "Ви" : nm(p)}</div>${role}
       ${voters.length ? `<div class="votes">${voters.map((v) => av(player(v), "mini")).join("")}</div>` : ""}
     </div>`;
   }).join("")}</div>`;
 }
 
 // во время партии в любой игре — кнопка «выйти» (в лобби и в конце есть своя)
-const leaveFab = () => (S.room && !["lobby", "end"].includes(S.room.phase) ? `<button class="leave-fab" data-a="leave" title="Выйти из игры">🚪<span>Выйти</span></button>` : "");
+const leaveFab = () => (S.room && !["lobby", "end"].includes(S.room.phase) ? `<button class="leave-fab" data-a="leave" title="Вийти з гри">🚪<span>Вийти</span></button>` : "");
 function viewRoom() {
   const r = S.room;
   return viewRoomInner() + (MChat.active() ? "" : leaveFab());
@@ -616,22 +618,22 @@ function groupResultReport(r) {
 function groupBtn(r) {
   if (!r || !isHost() || r.phase !== "lobby" || !Api.state || !Api.state.group) return "";
   const posted = (S.groupPosted || {})[r.code];
-  return `<button class="tile w2 t-act" data-a="group-post" ${posted ? "disabled" : ""}>${posted ? "📢 Уже в группе" : "📢 В группу"}</button>`;
+  return `<button class="tile w2 t-act" data-a="group-post" ${posted ? "disabled" : ""}>${posted ? "📢 Уже в групі" : "📢 У групу"}</button>`;
 }
 // общее лобби всех игр: код, число игроков, настройки, стол, позвать/в группу, правила, старт
 function lobbyBento(o) {
   const r = S.room, host = isHost(), grp = groupBtn(r), bots = Bots.bar(r);
-  return `<div class="lob-top"><button class="avatar" data-a="leave">←</button><div class="grow"><small>${esc(o.kicker || "Комната")}</small><h1>${esc(o.title)}</h1></div>${o.right || ""}</div>
+  return `<div class="lob-top"><button class="avatar" data-a="leave">←</button><div class="grow"><small>${esc(o.kicker || "Кімната")}</small><h1>${esc(o.title)}</h1></div>${o.right || ""}</div>
   <div class="bento lobby-bento">
-    <button class="tile ${host && o.settings ? "w2" : "w3"}" data-a="copy"><div class="t-k">${o.codeLabel || "Код комнаты"} · 📋</div><div class="t-code">${r.code}</div></button>
-    <div class="tile"><div class="t-k">${o.countLabel || "Игроков"}</div><div class="t-v">${r.players.length}<small>/${o.max}</small></div></div>
+    <button class="tile ${host && o.settings ? "w2" : "w3"}" data-a="copy"><div class="t-k">${o.codeLabel || "Код кімнати"} · 📋</div><div class="t-code">${r.code}</div></button>
+    <div class="tile"><div class="t-k">${o.countLabel || "Гравців"}</div><div class="t-v">${r.players.length}<small>/${o.max}</small></div></div>
     ${host && o.settings ? `<button class="tile center" data-a="${o.settings}"><span class="t-ico">⚙️</span></button>` : ""}
-    <div class="tile w4 t-players"><div class="t-k">${o.seats || "Игроки"}</div>${playerTiles(r.players, { kick: host, peek: true })}</div>
-    <button class="tile ${grp ? "w2" : "w4"} t-act" data-a="share">📨 Позвать друзей</button>${grp}
+    <div class="tile w4 t-players"><div class="t-k">${o.seats || "Гравці"}</div>${playerTiles(r.players, { kick: host, peek: true })}</div>
+    <button class="tile ${grp ? "w2" : "w4"} t-act" data-a="share">📨 Покликати друзів</button>${grp}
     <div class="tile w4 t-rules ${o.scene ? "img" : ""}" ${o.scene ? `style="background-image:url(${Pixel.scene(o.scene)})"` : ""}>${o.rulesLabel ? `<div class="t-k">${o.rulesLabel}</div>` : ""}<div class="t-body">${o.rules}</div></div>
     ${bots ? `<div class="tile w4 auto">${bots}</div>` : ""}
     ${host ? `<button class="tile w4 t-start" data-a="start" ${o.enough ? "" : "disabled"}>${o.enough ? o.start : o.waitText}</button>`
-      : `<div class="tile w4 t-wait">⏳ ${o.hostWait || "Ждём, когда хост начнёт игру…"}</div>`}
+      : `<div class="tile w4 t-wait">⏳ ${o.hostWait || "Чекаємо, коли хост почне гру…"}</div>`}
   </div>`;
 }
 function viewRoomInner() {
@@ -642,7 +644,7 @@ function viewRoomInner() {
   if (r.game === "blackjack") return viewBlackjackRoom();
   if (MChat.active()) return `<div class="mc-spacer"></div>`;
   const views = { lobby: viewLobby, reveal: viewReveal, night: viewNight, day: viewDay, vote: viewVote, verdict: viewVerdict, end: viewEnd };
-  return `${netBanner()}${!["lobby", "end"].includes(r.phase) ? `<button class="mc-tochat" data-a="mafia-view">💬 Вид чата</button>` : ""}${r.phase === "night" ? '<div class="night-sky"></div><div class="stars"></div>' : ""}
+  return `${netBanner()}${!["lobby", "end"].includes(r.phase) ? `<button class="mc-tochat" data-a="mafia-view">💬 Вигляд чату</button>` : ""}${r.phase === "night" ? '<div class="night-sky"></div><div class="stars"></div>' : ""}
     <div class="fade-in" key="${r.phase}">${PX() ? `<div class="pxscene ${r.phase === "lobby" ? "big" : ""}" style="background-image:url(${Pixel.scene(r.settings.theme)})"></div>` : ""}${(views[r.phase] || viewLobby)()}</div>
     ${r.phase !== "lobby" || r.players.length > 1 ? `<button class="chat-fab" data-a="chat">💬<span id="chat-badge"></span></button>` : ""}`;
 }
@@ -654,36 +656,36 @@ function viewLobby() {
     <div class="small mt" style="opacity:.9">✨ ${esc(th.twist)}</div>
     <div class="chips mt">${r.plan.map((x) => `<span class="pill" title="${esc(x.desc)}">${emo(x.emoji, 12)} ${esc(x.name)}${x.count > 1 ? " ×" + x.count : ""}</span>`).join("")}</div>
     <div class="chips mt"><span class="pill">${r.mode.emoji} ${esc(r.mode.title)}</span>
-      <span class="pill">${r.settings.reveal ? "👁 Роли умерших видны" : "🙈 Роли скрыты"}</span>
-      <span class="pill">${r.settings.anonymous ? "🗳 Тайное голосование" : "🗳 Открытое голосование"}</span></div>`;
-  return lobbyBento({ kicker: "Мафия · комната", title: SK().lobby, max: S.catalog.max, settings: "settings", scene: r.settings.theme, rulesLabel: "Сценарий", rules,
-    enough: r.players.length >= S.catalog.min, start: "Начать игру 🎬", waitText: `Ждём игроков (минимум ${S.catalog.min})` });
+      <span class="pill">${r.settings.reveal ? "👁 Ролі загиблих видно" : "🙈 Ролі приховані"}</span>
+      <span class="pill">${r.settings.anonymous ? "🗳 Таємне голосування" : "🗳 Відкрите голосування"}</span></div>`;
+  return lobbyBento({ kicker: "Мафія · кімната", title: SK().lobby, max: S.catalog.max, settings: "settings", scene: r.settings.theme, rulesLabel: "Сценарій", rules,
+    enough: r.players.length >= S.catalog.min, start: "Почати гру 🎬", waitText: `Чекаємо гравців (мінімум ${S.catalog.min})` });
 }
 
 function viewReveal() {
   const my = S.room.my;
   const mates = S.room.players.filter((p) => p.id !== S.me && p.role && p.role.team === "mafia" && my.role.team === "mafia");
-  return `${gamebar("Твоя роль", "Никому не показывай экран")}
+  return `${gamebar("Твоя роль", "Нікому не показуй екран")}
     <div class="flip ${S.flipOpen ? "open" : ""}" data-a="flip"><div class="flip-in">
       <div class="face front">${cardFront(skinKey())}</div>
       <div class="face back">${cardBack(skinKey(), my)}</div>
     </div></div>
     ${mates.length ? `<div class="card mt"><span class="kicker">Твоя команда</span><div class="mates mt">${mates.map((m) =>
       `<div class="row">${av(m, "sm")}<b>${esc(m.name)}</b><span class="muted small">${esc(m.role.name)}</span></div>`).join("")}</div></div>` : ""}
-    ${my.bounty ? `<div class="card mt"><span class="kicker">Твоя цель</span><div class="mt"><b>🎯 ${esc(my.bounty)}</b></div></div>` : ""}
-    <button class="btn mt" data-a="seen" ${S.flipOpen ? "" : "disabled"}>Я запомнил(а) — к игре</button>
-    ${hostSkip("Начать сразу")}`;
+    ${my.bounty ? `<div class="card mt"><span class="kicker">Твоя мета</span><div class="mt"><b>🎯 ${esc(my.bounty)}</b></div></div>` : ""}
+    <button class="btn mt" data-a="seen" ${S.flipOpen ? "" : "disabled"}>Я запам’ятав(ла) — до гри</button>
+    ${hostSkip("Почати одразу")}`;
 }
 
 /* ---------------------------------------------------------------- карты персонажей */
 function cardFront(skin) {
   const fronts = {
-    classic: `<div class="cf"><div class="cf-mono">M</div><div class="cf-line">Коснись, чтобы открыть</div></div>`,
-    "90s": `<div class="cf"><div class="reels"><i></i><i></i></div><div class="cf-line">▶ PLAY · нажми</div></div>`,
-    halloween: `<div class="cf"><div class="cf-moon">☾</div><div class="cf-stars">✦ ✧ ✦</div><div class="cf-line">Открой судьбу</div></div>`,
-    bunker: `<div class="cf"><div class="cf-stamp">СЕКРЕТНО</div><div class="cf-line">[ ОТКРЫТЬ ФАЙЛ ]</div></div>`,
-    west: `<div class="cf"><div class="cf-star">★</div><div class="cf-line">Переверни листовку</div></div>`,
-    office: `<div class="cf"><div class="cf-chip"></div><div class="cf-line">Приложите пропуск</div></div>`,
+    classic: `<div class="cf"><div class="cf-mono">M</div><div class="cf-line">Торкнися, щоб відкрити</div></div>`,
+    "90s": `<div class="cf"><div class="reels"><i></i><i></i></div><div class="cf-line">▶ PLAY · натисни</div></div>`,
+    halloween: `<div class="cf"><div class="cf-moon">☾</div><div class="cf-stars">✦ ✧ ✦</div><div class="cf-line">Відкрий долю</div></div>`,
+    bunker: `<div class="cf"><div class="cf-stamp">ТАЄМНО</div><div class="cf-line">[ ВІДКРИТИ ФАЙЛ ]</div></div>`,
+    west: `<div class="cf"><div class="cf-star">★</div><div class="cf-line">Переверни листівку</div></div>`,
+    office: `<div class="cf"><div class="cf-chip"></div><div class="cf-line">Прикладіть перепустку</div></div>`,
   };
   return fronts[skin] || fronts.classic;
 }
@@ -703,22 +705,22 @@ function cardBack(skin, my) {
   const t = {
     classic: `<div class="rc"><div class="rc-top"><span>№ ${pad(num)}</span><span>${esc(team)}</span></div>
       <div class="rc-art">${glyph}</div><div class="rc-name">${esc(r.name)}</div>${motto}${desc}
-      <div class="rc-stamp ${evil ? "evil" : ""}">${evil ? "Семья" : "Город"}</div></div>`,
+      <div class="rc-stamp ${evil ? "evil" : ""}">${evil ? "Сім’я" : "Місто"}</div></div>`,
     "90s": `<div class="rc"><div class="vhs-top"><span>VHS</span><span>SP · 180 MIN</span></div>
       <div class="vhs-label"><div class="rc-art">${glyph}</div><div class="rc-name" data-text="${esc(r.name)}">${esc(r.name)}</div></div>
       <div class="vhs-stripes"><i></i><i></i><i></i></div>${motto}${desc}<div class="vhs-rec"><b>●</b> REC · 1994 · ${esc(team)}</div></div>`,
     halloween: `<div class="rc"><div class="tarot-num">${ROMAN[num - 1] || num}</div><div class="tarot-window">${glyph}</div>
       <div class="rc-name">${esc(r.name)}</div>${motto}${desc}<div class="tarot-team">✦ ${esc(team)} ✦</div></div>`,
-    bunker: `<div class="rc"><div class="hazard"></div><div class="file-head"><span>ФАЙЛ № 07-${pad(num)}</span><span>${r.team === "mafia" ? "⚠ БИОУГРОЗА" : "ДОПУСК B"}</span></div>
+    bunker: `<div class="rc"><div class="hazard"></div><div class="file-head"><span>ФАЙЛ № 07-${pad(num)}</span><span>${r.team === "mafia" ? "⚠ БІОЗАГРОЗА" : "ДОПУСК B"}</span></div>
       <div class="file-row"><div class="rc-art">${glyph}</div><div class="file-data">
-        <div><i>СУБЪЕКТ</i>${esc(me.name || "")}</div><div><i>НАЗНАЧЕНИЕ</i>${esc(r.name)}</div>
+        <div><i>СУБ’ЄКТ</i>${esc(me.name || "")}</div><div><i>ПРИЗНАЧЕННЯ</i>${esc(r.name)}</div>
         <div><i>СТАТУС</i><b class="${r.team === "mafia" ? "bad" : "ok"}">${esc(team)}</b></div></div></div>${motto}${desc}
-      <div class="file-foot">&gt; КОНЕЦ ЗАПИСИ_</div></div>`,
-    west: `<div class="rc"><div class="wanted">${evil ? "Разыскивается" : r.key === "sheriff" ? "Закон" : "Житель"}</div>
-      <div class="wanted-sub">${evil ? "живым или мёртвым" : "Дэд-Крик · 1879"}</div><div class="rc-art">${portrait}</div>
+      <div class="file-foot">&gt; КІНЕЦЬ ЗАПИСУ_</div></div>`,
+    west: `<div class="rc"><div class="wanted">${evil ? "Розшукується" : r.key === "sheriff" ? "Закон" : "Мешканець"}</div>
+      <div class="wanted-sub">${evil ? "живим або мертвим" : "Дед-Крік · 1879"}</div><div class="rc-art">${portrait}</div>
       <div class="rc-name">${esc(r.name)}</div><div class="wanted-who">${esc(me.name || "")}</div>${motto}${desc}
-      <div class="reward">${evil ? "Награда · $500" : "★ " + esc(team) + " ★"}</div></div>`,
-    office: `<div class="rc"><div class="badge-hole"></div><div class="badge-co"><b>ООО «Вектор»</b><span>${r.team === "mafia" ? "доступ: все этажи" : "сотрудник"}</span></div>
+      <div class="reward">${evil ? "Нагорода · $500" : "★ " + esc(team) + " ★"}</div></div>`,
+    office: `<div class="rc"><div class="badge-hole"></div><div class="badge-co"><b>ТОВ «Вектор»</b><span>${r.team === "mafia" ? "доступ: усі поверхи" : "працівник"}</span></div>
       <div class="badge-main"><div class="rc-art">${portrait}</div><div><div class="badge-name">${esc(me.name || "")}</div>
         <div class="rc-name">${esc(r.name)}</div><div class="badge-dept">${esc(team)}</div></div></div>${motto}${desc}
       <div class="barcode"></div></div>`,
@@ -735,15 +737,15 @@ function storyBlock(kinds) {
 function notesBlock() {
   const priv = (S.room.my && S.room.my.private) || [];
   if (!priv.length) return "";
-  return `<div class="card mt notes"><b>🗒 Твои заметки</b>${priv.slice().reverse().map((n) => `<div class="n small">${esc(n)}</div>`).join("")}</div>`;
+  return `<div class="card mt notes"><b>🗒 Твої нотатки</b>${priv.slice().reverse().map((n) => `<div class="n small">${esc(n)}</div>`).join("")}</div>`;
 }
 
 function hostSkip(label) {
-  return isHost() ? `<div class="hostbar"><button class="btn ghost small grow" data-a="skip">⏭ ${label || "Дальше"}</button></div>` : "";
+  return isHost() ? `<div class="hostbar"><button class="btn ghost small grow" data-a="skip">⏭ ${label || "Далі"}</button></div>` : "";
 }
 
 function deadNote() {
-  return S.room.my && !S.room.my.alive ? `<div class="card center mt">👻 Ты выбыл(а). Наблюдай и общайся в чате «Морг».</div>` : "";
+  return S.room.my && !S.room.my.alive ? `<div class="card center mt">👻 Ти вибув(ла). Спостерігай і спілкуйся в чаті «Морг».</div>` : "";
 }
 
 function viewNight() {
@@ -758,27 +760,27 @@ function viewNight() {
       Object.entries(my.team_vote.votes || {}).forEach(([who, t]) => { if (t !== "pass") (voters[t] = voters[t] || []).push(who); });
       body += `<div class="section-title">🩸 ${esc(r.theme.mafia_team)}: ${esc(my.team_vote.label)}</div>
         ${playerTiles(alive, { pick: my.team_vote.targets, sel: my.team_vote.choice, action: "team", voters })}
-        <button class="btn ghost small mt" data-a="team" data-v="pass">${my.team_vote.choice === "pass" ? "✓ " : ""}Никого этой ночью</button>`;
+        <button class="btn ghost small mt" data-a="team" data-v="pass">${my.team_vote.choice === "pass" ? "✓ " : ""}Нікого цієї ночі</button>`;
     }
     if (my.abilities && my.abilities.length) {
       const own = my.own_choice;
       const ab = my.abilities[Math.min(S.sel.ability, my.abilities.length - 1)];
       const chosen = own && own !== "pass" ? own.target : null;
-      body += `<div class="section-title">✨ Твоя способность</div>
+      body += `<div class="section-title">✨ Твоя здібність</div>
         ${my.abilities.length > 1 ? `<div class="ability-tabs">${my.abilities.map((a, i) =>
           `<button class="pill ${a === ab ? "on" : ""}" data-a="ability" data-v="${i}">${esc(a.label)}${a.left != null ? ` · ${a.left}` : ""}</button>`).join("")}</div>` : ""}
-        ${own ? `<div class="card small">${own === "pass" ? "Ты решил(а) не действовать этой ночью." :
-          `✓ ${esc(my.abilities.find((a) => a.idx === own.idx)?.label || "Выбор")}: <b>${esc(player(own.target)?.name)}</b> — можно изменить`}</div>` : ""}
+        ${own ? `<div class="card small">${own === "pass" ? "Ти вирішив(ла) не діяти цієї ночі." :
+          `✓ ${esc(my.abilities.find((a) => a.idx === own.idx)?.label || "Вибір")}: <b>${esc(player(own.target)?.name)}</b> — можна змінити`}</div>` : ""}
         ${playerTiles(alive, { pick: ab.targets, sel: S.sel.target || chosen, action: "target" })}
         <div class="row mt"><button class="btn grow" data-a="own" ${S.sel.target ? "" : "disabled"}>${esc(ab.label)}${S.sel.target ? " → " + esc(player(S.sel.target).name) : ""}</button>
-          <button class="btn ghost small" data-a="own-pass">Пропустить</button></div>`;
+          <button class="btn ghost small" data-a="own-pass">Пропустити</button></div>`;
     }
   } else if (my.alive) {
-    body = `<div class="sleep"><div class="ph-icon">${icon("night", 72)}</div><h2 class="mt">Ты спишь</h2><p class="muted mt">Жди утра…</p></div>`;
+    body = `<div class="sleep"><div class="ph-icon">${icon("night", 72)}</div><h2 class="mt">Ти спиш</h2><p class="muted mt">Чекай ранку…</p></div>`;
   }
   return `${gamebar(esc(SK().night(r.night)), esc(SK().nightSub))}
     ${phaseHero("night", "", nightLine)}
-    ${body}${deadNote()}${notesBlock()}${hostSkip("Закончить ночь")}`;
+    ${body}${deadNote()}${notesBlock()}${hostSkip("Завершити ніч")}`;
 }
 
 function viewDay() {
@@ -790,20 +792,20 @@ function viewDay() {
   if (my.alive && my.abilities && my.abilities.length) {
     const ab = my.abilities[0];
     duel = S.sel.duel
-      ? `<div class="card mt"><b>🤠 ${esc(ab.label)}: выбери соперника</b><div class="mt">${playerTiles(alive, { pick: ab.targets, sel: S.sel.target, action: "target" })}</div>
-         <div class="row mt"><button class="btn danger grow" data-a="duel" ${S.sel.target ? "" : "disabled"}>Вызвать на дуэль</button>
-         <button class="btn ghost small" data-a="duel-cancel">Отмена</button></div></div>`
-      : `<button class="btn ghost mt" data-a="duel-open">🤠 ${esc(ab.label)} (осталось: ${ab.left})</button>`;
+      ? `<div class="card mt"><b>🤠 ${esc(ab.label)}: обери суперника</b><div class="mt">${playerTiles(alive, { pick: ab.targets, sel: S.sel.target, action: "target" })}</div>
+         <div class="row mt"><button class="btn danger grow" data-a="duel" ${S.sel.target ? "" : "disabled"}>Викликати на дуель</button>
+         <button class="btn ghost small" data-a="duel-cancel">Скасувати</button></div></div>`
+      : `<button class="btn ghost mt" data-a="duel-open">🤠 ${esc(ab.label)} (залишилося: ${ab.left})</button>`;
   }
   return `${gamebar(esc(SK().day(r.day)), esc(SK().discuss))}
     ${phaseHero("day")}
-    <div class="card">${storyBlock(["death", "calm", "saved", "silenced", "duel"]) || '<div class="muted">Утро.</div>'}</div>
+    <div class="card">${storyBlock(["death", "calm", "saved", "silenced", "duel"]) || '<div class="muted">Ранок.</div>'}</div>
     ${notesBlock()}
-    <div class="section-title">Кто подозрителен? Обсуждайте!</div>
+    <div class="section-title">Хто підозрілий? Обговорюйте!</div>
     ${playerTiles(r.players)}
     ${duel}
-    ${my.alive ? `<button class="btn mt2" data-a="ready" ${my.ready ? "disabled" : ""}>${my.ready ? "✓ Ты готов(а)" : "✋ Готов(а) голосовать"} · ${ready}/${alive.length}</button>` : deadNote()}
-    ${hostSkip("К голосованию")}`;
+    ${my.alive ? `<button class="btn mt2" data-a="ready" ${my.ready ? "disabled" : ""}>${my.ready ? "✓ Ти готовий(а)" : "✋ Готовий(а) голосувати"} · ${ready}/${alive.length}</button>` : deadNote()}
+    ${hostSkip("До голосування")}`;
 }
 
 function viewVote() {
@@ -818,42 +820,42 @@ function viewVote() {
   let action = "";
   if (my.can_vote) {
     action = `${playerTiles(alive, { pick: targets, sel: my.voted !== "none" ? my.voted : null, action: "vote", voters, counts })}
-      <button class="btn ghost mt" data-a="vote" data-v="skip">${my.voted === null ? "✓ " : ""}Воздержаться${skipVotes ? " · " + skipVotes : ""}</button>`;
+      <button class="btn ghost mt" data-a="vote" data-v="skip">${my.voted === null ? "✓ " : ""}Утриматися${skipVotes ? " · " + skipVotes : ""}</button>`;
   } else {
     action = `${playerTiles(alive, { voters, counts })}
-      <div class="card center mt">${my.alive ? "🤐 Сегодня ты без голоса" : "👻 Мёртвые не голосуют"}</div>`;
+      <div class="card center mt">${my.alive ? "🤐 Сьогодні ти без голосу" : "👻 Мертві не голосують"}</div>`;
   }
-  return `${gamebar(esc(SK().vote), r.settings.anonymous ? "Тайное голосование" : "Открытое голосование")}
-    ${phaseHero("vote", "Кого выгоняем?")}
-    ${action}${hostSkip("Подвести итог")}`;
+  return `${gamebar(esc(SK().vote), r.settings.anonymous ? "Таємне голосування" : "Відкрите голосування")}
+    ${phaseHero("vote", "Кого виганяємо?")}
+    ${action}${hostSkip("Підбити підсумок")}`;
 }
 
 function viewVerdict() {
   return `${gamebar(esc(SK().verdict), esc(SK().day(S.room.day)))}
     ${phaseHero("verdict")}
     <div class="card">${storyBlock(["out", "vote_none", "bounty"])}</div>
-    <div class="section-title">Игроки</div>${playerTiles(S.room.players)}${hostSkip("Наступает ночь")}`;
+    <div class="section-title">Гравці</div>${playerTiles(S.room.players)}${hostSkip("Настає ніч")}`;
 }
 
 function viewEnd() {
   const r = S.room;
   const iWon = (r.winners || []).includes(S.me);
-  const title = { town: r.theme.town_team, mafia: r.theme.mafia_team, solo: "Одиночка" }[r.winner];
+  const title = { town: r.theme.town_team, mafia: r.theme.mafia_team, solo: "Одинак" }[r.winner];
   const endText = (r.log || []).filter((e) => e.kind === "end").map((e) => esc(e.text)).join("");
   setTimeout(confetti, 50);
   const rw = S.reward && S.reward.key === store.lastGame ? S.reward.sum : 0;
-  return `<div class="win mt"><div class="ph-icon">${icon("end", 64)}</div><div class="small kicker">ПОБЕДА</div>
-      <h2>${esc(title)}</h2><p>${endText}</p><p class="mt"><b>${iWon ? "Ты победил(а)!" : "В этот раз не повезло"}</b></p>
+  return `<div class="win mt"><div class="ph-icon">${icon("end", 64)}</div><div class="small kicker">ПЕРЕМОГА</div>
+      <h2>${esc(title)}</h2><p>${endText}</p><p class="mt"><b>${iWon ? "Ти переміг(ла)!" : "Цього разу не пощастило"}</b></p>
       ${rw ? `<div class="reward-coins">${PX() ? Pixel.sprite("coin", 3) : "🪙"} +${rw} монет</div>` : ""}</div>
-    <div class="section-title">Кто был кем</div>
+    <div class="section-title">Хто був ким</div>
     <div class="card final-list">${r.players.map((p) => `<div class="r ${r.winners.includes(p.id) ? "winner" : ""} ${p.alive ? "" : "deadp"}">
       ${av(p, "sm")}
-      <div class="grow"><b>${nm(p)}</b>${p.look && Shop.titleText(p.look) ? `<div class="small muted">${esc(Shop.titleText(p.look))}</div>` : ""}<div class="small ${p.role ? "team-" + p.role.team : ""}">${p.role ? `${p.role.emoji} ${esc(p.role.name)}${p.role.converted ? " (обращён)" : ""}` : ""}</div></div>
-      <span class="small muted">${p.alive ? "жив" : "✝"}</span></div>`).join("")}</div>
-    <div class="section-title">Летопись партии</div>
+      <div class="grow"><b>${nm(p)}</b>${p.look && Shop.titleText(p.look) ? `<div class="small muted">${esc(Shop.titleText(p.look))}</div>` : ""}<div class="small ${p.role ? "team-" + p.role.team : ""}">${p.role ? `${p.role.emoji} ${esc(p.role.name)}${p.role.converted ? " (навернений)" : ""}` : ""}</div></div>
+      <span class="small muted">${p.alive ? "живий" : "✝"}</span></div>`).join("")}</div>
+    <div class="section-title">Літопис партії</div>
     <div class="card">${(r.log || []).filter((e) => e.kind !== "night").map((e) => `<div class="story ${e.kind} small">${esc(e.text)}</div>`).join("")}</div>
-    ${isHost() ? `<button class="btn mt2" data-a="again">🔁 Ещё партия</button>` : `<div class="card center mt2 muted">Хост может начать новую партию</div>`}
-    <button class="btn ghost mt" data-a="leave">Выйти в меню</button>`;
+    ${isHost() ? `<button class="btn mt2" data-a="again">🔁 Ще партія</button>` : `<div class="card center mt2 muted">Хост може почати нову партію</div>`}
+    <button class="btn ghost mt" data-a="leave">Вийти в меню</button>`;
 }
 
 function coinRain() {
@@ -898,15 +900,15 @@ function renderOverlay() {
       <div class="roles-list mt">${th.roles.map((r) => {
         const sp = th.specials.find((x) => x.key === r.key);
         return `<div class="r"><div class="e">${r.emoji}</div><div class="grow"><b>${esc(r.name)}</b>
-          <span class="small team-${r.team}"> · ${r.team === "mafia" ? "мафия" : r.team === "town" ? "город" : "сам за себя"}</span>
-          <div class="small muted">${esc(r.desc)}</div>${sp ? `<div class="small muted">появляется от ${sp.from} игроков</div>` : ""}</div></div>`;
+          <span class="small team-${r.team}"> · ${r.team === "mafia" ? "мафія" : r.team === "town" ? "місто" : "сам за себе"}</span>
+          <div class="small muted">${esc(r.desc)}</div>${sp ? `<div class="small muted">з’являється від ${sp.from} гравців</div>` : ""}</div></div>`;
       }).join("")}</div>`;
   } else if (S.sheet.type === "bj-settings") {
     body = S.room ? bjSettingsSheet() : "";
   } else if (S.sheet.type === "rou-settings") {
     body = rouSettingsSheet();
   } else if (S.sheet.type === "rou-rules") {
-    body = S.room ? `<h2>📖 Как играть</h2><div class="rou-rules">${rouRulesHtml(modeOf(S.room))}</div>` : "";
+    body = S.room ? `<h2>📖 Як грати</h2><div class="rou-rules">${rouRulesHtml(modeOf(S.room))}</div>` : "";
   } else if (S.sheet.type === "spy-settings") {
     body = spySettingsSheet();
   } else if (S.sheet.type === "spy-guess") {
@@ -946,8 +948,8 @@ function renderOverlay() {
     const r = S.room;
     const th = theme(r.settings.theme);
     const enabled = r.settings.roles || th.specials.map((s) => s.key);
-    body = `<h2>⚙️ Настройки игры</h2>
-      <div class="section-title">Сценарий</div>
+    body = `<h2>⚙️ Налаштування гри</h2>
+      <div class="section-title">Сценарій</div>
       <div class="themes">${S.catalog.themes.map((t) => `<button class="theme ${t.key === th.key ? "sel" : ""}" data-a="set-theme" data-v="${t.key}"
         style="${themeBg(t)}"><div class="e">${emo(t.emoji)}</div><b>${esc(t.title)}</b></button>`).join("")}</div>
       <div class="section-title">Темп</div>
@@ -955,13 +957,13 @@ function renderOverlay() {
         <b>${m.emoji} ${esc(m.title)}</b>${r.settings.mode === m.key ? " ✓" : ""}<div class="small muted">${esc(m.desc)}</div></button>`).join("")}
       <div class="section-title">Правила</div>
       <div class="card">
-        <div class="toggle"><span>Показывать роль выбывших</span><button class="switch ${r.settings.reveal ? "on" : ""}" data-a="set-toggle" data-v="reveal"></button></div>
-        <div class="toggle"><span>Тайное голосование</span><button class="switch ${r.settings.anonymous ? "on" : ""}" data-a="set-toggle" data-v="anonymous"></button></div>
+        <div class="toggle"><span>Показувати роль вибулих</span><button class="switch ${r.settings.reveal ? "on" : ""}" data-a="set-toggle" data-v="reveal"></button></div>
+        <div class="toggle"><span>Таємне голосування</span><button class="switch ${r.settings.anonymous ? "on" : ""}" data-a="set-toggle" data-v="anonymous"></button></div>
       </div>
-      <div class="section-title">Особые роли</div>
+      <div class="section-title">Особливі ролі</div>
       <div class="card">${th.specials.map((s) => {
         const role = th.roles.find((x) => x.key === s.key);
-        return `<div class="toggle"><span>${role.emoji} ${esc(role.name)} <span class="small muted">от ${s.from}</span></span>
+        return `<div class="toggle"><span>${role.emoji} ${esc(role.name)} <span class="small muted">від ${s.from}</span></span>
           <button class="switch ${enabled.includes(s.key) ? "on" : ""}" data-a="set-role" data-v="${s.key}"></button></div>`;
       }).join("")}</div>`;
   }
@@ -970,7 +972,7 @@ function renderOverlay() {
   if (PX()) Pixel.apply($overlay);
 }
 
-const CHANNELS = { all: "💬 Общий", mafia: "🩸 Команда", dead: "👻 Морг" };
+const CHANNELS = { all: "💬 Загальний", mafia: "🩸 Команда", dead: "👻 Морг" };
 
 function renderChat() {
   const r = S.room;
@@ -1001,7 +1003,7 @@ function renderChat() {
   const box = document.getElementById("msgs");
   box.innerHTML = list.length ? list.map((m) => `<div class="msg ${m.from === S.me ? "mine" : ""}">${av(m)}
     <div class="b">${m.from === S.me ? "" : `<div class="who">${esc(m.name)}</div>`}${esc(m.text)}</div></div>`).join("")
-    : `<div class="muted center mt2">Пока тихо…</div>`;
+    : `<div class="muted center mt2">Поки тихо…</div>`;
   box.scrollTop = box.scrollHeight;
   if (PX()) Pixel.apply(box);
   const form = document.getElementById("chat-form");
@@ -1010,26 +1012,24 @@ function renderChat() {
     form.dataset.mode = want;
     form.dataset.ch = S.chatTab;
     form.innerHTML = canWrite
-      ? `<form class="chat-form" id="chat-send"><input class="input" id="chat-input" maxlength="300" placeholder="Сообщение…" autocomplete="off">
+      ? `<form class="chat-form" id="chat-send"><input class="input" id="chat-input" maxlength="300" placeholder="Повідомлення…" autocomplete="off">
          <button class="btn" type="submit">➤</button></form>`
-      : `<div class="muted small center mt">Сейчас писать сюда нельзя${r.phase === "night" ? " — ночь" : ""}</div>`;
+      : `<div class="muted small center mt">Зараз писати сюди не можна${r.phase === "night" ? " — ніч" : ""}</div>`;
   }
 }
 
 /* ---------------------------------------------------------------- действия */
 const actions = {
-  avatar: (v) => { S.regAvatar = v; haptic(); render(); },
+  badge: (v) => { store.badge = v === "none" ? "" : v; haptic(); saveProfile(); syncProfile(); render(); },
   "pixel-toggle": () => { store.pixel = !S.pixel; S.pixel = store.pixel; saveProfile(); render(); },
-  "photo-toggle": () => { store.use_photo = !(store.use_photo !== false); saveProfile(); syncProfile(); render(); },
   register: () => {
     const name = (document.getElementById("reg-name").value || "").trim();
-    if (!name) return toast("Введите имя");
+    if (!name) return toast("Введіть ім’я");
     S.regName = name;
-    store.name = name.slice(0, 20);
-    store.avatar = S.regAvatar || store.avatar || "🙂";
+    if (!store.tg_name) store.name = [...Shop.cleanName(name)].slice(0, 18).join("") || "Гравець";
     saveProfile();
     syncProfile();
-    if (S.screen === "profile") toast("Сохранено ✓");
+    if (S.screen === "profile") toast("Збережено ✓");
     else {
       S.registered = true; S.screen = "home";
       if (S.pendingRoom) return joinRoom(S.pendingRoom);
@@ -1038,24 +1038,24 @@ const actions = {
     haptic("medium");
   },
   shop: () => { S.screen = "shop"; render(); },
-  "shop-cat": (v) => { S.shopCat = v; S.shopTry = null; haptic(); render(); },
+  "shop-cat": (v) => { S.shopCat = v; S.shopTry = null; S.craft = null; haptic(); render(); },
   "shop-try": (v) => { S.shopTry = { cat: S.shopCat || "frame", id: v }; haptic(); render(); },
-  "shop-equip": () => { const it = Shop.byId(S.shopTry.cat, S.shopTry.id); if (Shop.equip(it)) { saveProfile(); syncProfile(); haptic("medium"); toast("Надето ✓"); render(); } },
+  "shop-equip": () => { const it = Shop.byId(S.shopTry.cat, S.shopTry.id); if (Shop.equip(it)) { saveProfile(); syncProfile(); haptic("medium"); toast("Вдягнуто ✓"); render(); } },
   chest: () => {
     if (Api.on && Api.ready) {                               // сундук на сервере: монеты и крошечный шанс на яйцо
       return Api.act("/api/chest", {}).then((st) => {
         store.chest = new Date().toISOString().slice(0, 10); saveProfile();
-        notify("success"); toast(st.egg ? `Сундук: +${st.got} монет и… ЯЙЦО! 🥚` : `Сундук: +${st.got} монет!`); coinRain(); render();
+        notify("success"); toast(st.egg ? `Скриня: +${st.got} монет і… ЯЙЦЕ! 🥚` : `Скриня: +${st.got} монет!`); coinRain(); render();
       }).catch((e) => { store.chest = new Date().toISOString().slice(0, 10); saveProfile(); toast(e.message); render(); });
     }
     const sum = Shop.openChest();
     if (!sum) return;
-    saveProfile(); notify("success"); toast(`Сундук: +${sum} монет!`);
+    saveProfile(); notify("success"); toast(`Скриня: +${sum} монет!`);
     coinRain(); render();
   },
   peek: (v) => { S.sheet = { type: "peek", id: v }; haptic(); renderOverlay(); },
   "gate-open": () => { const l = Api.state && Api.state.gate && Api.state.gate.link, tg = window.Telegram && window.Telegram.WebApp; if (!l) return; if (tg && tg.openTelegramLink && /^https:\/\/t\.me\//.test(l)) tg.openTelegramLink(l); else window.open(l, "_blank"); },
-  "gate-check": () => Api.act("/api/me", { gate: 1 }).then(() => { if (Api.state.gate) toast("Пока не вижу подписки — подпишись и нажми ещё раз"); else { notify("success"); toast("✅ Спасибо! Добро пожаловать"); } render(); }).catch((e) => toast(e.message)),
+  "gate-check": () => Api.act("/api/me", { gate: 1 }).then(() => { if (Api.state.gate) toast("Поки не бачу підписки — підпишись і натисни ще раз"); else { notify("success"); toast("✅ Дякуємо! Ласкаво просимо"); } render(); }).catch((e) => toast(e.message)),
   "cancel-join": () => { Net.stop(); S.screen = "home"; render(); },
   tab: (v) => { S.screen = v; S.regName = ""; S.regAvatar = null; if (v === "shop") S.shopTry = null; render(); window.scrollTo(0, 0); },
   go: (v) => { S.screen = v; if (v === "petfun") { S.funFrom = "solo"; S.fun = null; } if (v === "pass") { S.passX = null; S.passSel = null; } if (v === "cup") { S.cup = null; S.cupAt = 0; S.cupWant = Api.state && Api.state.cup ? Api.state.cup.id : null; } render(); window.scrollTo(0, 0); },
@@ -1069,7 +1069,7 @@ const actions = {
   },
   join: () => {
     const code = (document.getElementById("join-code").value || "").trim().toUpperCase();
-    if (code.length !== 4) return toast("Код — 4 символа");
+    if (code.length !== 4) return toast("Код — 4 символи");
     joinRoom(code);
   },
   "group-post": () => {
@@ -1077,33 +1077,33 @@ const actions = {
     const M = { roulette: window.Roulette, revolver: window.Revolver, bluff: window.Bluff, blackjack: window.Blackjack, draw: window.Draw }[r.game];
     const max = (M && M.MAX_PLAYERS) || (S.catalog && S.catalog.max) || 12;
     Api.call("/api/group/room", { code: r.code, game: r.game || "mafia", title: r.theme ? r.theme.title : "", players: r.players.length, max, stake: (r.settings && r.settings.stake) || 0 })
-      .then(() => { (S.groupPosted = S.groupPosted || {})[r.code] = 1; (S.groupEver = S.groupEver || {})[r.code] = (S.groupEver || {})[r.code] || 0; toast("📢 Приглашение в группе"); notify("success"); render(); })
+      .then(() => { (S.groupPosted = S.groupPosted || {})[r.code] = 1; (S.groupEver = S.groupEver || {})[r.code] = (S.groupEver || {})[r.code] || 0; toast("📢 Запрошення в групі"); notify("success"); render(); })
       .catch((e) => toast(e.message));
   },
   leave: () => {
     const go = () => { haptic("medium"); if (S.room && S.room.phase === "lobby" && isHost()) groupDone(S.room.code, "gone"); send({ t: "leave" }); };
     if (S.room && !["lobby", "end"].includes(S.room.phase)) {
-      const q = isHost() ? "Ты хост: если выйдешь, игра закончится у всех. Выйти?" : CELLAR_GAMES.includes(S.room.game) ? "Выйти из игры? Ты встанешь из-за стола и выбудешь" : "Выйти из игры?";
+      const q = isHost() ? "Ти хост: якщо вийдеш, гра закінчиться в усіх. Вийти?" : CELLAR_GAMES.includes(S.room.game) ? "Вийти з гри? Ти встанеш з-за столу й вибудеш" : "Вийти з гри?";
       if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
     } else go();
   },
   "ref-share": () => {
-    const link = refUrl(), text = "Го в Настолкино — мафия, питомцы, кейсы! 🎲";
+    const link = refUrl(), text = "Го в Настолкіно — мафія, улюбленці, кейси! 🎲";
     if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
-    else if (navigator.share) navigator.share({ title: "Настолкино", text, url: link }).catch(() => {});
-    else { navigator.clipboard && navigator.clipboard.writeText(link); toast("Ссылка скопирована"); }
+    else if (navigator.share) navigator.share({ title: "Настолкіно", text, url: link }).catch(() => {});
+    else { navigator.clipboard && navigator.clipboard.writeText(link); toast("Посилання скопійовано"); }
   },
-  "ref-copy": () => { navigator.clipboard && navigator.clipboard.writeText(refUrl()); toast("Ссылка скопирована"); haptic(); },
-  copy: () => { navigator.clipboard && navigator.clipboard.writeText(S.room.code); toast("Код скопирован"); haptic(); },
+  "ref-copy": () => { navigator.clipboard && navigator.clipboard.writeText(refUrl()); toast("Посилання скопійовано"); haptic(); },
+  copy: () => { navigator.clipboard && navigator.clipboard.writeText(S.room.code); toast("Код скопійовано"); haptic(); },
   share: () => {
     const code = S.room.code;
     const link = S.bot ? (S.miniapp ? `https://t.me/${S.bot}/${S.miniapp}?startapp=${code}` : `https://t.me/${S.bot}?start=${code}`)
       : `${location.origin}${location.pathname}?room=${code}`;
-    const game = { draw: "Го в рисовалку!", roulette: "Спускайся в подвал. Один дробовик, один стол.", revolver: "Спускайся в подвал. Револьвер, один патрон, шесть гнёзд.", bluff: "Спускайся в подвал: карты, блеф и у каждого свой револьвер.", blackjack: "Садись за стол, раздаю!", spy: "Го в Шпиона! Кто-то из нас не знает, где мы 🕵️" }[S.room.game] || "Го в мафию!";
-    const text = `${game} ${S.room.theme.emoji} «${S.room.theme.title}». Код комнаты: ${code}`;
+    const game = { draw: "Го в малювалку!", roulette: "Спускайся в підвал. Одна рушниця, один стіл.", revolver: "Спускайся в підвал. Револьвер, один набій, шість гнізд.", bluff: "Спускайся в підвал: карти, блеф і в кожного свій револьвер.", blackjack: "Сідай за стіл, роздаю!", spy: "Го в Шпигуна! Хтось із нас не знає, де ми 🕵️" }[S.room.game] || "Го в мафію!";
+    const text = `${game} ${S.room.theme.emoji} «${S.room.theme.title}». Код кімнати: ${code}`;
     if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
     else if (navigator.share) navigator.share({ title: S.room.theme.title, text, url: link }).catch(() => {});
-    else { navigator.clipboard && navigator.clipboard.writeText(`${text}\n${link}`); toast("Приглашение скопировано"); }
+    else { navigator.clipboard && navigator.clipboard.writeText(`${text}\n${link}`); toast("Запрошення скопійовано"); }
   },
   kick: (v) => send({ t: "kick", id: v }),
   settings: () => { S.sheet = { type: "settings" }; renderOverlay(); },
@@ -1127,7 +1127,7 @@ const actions = {
   },
   start: () => { send({ t: "start" }); haptic("heavy"); },
   flip: () => { if (!S.flipOpen) { S.flipOpen = true; haptic("heavy"); render(); } },
-  seen: () => { send({ t: "seen" }); toast("Ждём остальных…"); },
+  seen: () => { send({ t: "seen" }); toast("Чекаємо решту…"); },
   team: (v) => { send({ t: "act", slot: "team", target: v }); haptic(); },
   ability: (v) => { S.sel.ability = Number(v); S.sel.target = null; render(); },
   target: (v) => { S.sel.target = v; haptic(); render(); },

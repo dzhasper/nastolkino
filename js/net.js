@@ -85,11 +85,11 @@ const Net = (() => {
             attempts += 1;
             if (!snapshot && attempts < 10) return tryOpen();                 // код занят — берём другой
             if (snapshot && attempts < 25) return setTimeout(tryOpen, 3000);  // старое соединение ещё не отпустило код
-            return reject(new Error("Не удалось открыть комнату"));
+            return reject(new Error("Не вдалося відкрити кімнату"));
           }
           if (!code && ["network", "server-error", "socket-error", "socket-closed", "browser-incompatible"].includes(err.type)) {
             peer.destroy();
-            reject(new Error(err.type === "browser-incompatible" ? "Это приложение не поддерживает прямую связь" : "Нет связи с сервером встреч. Проверьте интернет"));
+            reject(new Error(err.type === "browser-incompatible" ? "Цей застосунок не підтримує прямий зв’язок" : "Немає зв’язку із сервером зустрічей. Перевірте інтернет"));
           }
         });
       };
@@ -130,7 +130,7 @@ const Net = (() => {
     peer.on("disconnected", () => { if (wanted && peer && !peer.destroyed) setTimeout(() => peer && !peer.destroyed && peer.reconnect(), 1500); });
     peer.on("error", (err) => {
       if (err.type === "peer-unavailable") {
-        if (!everConnected) { h.onMessage({ t: "error", text: "Комната не найдена. Проверьте код" }); stop(); h.onMessage({ t: "left" }); }
+        if (!everConnected) { h.onMessage({ t: "error", text: "Кімнату не знайдено. Перевірте код" }); stop(); h.onMessage({ t: "left" }); }
         else retry();
       } else if (["network", "server-error", "socket-error", "socket-closed"].includes(err.type)) retry();
     });
@@ -176,7 +176,7 @@ const Net = (() => {
       if (msg.t === "leave") { wanted = false; setTimeout(stop, 300); }
     } else if (role === "client" && msg.t === "leave") {
       stop(); h.onMessage({ t: "left" });
-    } else h.onMessage({ t: "error", text: "Нет связи с комнатой… переподключаюсь" });
+    } else h.onMessage({ t: "error", text: "Немає зв’язку з кімнатою… перепідключаюся" });
   }
 
   function stop() {

@@ -10,7 +10,7 @@ const MChat = (() => {
   const active = () => S.screen === "room" && isMafia(S.room) && PHASES.includes(S.room.phase) && store.mafiaView !== "cards";
   const hostNow = () => Date.now() + (S.offset || 0);
   const pl = (id) => (S.room.players || []).find((p) => p.id === id);
-  const TEAM = { town: "мирные", mafia: "мафия", solo: "сам за себя" };
+  const TEAM = { town: "мирні", mafia: "мафія", solo: "сам за себе" };
 
   /* ---------------------------------------------------------------- каркас */
   function ensure() {
@@ -28,7 +28,7 @@ const MChat = (() => {
 
   /* ---------------------------------------------------------------- что показать в ленте */
   function host(text, cls = "", extra = "") {
-    return `<div class="mc-host ${cls}"><div class="mh-ava">${emo(S.room.theme.emoji, 20)}</div><div class="mh-b"><div class="mh-who">Ведущий${extra}</div>${esc(text)}</div></div>`;
+    return `<div class="mc-host ${cls}"><div class="mh-ava">${emo(S.room.theme.emoji, 20)}</div><div class="mh-b"><div class="mh-who">Ведучий${extra}</div>${esc(text)}</div></div>`;
   }
   function divider(kind, title, sub) {
     const ico = { night: "🌙", day: "☀️", vote: "⚖️", verdict: "🔨" }[kind] || "•";
@@ -37,12 +37,12 @@ const MChat = (() => {
   function killCard(e) {
     const p = pl(e.who) || { name: "?", avatar: "👤", look: {} }, role = e.role;
     const how = e.how || (e.kind === "out" ? "vote" : "night");
-    const title = how === "vote" ? "⚖️ Город изгнал" : how === "duel" ? "🤠 Проиграл(а) дуэль" : "🔪 Не пережил(а) ночь";
-    const stamp = how === "vote" ? "ИЗГНАН" : "УБИТ";
+    const title = how === "vote" ? "⚖️ Місто вигнало" : how === "duel" ? "🤠 Програв(ла) дуель" : "🔪 Не пережив(ла) ніч";
+    const stamp = how === "vote" ? "ВИГНАНО" : "УБИТО";
     return `<div class="mc-kill how-${how}">
       <div class="mk-stage"><div class="mk-av"><span class="mk-face">${av(p, "big")}</span><i class="mk-cross"></i><i class="mk-flash"></i><i class="mk-blood"></i>${how === "vote" ? '<i class="mk-gavel">🔨</i>' : ""}</div><b class="mk-stamp">${stamp}</b></div>
       <div class="mk-body"><div class="mk-title">${title}</div><div class="mk-name">${nm(p)}</div>
-        <div class="mk-role ${role ? "team-" + role.team : "hidden"}">${role ? `<span>Кем был(а):</span><b>${emo(role.emoji, 16)} ${esc(role.name)}${role.converted ? " (обращён)" : ""}</b><i>${TEAM[role.team] || ""}</i>` : "<span>Роль осталась тайной</span>"}</div>
+        <div class="mk-role ${role ? "team-" + role.team : "hidden"}">${role ? `<span>Ким був(ла):</span><b>${emo(role.emoji, 16)} ${esc(role.name)}${role.converted ? " (навернений)" : ""}</b><i>${TEAM[role.team] || ""}</i>` : "<span>Роль лишилася таємницею</span>"}</div>
         <div class="mk-text">${esc(e.text)}</div></div></div>`;
   }
   function chatMsg(m, ch) {
@@ -52,12 +52,12 @@ const MChat = (() => {
   function roleMsg(r) {
     const my = r.my, ro = my.role;
     const mates = r.players.filter((p) => p.id !== S.me && p.role && p.role.team === "mafia" && ro.team === "mafia");
-    return `<div class="mc-host role"><div class="mh-ava">${emo(r.theme.emoji, 20)}</div><div class="mh-b"><div class="mh-who">Ведущий · 🔒 только тебе</div>Раздаю роли. Никому не показывай экран.
+    return `<div class="mc-host role"><div class="mh-ava">${emo(r.theme.emoji, 20)}</div><div class="mh-b"><div class="mh-who">Ведучий · 🔒 лише тобі</div>Роздаю ролі. Нікому не показуй екран.
       <div class="mc-flip ${S.flipOpen || r.phase !== "reveal" ? "open" : ""}" id="mc-flip" data-a="mc-flip"><div class="flip-in">
         <div class="face front">${cardFront(skinKey())}</div><div class="face back">${cardBack(skinKey(), my)}</div></div></div>
       <div class="mc-rolemini team-${ro.team}">${emo(ro.emoji, 16)} <b>${esc(ro.name)}</b> · ${esc(my.team_name || "")}</div>
       ${mates.length ? `<div class="mc-mates">Твоя команда: ${mates.map((m) => `<b>${esc(m.name)}</b> <span class="muted">${esc(m.role.name)}</span>`).join(", ")}</div>` : ""}
-      ${my.bounty ? `<div class="mc-mates">🎯 Твоя цель: <b>${esc(my.bounty)}</b></div>` : ""}</div></div>`;
+      ${my.bounty ? `<div class="mc-mates">🎯 Твоя мета: <b>${esc(my.bounty)}</b></div>` : ""}</div></div>`;
   }
 
   function items(r) {
@@ -68,11 +68,11 @@ const MChat = (() => {
       const ts = e.ts || t0 + i, key = "l:" + (e.ts || 0) + ":" + e.kind + ":" + e.day + ":" + e.night + ":" + e.text.slice(0, 40);
       if (e.kind === "night" && !nights.has(e.night)) {
         nights.add(e.night);
-        out.push({ key: "dn:" + e.night, ts: ts - .5, html: divider("night", SK().night(e.night), "Город засыпает") });
+        out.push({ key: "dn:" + e.night, ts: ts - .5, html: divider("night", SK().night(e.night), "Місто засинає") });
       }
       if (["death", "calm", "saved", "silenced", "duel"].includes(e.kind) && e.day && !days.has(e.day) && !(e.kind === "death" && e.how === "duel")) {
         days.add(e.day);
-        out.push({ key: "dd:" + e.day, ts: ts - .5, html: divider("day", SK().day(e.day), "Город просыпается") });
+        out.push({ key: "dd:" + e.day, ts: ts - .5, html: divider("day", SK().day(e.day), "Місто прокидається") });
       }
       if ((e.kind === "death" || e.kind === "out") && e.who) out.push({ key, ts, html: killCard(e), cls: "big", kill: e });
       else if (e.kind === "out") out.push({ key, ts, html: host(e.text, "out"), cls: "" });
@@ -80,7 +80,7 @@ const MChat = (() => {
       else out.push({ key, ts, html: host(e.text, e.kind), cls: "" });
     });
     Object.entries(marks).forEach(([k, m]) => out.push({ key: k, ts: m.ts, html: divider(m.kind, m.title, m.sub) }));
-    (my.private || []).forEach((t) => { if (!(t in priv)) priv[t] = firstFill ? t0 + 1 : hostNow(); out.push({ key: "p:" + t, ts: priv[t], html: host(t, "priv", " · 🔒 только тебе") }); });
+    (my.private || []).forEach((t) => { if (!(t in priv)) priv[t] = firstFill ? t0 + 1 : hostNow(); out.push({ key: "p:" + t, ts: priv[t], html: host(t, "priv", " · 🔒 лише тобі") }); });
     Object.entries(r.chat || {}).forEach(([ch, list]) => list.forEach((m) => out.push({ key: `c:${ch}:${m.ts}:${m.from}`, ts: m.ts, html: chatMsg(m, ch), cls: "", chat: m.from !== S.me })));
     return out.sort((a, b) => a.ts - b.ts);
   }
@@ -117,7 +117,7 @@ const MChat = (() => {
     if (!e || !root) { cineOn = false; return; }
     cineOn = true;
     const d = document.createElement("div"); d.className = "mc-cine how-" + (e.how || "night");
-    d.innerHTML = `<div class="mc-item new">${killCard(e)}</div><div class="mc-cine-tap">нажми, чтобы закрыть</div>`;
+    d.innerHTML = `<div class="mc-item new">${killCard(e)}</div><div class="mc-cine-tap">натисни, щоб закрити</div>`;
     root.appendChild(d); if (PX()) Pixel.apply(d);
     try { haptic("heavy"); setTimeout(() => notify(e.how === "vote" ? "warning" : "error"), 1000); } catch (x) { /* нет */ }
     let done = false;
@@ -128,8 +128,8 @@ const MChat = (() => {
   /* ---------------------------------------------------------------- шапка, игроки, действия */
   function head(r) {
     const my = r.my || {}, ro = my.role;
-    const title = { reveal: "Раздача ролей", night: SK().night(r.night), day: SK().day(r.day), vote: SK().vote, verdict: SK().verdict }[r.phase] || "";
-    const sub = { reveal: "Запомни роль", night: SK().nightSub, day: SK().discuss, vote: r.settings.anonymous ? "Тайное голосование" : "Открытое голосование", verdict: SK().day(r.day) }[r.phase] || "";
+    const title = { reveal: "Роздача ролей", night: SK().night(r.night), day: SK().day(r.day), vote: SK().vote, verdict: SK().verdict }[r.phase] || "";
+    const sub = { reveal: "Запам’ятай роль", night: SK().nightSub, day: SK().discuss, vote: r.settings.anonymous ? "Таємне голосування" : "Відкрите голосування", verdict: SK().day(r.day) }[r.phase] || "";
     return `${netBanner()}<button class="mc-back" data-a="leave">←</button>
       <div class="mc-ttl"><span class="kicker">${esc(r.theme.title)}</span><b>${esc(title)}</b><span class="small muted">${esc(sub)}</span></div>
       ${ro ? `<button class="mc-rolechip team-${ro.team}" data-a="mc-role" title="${esc(ro.name)}">${emo(ro.emoji, 20)}<i>роль</i></button>` : ""}${timerSvg()}`;
@@ -137,61 +137,61 @@ const MChat = (() => {
   function strip(r) {
     return r.players.map((p) => `<button class="ms-p ${p.alive === false ? "dead" : ""} ${p.id === S.me ? "me" : ""} ${p.ready ? "ready" : ""}" data-a="peek" data-v="${p.id}">
       ${av(p, "sm")}${p.alive === false ? '<i class="ms-x">✝</i>' : ""}${p.ready ? '<i class="ms-r">✋</i>' : ""}${p.silenced ? '<i class="ms-r">🤐</i>' : ""}
-      <span>${p.id === S.me ? "Вы" : esc(p.name)}</span>${p.role && p.id !== S.me ? `<em class="team-${p.role.team}">${emo(p.role.emoji, 10)}</em>` : ""}</button>`).join("")
-      + `<button class="ms-p ms-view" data-a="mafia-view"><span class="ms-ico">▦</span><span>Карточки</span></button>`;
+      <span>${p.id === S.me ? "Ви" : esc(p.name)}</span>${p.role && p.id !== S.me ? `<em class="team-${p.role.team}">${emo(p.role.emoji, 10)}</em>` : ""}</button>`).join("")
+      + `<button class="ms-p ms-view" data-a="mafia-view"><span class="ms-ico">▦</span><span>Картки</span></button>`;
   }
   function chips(list, o = {}) {
     return `<div class="mc-chips">${list.map((p) => {
       const can = !o.pick || o.pick.includes(p.id), sel = o.sel === p.id, cnt = o.counts ? o.counts[p.id] : 0, vs = o.voters ? (o.voters[p.id] || []) : [];
       return `<button class="mc-chip ${sel ? "on" : ""} ${can ? "" : "off"}" ${can && o.action ? `data-a="${o.action}" data-v="${p.id}"` : "disabled"}>
-        ${av(p, "sm")}<span>${p.id === S.me ? "Вы" : esc(p.name)}</span>${cnt ? `<i class="cnt">${cnt}</i>` : ""}${vs.length ? `<i class="vs">${vs.map((v) => av(pl(v), "mini")).join("")}</i>` : ""}</button>`;
+        ${av(p, "sm")}<span>${p.id === S.me ? "Ви" : esc(p.name)}</span>${cnt ? `<i class="cnt">${cnt}</i>` : ""}${vs.length ? `<i class="vs">${vs.map((v) => av(pl(v), "mini")).join("")}</i>` : ""}</button>`;
     }).join("")}</div>`;
   }
   const skipBtn = (label) => (isHost() ? `<button class="mc-skip" data-a="skip">⏭ ${esc(label)}</button>` : "");
   function dock(r) {
     const my = r.my || {}, alive = r.players.filter((p) => p.alive);
     if (r.phase === "reveal") {
-      return S.flipOpen ? `<div class="mc-row"><button class="btn grow" data-a="seen">✓ Я запомнил(а) — к игре</button>${skipBtn("Сразу")}</div>`
-        : `<div class="mc-hint">👆 Нажми на карту в чате, чтобы открыть свою роль</div>${skipBtn("Начать сразу")}`;
+      return S.flipOpen ? `<div class="mc-row"><button class="btn grow" data-a="seen">✓ Я запам’ятав(ла) — до гри</button>${skipBtn("Одразу")}</div>`
+        : `<div class="mc-hint">👆 Натисни на карту в чаті, щоб відкрити свою роль</div>${skipBtn("Почати одразу")}`;
     }
-    if (!my.alive && r.phase !== "verdict") return `<div class="mc-hint">👻 Ты выбыл(а). Смотри и пиши в «Морг» — живые его не видят</div>${skipBtn("Дальше")}`;
+    if (!my.alive && r.phase !== "verdict") return `<div class="mc-hint">👻 Ти вибув(ла). Дивись і пиши в «Морг» — живі його не бачать</div>${skipBtn("Далі")}`;
     if (r.phase === "night") {
       let out = "";
       if (my.team_vote) {
         const voters = {};
         Object.entries(my.team_vote.votes || {}).forEach(([w, t]) => { if (t !== "pass") (voters[t] = voters[t] || []).push(w); });
         out += `<div class="mc-q">🩸 ${esc(r.theme.mafia_team)}: ${esc(my.team_vote.label)}</div>${chips(alive, { pick: my.team_vote.targets, sel: my.team_vote.choice, action: "team", voters })}
-          <button class="mc-pass ${my.team_vote.choice === "pass" ? "on" : ""}" data-a="team" data-v="pass">Никого этой ночью</button>`;
+          <button class="mc-pass ${my.team_vote.choice === "pass" ? "on" : ""}" data-a="team" data-v="pass">Нікого цієї ночі</button>`;
       }
       if (my.abilities && my.abilities.length) {
         const own = my.own_choice, ab = my.abilities[Math.min(S.sel.ability, my.abilities.length - 1)], chosen = own && own !== "pass" ? own.target : null;
-        out += `<div class="mc-q">✨ ${my.abilities.length > 1 ? my.abilities.map((a, i) => `<button class="pill ${a === ab ? "on" : ""}" data-a="ability" data-v="${i}">${esc(a.label)}${a.left != null ? ` · ${a.left}` : ""}</button>`).join(" ") : esc(ab.label) + (ab.left != null ? ` · осталось ${ab.left}` : "")}</div>
-          ${own ? `<div class="mc-done">${own === "pass" ? "Ты пропускаешь эту ночь" : `✓ ${esc((my.abilities.find((a) => a.idx === own.idx) || {}).label || "Выбор")}: <b>${esc((pl(own.target) || {}).name || "")}</b> — можно изменить`}</div>` : ""}
+        out += `<div class="mc-q">✨ ${my.abilities.length > 1 ? my.abilities.map((a, i) => `<button class="pill ${a === ab ? "on" : ""}" data-a="ability" data-v="${i}">${esc(a.label)}${a.left != null ? ` · ${a.left}` : ""}</button>`).join(" ") : esc(ab.label) + (ab.left != null ? ` · лишилося ${ab.left}` : "")}</div>
+          ${own ? `<div class="mc-done">${own === "pass" ? "Ти пропускаєш цю ніч" : `✓ ${esc((my.abilities.find((a) => a.idx === own.idx) || {}).label || "Вибір")}: <b>${esc((pl(own.target) || {}).name || "")}</b> — можна змінити`}</div>` : ""}
           ${chips(alive, { pick: ab.targets, sel: S.sel.target || chosen, action: "target" })}
-          <div class="mc-row"><button class="btn small grow" data-a="own" ${S.sel.target ? "" : "disabled"}>${esc(ab.label)}${S.sel.target ? " → " + esc((pl(S.sel.target) || {}).name || "") : ""}</button><button class="btn ghost small" data-a="own-pass">Пропустить</button></div>`;
+          <div class="mc-row"><button class="btn small grow" data-a="own" ${S.sel.target ? "" : "disabled"}>${esc(ab.label)}${S.sel.target ? " → " + esc((pl(S.sel.target) || {}).name || "") : ""}</button><button class="btn ghost small" data-a="own-pass">Пропустити</button></div>`;
       }
-      return (out || `<div class="mc-hint">😴 Ты спишь. Жди утра…</div>`) + skipBtn("Закончить ночь");
+      return (out || `<div class="mc-hint">😴 Ти спиш. Чекай ранку…</div>`) + skipBtn("Завершити ніч");
     }
     if (r.phase === "day") {
       const ready = alive.filter((p) => p.ready).length;
       let duel = "";
       if (my.abilities && my.abilities.length) {
         const ab = my.abilities[0];
-        duel = S.sel.duel ? `<div class="mc-q">🤠 ${esc(ab.label)}: с кем?</div>${chips(alive, { pick: ab.targets, sel: S.sel.target, action: "target" })}
-            <div class="mc-row"><button class="btn danger small grow" data-a="duel" ${S.sel.target ? "" : "disabled"}>Вызвать на дуэль</button><button class="btn ghost small" data-a="duel-cancel">Отмена</button></div>`
-          : `<button class="mc-pass" data-a="duel-open">🤠 ${esc(ab.label)} (осталось: ${ab.left})</button>`;
+        duel = S.sel.duel ? `<div class="mc-q">🤠 ${esc(ab.label)}: з ким?</div>${chips(alive, { pick: ab.targets, sel: S.sel.target, action: "target" })}
+            <div class="mc-row"><button class="btn danger small grow" data-a="duel" ${S.sel.target ? "" : "disabled"}>Викликати на дуель</button><button class="btn ghost small" data-a="duel-cancel">Скасувати</button></div>`
+          : `<button class="mc-pass" data-a="duel-open">🤠 ${esc(ab.label)} (залишилося: ${ab.left})</button>`;
       }
-      return `${duel}<div class="mc-row"><button class="btn grow" data-a="ready" ${my.ready ? "disabled" : ""}>${my.ready ? "✓ Ты готов(а)" : "✋ Готов(а) голосовать"} · ${ready}/${alive.length}</button>${skipBtn("К голосованию")}</div>`;
+      return `${duel}<div class="mc-row"><button class="btn grow" data-a="ready" ${my.ready ? "disabled" : ""}>${my.ready ? "✓ Ти готовий(а)" : "✋ Готовий(а) голосувати"} · ${ready}/${alive.length}</button>${skipBtn("До голосування")}</div>`;
     }
     if (r.phase === "vote") {
       const voters = {};
       r.players.forEach((p) => { if (p.vote && p.vote !== "skip") (voters[p.vote] = voters[p.vote] || []).push(p.id); });
       const counts = r.settings.anonymous ? (r.vote_counts || {}) : {}, skipV = (r.vote_counts || {}).skip || 0;
-      if (!my.can_vote) return `<div class="mc-hint">🤐 Сегодня ты без голоса</div>${chips(alive, { voters, counts })}${skipBtn("Подвести итог")}`;
-      return `<div class="mc-q">⚖️ Кого выгоняем?</div>${chips(alive, { pick: alive.filter((p) => p.id !== S.me).map((p) => p.id), sel: my.voted !== "none" ? my.voted : null, action: "vote", voters, counts })}
-        <div class="mc-row"><button class="mc-pass grow ${my.voted === null ? "on" : ""}" data-a="vote" data-v="skip">Воздержаться${skipV ? " · " + skipV : ""}</button>${skipBtn("Итог")}</div>`;
+      if (!my.can_vote) return `<div class="mc-hint">🤐 Сьогодні ти без голосу</div>${chips(alive, { voters, counts })}${skipBtn("Підбити підсумок")}`;
+      return `<div class="mc-q">⚖️ Кого виганяємо?</div>${chips(alive, { pick: alive.filter((p) => p.id !== S.me).map((p) => p.id), sel: my.voted !== "none" ? my.voted : null, action: "vote", voters, counts })}
+        <div class="mc-row"><button class="mc-pass grow ${my.voted === null ? "on" : ""}" data-a="vote" data-v="skip">Утриматися${skipV ? " · " + skipV : ""}</button>${skipBtn("Підсумок")}</div>`;
     }
-    if (r.phase === "verdict") return `<div class="mc-hint">Город решил. Скоро ночь…</div>${skipBtn("Наступает ночь")}`;
+    if (r.phase === "verdict") return `<div class="mc-hint">Місто вирішило. Скоро ніч…</div>${skipBtn("Настає ніч")}`;
     return "";
   }
   function input(r) {
@@ -202,13 +202,13 @@ const MChat = (() => {
     inputSig = sig;
     const old = document.getElementById("chat-input"), keep = old ? old.value : "";
     if (!can.length) {
-      el.innerHTML = `<div class="mc-closed">${r.phase === "night" ? "🌙 Ночью город спит — общий чат молчит" : r.phase === "reveal" ? "Сначала все смотрят роли" : "Сейчас писать нельзя"}</div>`;
+      el.innerHTML = `<div class="mc-closed">${r.phase === "night" ? "🌙 Уночі місто спить — загальний чат мовчить" : r.phase === "reveal" ? "Спершу всі дивляться ролі" : "Зараз писати не можна"}</div>`;
       return;
     }
-    const NAMES = { all: "💬 Всем", mafia: "🩸 Команде", dead: "👻 Морг" };
-    const ph = { all: "Сообщение всем…", mafia: "Шёпот команде — остальные не видят…", dead: "Пишут только выбывшие…" }[S.chatTab];
+    const NAMES = { all: "💬 Усім", mafia: "🩸 Команді", dead: "👻 Морг" };
+    const ph = { all: "Повідомлення всім…", mafia: "Шепіт команді — інші не бачать…", dead: "Пишуть лише вибулі…" }[S.chatTab];
     el.innerHTML = `${can.length > 1 ? `<div class="mc-chs">${can.map((c) => `<button class="pill ${c === S.chatTab ? "on" : ""}" data-a="mc-ch" data-v="${c}">${NAMES[c]}</button>`).join("")}</div>` : ""}
-      ${S.chatTab === "mafia" ? '<div class="mc-secret">🔒 Это видит только ваша команда</div>' : ""}
+      ${S.chatTab === "mafia" ? '<div class="mc-secret">🔒 Це бачить лише ваша команда</div>' : ""}
       <form class="chat-form ch-${S.chatTab}" id="chat-send"><input class="input" id="chat-input" maxlength="300" placeholder="${ph}" autocomplete="off"><button class="btn" type="submit">➤</button></form>`;
     const inp = document.getElementById("chat-input"); if (inp) inp.value = keep;
   }
@@ -223,7 +223,7 @@ const MChat = (() => {
     if (gk !== gameKey) { gameKey = gk; reset(); }
     const pk = r.phase + ":" + r.day + ":" + r.night;
     if (pk !== lastPhase) { lastPhase = pk; atBottom = true; unread = 0; downBtn(); }   // новая фаза — показываем самое свежее
-    if (r.phase === "vote" && !marks["dv:" + r.day]) marks["dv:" + r.day] = { kind: "vote", title: SK().vote, sub: "Город решает, кого выгнать", ts: firstFill ? hostNow() - 1 : hostNow() };
+    if (r.phase === "vote" && !marks["dv:" + r.day]) marks["dv:" + r.day] = { kind: "vote", title: SK().vote, sub: "Місто вирішує, кого вигнати", ts: firstFill ? hostNow() - 1 : hostNow() };
     root.classList.toggle("night", r.phase === "night");
     root.querySelector("#mc-head").innerHTML = head(r);
     root.querySelector("#mc-strip").innerHTML = strip(r);

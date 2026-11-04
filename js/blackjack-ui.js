@@ -15,18 +15,18 @@ function cardHtml(c, big) {
 function viewBlackjackMenu() {
   return `<div class="fade-in">
     <div class="pxscene big" style="background-image:url(${Pixel.scene("casino")})"></div>
-    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Блэкджек</h1>
-      <div class="muted small">Игроки против игроков · ${Blackjack.MIN_PLAYERS}–${Blackjack.MAX_PLAYERS} за столом</div></div>${coinPill()}</div>
+    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Блекджек</h1>
+      <div class="muted small">Гравці проти гравців · ${Blackjack.MIN_PLAYERS}–${Blackjack.MAX_PLAYERS} за столом</div></div>${coinPill()}</div>
     <div class="card bj-rules">
-      <p>Каждый получает две карты: <b>первая закрыта</b> от соперников, остальные открыты. По очереди: <b>«Ещё»</b> — взять карту, <b>«Хватит»</b> — остановиться, <b>«Удвоить»</b> — удвоить ставку и взять ровно одну карту.</p>
-      <p>Больше 21 — перебор. <b>Ближе всех к 21 забирает банк</b>. Блэкджек (туз + десятка с первых двух карт) сильнее любых других 21. Ничья — банк делится. Все перебрали — ставки возвращаются.</p>
-      <p>Хост выбирает: <b>на интерес</b> или <b>на монеты</b>. На монетах ставят все одинаково.</p>
+      <p>Кожен отримує дві карти: <b>перша закрита</b> від суперників, решта відкриті. По черзі: <b>«Ще»</b> — узяти карту, <b>«Досить»</b> — зупинитися, <b>«Подвоїти»</b> — подвоїти ставку й узяти рівно одну карту.</p>
+      <p>Більше 21 — перебір. <b>Найближчий до 21 забирає банк</b>. Блекджек (туз + десятка з перших двох карт) сильніший за будь-які інші 21. Нічия — банк ділиться. Усі перебрали — ставки повертаються.</p>
+      <p>Хост обирає: <b>на інтерес</b> або <b>на монети</b>. На монетах ставлять усі однаково.</p>
     </div>
-    <div class="card bj-fair">🔒 <b>Честная раздача.</b> Перед каждой раздачей новая колода из 52 карт. Хост заранее «запечатывает» её отпечатком (SHA-256), каждый телефон добавляет свою случайность, а после вскрытия твой телефон сам проверяет, что ни одну карту не подменили.</div>
-    <button class="btn mt2" data-a="bj-create">Сесть за стол</button>
-    <div class="section-title">Или войди по коду</div>
+    <div class="card bj-fair">🔒 <b>Чесна роздача.</b> Перед кожною роздачею нова колода з 52 карт. Хост заздалегідь «запечатує» її відбитком (SHA-256), кожен телефон додає свою випадковість, а після розкриття твій телефон сам перевіряє, що жодну карту не підмінили.</div>
+    <button class="btn mt2" data-a="bj-create">Сісти за стіл</button>
+    <div class="section-title">Або увійди за кодом</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
-      <button class="btn" data-a="join">Войти</button></div>
+      <button class="btn" data-a="join">Увійти</button></div>
   </div>`;
 }
 
@@ -42,19 +42,19 @@ function viewBlackjackRoom() {
 
 function bjLobby() {
   const r = S.room, s = r.settings, enough = r.players.filter((p) => p.online).length >= Blackjack.MIN_PLAYERS;
-  return lobbyBento({ kicker: "Блэкджек", title: "Стол", codeLabel: "Код стола", countLabel: "Мест", seats: "За столом", max: Blackjack.MAX_PLAYERS, right: coinPill(),
+  return lobbyBento({ kicker: "Блекджек", title: "Стіл", codeLabel: "Код столу", countLabel: "Місць", seats: "За столом", max: Blackjack.MAX_PLAYERS, right: coinPill(),
     settings: "bj-settings", scene: "casino", rulesLabel: "Ставки",
-    rules: s.stake ? `🪙 <b>На монеты: ${s.stake} с каждого за раздачу</b><div class="small">Банк раздачи забирает лучший. Нужно иметь хотя бы ${s.stake} монет.</div>` : `🎲 <b>На интерес</b><div class="small">Без монет — просто кто кого.</div>`,
-    enough, start: "Раздать карты", waitText: `Ждём игроков (минимум ${Blackjack.MIN_PLAYERS})`, hostWait: "Ждём, когда хост начнёт раздачу…" });
+    rules: s.stake ? `🪙 <b>На монети: ${s.stake} з кожного за роздачу</b><div class="small">Банк роздачі забирає найкращий. Треба мати хоча б ${s.stake} монет.</div>` : `🎲 <b>На інтерес</b><div class="small">Без монет — просто хто кого.</div>`,
+    enough, start: "Роздати карти", waitText: `Чекаємо гравців (мінімум ${Blackjack.MIN_PLAYERS})`, hostWait: "Чекаємо, коли хост почне роздачу…" });
 }
 
 function bjSeat(p) {
   const r = S.room, win = r.results && r.results.winners.includes(p.id), turn = r.turn === p.id;
-  const tag = p.blackjack ? "БЛЭКДЖЕК" : p.bust ? "ПЕРЕБОР" : p.folded ? "СБРОС" : p.doubled ? "×2" : r.phase === "play" && p.done ? "ХВАТИТ" : "";
+  const tag = p.blackjack ? "БЛЕКДЖЕК" : p.bust ? "ПЕРЕБІР" : p.folded ? "СКИДАННЯ" : p.doubled ? "×2" : r.phase === "play" && p.done ? "ДОСИТЬ" : "";
   const pay = r.phase === "show" && r.results ? r.results.payout[p.id] : null;
   return `<div class="bj-seat ${turn ? "turn" : ""} ${win ? "win" : ""} ${p.bust ? "bust" : ""} ${p.id === S.me ? "me" : ""}">
-    <div class="bj-who">${av(p, "sm")}<div class="grow"><b>${p.id === S.me ? "Вы" : nm(p)}</b>
-      <div class="small muted">${p.score != null ? `${p.score} очк.` : p.cards ? `${p.cards.length} карт` : ""}${p.net ? ` · <span class="${p.net > 0 ? "plus" : "minus"}">${p.net > 0 ? "+" : ""}${p.net}</span>` : ""}</div></div>
+    <div class="bj-who">${av(p, "sm")}<div class="grow"><b>${p.id === S.me ? "Ви" : nm(p)}</b>
+      <div class="small muted">${p.score != null ? `${p.score} оч.` : p.cards ? `${p.cards.length} карт` : ""}${p.net ? ` · <span class="${p.net > 0 ? "plus" : "minus"}">${p.net > 0 ? "+" : ""}${p.net}</span>` : ""}</div></div>
       ${tag ? `<span class="bj-tag ${p.bust ? "bad" : p.blackjack ? "gold" : ""}">${tag}</span>` : ""}${pay ? `<span class="bj-pay">+${pay}</span>` : ""}</div>
     <div class="bj-cards">${(p.cards || []).map((c) => cardHtml(c)).join("")}</div></div>`;
 }
@@ -67,60 +67,60 @@ function bjTable() {
   if (r.phase === "bet") {
     const can = !s.stake || (S.profile.coins || 0) >= s.stake;
     actions = r.my_joined === undefined
-      ? `<div class="card center"><b>Раздача №${r.handNo}</b>${s.stake ? ` · ставка ${chip(s.stake)}` : " · на интерес"}<div class="small muted mt">${can ? "Играешь эту раздачу?" : `Не хватает монет: у тебя ${S.profile.coins}`}</div></div>
-         <div class="row mt bj-act"><button class="btn grow" data-a="bj-bet" data-v="1" ${can ? "" : "disabled"}>Играю${s.stake ? ` · ${s.stake}` : ""}</button><button class="btn ghost grow" data-a="bj-bet" data-v="0">Пропускаю</button></div>`
-      : `<div class="card center">${r.my_joined ? "✓ Ты в раздаче. Ждём остальных…" : "Ты пропускаешь эту раздачу"}</div>`;
+      ? `<div class="card center"><b>Роздача №${r.handNo}</b>${s.stake ? ` · ставка ${chip(s.stake)}` : " · на інтерес"}<div class="small muted mt">${can ? "Граєш цю роздачу?" : `Бракує монет: у тебе ${S.profile.coins}`}</div></div>
+         <div class="row mt bj-act"><button class="btn grow" data-a="bj-bet" data-v="1" ${can ? "" : "disabled"}>Граю${s.stake ? ` · ${s.stake}` : ""}</button><button class="btn ghost grow" data-a="bj-bet" data-v="0">Пропускаю</button></div>`
+      : `<div class="card center">${r.my_joined ? "✓ Ти в роздачі. Чекаємо решту…" : "Ти пропускаєш цю роздачу"}</div>`;
   } else if (r.phase === "play") {
     const mine = r.turn === S.me, myp = r.players.find((p) => p.id === S.me);
     if (mine) {
       const canDouble = myp.cards.length === 2 && (!s.stake || (S.profile.coins || 0) >= s.stake);
-      actions = `<div class="your-turn bj">ТВОЙ ХОД · ${myp.score} очк.</div>
-        <div class="bj-act3"><button class="btn" data-a="bj-act" data-v="hit">Ещё</button><button class="btn ghost" data-a="bj-act" data-v="stand">Хватит</button>
-        <button class="btn gold" data-a="bj-act" data-v="double" ${canDouble ? "" : "disabled"}>Удвоить${s.stake ? ` · ${s.stake}` : ""}</button></div>`;
-    } else actions = `<div class="card center">Ходит <b>${esc(turnP ? turnP.name : "")}</b>${myp && myp.playing ? `<div class="small muted mt">У тебя ${myp.score} очк.</div>` : ""}</div>`;
+      actions = `<div class="your-turn bj">ТВІЙ ХІД · ${myp.score} оч.</div>
+        <div class="bj-act3"><button class="btn" data-a="bj-act" data-v="hit">Ще</button><button class="btn ghost" data-a="bj-act" data-v="stand">Досить</button>
+        <button class="btn gold" data-a="bj-act" data-v="double" ${canDouble ? "" : "disabled"}>Подвоїти${s.stake ? ` · ${s.stake}` : ""}</button></div>`;
+    } else actions = `<div class="card center">Ходить <b>${esc(turnP ? turnP.name : "")}</b>${myp && myp.playing ? `<div class="small muted mt">У тебе ${myp.score} оч.</div>` : ""}</div>`;
   } else if (r.phase === "show") {
     const res = r.results, v = bjVerify(r);
-    actions = `<div class="card center bj-result">${res.winners.length ? `🏆 <b>${res.winners.map((id) => esc((r.players.find((p) => p.id === id) || {}).name || "?")).join(", ")}</b> ${res.winners.length > 1 ? "делят" : "забирает"} банк${r.pot ? ` ${chip(r.pot)}` : ""}` : "Все перебрали — ставки вернулись"}
-      ${res.payout[S.me] ? `<div class="bj-myp">Тебе +${res.payout[S.me]}</div>` : ""}</div>
-      <div class="card bj-check ${v.ok ? "ok" : "bad"}">${v.ok ? "✅ Раздача честная — твой телефон проверил отпечаток колоды и каждую карту" : `⚠️ Раздача не сходится: ${esc(v.why)}`}
-        <details><summary>Подробнее</summary><div class="tiny">Отпечаток: ${r.reveal.commit}<br>Секрет хоста: ${r.reveal.serverSeed}<br>Случайности игроков: ${Object.entries(r.reveal.seeds).map(([k, x]) => `${esc((r.players.find((p) => p.id === k) || {}).name || k)}: ${x}`).join("<br>")}</div></details></div>
-      ${isHost() ? `<div class="row mt"><button class="btn small grow" data-a="skip">Следующая раздача</button><button class="btn ghost small grow" data-a="bj-finish">Закончить игру</button></div>` : `<div class="small muted center mt">Следующая раздача скоро…</div>`}`;
+    actions = `<div class="card center bj-result">${res.winners.length ? `🏆 <b>${res.winners.map((id) => esc((r.players.find((p) => p.id === id) || {}).name || "?")).join(", ")}</b> ${res.winners.length > 1 ? "ділять" : "забирає"} банк${r.pot ? ` ${chip(r.pot)}` : ""}` : "Усі перебрали — ставки повернулися"}
+      ${res.payout[S.me] ? `<div class="bj-myp">Тобі +${res.payout[S.me]}</div>` : ""}</div>
+      <div class="card bj-check ${v.ok ? "ok" : "bad"}">${v.ok ? "✅ Роздача чесна — твій телефон перевірив відбиток колоди й кожну карту" : `⚠️ Роздача не сходиться: ${esc(v.why)}`}
+        <details><summary>Докладніше</summary><div class="tiny">Відбиток: ${r.reveal.commit}<br>Секрет хоста: ${r.reveal.serverSeed}<br>Випадковості гравців: ${Object.entries(r.reveal.seeds).map(([k, x]) => `${esc((r.players.find((p) => p.id === k) || {}).name || k)}: ${x}`).join("<br>")}</div></details></div>
+      ${isHost() ? `<div class="row mt"><button class="btn small grow" data-a="skip">Наступна роздача</button><button class="btn ghost small grow" data-a="bj-finish">Завершити гру</button></div>` : `<div class="small muted center mt">Наступна роздача скоро…</div>`}`;
   } else if (r.phase === "wait") {
-    actions = `<div class="card center">Мало игроков для раздачи</div>${isHost() ? `<div class="row mt"><button class="btn small grow" data-a="skip">Новая раздача</button><button class="btn ghost small grow" data-a="bj-finish">Закончить игру</button></div>` : ""}`;
+    actions = `<div class="card center">Замало гравців для роздачі</div>${isHost() ? `<div class="row mt"><button class="btn small grow" data-a="skip">Нова роздача</button><button class="btn ghost small grow" data-a="bj-finish">Завершити гру</button></div>` : ""}`;
   }
   const playing = r.players.filter((p) => p.playing), idle = r.players.filter((p) => !p.playing);
-  return `<div class="bj-head"><div class="grow"><b>Раздача №${r.handNo}</b><div class="small">${s.stake ? `Ставка ${s.stake} · у тебя 🪙 ${S.profile.coins}` : "На интерес"}</div></div>
+  return `<div class="bj-head"><div class="grow"><b>Роздача №${r.handNo}</b><div class="small">${s.stake ? `Ставка ${s.stake} · у тебе 🪙 ${S.profile.coins}` : "На інтерес"}</div></div>
       ${r.pot ? `<div class="bj-pot">БАНК<br>${chip(r.pot)}</div>` : ""}${timer}</div>
     <div class="bj-felt">
-      ${r.phase === "bet" ? `<div class="bj-seal">🔒 Колода запечатана<br><code>${(r.commit || "").slice(0, 12)}…${(r.commit || "").slice(-6)}</code><div class="small">${r.players.filter((p) => p.joined).length} в раздаче</div></div>` : ""}
+      ${r.phase === "bet" ? `<div class="bj-seal">🔒 Колоду запечатано<br><code>${(r.commit || "").slice(0, 12)}…${(r.commit || "").slice(-6)}</code><div class="small">${r.players.filter((p) => p.joined).length} у роздачі</div></div>` : ""}
       ${playing.map(bjSeat).join("")}
-      ${r.phase !== "bet" && !playing.length ? `<div class="center muted">Карты ещё не розданы</div>` : ""}
+      ${r.phase !== "bet" && !playing.length ? `<div class="center muted">Карти ще не роздані</div>` : ""}
     </div>
     ${actions}
-    ${idle.length && r.phase !== "bet" ? `<div class="small muted mt">Не играют эту раздачу: ${idle.map((p) => esc(p.name)).join(", ")}</div>` : ""}
+    ${idle.length && r.phase !== "bet" ? `<div class="small muted mt">Не грають цю роздачу: ${idle.map((p) => esc(p.name)).join(", ")}</div>` : ""}
     <div class="section-title">За столом</div>
-    <div class="card bj-log">${(r.log || []).slice().reverse().map((l, i) => `<div class="ev ${i === 0 ? "new" : ""}">${esc(l)}</div>`).join("") || '<div class="muted">Тишина…</div>'}</div>
+    <div class="card bj-log">${(r.log || []).slice().reverse().map((l, i) => `<div class="ev ${i === 0 ? "new" : ""}">${esc(l)}</div>`).join("") || '<div class="muted">Тиша…</div>'}</div>
     ${me.id ? "" : ""}`;
 }
 
 function bjEnd() {
   const r = S.room;
   const list = r.players.slice().sort((a, b) => b.net - a.net);
-  return `<div class="win mt bj-end"><div class="kicker">ИГРА ОКОНЧЕНА</div><h2>${list[0] && list[0].net > 0 ? esc(list[0].name) : "Ничья"}</h2>
-      <p>${r.handNo} ${plural(r.handNo, "раздача", "раздачи", "раздач")}${r.settings.stake ? ` · ставка ${r.settings.stake}` : ""}</p></div>
-    <div class="section-title">Итоги</div>
-    <div class="card">${list.map((p) => `<div class="row bj-sum">${av(p, "sm")}<b class="grow">${p.id === S.me ? "Вы" : nm(p)}</b><span class="${p.net > 0 ? "plus" : p.net < 0 ? "minus" : "muted"}">${p.net > 0 ? "+" : ""}${p.net}</span></div>`).join("")}</div>
-    ${isHost() ? `<button class="btn mt2" data-a="again">🔁 Ещё игра</button>` : `<div class="card center mt2 muted">Хост может начать новую игру</div>`}
-    <button class="btn ghost mt" data-a="leave">Встать из-за стола</button>`;
+  return `<div class="win mt bj-end"><div class="kicker">ГРУ ЗАВЕРШЕНО</div><h2>${list[0] && list[0].net > 0 ? esc(list[0].name) : "Нічия"}</h2>
+      <p>${r.handNo} ${plural(r.handNo, "роздача", "роздачі", "роздач")}${r.settings.stake ? ` · ставка ${r.settings.stake}` : ""}</p></div>
+    <div class="section-title">Підсумки</div>
+    <div class="card">${list.map((p) => `<div class="row bj-sum">${av(p, "sm")}<b class="grow">${p.id === S.me ? "Ви" : nm(p)}</b><span class="${p.net > 0 ? "plus" : p.net < 0 ? "minus" : "muted"}">${p.net > 0 ? "+" : ""}${p.net}</span></div>`).join("")}</div>
+    ${isHost() ? `<button class="btn mt2" data-a="again">🔁 Ще гра</button>` : `<div class="card center mt2 muted">Хост може почати нову гру</div>`}
+    <button class="btn ghost mt" data-a="leave">Встати з-за столу</button>`;
 }
 
 function bjSettingsSheet() {
   const s = S.room.settings;
   return `<h2>⚙️ Ставки</h2>
-    <div class="section-title">С каждого игрока за раздачу</div>
-    <div class="chips">${Blackjack.STAKES.map((v) => `<button class="pill ${s.stake === v ? "on" : ""}" data-a="bj-set" data-v="${v}">${v ? `🪙 ${v}` : "на интерес"}</button>`).join("")}</div>
+    <div class="section-title">З кожного гравця за роздачу</div>
+    <div class="chips">${Blackjack.STAKES.map((v) => `<button class="pill ${s.stake === v ? "on" : ""}" data-a="bj-set" data-v="${v}">${v ? `🪙 ${v}` : "на інтерес"}</button>`).join("")}</div>
     ${stakeOwnRow(s.stake, Blackjack.STAKE_MAX, Blackjack.STAKES)}
-    <div class="small muted mt">Ставят все одинаково. Монеты — те, что нафармлены в играх и сундуках.</div>`;
+    <div class="small muted mt">Ставлять усі однаково. Монети — ті, що зароблені в іграх і скринях.</div>`;
 }
 
 /* ---------------------------------------------------------------- монеты: ставка списывается при раздаче, выигрыш приходит при вскрытии */
@@ -133,7 +133,7 @@ function bjBotWin(r) {
   store.bjBotPaid = key;
   const add = BOT_COIN * bots;
   if (Api.on && Api.ready) Api.solo(add, "bots"); else { store.coins += add; saveProfile(); }
-  coinRain(); toast(`Обыграл ботов: +${add} 🪙`);
+  coinRain(); toast(`Обіграв ботів: +${add} 🪙`);
 }
 function bjCoins(r) {
   bjBotWin(r);
@@ -157,8 +157,8 @@ function bjCoins(r) {
 function bjBank(r, me, tbl) {
   const hand = String(r.handNo), base = tbl + ":" + hand, done = (S.bjBank = S.bjBank || {});
   const once = (k, fn) => { if (!done[base + k]) { done[base + k] = 1; fn(); } };
-  if (me && me.playing) once(":a", () => Api.bet(tbl, hand, "ante", r.settings.stake).catch((e) => toast("Ставка не списалась: " + e.message)));
-  if (me && me.doubled) once(":d", () => Api.bet(tbl, hand, "double", r.settings.stake).catch((e) => toast("Удвоение не списалось: " + e.message)));
+  if (me && me.playing) once(":a", () => Api.bet(tbl, hand, "ante", r.settings.stake).catch((e) => toast("Ставка не списалася: " + e.message)));
+  if (me && me.doubled) once(":d", () => Api.bet(tbl, hand, "double", r.settings.stake).catch((e) => toast("Подвоєння не списалося: " + e.message)));
   if (r.phase === "show" && r.results) {
     if (isHost()) once(":s", () => setTimeout(() => Api.settle(tbl, hand, r.results.payout).catch(() => { done[base + ":s"] = 0; }), 2000));   // даём ставкам дойти до сервера
     if (me && me.playing) once(":r", () => {

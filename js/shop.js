@@ -6,113 +6,113 @@ const Shop = (() => {
   /* ---------------------------------------------------------------- каталог */
   const CATS = [
     { key: "frame", name: "Рамки", icon: "🖼️" },
-    { key: "bg", name: "Фоны", icon: "🏞️" },
-    { key: "style", name: "Карточки", icon: "🪪" },
-    { key: "title", name: "Титулы", icon: "🏷️" },
-    { key: "fx", name: "Эффекты", icon: "✨" },
-    { key: "ava", name: "Аватары", icon: "🐉" },
-    { key: "toy", name: "Игрушки", icon: "🧸" },
-    { key: "hat", name: "Приколы", icon: "🎩" },
-    { key: "mg", name: "Мутагены", icon: "💉" },
+    { key: "bg", name: "Фони", icon: "🏞️" },
+    { key: "style", name: "Картки", icon: "🪪" },
+    { key: "title", name: "Титули", icon: "🏷️" },
+    { key: "fx", name: "Ефекти", icon: "✨" },
+    { key: "ava", name: "Значки", icon: "🐉" },
+    { key: "toy", name: "Іграшки", icon: "🧸" },
+    { key: "hat", name: "Приколи", icon: "🎩" },
+    { key: "mg", name: "Мутагени", icon: "💉" },
   ];
   const I = (cat, id, name, price, extra = {}) => Object.assign({ cat, id, name, price }, extra);
   const ITEMS = [
     I("frame", "none", "Без рамки", 0),
-    I("frame", "wood", "Дерево", 60), I("frame", "silver", "Серебро", 90), I("frame", "hazard", "Опасность", 90),
-    I("frame", "cactus", "Кактус", 100), I("frame", "web", "Паутина", 120), I("frame", "pumpkin", "Тыквы", 120),
-    I("frame", "bones", "Кости", 140), I("frame", "barbed", "Колючка", 140), I("frame", "sheriff", "Шериф", 150),
-    I("frame", "win95", "Окно 95", 150), I("frame", "vhs", "Кассета", 160), I("frame", "blood", "Кровь", 180),
-    I("frame", "ice", "Лёд", 200), I("frame", "neon", "Неон", 220, { anim: "hue" }), I("frame", "matrix", "Матрица", 240, { anim: "flicker" }),
-    I("frame", "gold", "Золото", 260, { anim: "shine" }), I("frame", "fire", "Огонь", 300, { anim: "flame" }),
-    I("frame", "rainbow", "Радуга", 340, { anim: "hue" }), I("frame", "crown", "Корона", 400, { anim: "shine" }),
-    I("frame", "diamond", "Бриллиант", 500, { anim: "twinkle" }),
-    I("frame", "pixels", "Пиксели", 40, { fresh: 1 }), I("frame", "candy", "Карамель", 70, { fresh: 1 }),
-    I("frame", "cards", "Карточный стол", 220, { fresh: 1 }), I("frame", "shells", "Патронташ", 260, { fresh: 1 }),
-    I("frame", "ghost", "Призрак", 380, { fresh: 1, strip: 4, speed: .9 }), I("frame", "lightning", "Молния", 480, { fresh: 1, strip: 4, speed: .5 }),
+    I("frame", "wood", "Дерево", 60), I("frame", "silver", "Срібло", 90), I("frame", "hazard", "Небезпека", 90),
+    I("frame", "cactus", "Кактус", 100), I("frame", "web", "Павутина", 120), I("frame", "pumpkin", "Гарбузи", 120),
+    I("frame", "bones", "Кістки", 140), I("frame", "barbed", "Колючка", 140), I("frame", "sheriff", "Шериф", 150),
+    I("frame", "win95", "Вікно 95", 150), I("frame", "vhs", "Касета", 160), I("frame", "blood", "Кров", 180),
+    I("frame", "ice", "Лід", 200), I("frame", "neon", "Неон", 220, { anim: "hue" }), I("frame", "matrix", "Матриця", 240, { anim: "flicker" }),
+    I("frame", "gold", "Золото", 260, { anim: "shine" }), I("frame", "fire", "Вогонь", 300, { anim: "flame" }),
+    I("frame", "rainbow", "Веселка", 340, { anim: "hue" }), I("frame", "crown", "Корона", 400, { anim: "shine" }),
+    I("frame", "diamond", "Діамант", 500, { anim: "twinkle" }),
+    I("frame", "pixels", "Пікселі", 40, { fresh: 1 }), I("frame", "candy", "Карамель", 70, { fresh: 1 }),
+    I("frame", "cards", "Картковий стіл", 220, { fresh: 1 }), I("frame", "shells", "Патронташ", 260, { fresh: 1 }),
+    I("frame", "ghost", "Привид", 380, { fresh: 1, strip: 4, speed: .9 }), I("frame", "lightning", "Блискавка", 480, { fresh: 1, strip: 4, speed: .5 }),
     I("frame", "lava", "Лава", 560, { fresh: 1, strip: 4, speed: .7 }), I("frame", "galaxy", "Галактика", 750, { fresh: 1, strip: 6, speed: 1.2 }),
-    I("frame", "plasma", "Плазма", 1000, { fresh: 1, strip: 6, speed: .8 }), I("frame", "dragon", "Драконья чешуя", 1000, { fresh: 1, strip: 4, speed: 1 }),
-    I("frame", "royal", "Королевская", 2000, { fresh: 1, strip: 6, speed: 1.1 }),
-    I("frame", "bubbles", "Пузыри", 140, { fresh: 1, strip: 4, speed: 1.2 }), I("frame", "hearts", "Сердечки", 180, { fresh: 1, strip: 4, speed: .8 }),
-    I("frame", "glass", "Витраж", 220, { fresh: 1 }), I("frame", "confetti", "Конфетти", 280, { fresh: 1, strip: 4, speed: .6 }),
-    I("frame", "gears", "Шестерёнки", 320, { fresh: 1, strip: 4, speed: .8 }), I("frame", "eyes", "Глаза", 450, { fresh: 1, strip: 4, speed: 1.6 }),
-    I("frame", "snake", "Радужный змей", 600, { fresh: 1, strip: 6, speed: 1 }), I("frame", "aquarium", "Аквариум", 700, { fresh: 1, strip: 6, speed: 1.4 }),
+    I("frame", "plasma", "Плазма", 1000, { fresh: 1, strip: 6, speed: .8 }), I("frame", "dragon", "Драконяча луска", 1000, { fresh: 1, strip: 4, speed: 1 }),
+    I("frame", "royal", "Королівська", 2000, { fresh: 1, strip: 6, speed: 1.1 }),
+    I("frame", "bubbles", "Бульбашки", 140, { fresh: 1, strip: 4, speed: 1.2 }), I("frame", "hearts", "Сердечка", 180, { fresh: 1, strip: 4, speed: .8 }),
+    I("frame", "glass", "Вітраж", 220, { fresh: 1 }), I("frame", "confetti", "Конфеті", 280, { fresh: 1, strip: 4, speed: .6 }),
+    I("frame", "gears", "Шестерні", 320, { fresh: 1, strip: 4, speed: .8 }), I("frame", "eyes", "Очі", 450, { fresh: 1, strip: 4, speed: 1.6 }),
+    I("frame", "snake", "Райдужний змій", 600, { fresh: 1, strip: 6, speed: 1 }), I("frame", "aquarium", "Акваріум", 700, { fresh: 1, strip: 6, speed: 1.4 }),
     I("frame", "portal", "Портал", 900, { fresh: 1, strip: 6, speed: .9 }),
     // набор Создателя: только у администратора, из кейсов не выпадает (можно лишь подарить обменом)
-    I("frame", "bwfire", "Чёрно-белое пламя", 0, { excl: 1, strip: 6, speed: .7 }),
-    I("bg", "throne", "Трон Создателя", 0, { excl: 1 }),
-    I("style", "creator", "Создатель", 0, { excl: 1, desc: "Чёрная карта в чёрно-белом пламени с печатью Создателя" }),
-    I("title", "creator", "Создатель Настолкино", 0, { excl: 1, text: "Создатель Настолкино" }),
-    I("fx", "bwflame", "Чёрно-белое пламя", 0, { excl: 1 }),
-    I("ava", "key", "Ключ Создателя", 0, { excl: 1, emoji: "🗝️" }),
+    I("frame", "bwfire", "Чорно-біле полум’я", 0, { excl: 1, strip: 6, speed: .7 }),
+    I("bg", "throne", "Трон Творця", 0, { excl: 1 }),
+    I("style", "creator", "Творець", 0, { excl: 1, desc: "Чорна картка в чорно-білому полум’ї з печаткою Творця" }),
+    I("title", "creator", "Творець Настолкіно", 0, { excl: 1, text: "Творець Настолкіно" }),
+    I("fx", "bwflame", "Чорно-біле полум’я", 0, { excl: 1 }),
+    I("ava", "key", "Ключ Творця", 0, { excl: 1, emoji: "🗝️" }),
     // титулы за собранные коллекции питомцев (выдаёт сервер)
-    I("title", "dragonlord", "Повелитель драконов", 0, { excl: 1, text: "Повелитель драконов", desc: "Все 6 коллекционных драконов" }),
-    I("title", "elements", "Хранитель стихий", 0, { excl: 1, text: "Хранитель стихий", desc: "Все 4 стихийных духа" }),
+    I("title", "dragonlord", "Володар драконів", 0, { excl: 1, text: "Володар драконів", desc: "Усі 6 колекційних драконів" }),
+    I("title", "elements", "Хранитель стихій", 0, { excl: 1, text: "Хранитель стихій", desc: "Усі 4 стихійні духи" }),
     // мутагены: 200 шприцов (только от администратора и 0,01% из «Питомника»)
     ...(typeof Pets !== "undefined" && Pets.MG_COUNT ? Array.from({ length: Pets.MG_COUNT }, (_, i) => I("mg", String(i + 1), Pets.mgName(i + 1), 0, { mg: Pets.mgMut(i + 1).key })) : []),
     // кейс «Питомник»: игрушки (питомцы сами выбирают) и приколы на голову. Списки — из js/pets.js
     ...(typeof Pets !== "undefined" ? Pets.TOYS.map(([id, name, emoji, tier]) => I("toy", id, name, 0, { petcase: 1, tier, emoji }))
-      .concat(Pets.HATS.map(([id, name, tier]) => (tier >= 4 ? I("hat", id, name, 0, { excl: 1, prem: 1, desc: "только в премиум-пропуске" }) : I("hat", id, name, 0, { petcase: 1, tier })))) : []),
+      .concat(Pets.HATS.map(([id, name, tier]) => (tier >= 4 ? I("hat", id, name, 0, { excl: 1, prem: 1, desc: "лише в преміум-перепустці" }) : I("hat", id, name, 0, { petcase: 1, tier })))) : []),
     // сезонные кейсы: каждая вещь выпадает только из своего кейса (tier: 0 обычная … 3 легендарная)
-    ...[["s_ice", [["title", "s_ice1", "Дитя метели", 0, { text: "Дитя метели" }], ["ava", "s_ice1", "Снеговик", 0, { emoji: "☃️" }], ["frame", "s_snow", "Снежинки", 1],
-        ["title", "s_ice2", "Повелитель льда", 1, { text: "Повелитель льда" }], ["ava", "s_ice2", "Ледышка", 1, { emoji: "🧊" }], ["bg", "s_ice", "Северное сияние", 2],
-        ["fx", "s_ice", "Сияние", 2], ["frame", "s_aurora", "Северное сияние", 3, { strip: 6, speed: 1.4 }], ["style", "s_ice", "Ледяная карта", 3, { desc: "Морозное стекло, снег и сияние" }]]],
-      ["s_moon", [["title", "s_moon1", "Дитя луны", 0, { text: "Дитя луны" }], ["ava", "s_moon1", "Полнолуние", 0, { emoji: "🌕" }], ["frame", "s_fangs", "Клыки", 1],
-        ["title", "s_moon2", "Охотник на вампиров", 1, { text: "Охотник на вампиров" }], ["ava", "s_moon2", "Капля крови", 1, { emoji: "🩸" }], ["bg", "s_moon", "Кровавая луна", 2],
-        ["fx", "s_moon", "Лунный пульс", 2], ["frame", "s_bloodmoon", "Кровавая луна", 3, { strip: 6, speed: 1 }], ["style", "s_moon", "Проклятый свиток", 3, { desc: "Пергамент, кровь и луна" }]]],
-      ["s_neon", [["title", "s_neon1", "Хакер", 0, { text: "Хакер" }], ["ava", "s_neon1", "Кибер-рука", 0, { emoji: "🦾" }], ["frame", "s_circuit", "Схема", 1],
-        ["title", "s_neon2", "Призрак сети", 1, { text: "Призрак сети" }], ["ava", "s_neon2", "НЛО", 1, { emoji: "🛸" }], ["bg", "s_neon", "Неон-сити", 2],
-        ["fx", "s_neon", "Неон", 2], ["frame", "s_holo", "Голограмма", 3, { strip: 6, speed: .6 }], ["style", "s_neon", "Кибер-ID", 3, { desc: "Неоновое удостоверение с помехами" }]]],
-      ["s_dragon", [["title", "s_dragon1", "Сын неба", 0, { text: "Сын неба" }], ["ava", "s_dragon1", "Фонарик", 0, { emoji: "🏮" }], ["frame", "s_clouds", "Облака", 1],
-        ["title", "s_dragon2", "Хозяин дракона", 1, { text: "Хозяин дракона" }], ["ava", "s_dragon2", "Дракончик", 1, { emoji: "🐲" }], ["bg", "s_dragon", "Храм дракона", 2],
-        ["fx", "s_dragon", "Золото дракона", 2], ["frame", "s_gdragon", "Золотой дракон", 3, { strip: 6, speed: 1.2 }], ["style", "s_dragon", "Свиток императора", 3, { desc: "Красный лак, золото и печать дракона" }]]],
+    ...[["s_ice", [["title", "s_ice1", "Дитя хуртовини", 0, { text: "Дитя хуртовини" }], ["ava", "s_ice1", "Сніговик", 0, { emoji: "☃️" }], ["frame", "s_snow", "Сніжинки", 1],
+        ["title", "s_ice2", "Володар льоду", 1, { text: "Володар льоду" }], ["ava", "s_ice2", "Крижинка", 1, { emoji: "🧊" }], ["bg", "s_ice", "Північне сяйво", 2],
+        ["fx", "s_ice", "Сяйво", 2], ["frame", "s_aurora", "Північне сяйво", 3, { strip: 6, speed: 1.4 }], ["style", "s_ice", "Крижана картка", 3, { desc: "Морозне скло, сніг і сяйво" }]]],
+      ["s_moon", [["title", "s_moon1", "Дитя місяця", 0, { text: "Дитя місяця" }], ["ava", "s_moon1", "Повня", 0, { emoji: "🌕" }], ["frame", "s_fangs", "Ікла", 1],
+        ["title", "s_moon2", "Мисливець на вампірів", 1, { text: "Мисливець на вампірів" }], ["ava", "s_moon2", "Крапля крові", 1, { emoji: "🩸" }], ["bg", "s_moon", "Кривавий місяць", 2],
+        ["fx", "s_moon", "Місячний пульс", 2], ["frame", "s_bloodmoon", "Кривавий місяць", 3, { strip: 6, speed: 1 }], ["style", "s_moon", "Проклятий сувій", 3, { desc: "Пергамент, кров і місяць" }]]],
+      ["s_neon", [["title", "s_neon1", "Хакер", 0, { text: "Хакер" }], ["ava", "s_neon1", "Кібер-рука", 0, { emoji: "🦾" }], ["frame", "s_circuit", "Схема", 1],
+        ["title", "s_neon2", "Привид мережі", 1, { text: "Привид мережі" }], ["ava", "s_neon2", "НЛО", 1, { emoji: "🛸" }], ["bg", "s_neon", "Неон-сіті", 2],
+        ["fx", "s_neon", "Неон", 2], ["frame", "s_holo", "Голограма", 3, { strip: 6, speed: .6 }], ["style", "s_neon", "Кібер-ID", 3, { desc: "Неонове посвідчення з перешкодами" }]]],
+      ["s_dragon", [["title", "s_dragon1", "Син неба", 0, { text: "Син неба" }], ["ava", "s_dragon1", "Ліхтарик", 0, { emoji: "🏮" }], ["frame", "s_clouds", "Хмари", 1],
+        ["title", "s_dragon2", "Господар дракона", 1, { text: "Господар дракона" }], ["ava", "s_dragon2", "Драконик", 1, { emoji: "🐲" }], ["bg", "s_dragon", "Храм дракона", 2],
+        ["fx", "s_dragon", "Золото дракона", 2], ["frame", "s_gdragon", "Золотий дракон", 3, { strip: 6, speed: 1.2 }], ["style", "s_dragon", "Сувій імператора", 3, { desc: "Червоний лак, золото й печатка дракона" }]]],
     ].flatMap(([season, list]) => list.map(([cat, id, name, tier, extra]) => I(cat, id, name, 0, Object.assign({ season, tier }, extra || {})))),
 
-    I("bg", "none", "Без фона", 0), I("bg", "rpg", "Замок", 90), I("bg", "arcade", "Аркада", 80), I("bg", "office", "Офис", 100), I("bg", "classic", "Нуар", 100),
-    I("bg", "90s", "Район 90-х", 100), I("bg", "halloween", "Кладбище", 120), I("bg", "bunker", "Бункер", 120), I("bg", "west", "Салун", 120),
-    I("bg", "shop", "Лавка", 150), I("bg", "winter", "Зимний лес", 160), I("bg", "sakura", "Сакура", 180), I("bg", "ocean", "Подводный мир", 180),
-    I("bg", "dungeon", "Подземелье", 200), I("bg", "space", "Космос", 220),
-    I("bg", "studio", "Мастерская", 120, { fresh: 1 }), I("bg", "casino", "Казино", 250, { fresh: 1 }), I("bg", "cellar", "Подвал", 300, { fresh: 1 }),
+    I("bg", "none", "Без фону", 0), I("bg", "rpg", "Замок", 90), I("bg", "arcade", "Аркада", 80), I("bg", "office", "Офіс", 100), I("bg", "classic", "Нуар", 100),
+    I("bg", "90s", "Район 90-х", 100), I("bg", "halloween", "Цвинтар", 120), I("bg", "bunker", "Бункер", 120), I("bg", "west", "Салун", 120),
+    I("bg", "shop", "Крамничка", 150), I("bg", "winter", "Зимовий ліс", 160), I("bg", "sakura", "Сакура", 180), I("bg", "ocean", "Підводний світ", 180),
+    I("bg", "dungeon", "Підземелля", 200), I("bg", "space", "Космос", 220),
+    I("bg", "studio", "Майстерня", 120, { fresh: 1 }), I("bg", "casino", "Казино", 250, { fresh: 1 }), I("bg", "cellar", "Підвал", 300, { fresh: 1 }),
 
-    I("style", "rpg", "Ролевая игра", 0, { desc: "Синее окно героя, уровень и полоски" }),
-    I("style", "dossier", "Досье", 150, { desc: "Папка детектива со штампом" }),
-    I("style", "terminal", "Терминал", 180, { desc: "Зелёный экран бункера" }),
-    I("style", "vhs", "Кассета", 180, { desc: "Наклейка на видеокассете из 90-х" }),
-    I("style", "badge", "Пропуск", 200, { desc: "Бейдж сотрудника со штрихкодом" }),
-    I("style", "tarot", "Карта таро", 200, { desc: "Мистическая карта с римским числом" }),
-    I("style", "wanted", "Разыскивается", 220, { desc: "Плакат с наградой за твою голову" }),
-    I("style", "arcade", "Аркада", 250, { desc: "Таблица рекордов игрового автомата" }),
-    I("style", "vip", "VIP-карта", 1000, { fresh: 1, desc: "Чёрная карта с золотом и бегущим бликом" }),
+    I("style", "rpg", "Рольова гра", 0, { desc: "Синє вікно героя, рівень і смужки" }),
+    I("style", "dossier", "Досьє", 150, { desc: "Тека детектива зі штампом" }),
+    I("style", "terminal", "Термінал", 180, { desc: "Зелений екран бункера" }),
+    I("style", "vhs", "Касета", 180, { desc: "Наліпка на відеокасеті з 90-х" }),
+    I("style", "badge", "Перепустка", 200, { desc: "Бейдж співробітника зі штрихкодом" }),
+    I("style", "tarot", "Карта таро", 200, { desc: "Містична карта з римським числом" }),
+    I("style", "wanted", "Розшукується", 220, { desc: "Плакат із нагородою за твою голову" }),
+    I("style", "arcade", "Аркада", 250, { desc: "Таблиця рекордів ігрового автомата" }),
+    I("style", "vip", "VIP-картка", 1000, { fresh: 1, desc: "Чорна картка із золотом і біжучим відблиском" }),
 
-    I("title", "none", "Без титула", 0, { text: "" }),
-    I("title", "honest", "Честный житель", 50, { text: "Честный житель" }), I("title", "suspect", "Вечно подозреваемый", 60, { text: "Вечно подозреваемый" }),
-    I("title", "paranoid", "Главный параноик", 70, { text: "Главный параноик" }), I("title", "alibi", "Мастер алиби", 90, { text: "Мастер алиби" }),
-    I("title", "eye", "Глаз-алмаз", 100, { text: "Глаз-алмаз" }), I("title", "soul", "Душа компании", 100, { text: "Душа компании" }),
-    I("title", "devil", "Адвокат дьявола", 120, { text: "Адвокат дьявола" }), I("title", "silent", "Тихий убийца", 140, { text: "Тихий убийца" }),
-    I("title", "bluff", "Король блефа", 160, { text: "Король блефа" }), I("title", "self", "Сам себе мафия", 180, { text: "Сам себе мафия" }),
-    I("title", "hood", "Легенда района", 220, { text: "Легенда района" }), I("title", "night", "Хозяин ночи", 260, { text: "Хозяин ночи" }),
-    I("title", "untouch", "Неприкасаемый", 300, { text: "Неприкасаемый" }), I("title", "godfather", "Крёстный отец", 400, { text: "Крёстный отец" }),
-    I("title", "sharper", "Шулер", 350, { fresh: 1, text: "Шулер" }), I("title", "lucky", "Счастливчик", 500, { fresh: 1, text: "Счастливчик" }),
-    I("title", "cellar", "Хозяин подвала", 750, { fresh: 1, text: "Хозяин подвала" }), I("title", "legend", "Легенда Настолкино", 1000, { fresh: 1, text: "Легенда Настолкино" }),
-    I("title", "immortal", "Бессмертный", 1500, { fresh: 1, text: "Бессмертный" }),
+    I("title", "none", "Без титулу", 0, { text: "" }),
+    I("title", "honest", "Чесний мешканець", 50, { text: "Чесний мешканець" }), I("title", "suspect", "Вічно підозрюваний", 60, { text: "Вічно підозрюваний" }),
+    I("title", "paranoid", "Головний параноїк", 70, { text: "Головний параноїк" }), I("title", "alibi", "Майстер алібі", 90, { text: "Майстер алібі" }),
+    I("title", "eye", "Око-алмаз", 100, { text: "Око-алмаз" }), I("title", "soul", "Душа компанії", 100, { text: "Душа компанії" }),
+    I("title", "devil", "Адвокат диявола", 120, { text: "Адвокат диявола" }), I("title", "silent", "Тихий убивця", 140, { text: "Тихий убивця" }),
+    I("title", "bluff", "Король блефу", 160, { text: "Король блефу" }), I("title", "self", "Сам собі мафія", 180, { text: "Сам собі мафія" }),
+    I("title", "hood", "Легенда району", 220, { text: "Легенда району" }), I("title", "night", "Господар ночі", 260, { text: "Господар ночі" }),
+    I("title", "untouch", "Недоторканний", 300, { text: "Недоторканний" }), I("title", "godfather", "Хрещений батько", 400, { text: "Хрещений батько" }),
+    I("title", "sharper", "Шулер", 350, { fresh: 1, text: "Шулер" }), I("title", "lucky", "Щасливчик", 500, { fresh: 1, text: "Щасливчик" }),
+    I("title", "cellar", "Господар підвалу", 750, { fresh: 1, text: "Господар підвалу" }), I("title", "legend", "Легенда Настолкіно", 1000, { fresh: 1, text: "Легенда Настолкіно" }),
+    I("title", "immortal", "Безсмертний", 1500, { fresh: 1, text: "Безсмертний" }),
 
-    I("fx", "none", "Обычное имя", 0), I("fx", "glow", "Сияние", 120), I("fx", "wave", "Волна", 160), I("fx", "gold", "Золотое имя", 180),
-    I("fx", "glitch", "Глитч", 220), I("fx", "rainbow", "Радуга", 250), I("fx", "fire", "Пламя", 300),
-    I("fx", "shake", "Дрожь", 180, { fresh: 1 }), I("fx", "toxic", "Радиоактив", 260, { fresh: 1 }), I("fx", "ghosty", "Призрачное", 320, { fresh: 1 }),
-    I("fx", "frost", "Иней", 350, { fresh: 1 }), I("fx", "bloody", "Кровавое", 600, { fresh: 1 }), I("fx", "royal", "Королевское", 1000, { fresh: 1 }),
+    I("fx", "none", "Звичайне ім’я", 0), I("fx", "glow", "Сяйво", 120), I("fx", "wave", "Хвиля", 160), I("fx", "gold", "Золоте ім’я", 180),
+    I("fx", "glitch", "Глітч", 220), I("fx", "rainbow", "Веселка", 250), I("fx", "fire", "Полум’я", 300),
+    I("fx", "shake", "Тремтіння", 180, { fresh: 1 }), I("fx", "toxic", "Радіоактив", 260, { fresh: 1 }), I("fx", "ghosty", "Примарне", 320, { fresh: 1 }),
+    I("fx", "frost", "Іній", 350, { fresh: 1 }), I("fx", "bloody", "Криваве", 600, { fresh: 1 }), I("fx", "royal", "Королівське", 1000, { fresh: 1 }),
 
-    I("ava", "dragon", "Дракон", 40, { emoji: "🐉" }), I("ava", "dino", "Динозавр", 40, { emoji: "🦖" }), I("ava", "invader", "Пришелец", 50, { emoji: "👾" }),
-    I("ava", "wizard", "Волшебник", 50, { emoji: "🧙" }), I("ava", "shark", "Акула", 50, { emoji: "🦈" }), I("ava", "bat", "Летучая мышь", 60, { emoji: "🦇" }),
-    I("ava", "spider", "Паук", 60, { emoji: "🕷️" }), I("ava", "skull", "Череп", 70, { emoji: "💀" }), I("ava", "clown", "Клоун", 70, { emoji: "🤡" }),
-    I("ava", "oni", "Демон", 80, { emoji: "👹" }), I("ava", "genie", "Джинн", 80, { emoji: "🧞" }), I("ava", "villain", "Злодей", 90, { emoji: "🦹" }),
-    I("ava", "scorpion", "Скорпион", 60, { emoji: "🦂", fresh: 1 }), I("ava", "snake", "Змей", 90, { emoji: "🐍", fresh: 1 }), I("ava", "eagle", "Орёл", 120, { emoji: "🦅", fresh: 1 }),
-    I("ava", "orb", "Шар судьбы", 200, { emoji: "🔮", fresh: 1 }), I("ava", "joker", "Джокер", 300, { emoji: "🃏", fresh: 1 }), I("ava", "jolly", "Весёлый Роджер", 500, { emoji: "☠️", fresh: 1 }),
+    I("ava", "dragon", "Дракон", 40, { emoji: "🐉" }), I("ava", "dino", "Динозавр", 40, { emoji: "🦖" }), I("ava", "invader", "Прибулець", 50, { emoji: "👾" }),
+    I("ava", "wizard", "Чарівник", 50, { emoji: "🧙" }), I("ava", "shark", "Акула", 50, { emoji: "🦈" }), I("ava", "bat", "Кажан", 60, { emoji: "🦇" }),
+    I("ava", "spider", "Павук", 60, { emoji: "🕷️" }), I("ava", "skull", "Череп", 70, { emoji: "💀" }), I("ava", "clown", "Клоун", 70, { emoji: "🤡" }),
+    I("ava", "oni", "Демон", 80, { emoji: "👹" }), I("ava", "genie", "Джин", 80, { emoji: "🧞" }), I("ava", "villain", "Лиходій", 90, { emoji: "🦹" }),
+    I("ava", "scorpion", "Скорпіон", 60, { emoji: "🦂", fresh: 1 }), I("ava", "snake", "Змій", 90, { emoji: "🐍", fresh: 1 }), I("ava", "eagle", "Орел", 120, { emoji: "🦅", fresh: 1 }),
+    I("ava", "orb", "Куля долі", 200, { emoji: "🔮", fresh: 1 }), I("ava", "joker", "Джокер", 300, { emoji: "🃏", fresh: 1 }), I("ava", "jolly", "Веселий Роджер", 500, { emoji: "☠️", fresh: 1 }),
   ];
   // сезонный пропуск: на каждый месяц — своя рамка и два титула (выдаёт сервер на 15-м и 30-м уровне). Названия — как в server/worker.js (PASS_THEMES)
-  const PASS_THEMES = [["Ледяной венец", "#e8f8ff", "#8ad8ff", "#2a5a9a", "#ffffff"], ["Вьюга", "#f0f4ff", "#a8b8e8", "#3a4a8a", "#c8e8ff"], ["Первоцвет", "#f4ffe0", "#9ae07a", "#2a6a2a", "#ffe066"],
-    ["Капель", "#e0f4ff", "#6ac8f0", "#1a5a8a", "#ffffff"], ["Цветущий сад", "#fff0f8", "#ff9ad0", "#8a2a6a", "#fff4a0"], ["Солнцестояние", "#fffbe0", "#ffd23f", "#b86a10", "#ff5a2a"],
-    ["Зной", "#fff0d0", "#ff9a3a", "#8a2a0a", "#ffe066"], ["Звездопад", "#e8e0ff", "#8a7aff", "#1a1050", "#ffe066"], ["Листопад", "#fff0d8", "#e08a3a", "#6a2a0a", "#c8301a"],
-    ["Тыквенная ночь", "#ffd8a0", "#ff7a18", "#2a1006", "#7aff6a"], ["Туманный", "#eef0f4", "#a8b0c0", "#3a4050", "#d8e8ff"], ["Снегопад", "#ffffff", "#c8e0ff", "#4a6a9a", "#ff3355"]];
-  const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
+  const PASS_THEMES = [["Крижаний вінець", "#e8f8ff", "#8ad8ff", "#2a5a9a", "#ffffff"], ["Хуртовина", "#f0f4ff", "#a8b8e8", "#3a4a8a", "#c8e8ff"], ["Первоцвіт", "#f4ffe0", "#9ae07a", "#2a6a2a", "#ffe066"],
+    ["Капіж", "#e0f4ff", "#6ac8f0", "#1a5a8a", "#ffffff"], ["Квітучий сад", "#fff0f8", "#ff9ad0", "#8a2a6a", "#fff4a0"], ["Сонцестояння", "#fffbe0", "#ffd23f", "#b86a10", "#ff5a2a"],
+    ["Спека", "#fff0d0", "#ff9a3a", "#8a2a0a", "#ffe066"], ["Зорепад", "#e8e0ff", "#8a7aff", "#1a1050", "#ffe066"], ["Листопад", "#fff0d8", "#e08a3a", "#6a2a0a", "#c8301a"],
+    ["Гарбузова ніч", "#ffd8a0", "#ff7a18", "#2a1006", "#7aff6a"], ["Туманний", "#eef0f4", "#a8b0c0", "#3a4050", "#d8e8ff"], ["Снігопад", "#ffffff", "#c8e0ff", "#4a6a9a", "#ff3355"]];
+  const MONTHS = ["січень", "лютий", "березень", "квітень", "травень", "червень", "липень", "серпень", "вересень", "жовтень", "листопад", "грудень"];
   // рамка пропуска: двойной гранёный обод, по нему бегут волны света, вокруг летают искры, в углах мигают камни, сверху — герб сезона.
   // Премиум — та же рамка, но в золоте и фиолете: две волны, вдвое больше искр, пульсирующий ореол и корона над гербом
   const passFrame = ([, light, mid, dark, acc], prem) => (t, R, f, n) => {
@@ -145,12 +145,12 @@ const Shop = (() => {
     if (f % 3 === 0) t.P(18 + ((f * 5) % 12), 44, "#ffffff");
   };
   for (let y = 26; y <= 30; y++) for (let m = 1; m <= 12; m++) {
-    const tag = String(y) + String(m).padStart(2, "0"), th = PASS_THEMES[m - 1], when = `сезонный пропуск · ${MONTHS[m - 1]} 20${y}`;
+    const tag = String(y) + String(m).padStart(2, "0"), th = PASS_THEMES[m - 1], when = `сезонна перепустка · ${MONTHS[m - 1]} 20${y}`;
     ITEMS.push(I("frame", "ps" + tag, th[0], 0, { excl: 1, strip: 6, speed: 1.4, pass: tag, desc: when }),
-      I("frame", "pp" + tag, th[0] + " · премиум", 0, { excl: 1, strip: 8, speed: 1.1, pass: tag, prem: 1, desc: when + " · премиум-дорожка, 30-й уровень" }),
-      I("title", "pt" + tag + "p", `Премиум сезона «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Премиум «${th[0]}»`, desc: when + " · премиум, 30-й уровень" }),
-      I("title", "pt" + tag + "a", `Сезон «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Сезон «${th[0]}»`, desc: when + " · 15-й уровень" }),
-      I("title", "pt" + tag + "b", `Покоритель сезона «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Покоритель «${th[0]}»`, desc: when + " · 30-й уровень" }));
+      I("frame", "pp" + tag, th[0] + " · преміум", 0, { excl: 1, strip: 8, speed: 1.1, pass: tag, prem: 1, desc: when + " · преміум-доріжка, 30-й рівень" }),
+      I("title", "pt" + tag + "p", `Преміум сезону «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Преміум «${th[0]}»`, desc: when + " · преміум, 30-й рівень" }),
+      I("title", "pt" + tag + "a", `Сезон «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Сезон «${th[0]}»`, desc: when + " · 15-й рівень" }),
+      I("title", "pt" + tag + "b", `Підкорювач сезону «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Підкорювач «${th[0]}»`, desc: when + " · 30-й рівень" }));
   }
   // сгенерированные вещи (js/loot.js): рамки, фоны, карточки, переливы имени, титулы, аватары, вещи для питомцев, наборы новых сезонных сундуков
   if (typeof Loot !== "undefined") Loot.ALL.forEach((x) => ITEMS.push(Object.assign({}, x)));
@@ -160,24 +160,24 @@ const Shop = (() => {
 
   /* ---------------------------------------------------------------- кейсы: вещи только выбиваются. Таблицы — такие же в server/worker.js */
   const TIERS = [
-    { name: "Обычная", color: "#9aa4b8" }, { name: "Редкая", color: "#4fa8ff" },
-    { name: "Эпическая", color: "#b05cff" }, { name: "Легендарная", color: "#ffb020" }, { name: "Эксклюзив", color: "#f2f2f2" },
+    { name: "Звичайна", color: "#9aa4b8" }, { name: "Рідкісна", color: "#4fa8ff" },
+    { name: "Епічна", color: "#b05cff" }, { name: "Легендарна", color: "#ffb020" }, { name: "Ексклюзив", color: "#f2f2f2" },
     { name: "Мутаген", color: "#4dff88" },
   ];
   const tier = (it) => (it.mg ? 5 : it.excl ? 4 : it.tier != null ? it.tier : it.price >= 750 ? 3 : it.price >= 300 ? 2 : it.price >= 150 ? 1 : 0);
   const CASES = [
-    { key: "basement", name: "Подвальный кейс", price: 100, w: [70, 24, 5, 1], food: .25, egg: 0, desc: "В основном обычные вещи, иногда еда для питомцев" },
-    { key: "dark", name: "Тёмный кейс", price: 300, w: [30, 42, 22, 6], food: .1, egg: .003, desc: "Редкие и эпические вещи, бывает легендарка" },
-    { key: "legend", name: "Легендарный кейс", price: 1000, w: [0, 35, 45, 20], food: 0, egg: .015, desc: "Без обычных вещей, каждая пятая — легендарка" },
-    { key: "zoo", name: "Кейс «Питомник»", price: 250, w: [55, 28, 13, 4], food: 0, egg: .004, pool: "pet", desc: "Игрушки, приколы на голову и бутылочки роста. Только здесь. Шанс 0,01% — мутаген" },
+    { key: "basement", name: "Підвальний кейс", price: 100, w: [70, 24, 5, 1], food: .25, egg: 0, desc: "Здебільшого звичайні речі, інколи їжа для улюбленців" },
+    { key: "dark", name: "Темний кейс", price: 300, w: [30, 42, 22, 6], food: .1, egg: .003, desc: "Рідкісні й епічні речі, буває легендарка" },
+    { key: "legend", name: "Легендарний кейс", price: 1000, w: [0, 35, 45, 20], food: 0, egg: .015, desc: "Без звичайних речей, кожна п’ята — легендарка" },
+    { key: "zoo", name: "Кейс «Розплідник»", price: 250, w: [55, 28, 13, 4], food: 0, egg: .004, pool: "pet", desc: "Іграшки, приколи на голову й пляшечки росту. Тільки тут. Шанс 0,01% — мутаген" },
   ];
   const DUP = [25, 60, 150, 400];                                 // повтор превращается в монеты
   // сезонные кейсы: появляются на несколько минут (раз в день или по команде админа). Таблицы — такие же в server/worker.js (SEASONS)
   const SEASONS = [
-    { key: "s_ice", name: "Ледяная ночь", emoji: "❄️", price: 400, w: [50, 30, 15, 5], color: "#7ad8ff", desc: "Иней, северное сияние и вечный холод" },
-    { key: "s_moon", name: "Кровавая луна", emoji: "🌕", price: 400, w: [50, 30, 15, 5], color: "#ff3b4a", desc: "Ночь, когда луна наливается кровью" },
-    { key: "s_neon", name: "Неоновый город", emoji: "🌃", price: 400, w: [50, 30, 15, 5], color: "#ff3ec8", desc: "Дождь, неон и помехи в сети" },
-    { key: "s_dragon", name: "Золотой дракон", emoji: "🐲", price: 400, w: [50, 30, 15, 5], color: "#ffc23b", desc: "Фонари, облака и золото императора" },
+    { key: "s_ice", name: "Крижана ніч", emoji: "❄️", price: 400, w: [50, 30, 15, 5], color: "#7ad8ff", desc: "Іній, північне сяйво й вічний холод" },
+    { key: "s_moon", name: "Кривавий місяць", emoji: "🌕", price: 400, w: [50, 30, 15, 5], color: "#ff3b4a", desc: "Ніч, коли місяць наливається кров’ю" },
+    { key: "s_neon", name: "Неонове місто", emoji: "🌃", price: 400, w: [50, 30, 15, 5], color: "#ff3ec8", desc: "Дощ, неон і перешкоди в мережі" },
+    { key: "s_dragon", name: "Золотий дракон", emoji: "🐲", price: 400, w: [50, 30, 15, 5], color: "#ffc23b", desc: "Ліхтарі, хмари й золото імператора" },
   ];
   SEASONS.forEach((x) => { x.when = "any"; });
   if (typeof Loot !== "undefined") Loot.SETS.forEach((x) => SEASONS.push({ key: x.key, name: x.name, emoji: x.emoji, price: x.price, w: x.w, color: x.color, desc: x.desc, when: x.when, triple: !!x.triple }));
@@ -439,15 +439,15 @@ const Shop = (() => {
   }
   function equip(it) {
     if (!owns(it)) return false;
-    if (it.cat === "ava") store.avatar = it.emoji;
+    if (it.cat === "ava") store.badge = it.emoji;                 // значок — в конце ника (один)
     else store.look[it.cat] = it.id;
     return true;
   }
   // без сервера кейс открывается на телефоне (только вещи)
   function openCaseLocal(key) {
     const c = caseByKey(key);
-    if (!c) return { error: "Нет такого кейса" };
-    if (store.coins < c.price) return { error: `Не хватает ${c.price - store.coins} монет` };
+    if (!c) return { error: "Немає такого кейса" };
+    if (store.coins < c.price) return { error: `Бракує ${c.price - store.coins} монет` };
     store.coins -= c.price;
     const t = rollTier(c.w), it = rollItem(t, c), k = it.cat + ":" + it.id, dup = store.owned.includes(k);
     if (dup) store.coins += DUP[t]; else store.owned.push(k);
@@ -471,12 +471,22 @@ const Shop = (() => {
   const sceneUrl = (id) => (typeof Loot !== "undefined" && Loot.isBg(id) ? Loot.bg(id) : typeof Pixel !== "undefined" ? Pixel.scene(id) : "");
 
   /* ---------------------------------------------------------------- карточка профиля в выбранном виде */
-  const RANKS = ["Новичок", "Свидетель", "Завсегдатай", "Детектив", "Шулер", "Консильери", "Капо", "Крёстный отец"];
+  const RANKS = ["Новачок", "Свідок", "Завсідник", "Детектив", "Шулер", "Консильєрі", "Капо", "Хрещений батько"];
   const level = (games) => Math.floor((games || 0) / 5) + 1;
   const rank = (lv) => RANKS[Math.min(lv - 1, RANKS.length - 1)];
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const titleText = (lk) => { const t = byId("title", lk.title); return t && t.text ? t.text : ""; };
-  const nameFx = (name, fx) => {
+  // ник = имя из Telegram без эмодзи + один значок в конце (смайлик из кейса). Эффект имени красит только текст, значок — как есть
+  const EMO = /[\p{Extended_Pictographic}\p{Regional_Indicator}\u{1F3FB}-\u{1F3FF}\uFE0F\u200D\u20E3]/gu;
+  const cleanName = (s) => String(s || "").replace(EMO, "").replace(/\s+/g, " ").trim();
+  const splitBadge = (name) => { const m = /^(.*?)\s*((?:\p{Extended_Pictographic}|\p{Regional_Indicator})[\p{Extended_Pictographic}\p{Regional_Indicator}\u{1F3FB}-\u{1F3FF}\uFE0F\u200D\u20E3]*)$/u.exec(String(name || ""));
+    return m && m[1] ? { base: m[1], badge: m[2] } : { base: String(name || ""), badge: "" }; };
+  const withBadge = (base, badge) => (badge ? base + " " + badge : base);
+  const nameFx = (name0, fx) => {
+    const sb = splitBadge(name0), name = sb.base, tail = sb.badge ? ` <span class="nm-badge">${esc(sb.badge)}</span>` : "";
+    return nameFx0(name, fx) + tail;
+  };
+  const nameFx0 = (name, fx) => {
     const n = esc(name);
     if (!fx || fx === "none") return `<span class="nmfx">${n}</span>`;
     const gfx = typeof Loot !== "undefined" ? Loot.fx(fx) : null;
@@ -503,43 +513,43 @@ const Shop = (() => {
     const T = {
       rpg: `${bg}<div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
           <div class="pc-lv">LV ${lv}</div></div></div>
-        <div class="pc-bars"><div class="bar-label">${ico("heart", "❤️")} Сила · побед ${rate}%</div><div class="bar hp"><i style="width:${Math.max(rate, 3)}%"></i></div>
-          <div class="bar-label">${ico("star", "⭐")} Опыт · до LV ${lv + 1}: ${5 - ((p.games || 0) % 5)} игр</div><div class="bar xp"><i style="width:${Math.max(xp * 100, 3)}%"></i></div></div>
+        <div class="pc-bars"><div class="bar-label">${ico("heart", "❤️")} Сила · перемог ${rate}%</div><div class="bar hp"><i style="width:${Math.max(rate, 3)}%"></i></div>
+          <div class="bar-label">${ico("star", "⭐")} Досвід · до LV ${lv + 1}: ${5 - ((p.games || 0) % 5)} ігор</div><div class="bar xp"><i style="width:${Math.max(xp * 100, 3)}%"></i></div></div>
         <div class="pc-loot">${ico("end", "🏆")} ×${p.wins || 0}<span>${ico("star", "⭐")} ×${p.games || 0}</span>${ico("skull", "💀")} ×${Math.max(0, (p.games || 0) - (p.wins || 0))}</div>`,
-      dossier: `<div class="pc-tab">ДЕЛО № ${String(1000 + (p.games || 0) * 7).slice(-4)}</div><div class="pc-body"><div class="pc-photo">${avatar}<i class="clip"></i></div>
-          <div class="pc-main"><div class="pc-field"><i>Имя</i><b class="pc-name">${name}</b></div><div class="pc-field"><i>Кличка</i><b>${esc(title)}</b></div>
-          <div class="pc-field"><i>Дел раскрыто</i><b>${p.wins || 0} из ${p.games || 0}</b></div><div class="pc-field"><i>Уровень опасности</i><b>${lv}</b></div></div></div>
-        <div class="pc-evidence">${bg}<span>Место последней встречи</span></div><div class="pc-stamp">Совершенно секретно</div>`,
-      terminal: `<div class="pc-head">&gt; ДОСЬЕ ЖИТЕЛЯ БУНКЕРА_</div>${bg}<div class="pc-body">${avatar}<div class="pc-main">
-          <div>ИМЯ....... <b class="pc-name">${name}</b></div><div>СТАТУС.... ${esc(title)}</div><div>УРОВЕНЬ... ${lv}</div></div></div>
-        <pre class="pc-pre">ПОБЕДЫ  [${bar(rate / 100)}] ${rate}%\nОПЫТ    [${bar(xp)}] ${Math.round(xp * 100)}%\nПАРТИЙ  ${p.games || 0}   ВЫЖИЛ ${p.wins || 0}</pre>`,
+      dossier: `<div class="pc-tab">СПРАВА № ${String(1000 + (p.games || 0) * 7).slice(-4)}</div><div class="pc-body"><div class="pc-photo">${avatar}<i class="clip"></i></div>
+          <div class="pc-main"><div class="pc-field"><i>Ім’я</i><b class="pc-name">${name}</b></div><div class="pc-field"><i>Прізвисько</i><b>${esc(title)}</b></div>
+          <div class="pc-field"><i>Справ розкрито</i><b>${p.wins || 0} з ${p.games || 0}</b></div><div class="pc-field"><i>Рівень небезпеки</i><b>${lv}</b></div></div></div>
+        <div class="pc-evidence">${bg}<span>Місце останньої зустрічі</span></div><div class="pc-stamp">Цілком таємно</div>`,
+      terminal: `<div class="pc-head">&gt; ДОСЬЄ МЕШКАНЦЯ БУНКЕРА_</div>${bg}<div class="pc-body">${avatar}<div class="pc-main">
+          <div>ІМ’Я...... <b class="pc-name">${name}</b></div><div>СТАТУС.... ${esc(title)}</div><div>РІВЕНЬ.... ${lv}</div></div></div>
+        <pre class="pc-pre">ПЕРЕМОГИ [${bar(rate / 100)}] ${rate}%\nДОСВІД   [${bar(xp)}] ${Math.round(xp * 100)}%\nПАРТІЙ  ${p.games || 0}   ВИЖИВ ${p.wins || 0}</pre>`,
       vhs: `<div class="pc-top"><span>VHS</span><span>E-180 · SP</span></div><div class="pc-label">${bg}<div class="pc-body">${avatar}<div class="pc-main">
           <div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div></div>
-        <div class="pc-stripes"><i></i><i></i><i></i><i></i></div><div class="pc-rec"><b>●</b> REC · LV ${lv} · ${p.wins || 0} побед · ${p.games || 0} игр</div>`,
-      badge: `<div class="pc-hole"></div><div class="pc-co"><b>ООО «Мафия»</b><span>пропуск № ${String(4000 + (p.games || 0))}</span></div>${bg}
+        <div class="pc-stripes"><i></i><i></i><i></i><i></i></div><div class="pc-rec"><b>●</b> REC · LV ${lv} · ${p.wins || 0} перемог · ${p.games || 0} ігор</div>`,
+      badge: `<div class="pc-hole"></div><div class="pc-co"><b>ТОВ «Мафія»</b><span>перепустка № ${String(4000 + (p.games || 0))}</span></div>${bg}
         <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
-          <div class="pc-dept">Уровень доступа: ${lv} · Побед: ${p.wins || 0}</div></div></div><div class="pc-barcode"></div>`,
+          <div class="pc-dept">Рівень доступу: ${lv} · Перемог: ${p.wins || 0}</div></div></div><div class="pc-barcode"></div>`,
       tarot: `<div class="pc-num">${ROMAN[Math.min(lv, 20) - 1]}</div><div class="pc-window">${bg}${avatar}</div><div class="pc-name">${name}</div>
-        <div class="pc-sub">✦ ${esc(title)} ✦</div><div class="pc-stats">${p.games || 0} партий · ${p.wins || 0} побед · ${rate}%</div>`,
-      wanted: `<div class="pc-w1">Разыскивается</div><div class="pc-w2">живым или мёртвым</div><div class="pc-photo">${bg}${avatar}</div>
-        <div class="pc-name">${name}</div><div class="pc-sub">по кличке «${esc(title)}»</div>
-        <div class="pc-reward">Награда $${((p.wins || 0) * 100 + 50).toLocaleString("ru-RU")}</div><div class="pc-stats">${p.games || 0} дел · уровень ${lv}</div>`,
-      vip: `<div class="pc-shine"></div><div class="pc-top"><b>VIP</b><span>НАСТОЛКИНО · CLUB</span></div><div class="pc-chipx"></div>
+        <div class="pc-sub">✦ ${esc(title)} ✦</div><div class="pc-stats">${p.games || 0} партій · ${p.wins || 0} перемог · ${rate}%</div>`,
+      wanted: `<div class="pc-w1">Розшукується</div><div class="pc-w2">живим або мертвим</div><div class="pc-photo">${bg}${avatar}</div>
+        <div class="pc-name">${name}</div><div class="pc-sub">на прізвисько «${esc(title)}»</div>
+        <div class="pc-reward">Нагорода $${((p.wins || 0) * 100 + 50).toLocaleString("uk-UA")}</div><div class="pc-stats">${p.games || 0} справ · рівень ${lv}</div>`,
+      vip: `<div class="pc-shine"></div><div class="pc-top"><b>VIP</b><span>НАСТОЛКІНО · CLUB</span></div><div class="pc-chipx"></div>
         <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div>
         <div class="pc-num">${String(4000 + (p.games || 0) * 37).padStart(4, "0")} ${String(1000 + (p.wins || 0) * 91).slice(-4)} ${String(lv).padStart(2, "0")}${String(rate).padStart(2, "0")} ${String(p.coins || 0).padStart(4, "0").slice(-4)}</div>
-        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} побед</span><span>${rate}%</span></div>${bg}`,
+        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} перемог</span><span>${rate}%</span></div>${bg}`,
       s_ice: `<div class="pc-frost"></div>${bg}<div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div>
-        <div class="pc-foot"><span>❄ LV ${lv}</span><span>${p.wins || 0} побед</span><span>${rate}%</span></div>`,
+        <div class="pc-foot"><span>❄ LV ${lv}</span><span>${p.wins || 0} перемог</span><span>${rate}%</span></div>`,
       s_moon: `<div class="pc-moon"></div><div class="pc-name">${name}</div><div class="pc-sub">— ${esc(title)} —</div><div class="pc-window">${bg}${avatar}</div>
-        <div class="pc-stats">${p.games || 0} ночей · ${p.wins || 0} побед · уровень ${lv}</div>`,
+        <div class="pc-stats">${p.games || 0} ночей · ${p.wins || 0} перемог · рівень ${lv}</div>`,
       s_neon: `<div class="pc-scan"></div>${bg}<div class="pc-top"><b>CYBER·ID</b><span>#${String(1000 + (p.games || 0) * 13).slice(-4)}</span></div>
         <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div><div class="pc-code">LV ${lv} · WIN ${rate}%</div></div></div><div class="pc-barcode"></div>`,
       s_dragon: `${bg}<div class="pc-seal">龍</div><div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
-          <div class="pc-code">Уровень ${lv} · ${p.wins || 0} побед</div></div></div>`,
-      creator: `<div class="pc-flames"><i></i><i></i><i></i></div>${bg}<div class="pc-seal">✦ СОЗДАТЕЛЬ ✦</div>
+          <div class="pc-code">Рівень ${lv} · ${p.wins || 0} перемог</div></div></div>`,
+      creator: `<div class="pc-flames"><i></i><i></i><i></i></div>${bg}<div class="pc-seal">✦ ТВОРЕЦЬ ✦</div>
         <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
-          <div class="pc-admin">ADMIN · НАСТОЛКИНО</div></div></div>
-        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} побед</span><span>${p.games || 0} партий</span></div>`,
+          <div class="pc-admin">ADMIN · НАСТОЛКІНО</div></div></div>
+        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} перемог</span><span>${p.games || 0} партій</span></div>`,
       arcade: `${bg}<div class="pc-hs">HIGH SCORE</div><div class="pc-body">${avatar}<div class="pc-main"><div class="pc-p1">PLAYER 1</div>
           <div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div>
         <div class="pc-table"><div><span>LEVEL</span><b>${String(lv).padStart(2, "0")}</b></div><div><span>WINS</span><b>${String(p.wins || 0).padStart(3, "0")}</b></div>
@@ -550,7 +560,7 @@ const Shop = (() => {
       const [g1, g2, g3, g4] = gs.pal;
       return `<div class="pcard pc-gen pc-gen-${gs.kind} ${opts.mini ? "mini" : ""}" style="--g1:${g1};--g2:${g2};--g3:${g3};--g4:${g4}">${gs.kind === "foil" ? `<div class="pc-shine"></div>` : ""}${bg}
         <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div>
-        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} побед</span><span>${p.games || 0} игр</span><span>${rate}%</span></div></div>`;
+        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} перемог</span><span>${p.games || 0} ігор</span><span>${rate}%</span></div></div>`;
     }
     return `<div class="pcard pc-${lk.style} ${opts.mini ? "mini" : ""}">${T[lk.style] || T.rpg}</div>`;
   }
@@ -567,5 +577,5 @@ const Shop = (() => {
   }
 
   return { CATS, ITEMS, DEFAULT, REWARD, TIERS, CASES, DUP, POOL, poolOf, SEASONS, seasonByKey, seasonPool, tier, caseByKey, rollTier, rollItem, openCaseLocal, byKey, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl, sceneUrl,
-    card, nameFx, level, rank, titleText, demo, get coins() { return store ? store.coins : 0; } };
+    card, nameFx, cleanName, splitBadge, withBadge, level, rank, titleText, demo, get coins() { return store ? store.coins : 0; } };
 })();

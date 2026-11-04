@@ -1,7 +1,7 @@
 /* Рисовалка: экраны и холст. Функции вызываются из app.js (общие S, send, av, esc и т. п. объявлены там). */
 "use strict";
 
-const DRAW_TOOLS = [["pen", "✏️", "Карандаш"], ["fill", "🪣", "Заливка"], ["eraser", "🧽", "Ластик"]];
+const DRAW_TOOLS = [["pen", "✏️", "Олівець"], ["fill", "🪣", "Заливка"], ["eraser", "🧽", "Гумка"]];
 const drawPen = () => (S.pen = S.pen || { c: 1, w: 2, tool: "pen" });
 const amDrawer = () => S.room && S.room.drawer === S.me;
 
@@ -10,19 +10,19 @@ function viewDrawMenu() {
   const step = (n, t, d) => `<div class="how"><b>${n}</b><div><div class="how-t">${t}</div><div class="muted small">${d}</div></div></div>`;
   return `<div class="fade-in">
     <div class="pxscene big" style="background-image:url(${Pixel.scene("studio")})"></div>
-    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>🎨 Рисовалка</h1>
-      <div class="muted small">Один рисует — все угадывают · ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS} игроков</div></div></div>
+    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>🎨 Малювалка</h1>
+      <div class="muted small">Один малює — усі вгадують · ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS} гравців</div></div></div>
     <div class="card">
-      ${step(1, "Художник выбирает слово", "Из трёх вариантов. Остальные его не видят")}
-      ${step(2, "Рисует на пиксельном холсте", "Все видят рисунок вживую, на своих телефонах")}
-      ${step(3, "Каждый пишет ответ", "Одним словом. Время на ответ хост настраивает сам")}
-      ${step(4, "Художник раздаёт баллы", "Угадал — +2, почти — +1. Художнику +1 за каждого угадавшего")}
-      ${step(5, "Всем показывают слово", "И рисует следующий. В конце — таблица победителей")}
+      ${step(1, "Художник обирає слово", "З трьох варіантів. Інші його не бачать")}
+      ${step(2, "Малює на піксельному полотні", "Усі бачать малюнок наживо, на своїх телефонах")}
+      ${step(3, "Кожен пише відповідь", "Одним словом. Час на відповідь хост налаштовує сам")}
+      ${step(4, "Художник роздає бали", "Вгадав — +2, майже — +1. Художнику +1 за кожного, хто вгадав")}
+      ${step(5, "Усім показують слово", "І малює наступний. Наприкінці — таблиця переможців")}
     </div>
-    <button class="btn mt2" data-a="draw-create">Создать комнату</button>
-    <div class="section-title">Или войди по коду</div>
+    <button class="btn mt2" data-a="draw-create">Створити кімнату</button>
+    <div class="section-title">Або увійди за кодом</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
-      <button class="btn" data-a="join">Войти</button></div>
+      <button class="btn" data-a="join">Увійти</button></div>
   </div>`;
 }
 
@@ -37,23 +37,23 @@ function viewDrawRoom() {
 }
 
 const drawerP = () => player(S.room.drawer) || {};
-const roundLabel = () => `Раунд ${S.room.turn} из ${S.room.turns}`;
-const settingLine = (s) => `✏️ ${s.drawTime} с на рисунок · ⌛ ${s.guessTime} с на ответ · 🔁 ${s.rounds === 1 ? "1 круг" : s.rounds + " круга"} · 📚 ${Draw.DIFFS[s.words]}`;
+const roundLabel = () => `Раунд ${S.room.turn} з ${S.room.turns}`;
+const settingLine = (s) => `✏️ ${s.drawTime} с на малюнок · ⌛ ${s.guessTime} с на відповідь · 🔁 ${s.rounds === 1 ? "1 коло" : s.rounds + " кола"} · 📚 ${Draw.DIFFS[s.words]}`;
 
 function drawLobby() {
   const r = S.room, enough = r.players.filter((p) => p.online).length >= Draw.MIN_PLAYERS;
-  return lobbyBento({ kicker: "Рисовалка · комната", title: "Мастерская", max: Draw.MAX_PLAYERS, settings: "draw-settings", rulesLabel: "Правила",
-    rules: `<b class="display">🎨 Рисовалка</b><div class="small muted mt">${settingLine(r.settings)}</div>
-      <div class="small mt">Каждый игрок нарисует ${r.settings.rounds === 1 ? "одну картинку" : r.settings.rounds + " картинки"}. Пока рисуют, чат закрыт — без подсказок!</div>`,
-    enough, start: "Начать игру 🎬", waitText: `Ждём игроков (минимум ${Draw.MIN_PLAYERS})` });
+  return lobbyBento({ kicker: "Малювалка · кімната", title: "Майстерня", max: Draw.MAX_PLAYERS, settings: "draw-settings", rulesLabel: "Правила",
+    rules: `<b class="display">🎨 Малювалка</b><div class="small muted mt">${settingLine(r.settings)}</div>
+      <div class="small mt">Кожен гравець намалює ${r.settings.rounds === 1 ? "одну картинку" : r.settings.rounds + " картинки"}. Поки малюють, чат закритий — без підказок!</div>`,
+    enough, start: "Почати гру 🎬", waitText: `Чекаємо гравців (мінімум ${Draw.MIN_PLAYERS})` });
 }
 
 function scoreBoard(opts = {}) {
   const list = S.room.players.slice().sort((a, b) => b.score - a.score);
   const gained = opts.gained || {};
   return `<div class="card scores">${list.map((p, i) => `<div class="sc ${p.id === S.me ? "me" : ""} ${p.online ? "" : "off"}">
-      <span class="pl">${i + 1}</span>${av(p, "sm")}<div class="grow nmline"><b>${p.id === S.me ? "Вы" : nm(p)}</b>
-      <span class="small muted">${p.drawer ? "✏️ рисует" : opts.answered && p.answered ? "✓ ответил(а)" : ""}</span></div>
+      <span class="pl">${i + 1}</span>${av(p, "sm")}<div class="grow nmline"><b>${p.id === S.me ? "Ви" : nm(p)}</b>
+      <span class="small muted">${p.drawer ? "✏️ малює" : opts.answered && p.answered ? "✓ відповів(ла)" : ""}</span></div>
       ${gained[p.id] ? `<span class="plus">+${gained[p.id]}</span>` : ""}<span class="pts">${p.score}</span></div>`).join("")}</div>`;
 }
 
@@ -66,14 +66,14 @@ function board(cls = "") { return `<div class="board-wrap ${cls}"><canvas id="bo
 function drawChoose() {
   const r = S.room, d = drawerP();
   if (amDrawer()) {
-    return `${gamebar("Твоя очередь рисовать", roundLabel())}
-      <div class="phase-hero"><h2>Выбери слово</h2><p class="muted mt">Его увидишь только ты</p></div>
+    return `${gamebar("Твоя черга малювати", roundLabel())}
+      <div class="phase-hero"><h2>Обери слово</h2><p class="muted mt">Його побачиш лише ти</p></div>
       <div class="words">${(r.options || []).map((w, i) => `<button class="btn word-btn" data-a="draw-pick" data-v="${i}">${esc(w)}</button>`).join("")}</div>
-      <div class="section-title">Счёт</div>${scoreBoard()}`;
+      <div class="section-title">Рахунок</div>${scoreBoard()}`;
   }
-  return `${gamebar(`${esc(d.name)} выбирает слово`, roundLabel())}
-    <div class="waiting">${av(d, "huge")}<h2 class="mt2">${nm(d)}</h2><p class="muted mt">Сейчас будет рисовать. Приготовься угадывать!</p></div>
-    <div class="section-title">Счёт</div>${scoreBoard()}${hostSkip("Дальше")}`;
+  return `${gamebar(`${esc(d.name)} обирає слово`, roundLabel())}
+    <div class="waiting">${av(d, "huge")}<h2 class="mt2">${nm(d)}</h2><p class="muted mt">Зараз малюватиме. Готуйся вгадувати!</p></div>
+    <div class="section-title">Рахунок</div>${scoreBoard()}${hostSkip("Далі")}`;
 }
 
 function drawTools() {
@@ -82,23 +82,23 @@ function drawTools() {
     <div class="palette">${Draw.PALETTE.map((c, i) => i === 0 ? "" : `<button class="sw ${pen.c === i && pen.tool !== "eraser" ? "on" : ""}" style="background:${c}" data-a="pen-color" data-v="${i}"></button>`).join("")}</div>
     <div class="toolrow">${DRAW_TOOLS.map(([k, e, t]) => `<button class="tool ${pen.tool === k ? "on" : ""}" data-a="pen-tool" data-v="${k}" title="${t}">${emo(e, 20)}</button>`).join("")}
       ${Draw.BRUSHES.map((w) => `<button class="tool size ${pen.w === w ? "on" : ""}" data-a="pen-size" data-v="${w}"><i style="width:${3 + w * 2}px;height:${3 + w * 2}px"></i></button>`).join("")}
-      <button class="tool" data-a="pen-undo" title="Отменить">${emo("↩️", 20)}</button><button class="tool" data-a="pen-clear" title="Очистить">${emo("🗑️", 20)}</button></div>
+      <button class="tool" data-a="pen-undo" title="Скасувати">${emo("↩️", 20)}</button><button class="tool" data-a="pen-clear" title="Очистити">${emo("🗑️", 20)}</button></div>
   </div>`;
 }
 
 function drawDrawing() {
   const r = S.room, d = drawerP();
   if (amDrawer()) {
-    return `${gamebar("Рисуй!", roundLabel())}
-      <div class="secret"><span class="small muted">Твоё слово</span>${wordTiles(r.word)}</div>
+    return `${gamebar("Малюй!", roundLabel())}
+      <div class="secret"><span class="small muted">Твоє слово</span>${wordTiles(r.word)}</div>
       ${board("live")}${drawTools()}
-      <button class="btn mt" data-a="draw-done">Готово — пусть угадывают</button>`;
+      <button class="btn mt" data-a="draw-done">Готово — хай вгадують</button>`;
   }
-  return `${gamebar(`${esc(d.name)} рисует`, roundLabel())}
-    <div class="secret"><span class="small muted">Загадано слово из ${r.hint.replace(/ /g, "").length} букв</span>${wordTiles(r.hint)}</div>
+  return `${gamebar(`${esc(d.name)} малює`, roundLabel())}
+    <div class="secret"><span class="small muted">Загадано слово з ${r.hint.replace(/ /g, "").length} літер</span>${wordTiles(r.hint)}</div>
     ${board()}
-    <div class="card center mt small">👀 Смотри внимательно — ответ напишешь, когда время рисования кончится</div>
-    ${hostSkip("Хватит рисовать")}`;
+    <div class="card center mt small">👀 Дивись уважно — відповідь напишеш, коли час малювання скінчиться</div>
+    ${hostSkip("Досить малювати")}`;
 }
 
 function drawGuess() {
@@ -106,45 +106,45 @@ function drawGuess() {
   const left = r.players.filter((p) => !p.drawer && p.online);
   const done = left.filter((p) => p.answered).length;
   if (amDrawer()) {
-    return `${gamebar("Угадывают…", roundLabel())}${board()}
-      <div class="card center mt">Твоё слово: <b>${esc(r.word)}</b><div class="muted small mt">Ответили ${done} из ${left.length}. Потом ты раздашь баллы</div></div>
-      ${scoreBoard({ answered: true })}${hostSkip("К баллам")}`;
+    return `${gamebar("Вгадують…", roundLabel())}${board()}
+      <div class="card center mt">Твоє слово: <b>${esc(r.word)}</b><div class="muted small mt">Відповіли ${done} з ${left.length}. Потім ти роздаси бали</div></div>
+      ${scoreBoard({ answered: true })}${hostSkip("До балів")}`;
   }
-  return `${gamebar("Что это?", roundLabel())}${board()}
-    ${r.my_guess ? `<div class="card center mt">Твой ответ: <b>${esc(r.my_guess)}</b><div class="muted small mt">Ответили ${done} из ${left.length}. Можно изменить</div></div>` : ""}
+  return `${gamebar("Що це?", roundLabel())}${board()}
+    ${r.my_guess ? `<div class="card center mt">Твоя відповідь: <b>${esc(r.my_guess)}</b><div class="muted small mt">Відповіли ${done} з ${left.length}. Можна змінити</div></div>` : ""}
     <form class="guess-form mt" id="guess-form"><input class="input" id="guess-input" maxlength="30" placeholder="Одним словом…" autocomplete="off" value="${esc(S.guessDraft || "")}">
-      <button class="btn" type="submit">${r.my_guess ? "Изменить" : "Ответить"}</button></form>
-    <div class="section-title">${roundLabel()}</div>${scoreBoard({ answered: true })}${hostSkip("К баллам")}`;
+      <button class="btn" type="submit">${r.my_guess ? "Змінити" : "Відповісти"}</button></form>
+    <div class="section-title">${roundLabel()}</div>${scoreBoard({ answered: true })}${hostSkip("До балів")}`;
 }
 
 function drawJudge() {
   const r = S.room, d = drawerP();
   if (amDrawer()) {
     const names = (id) => (player(id) || {}).name || "?";
-    return `${gamebar("Раздай баллы", roundLabel())}
-      <div class="card center">Было загадано: <b>${esc(r.word)}</b><div class="muted small mt">Отметь, кто угадал. Точные ответы уже засчитаны</div></div>
+    return `${gamebar("Роздай бали", roundLabel())}
+      <div class="card center">Було загадано: <b>${esc(r.word)}</b><div class="muted small mt">Познач, хто вгадав. Точні відповіді вже зараховано</div></div>
       <div class="answers mt">${(r.answers || []).map((a) => `<div class="ans">
         ${av(player(a.id), "sm")}<div class="grow"><div class="small muted">${esc(names(a.id))}</div><b class="ans-t">${esc(a.text)}</b></div>
-        <div class="marks">${[[0, "✗", "мимо"], [1, "≈", "почти +1"], [2, "✓", "угадал +2"]].map(([v, s, t]) =>
+        <div class="marks">${[[0, "✗", "повз"], [1, "≈", "майже +1"], [2, "✓", "вгадав +2"]].map(([v, s, t]) =>
           `<button class="mk mk${v} ${a.mark === v ? "on" : ""}" data-a="draw-mark" data-v="${a.id}:${v}" title="${t}">${s}${v ? `<small>+${v}</small>` : ""}</button>`).join("")}</div></div>`).join("")}</div>
-      <button class="btn mt2" data-a="draw-award">Раздать баллы и показать слово</button>`;
+      <button class="btn mt2" data-a="draw-award">Роздати бали й показати слово</button>`;
   }
-  return `${gamebar(`${esc(d.name)} раздаёт баллы`, roundLabel())}${board()}
-    <div class="card center mt">${r.my_guess ? `Твой ответ: <b>${esc(r.my_guess)}</b>` : "Ты не успел(а) ответить"}<div class="muted small mt">Художник смотрит ответы…</div></div>
-    ${hostSkip("Показать слово")}`;
+  return `${gamebar(`${esc(d.name)} роздає бали`, roundLabel())}${board()}
+    <div class="card center mt">${r.my_guess ? `Твоя відповідь: <b>${esc(r.my_guess)}</b>` : "Ти не встиг(ла) відповісти"}<div class="muted small mt">Художник дивиться відповіді…</div></div>
+    ${hostSkip("Показати слово")}`;
 }
 
 function drawReveal() {
   const r = S.room, d = drawerP();
-  const mark = (v) => (v === 2 ? '<span class="tag2">✓ угадал</span>' : v === 1 ? '<span class="tag1">≈ почти</span>' : '<span class="tag0">✗ мимо</span>');
-  return `${gamebar("Это было…", roundLabel())}
+  const mark = (v) => (v === 2 ? '<span class="tag2">✓ вгадав</span>' : v === 1 ? '<span class="tag1">≈ майже</span>' : '<span class="tag0">✗ повз</span>');
+  return `${gamebar("Це було…", roundLabel())}
     <div class="reveal-word">${wordTiles(r.word)}</div>
     ${board()}
-    <div class="small muted center mt">Рисовал(а) ${esc(d.name)} · ${r.gained && r.gained[r.drawer] ? `+${r.gained[r.drawer]} за угадавших` : "никто не угадал"}</div>
+    <div class="small muted center mt">Малював(ла) ${esc(d.name)} · ${r.gained && r.gained[r.drawer] ? `+${r.gained[r.drawer]} за тих, хто вгадав` : "ніхто не вгадав"}</div>
     ${(r.answers || []).length ? `<div class="answers mt">${r.answers.map((a) => `<div class="ans">${av(player(a.id), "sm")}
       <div class="grow"><div class="small muted">${esc((player(a.id) || {}).name || "")}</div><b class="ans-t">${esc(a.text)}</b></div>${mark(a.mark)}</div>`).join("")}</div>` : ""}
-    <div class="section-title">Счёт</div>${scoreBoard({ gained: r.gained })}
-    ${hostSkip(r.turn >= r.turns ? "К итогам" : "Следующий художник")}`;
+    <div class="section-title">Рахунок</div>${scoreBoard({ gained: r.gained })}
+    ${hostSkip(r.turn >= r.turns ? "До підсумків" : "Наступний художник")}`;
 }
 
 function drawEnd() {
@@ -154,26 +154,26 @@ function drawEnd() {
   const rw = S.reward && S.reward.key === store.lastGame ? S.reward.sum : 0;
   setTimeout(confetti, 50);
   const podium = list.slice(0, 3);
-  return `<div class="win mt"><div class="ph-icon">${icon("end", 64)}</div><div class="small kicker">ИТОГИ</div>
-      <h2>${top.length ? top.map((p) => esc(p.name)).join(", ") : "Ничья"}</h2>
-      <p>${top.length ? `Лучший художник и угадыватель: ${top[0].score} баллов` : "Никто не набрал баллов"}</p>
+  return `<div class="win mt"><div class="ph-icon">${icon("end", 64)}</div><div class="small kicker">ПІДСУМКИ</div>
+      <h2>${top.length ? top.map((p) => esc(p.name)).join(", ") : "Нічия"}</h2>
+      <p>${top.length ? `Найкращий художник і відгадувач: ${top[0].score} балів` : "Ніхто не набрав балів"}</p>
       ${rw ? `<div class="reward-coins">${PX() ? Pixel.sprite("coin", 3) : "🪙"} +${rw} монет</div>` : ""}</div>
     <div class="podium">${[1, 0, 2].map((i) => podium[i] ? `<div class="pod p${i + 1}">${av(podium[i], i === 0 ? "big" : "")}<b>${nm(podium[i])}</b>
       <div class="step"><span>${i + 1}</span><small>${podium[i].score}</small></div></div>` : "").join("")}</div>
-    <div class="section-title">Таблица</div>${scoreBoard()}
-    <div class="section-title">Что рисовали</div>
-    <div class="card">${(r.history || []).map((h) => `<div class="story small">${esc((player(h.drawer) || {}).name || "?")}: «${esc(h.word)}» — ${h.of ? `угадали ${h.right} из ${h.of}` : "никто не ответил"}</div>`).join("")}</div>
-    ${isHost() ? `<button class="btn mt2" data-a="again">🔁 Ещё партия</button>` : `<div class="card center mt2 muted">Хост может начать новую партию</div>`}
-    <button class="btn ghost mt" data-a="leave">Выйти в меню</button>`;
+    <div class="section-title">Таблиця</div>${scoreBoard()}
+    <div class="section-title">Що малювали</div>
+    <div class="card">${(r.history || []).map((h) => `<div class="story small">${esc((player(h.drawer) || {}).name || "?")}: «${esc(h.word)}» — ${h.of ? `вгадали ${h.right} з ${h.of}` : "ніхто не відповів"}</div>`).join("")}</div>
+    ${isHost() ? `<button class="btn mt2" data-a="again">🔁 Ще партія</button>` : `<div class="card center mt2 muted">Хост може почати нову партію</div>`}
+    <button class="btn ghost mt" data-a="leave">Вийти в меню</button>`;
 }
 
 function drawSettingsSheet() {
   const s = S.room.settings;
   const opt = (key, list, fmt) => `<div class="chips">${list.map((v) => `<button class="pill ${s[key] === v ? "on" : ""}" data-a="draw-set" data-v="${key}:${v}">${fmt(v)}</button>`).join("")}</div>`;
-  return `<h2>⚙️ Настройки рисовалки</h2>
-    <div class="section-title">Время на рисунок</div>${opt("drawTime", Draw.DRAW_TIMES, (v) => `${v} с`)}
-    <div class="section-title">Время на ответ</div>${opt("guessTime", Draw.GUESS_TIMES, (v) => `${v} с`)}
-    <div class="section-title">Сколько раз рисует каждый</div>${opt("rounds", [1, 2, 3], (v) => `${v} ${v === 1 ? "раз" : "раза"}`)}
+  return `<h2>⚙️ Налаштування малювалки</h2>
+    <div class="section-title">Час на малюнок</div>${opt("drawTime", Draw.DRAW_TIMES, (v) => `${v} с`)}
+    <div class="section-title">Час на відповідь</div>${opt("guessTime", Draw.GUESS_TIMES, (v) => `${v} с`)}
+    <div class="section-title">Скільки разів малює кожен</div>${opt("rounds", [1, 2, 3], (v) => `${v} ${v === 1 ? "раз" : "рази"}`)}
     <div class="section-title">Слова</div>${opt("words", Object.keys(Draw.DIFFS), (v) => Draw.DIFFS[v])}`;
 }
 
@@ -281,7 +281,7 @@ const DRAW_ACTIONS = {
   "pen-undo": () => { inkSend({ k: "u" }); haptic(); },
   "pen-clear": () => {
     const go = () => { inkSend({ k: "x" }); haptic("heavy"); };
-    if (tg) tg.showConfirm("Стереть весь рисунок?", (ok) => ok && go()); else if (confirm("Стереть весь рисунок?")) go();
+    if (tg) tg.showConfirm("Стерти весь малюнок?", (ok) => ok && go()); else if (confirm("Стерти весь малюнок?")) go();
   },
 };
 
@@ -290,7 +290,7 @@ document.addEventListener("submit", (e) => {
   e.preventDefault();
   const input = document.getElementById("guess-input");
   const text = input.value.trim();
-  if (!text) return toast("Напиши ответ");
+  if (!text) return toast("Напиши відповідь");
   S.guessDraft = text;
   send({ t: "act", slot: "guess", text });
   haptic("medium");

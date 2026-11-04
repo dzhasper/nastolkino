@@ -24,7 +24,7 @@ const Cellar = (() => {
     const s = document.createElement("script");
     s.src = "vendor/three.min.js";
     s.onload = () => { T = window.THREE; const w = waiting; waiting = null; w.forEach((f) => f()); };
-    s.onerror = () => { const w = waiting; waiting = null; s.remove(); w.forEach((f) => f(new Error("Не удалось загрузить 3D"))); };
+    s.onerror = () => { const w = waiting; waiting = null; s.remove(); w.forEach((f) => f(new Error("Не вдалося завантажити 3D"))); };
     document.head.appendChild(s);
   }
 
@@ -135,7 +135,7 @@ const Cellar = (() => {
       vec3 c = texture2D(tDiffuse, vUv).rgb;
       c = mix(c, vec3(1.0, .95, .8), flash * .6);
       c = mix(c, vec3(.55, 0.0, 0.0), hurt * .55);
-      vec2 d = vUv - .5; c *= 1.0 - dot(d, d) * (1.4 + dark * 3.0);  // виньетка (сильнее, когда ствол у виска)
+      vec2 d = vUv - .5; c *= 1.0 - dot(d, d) * (1.4 + dark * 3.0);  // vignette (stronger when the barrel is at the temple)
       c = pow(c, vec3(.82)) * 1.12; c.r *= 1.05; c.b *= .92;
       float th = (bayer(gl_FragCoord.xy) - .5) * .7;
       float L = 8.0;
@@ -789,7 +789,7 @@ const Cellar = (() => {
       state.claim = { pid: e.who, text: "«" + (window.Bluff ? Bluff.claimText(e.cnt, e.rank) : e.cnt) + "»", until: performance.now() + 9000 };
       if (f) f.userData.use = performance.now() / 1000;
     } else if (e.kind === "call") {                                   // «Не верю!»: последние карты взлетают и переворачиваются лицом
-      state.claim = { pid: e.who, text: "Не верю!", hot: true, until: performance.now() + 2600 };
+      state.claim = { pid: e.who, text: "Не вірю!", hot: true, until: performance.now() + 2600 };
       state.reveal = { until: performance.now() + 5200 };
       const n = e.cards.length;
       e.cards.forEach((rk, i) => {
@@ -1433,12 +1433,12 @@ const Cellar = (() => {
     load((err) => {
       if (err) return cb && cb(err);
       if (state.wantHost !== el || !el.isConnected) return;
-      if (!window.CellarPeople) return cb && cb(new Error("Не загрузились персонажи подвала"));
+      if (!window.CellarPeople) return cb && cb(new Error("Не завантажилися персонажі підвалу"));
       host = el;
       if (!renderer) {
         canvas = document.createElement("canvas"); canvas.className = "cellar-canvas";
         try { renderer = new T.WebGLRenderer({ canvas, antialias: false, powerPreference: "low-power" }); }
-        catch (e) { renderer = null; return cb && cb(new Error("Этот телефон не умеет 3D — играть можно кнопками ниже")); }
+        catch (e) { renderer = null; return cb && cb(new Error("Цей телефон не вміє 3D — грати можна кнопками нижче")); }
         renderer.setPixelRatio(1);
         rt = new T.WebGLRenderTarget(W, H, { minFilter: T.NearestFilter, magFilter: T.NearestFilter });
         post = new T.ShaderMaterial({ uniforms: { tDiffuse: { value: rt.texture }, res: { value: new T.Vector2(W, H) }, flash: { value: 0 }, hurt: { value: 0 }, time: { value: 0 }, dark: { value: 0 } },

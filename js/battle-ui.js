@@ -9,7 +9,7 @@ function linkFor(prefix, code, q) {
 function shareLink(link, text) {
   if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
   else if (navigator.share) navigator.share({ text, url: link }).catch(() => {});
-  else { navigator.clipboard && navigator.clipboard.writeText(`${text}\n${link}`); toast("Ссылка скопирована"); }
+  else { navigator.clipboard && navigator.clipboard.writeText(`${text}\n${link}`); toast("Посилання скопійовано"); }
 }
 const fightCode = (f) => f.rarity + f.dna + (f.stage ? "." + f.stage : "") + (f.hat ? "-" + f.hat : "");
 const statLine = (s) => `<div class="bstats small"><span>❤️ ${s.hp}</span><span>⚔️ ${s.atk}</span><span>🛡 ${s.def}</span><span>💨 ${s.spd}</span></div>`;
@@ -47,68 +47,68 @@ function viewBattleTab() {
   const list = S.battleList, tours = S.tourList || [];
   const row = (b) => {
     const me = b.side === 1 ? b.teams.b : b.teams.a, foe = b.side === 1 ? b.teams.a : b.teams.b;
-    const res = b.status === "done" ? (b.winner === b.side ? `<span class="win-tag">🏆 Победа</span>` : `<span class="lose-tag">Поражение</span>`)
-      : b.status === "open" ? `<span class="muted">⏳ ${b.size}×${b.size}</span>` : b.status === "refused" ? `<span class="muted">отказ</span>` : `<span class="muted">истёк</span>`;
+    const res = b.status === "done" ? (b.winner === b.side ? `<span class="win-tag">🏆 Перемога</span>` : `<span class="lose-tag">Поразка</span>`)
+      : b.status === "open" ? `<span class="muted">⏳ ${b.size}×${b.size}</span>` : b.status === "refused" ? `<span class="muted">відмова</span>` : `<span class="muted">минув</span>`;
     return `<button class="card brow" data-a="battle-open" data-v="${b.code}">${me && me[0] ? Pets.sprite(fightCode(me[0]), 44) : ""}<div class="grow"><b>${esc(teamNames(me))}</b>
-      <div class="small muted">${b.tour ? "🏆 " + esc(b.tour.name) + " · " : ""}${foe && foe.length ? "против " + esc(teamNames(foe)) : "вызов " + b.size + "×" + b.size}</div></div>${res}</button>`;
+      <div class="small muted">${b.tour ? "🏆 " + esc(b.tour.name) + " · " : ""}${foe && foe.length ? "проти " + esc(teamNames(foe)) : "виклик " + b.size + "×" + b.size}</div></div>${res}</button>`;
   };
   const tourRow = (t) => `<button class="card brow tour-row ${t.status}" data-a="tour-open" data-v="${t.id}"><span class="tour-cup">🏆</span><div class="grow"><b>${esc(t.name)}</b>
-      <div class="small muted">${t.status === "reg" ? `запись: ${t.players}/${t.size}` : t.status === "run" ? "идёт" : "окончен"} · приз: ${esc(t.prize)}</div></div>${t.joined ? `<span class="win-tag">ты в деле</span>` : t.status === "reg" ? `<span class="pill on">Записаться</span>` : ""}</button>`;
-  return `${tours.length ? `<div class="section-title">🏆 Турниры</div><div class="blist">${tours.map(tourRow).join("")}</div>` : ""}
-    <div class="card small mt">⚔️ Вызов — из карточки питомца: <b>1×1</b>, <b>2×2</b> или <b>3×3</b>. В командном бою бойцы выходят по очереди, место в команде может занять друг.
-      Решают характеристики, мутации, стихия, сытость и настроение. <b>Победа +12 🪙, поражение +4 🪙.</b></div>
-    <div class="section-title">Мои бои</div>
-    ${!list ? `<div class="muted small">Загружаю…</div>` : list.length ? `<div class="blist">${list.map(row).join("")}</div>` : `<div class="muted small">Боёв пока не было</div>`}`;
+      <div class="small muted">${t.status === "reg" ? `запис: ${t.players}/${t.size}` : t.status === "run" ? "триває" : "завершено"} · приз: ${esc(t.prize)}</div></div>${t.joined ? `<span class="win-tag">ти в грі</span>` : t.status === "reg" ? `<span class="pill on">Записатися</span>` : ""}</button>`;
+  return `${tours.length ? `<div class="section-title">🏆 Турніри</div><div class="blist">${tours.map(tourRow).join("")}</div>` : ""}
+    <div class="card small mt">⚔️ Виклик — з картки улюбленця: <b>1×1</b>, <b>2×2</b> або <b>3×3</b>. У командному бою бійці виходять по черзі, місце в команді може зайняти друг.
+      Вирішують характеристики, мутації, стихія, ситість і настрій. <b>Перемога +12 🪙, поразка +4 🪙.</b></div>
+    <div class="section-title">Мої бої</div>
+    ${!list ? `<div class="muted small">Завантажую…</div>` : list.length ? `<div class="blist">${list.map(row).join("")}</div>` : `<div class="muted small">Боїв поки не було</div>`}`;
 }
 
 /* ---------------------------------------------------------------- вызов: формат и бойцы */
 function battleSetupSheet() {
   const st = S.bsetup, pets = myFighters();
   if (!st) return "";
-  return `<h2>⚔️ Вызов на бой</h2>
+  return `<h2>⚔️ Виклик на бій</h2>
     <div class="seg mt" style="grid-template-columns:repeat(3,1fr)">${[1, 2, 3].map((n) => `<button class="${st.size === n ? "on" : ""}" data-a="bsetup-size" data-v="${n}">${n}×${n}</button>`).join("")}</div>
-    <div class="small muted mt">${st.size === 1 ? "Один на один." : `Команды по ${st.size}. Бойцы выходят по очереди: выбыл один — выходит следующий. Можешь выставить своих или оставить места другу — он вступит по той же ссылке.`}</div>
-    <div class="section-title">Твои бойцы · ${st.pets.length}/${st.size}</div>
+    <div class="small muted mt">${st.size === 1 ? "Один на один." : `Команди по ${st.size}. Бійці виходять по черзі: вибув один — виходить наступний. Можеш виставити своїх або залишити місця другові — він приєднається за тим самим посиланням.`}</div>
+    <div class="section-title">Твої бійці · ${st.pets.length}/${st.size}</div>
     <div class="pick-grid">${pets.map((p) => `<button class="pick ${st.pets.includes(p.id) ? "on" : ""}" data-a="bsetup-pet" data-v="${p.id}">${Pets.sprite(petCode(p), 48)}<span>${esc(Pets.name(p.dna))}</span>
       ${bar(p.energy, "energy")}</button>`).join("")}</div>
-    <button class="btn mt2" data-a="bsetup-go" ${st.pets.length ? "" : "disabled"}>Создать вызов</button>`;
+    <button class="btn mt2" data-a="bsetup-go" ${st.pets.length ? "" : "disabled"}>Створити виклик</button>`;
 }
 
 function slotCard(f) {
   return `<div class="slot r${f.rarity}">${Pets.sprite(fightCode(f), 52)}<div class="grow"><b>${esc(f.name)}</b><div class="small muted">${esc(f.owner || "")}</div>${statLine(f.stats || Pets.stats(f.dna, f.rarity))}</div></div>`;
 }
 function battleScreen() {
-  const b = S.battle, back = `<button class="btn ghost small" data-a="battle-back">← Все бои</button>`;
-  if (!Api.on) return `${back}<div class="card mt">Бои работают через сервер — открой Настолкино из бота.</div>`;
+  const b = S.battle, back = `<button class="btn ghost small" data-a="battle-back">← Усі бої</button>`;
+  if (!Api.on) return `${back}<div class="card mt">Бої працюють через сервер — відкрий Настолкіно з бота.</div>`;
   if (!b) return `${back}<div class="card center mt"><div class="spinner" style="margin:10px auto"></div></div>`;
   if (b.status === "done") return `${back}${b.tour ? `<div class="small muted mt">🏆 ${esc(b.tour.name)} · ${esc(b.tour.round)}</div>` : ""}${arena(b)}`;
-  if (b.status !== "open") return `${back}<div class="card center mt">${b.status === "refused" ? `😾 Бой не состоялся${b.reason ? ": " + esc(b.reason) : ""}` : b.status === "cancel" ? "Вызов отменён" : "⌛ Вызов истёк — его никто не принял за сутки"}</div>`;
+  if (b.status !== "open") return `${back}<div class="card center mt">${b.status === "refused" ? `😾 Бій не відбувся${b.reason ? ": " + esc(b.reason) : ""}` : b.status === "cancel" ? "Виклик скасовано" : "⌛ Виклик минув — його ніхто не прийняв за добу"}</div>`;
   const free = { a: b.size - b.teams.a.length, b: b.size - b.teams.b.length };
   const team = (k, title) => `<div class="team"><div class="section-title">${title} · ${b.teams[k].length}/${b.size}</div>
-    ${b.teams[k].map(slotCard).join("")}${Array.from({ length: free[k] }, () => `<div class="slot empty">свободное место</div>`).join("")}</div>`;
+    ${b.teams[k].map(slotCard).join("")}${Array.from({ length: free[k] }, () => `<div class="slot empty">вільне місце</div>`).join("")}</div>`;
   let act = "";
   if (b.side != null) {
-    act = `<button class="btn mt" data-a="battle-share">📨 ${free.a || free.b ? "Позвать соперника или друга в команду" : "Отправить ссылку"}</button>
-      ${Api.state && Api.state.group ? `<button class="btn ghost mt" data-a="battle-group" ${S.battleGrp === b.code ? "disabled" : ""}>${S.battleGrp === b.code ? "📢 Вызов уже в группе" : "📢 Выложить вызов в группу"}</button>` : ""}
-      ${b.mine ? `<button class="btn ghost small mt" data-a="battle-cancel">Отменить вызов</button>` : ""}
-      ${free[b.side ? "b" : "a"] ? `<button class="btn ghost small mt" data-a="battle-join" data-v="${b.side ? "b" : "a"}">＋ Добавить ещё своего бойца</button>` : ""}`;
+    act = `<button class="btn mt" data-a="battle-share">📨 ${free.a || free.b ? "Покликати суперника або друга в команду" : "Надіслати посилання"}</button>
+      ${Api.state && Api.state.group ? `<button class="btn ghost mt" data-a="battle-group" ${S.battleGrp === b.code ? "disabled" : ""}>${S.battleGrp === b.code ? "📢 Виклик уже в групі" : "📢 Викласти виклик у групу"}</button>` : ""}
+      ${b.mine ? `<button class="btn ghost small mt" data-a="battle-cancel">Скасувати виклик</button>` : ""}
+      ${free[b.side ? "b" : "a"] ? `<button class="btn ghost small mt" data-a="battle-join" data-v="${b.side ? "b" : "a"}">＋ Додати ще свого бійця</button>` : ""}`;
   } else {
-    act = `${free.b ? `<button class="btn mt" data-a="battle-join" data-v="b">⚔️ Принять вызов — выставить бойца</button>` : ""}
-      ${free.a ? `<button class="btn ghost mt" data-a="battle-join" data-v="a">🤝 Вступить в команду ${esc(b.teams.a[0] ? b.teams.a[0].owner : "")}</button>` : ""}`;
+    act = `${free.b ? `<button class="btn mt" data-a="battle-join" data-v="b">⚔️ Прийняти виклик — виставити бійця</button>` : ""}
+      ${free.a ? `<button class="btn ghost mt" data-a="battle-join" data-v="a">🤝 Вступити в команду ${esc(b.teams.a[0] ? b.teams.a[0].owner : "")}</button>` : ""}`;
   }
   const pick = S.battleJoin ? battleJoinPicker(b, free[S.battleJoin]) : "";
-  return `${back}<div class="card center mt"><b>Бой ${b.size}×${b.size}</b><div class="small muted">Когда обе команды наберутся — бой начнётся сам. Вызов живёт сутки.</div></div>
-    ${team("a", b.size > 1 ? "Команда 1" : "Вызывает")}${team("b", b.size > 1 ? "Команда 2" : "Соперник")}${pick || act}`;
+  return `${back}<div class="card center mt"><b>Бій ${b.size}×${b.size}</b><div class="small muted">Коли обидві команди зберуться — бій почнеться сам. Виклик живе добу.</div></div>
+    ${team("a", b.size > 1 ? "Команда 1" : "Викликає")}${team("b", b.size > 1 ? "Команда 2" : "Суперник")}${pick || act}`;
 }
 function battleJoinPicker(b, free) {
   const mine = myFighters().filter((p) => ![...b.teams.a, ...b.teams.b].some((f) => f.id === p.id));
-  return `<div class="section-title">Выбери бойцов · ${S.battlePick.length}/${free}</div>
+  return `<div class="section-title">Обери бійців · ${S.battlePick.length}/${free}</div>
     ${mine.length ? `<div class="pet-grid">${mine.map((p) => { const t = Pets.traits(p.dna);
       return `<button class="pet-card ${S.battlePick.includes(p.id) ? "main" : ""}" data-a="battle-pick" data-v="${p.id}">${Pets.sprite(petCode(p), 72)}<b>${esc(t.name)}</b>
         ${statLine(Pets.stats(p.dna, p.rarity))}${bar(p.energy, "energy")}</button>`; }).join("")}</div>
-      <button class="btn mt2" data-a="battle-go" ${S.battlePick.length ? "" : "disabled"}>⚔️ В бой!</button>`
-      : `<div class="card muted small">Нет свободных вылупившихся питомцев.</div>`}
-    <button class="btn ghost small mt" data-a="battle-join" data-v="">Отмена</button>`;
+      <button class="btn mt2" data-a="battle-go" ${S.battlePick.length ? "" : "disabled"}>⚔️ У бій!</button>`
+      : `<div class="card muted small">Немає вільних вилуплених улюбленців.</div>`}
+    <button class="btn ghost small mt" data-a="battle-join" data-v="">Скасувати</button>`;
 }
 
 /* ---------------------------------------------------------------- повтор боя */
@@ -143,7 +143,7 @@ function battleFx(e, me, foe, att, side) {
   const hostFoe = foe && foe.querySelector(".fspr"), hostMe = me && me.querySelector(".fspr"), el = ELEM_FX[fighterElem(att)] || ["#ffffff", "#ffd23b"];
   if (e.t === "hit" || e.t === "double") { bfx(hostFoe, "slash", "", 500); bfx(hostFoe, "flash", "", 300); sparks(hostFoe, el, 8); arenaShake(false); }
   if (e.t === "crit") { bfx(hostFoe, "slash x2", "", 600); bfx(hostFoe, "flash big", "", 420); sparks(hostFoe, el, 16); arenaShake(true); bfx(document.getElementById("arena"), "crit-word", "КРИТ!", 900); }
-  if (e.t === "miss") { foe && foe.classList.add("dodge"); setTimeout(() => foe && foe.classList.remove("dodge"), 500); bfx(hostFoe, "word miss", "мимо", 800); bfx(hostFoe, "whoosh", "", 400); }
+  if (e.t === "miss") { foe && foe.classList.add("dodge"); setTimeout(() => foe && foe.classList.remove("dodge"), 500); bfx(hostFoe, "word miss", "повз", 800); bfx(hostFoe, "whoosh", "", 400); }
   if (e.t === "burn" || e.t === "burnon") sparks(e.t === "burn" ? hostMe : hostFoe, ["#ff8a1f", "#ffd23b", "#ff4a1f"], 12), bfx(e.t === "burn" ? hostMe : hostFoe, "flames", "🔥🔥🔥", 900);
   if (e.t === "freeze" || e.t === "frozen") bfx(e.t === "freeze" ? hostFoe : hostMe, "ice", "", 1000);
   if (e.t === "stun" || e.t === "boo" || e.t === "sing" || e.t === "charmed") bfx(e.t === "charmed" ? hostMe : hostFoe, "dizzy", e.t === "sing" || e.t === "charmed" ? "♪ ♫ ♪" : "💫", 1000);
@@ -153,14 +153,14 @@ function battleFx(e, me, foe, att, side) {
   if (e.t === "out") { bfx(hostMe, "ko-stars", "💫", 1200); bfx(document.getElementById("arena"), "ko-word", "НОКАУТ!", 1100); arenaShake(true); }
 }
 const LOG_TEXT = {
-  hit: (A, D, d) => `${A} бьёт ${D}: −${d}`, crit: (A, D, d) => `💥 Крит! ${A} наносит ${d}`, miss: (A, D) => `${D} уворачивается`,
-  burn: (A, D, d) => `🔥 ${A} горит: −${d}`, burnon: (A, D) => `🔥 ${A} поджигает ${D}`, freeze: (A, D) => `❄️ ${D} заморожен`,
-  frozen: (A) => `🧊 ${A} пропускает ход`, stun: (A, D) => `🐙 Щупальца оглушают ${D}`, heal: (A, D, d) => `💚 ${A} лечится: +${d}`,
-  drain: (A, D, d) => `🧛 ${A} пьёт здоровье: +${d}`, shield: (A, D, d) => `💎 Щит ${A} гасит ${d}`, double: (A) => `👯 ${A} бьёт ещё раз!`,
-  revive: (A) => `🧟 ${A} поднимается с 1 здоровьем!`, rebirth: (A, D, d) => `🔥 ${A} возрождается из пепла: +${d}!`, revenge: (A) => `😤 ${A} жаждет реванша: +10% к атаке`,
-  out: (A) => `💤 ${A} выбывает`, in: (A) => `➡️ На арену выходит ${A}!`,
-  sleep: (A) => `💤 ${A} уснул посреди боя!`, sing: (A, D) => `🎵 ${A} запел — ${D} заслушался`, charmed: (A) => `🎶 ${A} всё ещё слушает песню и пропускает ход`,
-  box: (A) => `📦 ${A} спрятался в коробку — удар мимо!`, boo: (A, D) => `👻 ${A} крикнул «БУ!» — ${D} испугался`,
+  hit: (A, D, d) => `${A} б’є ${D}: −${d}`, crit: (A, D, d) => `💥 Крит! ${A} завдає ${d}`, miss: (A, D) => `${D} ухиляється`,
+  burn: (A, D, d) => `🔥 ${A} горить: −${d}`, burnon: (A, D) => `🔥 ${A} підпалює ${D}`, freeze: (A, D) => `❄️ ${D} заморожений`,
+  frozen: (A) => `🧊 ${A} пропускає хід`, stun: (A, D) => `🐙 Щупальця оглушують ${D}`, heal: (A, D, d) => `💚 ${A} лікується: +${d}`,
+  drain: (A, D, d) => `🧛 ${A} п’є здоров’я: +${d}`, shield: (A, D, d) => `💎 Щит ${A} гасить ${d}`, double: (A) => `👯 ${A} б’є ще раз!`,
+  revive: (A) => `🧟 ${A} підводиться з 1 здоров’ям!`, rebirth: (A, D, d) => `🔥 ${A} відроджується з попелу: +${d}!`, revenge: (A) => `😤 ${A} прагне реваншу: +10% до атаки`,
+  out: (A) => `💤 ${A} вибуває`, in: (A) => `➡️ На арену виходить ${A}!`,
+  sleep: (A) => `💤 ${A} заснув посеред бою!`, sing: (A, D) => `🎵 ${A} заспівав — ${D} заслухався`, charmed: (A) => `🎶 ${A} усе ще слухає пісню й пропускає хід`,
+  box: (A) => `📦 ${A} сховався в коробку — удар повз!`, boo: (A, D) => `👻 ${A} крикнув «БУ!» — ${D} злякався`,
 };
 function replayStep() {
   const b = S.battle, r = S.replay;
@@ -221,15 +221,15 @@ function arena(b) {
   const reward = myReward ? ` · +${myReward} 🪙` : "";
   const intro = r.intro ? `<div class="b-intro"><div class="bi-half l"><div class="bi-lines"></div><div class="bi-spr">${Pets.sprite(fightCode(T[0][0]), 130)}</div><div class="bi-name"><b>${esc(teamNames(T[0]))}</b><span>${esc(T[0][0].owner || "")}</span></div></div>
       <div class="bi-half r"><div class="bi-lines"></div><div class="bi-spr">${Pets.sprite(fightCode(T[1][0]), 130)}</div><div class="bi-name"><b>${esc(teamNames(T[1]))}</b><span>${esc(T[1][0].owner || "")}</span></div></div>
-      <div class="bi-flash"></div><div class="bi-vs">VS</div><div class="bi-go">БОЙ!</div></div>` : "";
+      <div class="bi-flash"></div><div class="bi-vs">VS</div><div class="bi-go">БІЙ!</div></div>` : "";
   const fin = r.finale ? `<div class="b-win ${b.side == null || won ? "" : "lost"}">${Array.from({ length: 24 }, (_, i) => `<i style="--i:${i}"></i>`).join("")}</div>` : "";
   if (r.finale) setTimeout(() => { r.finale = false; }, 50);
   return `<div class="arena ${r.intro ? "intro" : ""}" id="arena">${intro}${side(0)}<div class="vs">VS</div>${side(1)}${fin}</div>
-    <div class="card blog" id="blog">${esc(r.done ? "Бой окончен" : r.text || "Бой начинается…")}</div>
-    ${r.done ? `<div class="card center bres ${b.side == null ? "" : won ? "won" : "lost"}"><div class="display">${b.side == null ? "🏆 " + esc(wname) : won ? "🏆 Победа!" : "Поражение"}</div>
-        <div class="small muted mt">${b.side == null ? "победа в этом бою" : won ? `${esc(wname)} — сильнее${reward}` : `Победа за ${esc(wname)}. Питомцы немного расстроены${reward}`}</div>
+    <div class="card blog" id="blog">${esc(r.done ? "Бій завершено" : r.text || "Бій починається…")}</div>
+    ${r.done ? `<div class="card center bres ${b.side == null ? "" : won ? "won" : "lost"}"><div class="display">${b.side == null ? "🏆 " + esc(wname) : won ? "🏆 Перемога!" : "Поразка"}</div>
+        <div class="small muted mt">${b.side == null ? "перемога в цьому бою" : won ? `${esc(wname)} — сильніший${reward}` : `Перемога за ${esc(wname)}. Улюбленці трохи засмучені${reward}`}</div>
 </div>`
-      : `<button class="btn ghost small mt" data-a="replay-skip">⏭ Пропустить</button>`}`;
+      : `<button class="btn ghost small mt" data-a="replay-skip">⏭ Пропустити</button>`}`;
 }
 
 /* ---------------------------------------------------------------- турниры */
@@ -240,31 +240,31 @@ function tourOpen(id) {
   Api.call("/api/tour/get", { id: S.tourId }).then((r) => { S.tour = r.tour; render(); }).catch((e) => { toast(e.message); S.tourId = null; render(); });
 }
 function tourScreen() {
-  const t = S.tour, back = `<button class="btn ghost small" data-a="tour-back">← Все бои</button>`;
-  if (!Api.on) return `${back}<div class="card mt">Турниры работают через сервер — открой Настолкино из бота.</div>`;
+  const t = S.tour, back = `<button class="btn ghost small" data-a="tour-back">← Усі бої</button>`;
+  if (!Api.on) return `${back}<div class="card mt">Турніри працюють через сервер — відкрий Настолкіно з бота.</div>`;
   if (!t) return `${back}<div class="card center mt"><div class="spinner" style="margin:10px auto"></div></div>`;
   const total = t.rounds.length ? t.rounds[0].length : 0;
-  const rname = (n) => (n === 1 ? "Финал" : n === 2 ? "Полуфинал" : `1/${n} финала`);
-  const fighterLine = (f, won) => f ? `<div class="tm-f ${won ? "won" : ""}">${Pets.sprite(fightCode(f), 30)}<span><b>${esc(f.name)}</b><i>${esc(f.owner)}</i></span></div>` : `<div class="tm-f bye">— проход —</div>`;
+  const rname = (n) => (n === 1 ? "Фінал" : n === 2 ? "Півфінал" : `1/${n} фіналу`);
+  const fighterLine = (f, won) => f ? `<div class="tm-f ${won ? "won" : ""}">${Pets.sprite(fightCode(f), 30)}<span><b>${esc(f.name)}</b><i>${esc(f.owner)}</i></span></div>` : `<div class="tm-f bye">— прохід —</div>`;
   const bracket = t.rounds.map((ms, ri) => `<div class="tround"><div class="tr-title">${rname(Math.max(1, total >> ri))}</div>${ms.map((m) => `<div class="tmatch">
       ${fighterLine(m.a, m.winner === 0)}${fighterLine(m.b, m.winner === 1)}
       ${m.code ? `<button class="tm-play" data-a="battle-open" data-v="${m.code}">▶</button>` : ""}${m.note ? `<div class="tm-note">${esc(m.note)}</div>` : ""}</div>`).join("")}</div>`).join("");
   const mine = myFighters();
   let act = "";
   if (t.status === "reg") {
-    act = t.joined ? `<div class="card center mt">✅ Ты записан. Раунды пройдут сами — результаты пришлёт бот.</div><button class="btn ghost small mt" data-a="tour-leave">Выписаться</button>`
-      : `<div class="section-title">Выбери бойца для турнира</div>${mine.length ? `<div class="pet-grid">${mine.map((p) => `<button class="pet-card ${S.tourPick === p.id ? "main" : ""}" data-a="tour-pick" data-v="${p.id}">
+    act = t.joined ? `<div class="card center mt">✅ Ти записаний. Раунди пройдуть самі — результати надішле бот.</div><button class="btn ghost small mt" data-a="tour-leave">Виписатися</button>`
+      : `<div class="section-title">Обери бійця для турніру</div>${mine.length ? `<div class="pet-grid">${mine.map((p) => `<button class="pet-card ${S.tourPick === p.id ? "main" : ""}" data-a="tour-pick" data-v="${p.id}">
           ${Pets.sprite(petCode(p), 64)}<b>${esc(Pets.name(p.dna))}</b>${statLine(Pets.stats(p.dna, p.rarity))}</button>`).join("")}</div>
-        <button class="btn mt2" data-a="tour-join" ${S.tourPick ? "" : "disabled"}>🏆 Записаться</button>
-        <div class="small muted mt">В день боя питомец должен быть сыт, бодр и в настроении: если откажется драться — проиграет.</div>` : `<div class="card muted small">Нужен вылупившийся питомец.</div>`}`;
+        <button class="btn mt2" data-a="tour-join" ${S.tourPick ? "" : "disabled"}>🏆 Записатися</button>
+        <div class="small muted mt">У день бою улюбленець має бути ситий, бадьорий і в настрої: якщо відмовиться битися — програє.</div>` : `<div class="card muted small">Потрібен вилуплений улюбленець.</div>`}`;
   }
   return `${back}<div class="card tour-head mt"><div class="tour-cup big">🏆</div><div class="grow"><b class="tour-name">${esc(t.name)}</b>
-      <div class="small muted">${t.status === "reg" ? `Запись: ${t.players}/${t.size}` : t.status === "run" ? `Идёт · раунды каждые ${Math.round(t.interval / 60)} мин` : t.status === "done" ? "Окончен" : "Отменён"}</div>
+      <div class="small muted">${t.status === "reg" ? `Запис: ${t.players}/${t.size}` : t.status === "run" ? `Триває · раунди кожні ${Math.round(t.interval / 60)} хв` : t.status === "done" ? "Завершено" : "Скасовано"}</div>
       <div class="small">Приз: <b>${esc(t.prize)}</b></div></div></div>
-    ${t.winner ? `<div class="card center mt tour-win">${Pets.sprite(fightCode(t.winner), 96)}<div class="display">🏆 ${esc(t.winner.name)}</div><div class="small muted">${esc(t.winner.owner)} — победитель</div></div>` : ""}
+    ${t.winner ? `<div class="card center mt tour-win">${Pets.sprite(fightCode(t.winner), 96)}<div class="display">🏆 ${esc(t.winner.name)}</div><div class="small muted">${esc(t.winner.owner)} — переможець</div></div>` : ""}
     ${act}
-    ${t.rounds.length ? `<div class="section-title">Сетка</div><div class="bracket">${bracket}</div>`
-      : t.list.length ? `<div class="section-title">Участники</div><div class="tchips">${t.list.filter(Boolean).map((f) => `<span class="tchip pet">${Pets.sprite(fightCode(f), 32)}${esc(f.name)} <i class="muted">${esc(f.owner)}</i></span>`).join("")}</div>` : ""}`;
+    ${t.rounds.length ? `<div class="section-title">Сітка</div><div class="bracket">${bracket}</div>`
+      : t.list.length ? `<div class="section-title">Учасники</div><div class="tchips">${t.list.filter(Boolean).map((f) => `<span class="tchip pet">${Pets.sprite(fightCode(f), 32)}${esc(f.name)} <i class="muted">${esc(f.owner)}</i></span>`).join("")}</div>` : ""}`;
 }
 
 const BATTLE_ACTIONS = {
@@ -283,13 +283,13 @@ const BATTLE_ACTIONS = {
   "battle-share": () => {
     const b = S.battle; if (!b) return;
     const names = teamNames(b.teams.a);
-    shareLink(linkFor("b", b.code, "battle"), b.size > 1 ? `⚔️ Бой питомцев ${b.size}×${b.size}! Моя команда: ${names}. Выставляй своих — или вступай ко мне в команду!` : `⚔️ Вызываю тебя на бой питомцев! Мой боец — ${names}. Выставляй своего!`);
+    shareLink(linkFor("b", b.code, "battle"), b.size > 1 ? `⚔️ Бій улюбленців ${b.size}×${b.size}! Моя команда: ${names}. Виставляй своїх — або вступай до мене в команду!` : `⚔️ Викликаю тебе на бій улюбленців! Мій боєць — ${names}. Виставляй свого!`);
   },
   "battle-group": () => {
     const b = S.battle; if (!b) return;
-    Api.call("/api/group/battle", { code: b.code }).then(() => { S.battleGrp = b.code; toast("📢 Вызов в группе — итог боя появится там же"); notify("success"); render(); }).catch((e) => toast(e.message));
+    Api.call("/api/group/battle", { code: b.code }).then(() => { S.battleGrp = b.code; toast("📢 Виклик у групі — підсумок бою з’явиться там же"); notify("success"); render(); }).catch((e) => toast(e.message));
   },
-  "battle-cancel": () => Api.call("/api/battle/cancel", { code: S.battle.code }).then(() => { toast("Вызов отменён"); BATTLE_ACTIONS["battle-back"](); }).catch(petErr),
+  "battle-cancel": () => Api.call("/api/battle/cancel", { code: S.battle.code }).then(() => { toast("Виклик скасовано"); BATTLE_ACTIONS["battle-back"](); }).catch(petErr),
   "battle-join": (side) => { S.battleJoin = side || null; S.battlePick = []; haptic(); render(); },
   "battle-pick": (id) => {
     id = Number(id); const b = S.battle, free = b.size - b.teams[S.battleJoin].length, a = S.battlePick;
@@ -301,7 +301,7 @@ const BATTLE_ACTIONS = {
     haptic("heavy");
     Api.act("/api/battle/join", { code: S.battle.code, side: S.battleJoin, pets: S.battlePick }).then((r) => {
       S.battle = r.battle; S.battleJoin = null; S.battlePick = [];
-      if (r.battle.status === "done") battleWatch(r.battle); else toast("Ты в бою! Ждём остальных");
+      if (r.battle.status === "done") battleWatch(r.battle); else toast("Ти в бою! Чекаємо решту");
       render(); window.scrollTo(0, 0);
     }).catch(petErr);
   },
@@ -309,7 +309,7 @@ const BATTLE_ACTIONS = {
   "tour-open": (id) => { haptic(); tourOpen(id); window.scrollTo(0, 0); },
   "tour-back": () => { S.tourId = null; S.tour = null; render(); battleLoadList(); },
   "tour-pick": (id) => { S.tourPick = Number(id); haptic(); render(); },
-  "tour-join": () => Api.call("/api/tour/join", { id: S.tour.id, pet: S.tourPick }).then((r) => { S.tour = r.tour; notify("success"); toast("Записан! 🏆"); render(); }).catch(petErr),
+  "tour-join": () => Api.call("/api/tour/join", { id: S.tour.id, pet: S.tourPick }).then((r) => { S.tour = r.tour; notify("success"); toast("Записано! 🏆"); render(); }).catch(petErr),
   "tour-leave": () => Api.call("/api/tour/leave", { id: S.tour.id }).then((r) => { S.tour = r.tour; render(); }).catch(petErr),
 };
 

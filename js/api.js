@@ -21,7 +21,7 @@
       body: JSON.stringify(body || {}),
     }).then(async (r) => {
       const data = await r.json().catch(() => ({}));
-      if (!r.ok) { const e = new Error(data.error || "Сервер недоступен"); e.status = r.status; e.data = data; throw e; }
+      if (!r.ok) { const e = new Error(data.error || "Сервер недоступний"); e.status = r.status; e.data = data; throw e; }
       return data;
     }));
     chain = p.catch(() => {});
@@ -109,7 +109,7 @@
   let profT = null, profLast = "";
   Api.pushProfile = (p) => {
     if (!on || !Api.ready) return;
-    const data = JSON.stringify({ avatar: p.avatar, look: p.look, games: p.games, wins: p.wins, photo: p.photo || null });
+    const data = JSON.stringify({ avatar: p.avatar, badge: p.badge || "", look: p.look, games: p.games, wins: p.wins, photo: p.photo || null });
     if (data === profLast) return;
     clearTimeout(profT);
     profT = setTimeout(() => { profLast = data; call("/api/profile/save", { profile: JSON.parse(data) }).catch(() => { profLast = ""; }); }, 5000);

@@ -34,8 +34,8 @@
   class Mafia {
     constructor(themeKey, players, settings, restore) {
       if (restore) { Object.assign(this, restore); this.theme = THEMES[this.theme_key]; this.ready = new Set(restore.ready); return; }
-      if (!THEMES[themeKey]) throw new GameError("Нет такого сценария");
-      if (players.length < MIN_PLAYERS || players.length > MAX_PLAYERS) throw new GameError(`Нужно от ${MIN_PLAYERS} до ${MAX_PLAYERS} игроков`);
+      if (!THEMES[themeKey]) throw new GameError("Немає такого сценарію");
+      if (players.length < MIN_PLAYERS || players.length > MAX_PLAYERS) throw new GameError(`Потрібно від ${MIN_PLAYERS} до ${MAX_PLAYERS} гравців`);
       this.theme_key = themeKey;
       this.theme = THEMES[themeKey];
       this.settings = Object.assign({ reveal: true, anonymous: false, roles: null }, settings || {});
@@ -72,11 +72,11 @@
     newBountyTarget(p) {
       const options = this.alive().filter((q) => q.team === "town" && q.id !== p.id);
       p.bounty_target = options.length ? rnd.choice(options).id : null;
-      if (p.bounty_target) p.private.push(`🎯 Твоя цель: ${this.players[p.bounty_target].name}. Добейся, чтобы город её повесил.`);
+      if (p.bounty_target) p.private.push(`🎯 Твоя мета: ${this.players[p.bounty_target].name}. Доможися, щоб місто її повісило.`);
     }
 
     role(p) { return p.converted ? this.theme.roles.mafia : this.theme.roles[p.role]; }
-    roleTitle(p) { const r = this.role(p); return `${r.emoji} ${r.name}` + (p.converted ? " (обращён)" : ""); }
+    roleTitle(p) { const r = this.role(p); return `${r.emoji} ${r.name}` + (p.converted ? " (навернений)" : ""); }
     alive() { return this.order.map((id) => this.players[id]).filter((p) => p.alive); }
     pick(key, kw = {}) {
       const options = this.theme.story[key] || THEMES.classic.story[key] || [""];
@@ -119,18 +119,18 @@
 
     nightAct(pid, slot, target, ability) {
       const p = this.players[pid];
-      if (this.phase !== "night" || !p || !p.alive) throw new GameError("Сейчас нельзя");
+      if (this.phase !== "night" || !p || !p.alive) throw new GameError("Зараз не можна");
       const entry = this.night_actions[pid] || (this.night_actions[pid] = {});
       if (slot === "team") {
-        if (!this.inTeamVote(p)) throw new GameError("Ты не в команде мафии");
-        if (target !== "pass" && !this.validTargets(p, "mafia_kill").includes(target)) throw new GameError("Нельзя выбрать эту цель");
+        if (!this.inTeamVote(p)) throw new GameError("Ти не в команді мафії");
+        if (target !== "pass" && !this.validTargets(p, "mafia_kill").includes(target)) throw new GameError("Не можна обрати цю ціль");
         entry.team = target; return;
       }
-      if (slot !== "own") throw new GameError("Неизвестное действие");
+      if (slot !== "own") throw new GameError("Невідома дія");
       if (target === "pass") { entry.own = "pass"; return; }
       const opt = this.abilities(p, "night").find(([i]) => i === ability);
-      if (!opt) throw new GameError("Способность недоступна");
-      if (!this.validTargets(p, opt[1].kind).includes(target)) throw new GameError("Нельзя выбрать эту цель");
+      if (!opt) throw new GameError("Здібність недоступна");
+      if (!this.validTargets(p, opt[1].kind).includes(target)) throw new GameError("Не можна обрати цю ціль");
       entry.own = [ability, target];
     }
 
@@ -165,14 +165,14 @@
         if (kind === "heal") p.last_heal = t;
       });
       const effective = acts.filter(([p]) => {
-        if (blocked.has(p.id)) { privateMsg[p.id] = privateMsg[p.id] || "🚫 Этой ночью тебя отвлекли — способность не сработала."; return false; }
+        if (blocked.has(p.id)) { privateMsg[p.id] = privateMsg[p.id] || "🚫 Цієї ночі тебе відволікли — здібність не спрацювала."; return false; }
         return true;
       });
       const healed = new Set(effective.filter(([, k]) => k === "heal").map(([, , t]) => t));
       effective.forEach(([, k, t]) => { if (k === "silence") this.players[t].silenced_day = this.day + 1; });
 
       const allVotes = this.teamVotes();
-      Object.keys(allVotes).forEach((pid) => { if (blocked.has(pid)) privateMsg[pid] = privateMsg[pid] || "🚫 Этой ночью тебя отвлекли — твой голос не учтён."; });
+      Object.keys(allVotes).forEach((pid) => { if (blocked.has(pid)) privateMsg[pid] = privateMsg[pid] || "🚫 Цієї ночі тебе відволікли — твій голос не враховано."; });
       const votes = {};
       Object.entries(allVotes).forEach(([pid, t]) => { if (!blocked.has(pid)) votes[pid] = t; });
       let teamTarget = null;
@@ -191,7 +191,7 @@
           const q = this.players[t];
           if (healed.has(t) || !q.alive || q.team === "mafia") return;
           q.team = "mafia"; q.converted = true;
-          q.private.push(`🩸 Этой ночью тебя обратили. Теперь ты в команде «${this.theme.mafia_team}». Твоя прежняя роль больше не действует.`);
+          q.private.push(`🩸 Цієї ночі тебе навернули. Тепер ти в команді «${this.theme.mafia_team}». Твоя попередня роль більше не діє.`);
         });
       }
       if (teamTarget) kills.push(teamTarget);
@@ -202,7 +202,7 @@
         const q = this.players[t];
         if (!q.alive) return;
         if (healed.has(t)) { saved = true; return; }
-        if (q.armor) { q.armor = false; saved = true; q.private.push("🛡️ Этой ночью на тебя напали, но защита спасла. Второй раз не спасёт."); return; }
+        if (q.armor) { q.armor = false; saved = true; q.private.push("🛡️ Цієї ночі на тебе напали, але захист урятував. Удруге не врятує."); return; }
         q.alive = false; died.push(q);
         if (t === teamTarget) Object.keys(votes).forEach((pid) => { if (votes[pid] === t) this.stat(pid, "kills"); });   // убийство клана — тем, кто за него голосовал
         effective.forEach(([p, k, tt]) => { if (KILL_KINDS.includes(k) && tt === t) this.stat(p.id, "kills"); });
@@ -214,12 +214,12 @@
 
       effective.forEach(([p, kind, t]) => {
         const q = this.players[t];
-        if (kind === "check_team") { p.private.push(`🔎 Ночь ${this.night}: ${q.name} — ${q.team === "mafia" ? "🔴 " + this.theme.mafia_team : "🟢 не мафия"}.`); if (q.team === "mafia") this.stat(p.id, "finds"); }
-        else if (kind === "check_role") p.private.push(`🔎 Ночь ${this.night}: ${q.name} — ${this.roleTitle(q)}.`);
+        if (kind === "check_team") { p.private.push(`🔎 Ніч ${this.night}: ${q.name} — ${q.team === "mafia" ? "🔴 " + this.theme.mafia_team : "🟢 не мафія"}.`); if (q.team === "mafia") this.stat(p.id, "finds"); }
+        else if (kind === "check_role") p.private.push(`🔎 Ніч ${this.night}: ${q.name} — ${this.roleTitle(q)}.`);
         else if (kind === "find_sheriff") {
           const found = this.role(q).sheriff && !q.converted;
-          const sheriff = (Object.values(this.theme.roles).find((r) => r.sheriff) || { name: "комиссар" }).name;
-          p.private.push(`🔎 Ночь ${this.night}: ${q.name} — ` + (found ? `это ${sheriff}! 🎯` : `не ${sheriff}.`));
+          const sheriff = (Object.values(this.theme.roles).find((r) => r.sheriff) || { name: "комісар" }).name;
+          p.private.push(`🔎 Ніч ${this.night}: ${q.name} — ` + (found ? `це ${sheriff}! 🎯` : `не ${sheriff}.`));
         }
       });
       Object.entries(privateMsg).forEach(([pid, text]) => this.players[pid].private.push(text));
@@ -228,7 +228,7 @@
       died.forEach((q) => this.say("death", this.settings.reveal ? this.pick("dead", { name: q.name, role: this.roleTitle(q) }) : this.pick("dead_hidden", { name: q.name }), this.gone(q, "night")));
       if (!died.length) this.say("calm", this.pick("none"));
       if (saved) this.say("saved", this.pick("saved"));
-      this.alive().forEach((q) => { if (q.silenced_day === this.day) this.say("silenced", this.pick("silenced", { name: q.name }) || `${q.name} сегодня без голоса.`); });
+      this.alive().forEach((q) => { if (q.silenced_day === this.day) this.say("silenced", this.pick("silenced", { name: q.name }) || `${q.name} сьогодні без голосу.`); });
       Object.values(this.players).forEach((b) => {
         if (b.alive && b.bounty_target && !this.players[b.bounty_target].alive && !b.bounty_won) this.newBountyTarget(b);
       });
@@ -238,11 +238,11 @@
 
     dayAct(pid, ability, target) {
       const p = this.players[pid];
-      if (this.phase !== "day" || !p || !p.alive) throw new GameError("Сейчас нельзя");
-      if (!this.abilities(p, "day").find(([i]) => i === ability) || !this.validTargets(p, "duel").includes(target)) throw new GameError("Способность недоступна");
+      if (this.phase !== "day" || !p || !p.alive) throw new GameError("Зараз не можна");
+      if (!this.abilities(p, "day").find(([i]) => i === ability) || !this.validTargets(p, "duel").includes(target)) throw new GameError("Здібність недоступна");
       p.uses[ability] = (p.uses[ability] || 0) + 1;
       const q = this.players[target];
-      this.say("duel", this.pick("duel", { a: p.name, b: q.name }) || `${p.name} вызывает ${q.name} на дуэль!`);
+      this.say("duel", this.pick("duel", { a: p.name, b: q.name }) || `${p.name} викликає ${q.name} на дуель!`);
       const loser = rnd.choice([p, q]);
       loser.alive = false;
       this.say("death", this.pick(this.settings.reveal ? "duel_dead" : "duel_dead_hidden", { name: loser.name, role: this.roleTitle(loser) }), this.gone(loser, "duel"));
@@ -257,8 +257,8 @@
 
     vote(pid, target) {
       const p = this.players[pid];
-      if (this.phase !== "vote" || !p || !this.canVote(p)) throw new GameError("Ты не можешь голосовать");
-      if (target !== null && (!this.players[target] || !this.players[target].alive || target === pid)) throw new GameError("Нельзя голосовать за этого игрока");
+      if (this.phase !== "vote" || !p || !this.canVote(p)) throw new GameError("Ти не можеш голосувати");
+      if (target !== null && (!this.players[target] || !this.players[target].alive || target === pid)) throw new GameError("Не можна голосувати за цього гравця");
       this.votes[pid] = target;
     }
     voteDone() { return this.alive().filter((p) => this.canVote(p)).every((p) => p.id in this.votes); }
@@ -281,7 +281,7 @@
         Object.values(this.players).forEach((b) => {
           if (b.alive && b.bounty_target === out.id && !b.bounty_won) {
             b.bounty_won = true;
-            this.say("bounty", this.pick("bounty", { name: b.name }) || `${b.name} получает награду!`);
+            this.say("bounty", this.pick("bounty", { name: b.name }) || `${b.name} отримує нагороду!`);
           }
         });
       } else this.say("vote_none", this.pick("vote_none"));
@@ -348,8 +348,8 @@
 
     join(m) {
       if (this.members[m.id]) { Object.assign(this.members[m.id], { online: true, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); this.touch(); return; }
-      if (this.phase !== "lobby") throw new GameError("Игра уже идёт — дождитесь следующей партии");
-      if (this.order.length >= MAX_PLAYERS) throw new GameError(`Комната заполнена (${MAX_PLAYERS} игроков)`);
+      if (this.phase !== "lobby") throw new GameError("Гра вже триває — дочекайтеся наступної партії");
+      if (this.order.length >= MAX_PLAYERS) throw new GameError(`Кімната заповнена (${MAX_PLAYERS} гравців)`);
       this.members[m.id] = m; this.order.push(m.id); this.touch();
     }
 
@@ -361,7 +361,7 @@
     }
 
     kick(by, pid) {
-      if (by !== this.host || pid === this.host || this.phase !== "lobby") throw new GameError("Нельзя");
+      if (by !== this.host || pid === this.host || this.phase !== "lobby") throw new GameError("Не можна");
       this.leave(pid);
     }
 
@@ -369,9 +369,9 @@
     timer(key) { return MODES[this.settings.mode][key]; }
 
     start(by) {
-      if (by !== this.host) throw new GameError("Начать может только хост");
-      if (!["lobby", "end"].includes(this.phase)) throw new GameError("Игра уже идёт");
-      if (this.order.length < MIN_PLAYERS) throw new GameError(`Нужно минимум ${MIN_PLAYERS} игрока`);
+      if (by !== this.host) throw new GameError("Почати може лише хост");
+      if (!["lobby", "end"].includes(this.phase)) throw new GameError("Гра вже триває");
+      if (this.order.length < MIN_PLAYERS) throw new GameError(`Потрібно щонайменше ${MIN_PLAYERS} гравці`);
       const players = this.order.map((pid) => [pid, this.members[pid].name, this.members[pid].avatar]);
       this.game = new Mafia(this.settings.theme, players, { reveal: this.settings.reveal, anonymous: this.settings.anonymous, roles: this.settings.roles });
       this.chat = { all: [], mafia: [], dead: [] };
@@ -380,7 +380,7 @@
     }
 
     backToLobby(by) {
-      if (by !== this.host || this.phase !== "end") throw new GameError("Нельзя");
+      if (by !== this.host || this.phase !== "end") throw new GameError("Не можна");
       this.order.filter((p) => !this.members[p].online).forEach((p) => this.leave(p));
       this.phase = "lobby"; this.game = null; this.deadline = null; this.touch();
     }
@@ -394,19 +394,19 @@
 
     act(pid, d) {
       const g = this.game;
-      if (!g) throw new GameError("Игра не начата");
+      if (!g) throw new GameError("Гру не почато");
       const slot = d.slot; const target = d.target === undefined ? null : d.target;
       if (this.phase === "night") { g.nightAct(pid, slot, target, d.ability); if (g.nightDone()) this.advance(); }
       else if (this.phase === "day") {
         if (slot === "ready") { g.setReady(pid); if (g.allReady()) this.advance(); }
         else if (slot === "own") { g.dayAct(pid, d.ability, target); if (g.phase === "end") this.finish(); }
       } else if (this.phase === "vote") { g.vote(pid, target); if (g.voteDone()) this.advance(); }
-      else throw new GameError("Сейчас нельзя");
+      else throw new GameError("Зараз не можна");
       this.touch();
     }
 
     skip(by) {
-      if (by !== this.host) throw new GameError("Только хост");
+      if (by !== this.host) throw new GameError("Лише хост");
       if (["reveal", "day", "verdict", "night", "vote"].includes(this.phase)) this.advance();
     }
 
@@ -444,7 +444,7 @@
     say(pid, channel, text) {
       text = String(text || "").trim().slice(0, 300);
       if (!text) return;
-      if (!this.channelsFor(pid)[channel]) throw new GameError("Сейчас писать в этот чат нельзя");
+      if (!this.channelsFor(pid)[channel]) throw new GameError("Зараз писати в цей чат не можна");
       const m = this.members[pid];
       this.chat[channel].push({ from: pid, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look || {}, text, ts: Math.round(this.clock() * 1000) });
       this.chat[channel] = this.chat[channel].slice(-CHAT_LIMIT);
@@ -505,7 +505,7 @@
         const my = { alive: me.alive, role: { key: me.role, name: r.name, emoji: r.emoji, desc: r.desc, team: me.team, converted: me.converted, motto: r.motto || "" },
           private: me.private.slice(-20), can_vote: this.phase === "vote" ? g.canVote(me) : false,
           voted: this.phase === "vote" ? (pid in g.votes ? g.votes[pid] : "none") : null };
-        my.team_name = me.team === "mafia" ? theme.mafia_team : me.team === "town" ? theme.town_team : "Сам за себя";
+        my.team_name = me.team === "mafia" ? theme.mafia_team : me.team === "town" ? theme.town_team : "Сам за себе";
         if (me.bounty_target) my.bounty = g.players[me.bounty_target].name;
         const entry = g.night_actions[pid] || {};
         if (this.phase === "night" && me.alive) {
@@ -513,7 +513,7 @@
             const votes = {};
             Object.entries(g.night_actions).forEach(([k, v]) => { if (g.players[k].team === "mafia" && v.team) votes[k] = v.team; });
             my.team_vote = { targets: g.validTargets(me, "mafia_kill"), choice: entry.team || null,
-              label: (r.abilities.find((a) => a.kind === "mafia_kill") || { label: "Убить" }).label, votes };
+              label: (r.abilities.find((a) => a.kind === "mafia_kill") || { label: "Убити" }).label, votes };
           }
           my.abilities = g.abilities(me, "night").map(([i, a]) => ({ idx: i, label: a.label, kind: a.kind, targets: g.validTargets(me, a.kind),
             left: a.uses === null ? null : a.uses - (me.uses[i] || 0) }));
@@ -557,12 +557,12 @@
         }
         if (t === "hello" || t === "profile") {
           const tour = room.settings && room.settings.tour;
-          if (t === "hello" && tour && Array.isArray(tour.players) && !tour.players.includes(pid) && !room.members[pid]) throw new GameError("Это турнирный стол — сесть могут только его участники");
+          if (t === "hello" && tour && Array.isArray(tour.players) && !tour.players.includes(pid) && !room.members[pid]) throw new GameError("Це турнірний стіл — сісти можуть лише його учасники");
           const m = member(Object.assign({}, msg.profile || {}, { id: pid }));
           if (t === "hello") room.join(m);
           else if (room.members[pid]) { Object.assign(room.members[pid], { name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); room.touch(); }
         } else if (t === "settings") {
-          if (pid !== room.host || room.phase !== "lobby") throw new GameError("Настройки меняет хост в лобби");
+          if (pid !== room.host || room.phase !== "lobby") throw new GameError("Налаштування змінює хост у лобі");
           const ns = Object.assign({}, msg.settings || {}); if (room.settings.tour) delete ns.stake;   // в турнире — без ставок
           room.updateSettings(ns);
         } else if (t === "start") room.start(pid);
@@ -574,10 +574,10 @@
         else if (t === "finish" && room.kind === "blackjack") room.finish(pid);
         else if (t === "chat") room.say(pid, msg.channel || "all", msg.text);
         else if (t === "leave") { room.leave(pid); this.send(pid, { t: "left" }); }
-        else throw new GameError("Неизвестная команда");
+        else throw new GameError("Невідома команда");
       } catch (e) {
         if (!(e instanceof GameError)) console.error(e);
-        this.send(pid, { t: "error", text: e instanceof GameError ? e.message : "Что-то пошло не так" });
+        this.send(pid, { t: "error", text: e instanceof GameError ? e.message : "Щось пішло не так" });
         return;
       }
       this.push();
@@ -597,7 +597,7 @@
   }
 
   function member(p) {
-    return { id: p.id, name: String(p.name || "Игрок").slice(0, 20), avatar: String(p.avatar || "🙂").slice(0, 4),
+    return { id: p.id, name: [...String(p.name || "Гравець")].slice(0, 26).join(""), avatar: String(p.avatar || "🙂").slice(0, 4),
       photo: typeof p.photo === "string" && /^https?:\/\//.test(p.photo) ? p.photo : null, look: lookOf(p.look), online: true };
   }
 

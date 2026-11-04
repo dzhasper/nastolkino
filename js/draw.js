@@ -78,32 +78,32 @@
 
   /* ---------------------------------------------------------------- слова */
   const WORDS = {
-    easy: ("кот собака дом солнце дерево машина рыба птица цветок яблоко банан мяч луна звезда облако дождь снеговик ёлка гриб " +
-      "шарик зонт очки часы ключ телефон книга стул стол кровать лампа чашка ложка вилка нож торт пицца мороженое морковь " +
-      "арбуз груша вишня лимон корова свинья лошадь заяц мышь змея улитка паук бабочка пчела черепаха жираф слон лев утка " +
-      "сердце корона ракета самолёт корабль поезд велосипед гитара барабан шапка носок ботинок футболка платье замок мост " +
-      "гора море остров радуга молния огонь снежинка кактус пальма зуб глаз нос рука нога улыбка подарок свеча флаг якорь " +
-      "колесо лодка паровоз акула медуза осьминог краб пингвин сова лиса волк медведь ёж кит тыква яйцо хлеб сыр конфета").split(" "),
-    medium: ("вампир привидение пират робот дракон русалка единорог волшебник принцесса рыцарь ковбой космонавт клоун ниндзя " +
-      "супергерой зомби мумия скелет инопланетянин динозавр вулкан водопад пустыня пещера маяк мельница светофор фонтан " +
-      "карусель палатка костёр рюкзак компас телескоп микроскоп магнит батарейка лампочка вентилятор пылесос холодильник " +
-      "телевизор компьютер наушники микрофон фотоаппарат камера скрипка пианино труба аккордеон шахматы кубик пазл качели " +
-      "горка батут бассейн душ ванна зеркало расчёска зубная_щётка мыло полотенце подушка одеяло будильник календарь " +
-      "письмо конверт марка посылка корзина тележка лестница лифт эскалатор вертолёт подводная_лодка воздушный_шар парашют " +
-      "трактор экскаватор пожарная_машина скорая полиция тюрьма банк ресторан больница школа зоопарк цирк кинотеатр стадион").split(" ").map((w) => w.replace(/_/g, " ")),
-    hard: ("алиби шпион предательство заговор ограбление свидетель допрос детектив отпечаток наручники сейф сокровище карта_сокровищ " +
-      "кораблекрушение землетрясение затмение северное_сияние чёрная_дыра невесомость гравитация эхо тень отражение мираж " +
-      "сон кошмар дежавю ностальгия лень вдохновение ревность удача сюрприз секрет тайна мечта паника скука " +
-      "бермудский_треугольник эйфелева_башня статуя_свободы пирамида колизей стоунхендж кремль " +
-      "селфи мем вайфай пароль облачное_хранилище вирус антивирус лайк подписчик стрим блогер дедлайн планёрка отпуск " +
-      "понедельник пятница час_пик пробка очередь сдача квитанция инфляция кредит ипотека").split(" ").map((w) => w.replace(/_/g, " ")),
+    easy: ("кіт собака будинок сонце дерево машина риба птах квітка яблуко банан м’яч місяць зірка хмара дощ сніговик ялинка гриб " +
+      "кулька парасолька окуляри годинник ключ телефон книжка стілець стіл ліжко лампа чашка ложка виделка ніж торт піца морозиво морква " +
+      "кавун груша вишня лимон корова свиня кінь заєць миша змія равлик павук метелик бджола черепаха жирафа слон лев качка " +
+      "серце корона ракета літак корабель потяг велосипед гітара барабан шапка шкарпетка черевик футболка сукня замок міст " +
+      "гора море острів веселка блискавка вогонь сніжинка кактус пальма зуб око ніс рука нога усмішка подарунок свічка прапор якір " +
+      "колесо човен паротяг акула медуза восьминіг краб пінгвін сова лисиця вовк ведмідь їжак кит гарбуз яйце хліб сир цукерка").split(" "),
+    medium: ("вампір привид пірат робот дракон русалка єдиноріг чарівник принцеса лицар ковбой космонавт клоун ніндзя " +
+      "супергерой зомбі мумія скелет інопланетянин динозавр вулкан водоспад пустеля печера маяк млин світлофор фонтан " +
+      "карусель намет багаття рюкзак компас телескоп мікроскоп магніт батарейка лампочка вентилятор пилосос холодильник " +
+      "телевізор комп’ютер навушники мікрофон фотоапарат камера скрипка піаніно труба акордеон шахи кубик пазл гойдалка " +
+      "гірка батут басейн душ ванна дзеркало гребінець зубна_щітка мило рушник подушка ковдра будильник календар " +
+      "лист конверт марка посилка кошик візок драбина ліфт ескалатор гелікоптер підводний_човен повітряна_куля парашут " +
+      "трактор екскаватор пожежна_машина швидка поліція в’язниця банк ресторан лікарня школа зоопарк цирк кінотеатр стадіон").split(" ").map((w) => w.replace(/_/g, " ")),
+    hard: ("алібі шпигун зрада змова пограбування свідок допит детектив відбиток кайданки сейф скарб карта_скарбів " +
+      "корабельна_аварія землетрус затемнення північне_сяйво чорна_діра невагомість гравітація луна тінь відображення міраж " +
+      "сон кошмар дежавю ностальгія лінь натхнення ревнощі удача сюрприз секрет таємниця мрія паніка нудьга " +
+      "бермудський_трикутник ейфелева_вежа статуя_свободи піраміда колізей стоунхендж золоті_ворота " +
+      "селфі мем вайфай пароль хмарне_сховище вірус антивірус лайк підписник стрим блогер дедлайн планірка відпустка " +
+      "понеділок п’ятниця година_пік затор черга решта квитанція інфляція кредит іпотека").split(" ").map((w) => w.replace(/_/g, " ")),
   };
-  const DIFFS = { easy: "Лёгкие", medium: "Средние", hard: "Сложные", mix: "Вперемешку" };
+  const DIFFS = { easy: "Легкі", medium: "Середні", hard: "Складні", mix: "Упереміш" };
   const DRAW_TIMES = [40, 60, 80, 100, 120];
   const GUESS_TIMES = [15, 20, 30, 45, 60];
   const CHOOSE_SECONDS = 15, JUDGE_SECONDS = 40, REVEAL_SECONDS = 12;
   const MIN_PLAYERS = 2, MAX_PLAYERS = 20, CHAT_LIMIT = 80;
-  const norm = (s) => String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-я0-9]/g, "");
+  const norm = (s) => String(s || "").toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-яіїєґ0-9]/g, "");
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
   /* ---------------------------------------------------------------- комната рисовалки */
@@ -145,8 +145,8 @@
 
     join(m) {
       if (this.members[m.id]) { Object.assign(this.members[m.id], { online: true, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); this.touch(); return; }
-      if (this.phase !== "lobby" && this.phase !== "end") throw new GameError("Игра уже идёт — дождитесь следующей партии");
-      if (this.order.length >= MAX_PLAYERS) throw new GameError(`Комната заполнена (${MAX_PLAYERS} игроков)`);
+      if (this.phase !== "lobby" && this.phase !== "end") throw new GameError("Гра вже триває — дочекайтеся наступної партії");
+      if (this.order.length >= MAX_PLAYERS) throw new GameError(`Кімната заповнена (${MAX_PLAYERS} гравців)`);
       this.members[m.id] = m; this.order.push(m.id); this.touch();
     }
 
@@ -158,7 +158,7 @@
     }
 
     kick(by, pid) {
-      if (by !== this.host || pid === this.host || this.phase !== "lobby") throw new GameError("Нельзя");
+      if (by !== this.host || pid === this.host || this.phase !== "lobby") throw new GameError("Не можна");
       this.leave(pid);
     }
 
@@ -169,9 +169,9 @@
     setTimer(sec) { this.total = sec; this.deadline = this.clock() + sec; }
 
     start(by) {
-      if (by !== this.host) throw new GameError("Начать может только хост");
-      if (!["lobby", "end"].includes(this.phase)) throw new GameError("Игра уже идёт");
-      if (this.online().length < MIN_PLAYERS) throw new GameError(`Нужно минимум ${MIN_PLAYERS} игрока`);
+      if (by !== this.host) throw new GameError("Почати може лише хост");
+      if (!["lobby", "end"].includes(this.phase)) throw new GameError("Гра вже триває");
+      if (this.online().length < MIN_PLAYERS) throw new GameError(`Потрібно щонайменше ${MIN_PLAYERS} гравці`);
       this.resetGame();
       this.order.forEach((p) => { this.scores[p] = 0; });
       for (let r = 0; r < this.settings.rounds; r++) this.turns.push(...this.order);
@@ -180,7 +180,7 @@
     }
 
     backToLobby(by) {
-      if (by !== this.host || this.phase !== "end") throw new GameError("Нельзя");
+      if (by !== this.host || this.phase !== "end") throw new GameError("Не можна");
       this.order.filter((p) => !this.members[p].online).forEach((p) => this.leave(p));
       this.phase = "lobby"; this.deadline = null; this.touch();
     }
@@ -236,27 +236,27 @@
 
     act(pid, d) {
       const slot = d.slot;
-      if (this.phase === "choose" && slot === "pick") { if (pid !== this.drawer) throw new GameError("Слово выбирает художник"); this.choose(d.target); }
-      else if (this.phase === "draw" && slot === "done") { if (pid !== this.drawer) throw new GameError("Нельзя"); this.endDrawing(); }
+      if (this.phase === "choose" && slot === "pick") { if (pid !== this.drawer) throw new GameError("Слово обирає художник"); this.choose(d.target); }
+      else if (this.phase === "draw" && slot === "done") { if (pid !== this.drawer) throw new GameError("Не можна"); this.endDrawing(); }
       else if (this.phase === "guess" && slot === "guess") {
-        if (pid === this.drawer || !this.members[pid]) throw new GameError("Художник не угадывает");
+        if (pid === this.drawer || !this.members[pid]) throw new GameError("Художник не вгадує");
         const text = String(d.text || "").trim().replace(/\s+/g, " ").slice(0, 30);
-        if (!text) throw new GameError("Напиши ответ");
+        if (!text) throw new GameError("Напиши відповідь");
         this.guesses[pid] = text; this.touch();
         if (this.guessers().every((p) => this.guesses[p])) this.startJudge();
       } else if (this.phase === "judge" && slot === "mark") {
-        if (pid !== this.drawer) throw new GameError("Баллы раздаёт художник");
-        if (!(d.target in this.guesses)) throw new GameError("Нет такого ответа");
+        if (pid !== this.drawer) throw new GameError("Бали роздає художник");
+        if (!(d.target in this.guesses)) throw new GameError("Немає такої відповіді");
         const v = Number(d.value);
         this.marks[d.target] = [0, 1, 2].includes(v) ? v : 0; this.touch();
       } else if (this.phase === "judge" && slot === "award") {
-        if (pid !== this.drawer) throw new GameError("Баллы раздаёт художник");
+        if (pid !== this.drawer) throw new GameError("Бали роздає художник");
         this.award();
-      } else throw new GameError("Сейчас нельзя");
+      } else throw new GameError("Зараз не можна");
     }
 
     skip(by) {
-      if (by !== this.host) throw new GameError("Только хост");
+      if (by !== this.host) throw new GameError("Лише хост");
       if (this.phase !== "lobby" && this.phase !== "end") this.advance();
     }
 
@@ -278,7 +278,7 @@
     say(pid, channel, text) {
       text = String(text || "").trim().slice(0, 300);
       if (!text) return;
-      if (channel !== "all" || !this.channelsFor(pid).all) throw new GameError("Пока идёт раунд, чат закрыт — не подсказывай!");
+      if (channel !== "all" || !this.channelsFor(pid).all) throw new GameError("Поки триває раунд, чат закритий — не підказуй!");
       const m = this.members[pid];
       this.chat.all.push({ from: pid, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look || {}, text, ts: Math.round(this.clock() * 1000) });
       this.chat.all = this.chat.all.slice(-CHAT_LIMIT);
@@ -298,7 +298,7 @@
         ? Object.entries(this.guesses).map(([id, text]) => ({ id, text, mark: this.marks[id] || 0, gained: this.gained ? this.gained[id] : 0 })) : null;
       return {
         game: "draw", code: this.code, host: this.host, version: this.version, now: Math.round(this.clock() * 1000),
-        theme: { key: "draw", title: "Рисовалка", emoji: "🎨", accent: "#ff4f7b", accent2: "#29adff" },
+        theme: { key: "draw", title: "Малювалка", emoji: "🎨", accent: "#ff4f7b", accent2: "#29adff" },
         settings: this.settings, phase: this.phase, deadline: this.deadline ? Math.round(this.deadline * 1000) : null, total: this.total,
         players, drawer: this.drawer, turn: this.turn + 1, turns: this.turns.length,
         word: showWord ? this.word : null, hint: this.word && !showWord ? this.word.replace(/[^\s-]/g, "_") : null,

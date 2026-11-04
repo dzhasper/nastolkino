@@ -71,63 +71,63 @@ const CELLAR_GAMES = ["roulette", "revolver", "bluff"];
 const isRev = (r) => !!r && r.game === "revolver";
 const isBluff = (r) => !!r && r.game === "bluff";
 const modeOf = (r) => (isBluff(r) ? "bluff" : isRev(r) ? "revolver" : "roulette");
-const CONTROLS = `<p>🎮 <b>Управление — от первого лица.</b> Во время партии экран сам переходит в горизонтальный вид — поверни телефон. Нажми на соперника — ствол повернётся на него, «Выстрел» — нажать на спуск, «В себя» — навести ствол на себя. Пальцем влево-вправо — оглядеться.</p>`;
+const CONTROLS = `<p>🎮 <b>Керування — від першої особи.</b> Під час партії екран сам переходить у горизонтальний вигляд — поверни телефон. Натисни на суперника — ствол повернеться на нього, «Постріл» — натиснути на гачок, «У себе» — навести ствол на себе. Пальцем ліворуч-праворуч — роззирнутися.</p>`;
 function rouRulesHtml(mode) {
   if (mode === "bluff") return `
-    <p>Колода: <b>6 королей, 6 дам, 6 тузов и 2 джокера</b>. Каждому раздают по ${Bluff.HAND} карт. В начале раздачи над столом появляется карта — <b>что требует стол</b>: короли, дамы или тузы. Она делает один оборот и исчезает (что требует стол — написано вверху экрана).</p>
-    <p>В свой ход кладёшь рубашкой вверх <b>1–3 карты</b> и говоришь, что это то, что требует стол. <b>Джокер</b> подходит за что угодно. Можно и соврать.</p>
-    <p>Следующий решает: поверить и положить свои — или сказать <b>«Не верю!»</b>. Карты вскрывают: соврал — стреляет лжец, сказал правду — стреляет тот, кто не поверил.</p>
-    <p>🔫 <b>У каждого свой револьвер</b>: шесть гнёзд, один патрон, где он — не знает никто. Барабан не крутят — каждый щелчок приближает патрон. Сколько раз ты уже нажимал(а) на спуск — помни сам(а). Проигравший подносит револьвер к виску, рука дрожит — и случайная заминка перед выстрелом.</p>
-    <p>🃏 <b>Джокер</b> — фиолетовая карта со звездой: подходит за любую. При вскрытии видно, чьи карты открыли, и под каждой картой — что это.</p>
-    <p>Кончились карты — тебя пропускают. Остались карты только у одного — следующий обязан сказать «Не верю!». После выстрела — новая раздача и новая карта стола.</p>
-    <p>🪙 На монеты: каждый ставит одинаково, последний живой забирает весь банк.</p>
-    <p>🎮 Свои карты — внизу экрана: нажми на 1–3 карты и «Положить». Или «Не верю!», если не веришь тому, кто положил перед тобой.</p>`;
+    <p>Колода: <b>6 королів, 6 дам, 6 тузів і 2 джокери</b>. Кожному роздають по ${Bluff.HAND} карт. На початку роздачі над столом з’являється карта — <b>що вимагає стіл</b>: королі, дами або тузи. Вона робить один оберт і зникає (що вимагає стіл — написано вгорі екрана).</p>
+    <p>Свого ходу кладеш сорочкою догори <b>1–3 карти</b> й кажеш, що це те, що вимагає стіл. <b>Джокер</b> підходить за будь-що. Можна й збрехати.</p>
+    <p>Наступний вирішує: повірити й покласти свої — або сказати <b>«Не вірю!»</b>. Карти розкривають: збрехав — стріляє брехун, сказав правду — стріляє той, хто не повірив.</p>
+    <p>🔫 <b>У кожного свій револьвер</b>: шість гнізд, один набій, де він — не знає ніхто. Барабан не крутять — кожне клацання наближає набій. Скільки разів ти вже натискав(ла) на гачок — пам’ятай сам(а). Той, хто програв, підносить револьвер до скроні, рука тремтить — і випадкова затримка перед пострілом.</p>
+    <p>🃏 <b>Джокер</b> — фіолетова карта із зіркою: підходить за будь-яку. Під час розкриття видно, чиї карти відкрили, і під кожною картою — що це.</p>
+    <p>Скінчилися карти — тебе пропускають. Карти лишилися тільки в одного — наступний мусить сказати «Не вірю!». Після пострілу — нова роздача й нова карта столу.</p>
+    <p>🪙 На монети: кожен ставить однаково, останній живий забирає весь банк.</p>
+    <p>🎮 Свої карти — унизу екрана: натисни на 1–3 карти й «Покласти». Або «Не вірю!», якщо не віриш тому, хто поклав перед тобою.</p>`;
   if (mode === "revolver") return `
-    <p>Револьвер на ${Revolver.CHAMBERS} гнёзд, патрон один, где он — не знает никто. Ходят по кругу. Никаких подсказок и счётчиков — только револьвер и нервы.</p>
-    <p>В свой ход выбираешь цель — <b>себя или любого за столом</b> — и жмёшь на спуск. Выстрелило — минус сердце (обычно оно одно), барабан перезаряжается.</p>
-    <p>🎖 <b>Храбрец.</b> Выстрелил(а) в себя и выжил(а) — до твоего следующего хода в тебя целиться нельзя.</p>
-    <p>🔄 Раз за зарядку можно <b>крутануть барабан</b> — нажми на револьвер у себя в руке.</p>
-    <p>🪙 <b>Банк.</b> Каждый ставит одинаково — сколько в банке, показывают в начале партии. Весь банк забирает последний за столом.</p>
-    <p>🎯 <b>Награда за голову</b> (только когда за столом одни живые игроки, без ботов): выбил соперника — над тобой появляется <b>+${Revolver.BOUNTY} 🪙</b> и всё, что было над ним. Выбил двоих — над тобой уже 🪙100 и больше. Победил — забираешь банк и свою награду. Выбили тебя — твою награду забирает стрелок (и получает ещё ${Revolver.BOUNTY} сверху). Погиб от своей руки — награда сгорает.</p>
-    <p>😰 Перед выстрелом палец замирает на спуске — случайная заминка, сердце колотится. Пуля не сносит голову: человек валится вбок, оседает на стол, сползает со стула или падает назад.</p>
+    <p>Револьвер на ${Revolver.CHAMBERS} гнізд, набій один, де він — не знає ніхто. Ходять по колу. Жодних підказок і лічильників — тільки револьвер і нерви.</p>
+    <p>Свого ходу обираєш ціль — <b>себе або будь-кого за столом</b> — і тиснеш на гачок. Вистрілило — мінус серце (зазвичай воно одне), барабан перезаряджається.</p>
+    <p>🎖 <b>Сміливець.</b> Вистрілив(ла) в себе й вижив(ла) — до твого наступного ходу в тебе цілитися не можна.</p>
+    <p>🔄 Раз за зарядку можна <b>крутнути барабан</b> — натисни на револьвер у себе в руці.</p>
+    <p>🪙 <b>Банк.</b> Кожен ставить однаково — скільки в банку, показують на початку партії. Весь банк забирає останній за столом.</p>
+    <p>🎯 <b>Нагорода за голову</b> (лише коли за столом самі живі гравці, без ботів): вибив суперника — над тобою з’являється <b>+${Revolver.BOUNTY} 🪙</b> і все, що було над ним. Вибив двох — над тобою вже 🪙100 і більше. Переміг — забираєш банк і свою нагороду. Вибили тебе — твою нагороду забирає стрілець (і отримує ще ${Revolver.BOUNTY} зверху). Загинув від своєї руки — нагорода згорає.</p>
+    <p>😰 Перед пострілом палець завмирає на гачку — випадкова затримка, серце калатає. Куля не зносить голову: людина відкидається на спинку стільця, осідає на стіл або падає назад. З кожним убитим крові на столі більшає.</p>
     ${CONTROLS}`;
   const it = Object.values(RI());
   return `
-    <p>Перед каждой зарядкой <b>каждый тайно заряжает в дробовик один патрон</b> — боевой или холостой. Подвал докладывает ещё несколько своих.</p>
-    <p>Сразу после зарядки все видят, <b>сколько боевых и холостых</b> — один раз, потом считать придётся самому: счётчиков на экране нет.</p>
-    <p>В свой ход целишься <b>в себя или в соперника</b>. Холостой в себя — ходишь ещё раз. Боевой — минус сердце.</p>
-    <p>🎒 <b>Предметы</b> лежат перед тобой на столе — <b>не больше ${Roulette.MAX_ITEMS}</b>. У кого уже ${Roulette.MAX_ITEMS}, тому на следующей зарядке новых не дают. Нажми на свой предмет — и «Применить» (бутылку, подслушку и перчатку — потом на соперника). Что делает каждый — только здесь, в правилах: во время игры подсказок нет.</p>
+    <p>Перед кожною зарядкою <b>кожен таємно заряджає в рушницю один набій</b> — бойовий або холостий. Підвал докладає ще кілька своїх.</p>
+    <p>Одразу після зарядки всі бачать, <b>скільки бойових і холостих</b> — один раз, далі рахувати доведеться самому: лічильників на екрані немає.</p>
+    <p>Свого ходу цілишся <b>в себе або в суперника</b>. Холостий у себе — ходиш ще раз. Бойовий — мінус серце.</p>
+    <p>🎒 <b>Предмети</b> лежать перед тобою на столі — <b>не більше ${Roulette.MAX_ITEMS}</b>. У кого вже ${Roulette.MAX_ITEMS}, тому на наступній зарядці нових не дають. Натисни на свій предмет — і «Застосувати» (пляшку, прослушку й рукавичку — потім на суперника). Що робить кожен — лише тут, у правилах: під час гри підказок немає.</p>
     <div class="rou-items mt">${it.map((x) => `<div class="ri">${emo(x.emoji, 24)}<div><b>${esc(x.name)}</b><div class="small muted">${esc(x.desc)}</div></div></div>`).join("")}</div>
     ${CONTROLS}`;
 }
 function viewRouletteMenu() {
   return `<div class="fade-in">
     <div class="pxscene big" style="background-image:url(${Pixel.scene("cellar")})"></div>
-    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Подвал</h1>
-      <div class="muted small">Стол, лампа и оружие. Выбери, во что играть</div></div></div>
+    <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Підвал</h1>
+      <div class="muted small">Стіл, лампа й зброя. Обери, у що грати</div></div></div>
     <div class="bm-modes">
       <div class="card bm-mode shotgun">
-        <div class="bm-head"><div class="bm-ico">💥</div><div class="grow"><b>Последний заряд</b><div class="tiny muted">дробовик · ${Roulette.MIN_PLAYERS}–${Roulette.MAX_PLAYERS} игрока · предметы</div></div></div>
-        <p class="small">Каждый тайно кладёт в дробовик патрон — боевой или холостой. Стреляешь в себя или в соперника, пользуешься предметами. Последний за столом забирает всё.</p>
-        <button class="btn" data-a="rou-create" data-v="roulette">Сесть за стол</button>
+        <div class="bm-head"><div class="bm-ico">💥</div><div class="grow"><b>Останній заряд</b><div class="tiny muted">рушниця · ${Roulette.MIN_PLAYERS}–${Roulette.MAX_PLAYERS} гравці · предмети</div></div></div>
+        <p class="small">Кожен таємно кладе в рушницю набій — бойовий або холостий. Стріляєш у себе або в суперника, користуєшся предметами. Останній за столом забирає все.</p>
+        <button class="btn" data-a="rou-create" data-v="roulette">Сісти за стіл</button>
       </div>
       <div class="card bm-mode revolver">
-        <div class="bm-head"><div class="bm-ico">🔫</div><div class="grow"><b>Русская рулетка</b><div class="tiny muted">револьвер · ${Revolver.MIN_PLAYERS}–${Revolver.MAX_PLAYERS} игроков · награда за голову</div></div></div>
-        <p class="small">В барабане на ${Revolver.CHAMBERS} гнёзд — один патрон. Последний за столом забирает банк. За каждого выбитого над тобой растёт награда за голову — выбьют тебя, её заберёт стрелок.</p>
-        <button class="btn" data-a="rou-create" data-v="revolver">Сесть за стол</button>
+        <div class="bm-head"><div class="bm-ico">🔫</div><div class="grow"><b>Револьверна рулетка</b><div class="tiny muted">револьвер · ${Revolver.MIN_PLAYERS}–${Revolver.MAX_PLAYERS} гравців · нагорода за голову</div></div></div>
+        <p class="small">У барабані на ${Revolver.CHAMBERS} гнізд — один набій. Останній за столом забирає банк. За кожного вибитого над тобою росте нагорода за голову — виб’ють тебе, її забере стрілець.</p>
+        <button class="btn" data-a="rou-create" data-v="revolver">Сісти за стіл</button>
       </div>
       <div class="card bm-mode bluff">
-        <div class="bm-head"><div class="bm-ico">🎴</div><div class="grow"><b>Верю — не верю</b><span class="new-badge">NEW</span><div class="tiny muted">карты и свой револьвер · ${Bluff.MIN_PLAYERS}–${Bluff.MAX_PLAYERS} игрока</div></div></div>
-        <p class="small">Стол требует королей, дам или тузов. Кладёшь карты рубашкой вверх — правду или блеф. Не поверили и поймали — стреляешь в себя. Поверили зря — стреляют они.</p>
-        <button class="btn" data-a="rou-create" data-v="bluff">Сесть за стол</button>
+        <div class="bm-head"><div class="bm-ico">🎴</div><div class="grow"><b>Вірю — не вірю</b><span class="new-badge">NEW</span><div class="tiny muted">карти й свій револьвер · ${Bluff.MIN_PLAYERS}–${Bluff.MAX_PLAYERS} гравці</div></div></div>
+        <p class="small">Стіл вимагає королів, дам або тузів. Кладеш карти сорочкою догори — правду чи блеф. Не повірили й спіймали — стріляєш у себе. Повірили марно — стріляють вони.</p>
+        <button class="btn" data-a="rou-create" data-v="bluff">Сісти за стіл</button>
       </div>
     </div>
-    <details class="card rou-rules mt"><summary><b>Правила «Последнего заряда»</b></summary>${rouRulesHtml("roulette")}</details>
-    <details class="card rou-rules mt"><summary><b>Правила «Русской рулетки»</b></summary>${rouRulesHtml("revolver")}</details>
-    <details class="card rou-rules mt"><summary><b>Правила «Верю — не верю»</b></summary>${rouRulesHtml("bluff")}</details>
-    <div class="section-title">Или войди по коду</div>
+    <details class="card rou-rules mt"><summary><b>Правила «Останнього заряду»</b></summary>${rouRulesHtml("roulette")}</details>
+    <details class="card rou-rules mt"><summary><b>Правила «Револьверної рулетки»</b></summary>${rouRulesHtml("revolver")}</details>
+    <details class="card rou-rules mt"><summary><b>Правила «Вірю — не вірю»</b></summary>${rouRulesHtml("bluff")}</details>
+    <div class="section-title">Або увійди за кодом</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
-      <button class="btn" data-a="join">Войти</button></div>
+      <button class="btn" data-a="join">Увійти</button></div>
   </div>`;
 }
 
@@ -138,8 +138,8 @@ function viewRouletteRoom() {
   if (r.phase === "lobby") {
     const fk = r.code + ":l", fade = S.rouFade !== fk; S.rouFade = fk;
     return `${netBanner()}<div class="${fade ? "fade-in" : ""}">
-      <div class="stage ${isRev(r) ? "rev" : ""}" id="stage"><div class="stage-hud"><div class="drum">ПОДВАЛ</div><button class="snd" data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button></div>
-        <div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">загрузка подвала…</div></div>
+      <div class="stage ${isRev(r) ? "rev" : ""}" id="stage"><div class="stage-hud"><div class="drum">ПІДВАЛ</div><button class="snd" data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button></div>
+        <div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">завантаження підвалу…</div></div>
       ${rouLobby()}</div>
       ${r.players.length > 1 ? `<button class="chat-fab" data-a="chat">💬<span id="chat-badge"></span></button>` : ""}`;
   }
@@ -151,53 +151,53 @@ function cellarFs(r) {
   const me = rouMe(), seated = !!me && r.seats.includes(S.me), bl = isBluff(r), rv = isRev(r);
   const mine = seated && me.alive && r.turn === S.me && r.phase === "play" && !BQ.busy;
   const turnP = r.players.find((p) => p.id === r.turn) || {};
-  const tag = ["play", "shot"].includes(r.phase) && !BQ.busy ? `<div class="cfs-turn ${r.turn === S.me ? "me" : ""}">${r.turn === S.me ? "ТВОЙ ХОД" : "ХОДИТ: " + esc(turnP.name || "").toUpperCase()}</div>` : "";
+  const tag = ["play", "shot"].includes(r.phase) && !BQ.busy ? `<div class="cfs-turn ${r.turn === S.me ? "me" : ""}">${r.turn === S.me ? "ТВІЙ ХІД" : "ХОДИТЬ: " + esc(turnP.name || "").toUpperCase()}</div>` : "";
   const timer = r.deadline && ["play", "load"].includes(r.phase) ? `<div class="cfs-timer" id="timer" data-total="${r.total}"><span id="timer-num">${fmtTime(remaining())}</span></div>` : "";
   const hp = seated && me.alive && ((!bl && r.maxHp > 1) || (rv && me.bounty)) ? `<div class="cfs-hp">${rv && me.bounty ? `<span class="cfs-bounty">🎯 🪙${me.bounty}</span>` : ""}${!bl && r.maxHp > 1 ? hearts(me.hp, r.maxHp) : ""}</div>` : "";
-  const rank = bl && r.table && r.table.rank ? `<div class="cfs-rank">СТОЛ: <b>${Bluff.RANKS[r.table.rank].many.toUpperCase()}</b></div>` : "";
+  const rank = bl && r.table && r.table.rank ? `<div class="cfs-rank">СТІЛ: <b>${Bluff.RANKS[r.table.rank].many.toUpperCase()}</b></div>` : "";
   const sub = S.rouSub && Date.now() - S.rouSub.at < 5200 ? `<div class="cfs-sub show" id="cfs-sub" style="animation-delay:-${((Date.now() - S.rouSub.at) / 1000).toFixed(2)}s">${esc(S.rouSub.text)}</div>` : `<div class="cfs-sub" id="cfs-sub"></div>`;
   const controls = r.phase === "end" ? `<div class="cfs-end"><div class="cfs-endc">${rouEnd()}</div></div>` : bl ? bluffControls(r, me, mine) : rv ? revControls(r, me, mine) : rouControls(r, me, mine);
   return `${netBanner()}<div class="cfs ${bl ? "bl" : rv ? "rv" : "sg"}" id="cfs">
-    <div class="stage fs ${rv ? "rev" : ""}" id="stage"><div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">загрузка подвала…</div></div>
+    <div class="stage fs ${rv ? "rev" : ""}" id="stage"><div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">завантаження підвалу…</div></div>
     <div class="cfs-top">
-      <div class="cfs-btns"><button data-a="leave" title="Выйти">🚪</button><button data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button>${r.players.length > 1 ? `<button data-a="chat">💬<span id="chat-badge"></span></button>` : ""}<button data-a="rou-rot" title="Повернуть экран">⟲</button></div>
+      <div class="cfs-btns"><button data-a="leave" title="Вийти">🚪</button><button data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button>${r.players.length > 1 ? `<button data-a="chat">💬<span id="chat-badge"></span></button>` : ""}<button data-a="rou-rot" title="Повернути екран">⟲</button></div>
       <div class="cfs-mid">${rank}${tag}${timer}</div>${hp}
     </div>
     ${sub}${controls}
   </div>`;
 }
 
-const cfsWatch = (me) => (!me || me.seat < 0 ? `<div class="cfs-note">👀 Ты смотришь партию — следующую сыграешь за столом</div>` : !me.alive ? `<div class="cfs-note">Ты выбыл(а) — смотри, чем кончится</div>` : null);
+const cfsWatch = (me) => (!me || me.seat < 0 ? `<div class="cfs-note">👀 Ти дивишся партію — наступну зіграєш за столом</div>` : !me.alive ? `<div class="cfs-note">Ти вибув(ла) — дивись, чим скінчиться</div>` : null);
 function fireBtns(r) {
   const aim = r.aim, self = aim === S.me;
-  return `${aim ? "" : `<div class="cfs-note dim">нажми на соперника — или «В себя»</div>`}
-    <div class="cfs-act"><button class="act self ${self ? "on" : ""}" data-a="rou-aim" data-v="${S.me}">В СЕБЯ</button><button class="act fire" data-a="rou-fire" ${aim ? "" : "disabled"}>ВЫСТРЕЛ</button></div>`;
+  return `${aim ? "" : `<div class="cfs-note dim">натисни на суперника — або «У себе»</div>`}
+    <div class="cfs-act"><button class="act self ${self ? "on" : ""}" data-a="rou-aim" data-v="${S.me}">У СЕБЕ</button><button class="act fire" data-a="rou-fire" ${aim ? "" : "disabled"}>ПОСТРІЛ</button></div>`;
 }
 // «Последний заряд»: зарядка, предметы на столе, выстрел
 function rouControls(r, me) {
   const w = cfsWatch(me); if (w) return w;
   if (r.phase === "load") {
-    if (r.my_load) return `<div class="cfs-note">Заряжено: <b class="sh-${r.my_load}">${r.my_load === "live" ? "боевой" : "холостой"}</b>. Ждём остальных…</div>`;
-    return `<div class="cfs-load"><div class="cfs-q">Заряди один патрон — никто не увидит какой</div>
-      <div class="row"><button class="shell live" data-a="rou-load" data-v="live"><i></i>БОЕВОЙ</button><button class="shell blank" data-a="rou-load" data-v="blank"><i></i>ХОЛОСТОЙ</button></div></div>`;
+    if (r.my_load) return `<div class="cfs-note">Заряджено: <b class="sh-${r.my_load}">${r.my_load === "live" ? "бойовий" : "холостий"}</b>. Чекаємо решту…</div>`;
+    return `<div class="cfs-load"><div class="cfs-q">Заряди один набій — ніхто не побачить який</div>
+      <div class="row"><button class="shell live" data-a="rou-load" data-v="live"><i></i>БОЙОВИЙ</button><button class="shell blank" data-a="rou-load" data-v="blank"><i></i>ХОЛОСТИЙ</button></div></div>`;
   }
   if (!(r.turn === S.me && r.phase === "play") || BQ.busy) return "";
   const sel = S.rouItem != null ? me.items[S.rouItem] : null, it = sel ? RI()[sel] : null;
   const cancel = `<button class="act ghost" data-a="rou-item" data-v="">✕</button>`;
   if (it && it.steal && S.rouSteal) {
     const v = r.players.find((p) => p.id === S.rouSteal) || { items: [], name: "" };
-    return `<div class="cfs-pick"><div class="cfs-q">${emo(it.emoji, 16)} Что забрать у ${esc(v.name)}?</div>
-      <div class="row">${v.items.map((k, j) => `<button class="pk" data-a="rou-use" data-v="${S.rouItem}:${v.id}:${j}">${emo(RI()[k].emoji, 26)}</button>`).join("") || '<span class="muted small">у него(неё) пусто</span>'}</div></div>
+    return `<div class="cfs-pick"><div class="cfs-q">${emo(it.emoji, 16)} Що забрати в ${esc(v.name)}?</div>
+      <div class="row">${v.items.map((k, j) => `<button class="pk" data-a="rou-use" data-v="${S.rouItem}:${v.id}:${j}">${emo(RI()[k].emoji, 26)}</button>`).join("") || '<span class="muted small">у нього(неї) порожньо</span>'}</div></div>
       <div class="cfs-act">${cancel}</div>`;
   }
-  if (it && it.target) return `<div class="cfs-note hot">${emo(it.emoji, 16)} → нажми на соперника</div><div class="cfs-act">${cancel}</div>`;
-  if (it) return `<div class="cfs-act">${cancel}<button class="act use" data-a="rou-use" data-v="${S.rouItem}:">${emo(it.emoji, 18)} ПРИМЕНИТЬ</button></div>`;
+  if (it && it.target) return `<div class="cfs-note hot">${emo(it.emoji, 16)} → натисни на суперника</div><div class="cfs-act">${cancel}</div>`;
+  if (it) return `<div class="cfs-act">${cancel}<button class="act use" data-a="rou-use" data-v="${S.rouItem}:">${emo(it.emoji, 18)} ЗАСТОСУВАТИ</button></div>`;
   return fireBtns(r);
 }
 // «Русская рулетка»: только выстрел — в соперника или в себя; барабан крутят, нажав на револьвер
 function revControls(r, me, mine) {
   const w = cfsWatch(me); if (w) return w;
-  if (!mine) return me.brave ? `<div class="cfs-note">🎖 Ты храбрец — до твоего хода в тебя не целятся</div>` : "";
+  if (!mine) return me.brave ? `<div class="cfs-note">🎖 Ти сміливець — до твого ходу в тебе не цілять</div>` : "";
   return fireBtns(r);
 }
 // «Верю — не верю»: свои карты внизу, «Положить» и «Не верю!»
@@ -213,9 +213,9 @@ function bluffControls(r, me, mine) {
     const k = i - (n - 1) / 2, on = sel.includes(i);
     return `<button class="bcard r-${c} ${on ? "on" : ""}" ${canPlay ? `data-a="bluff-pick" data-v="${i}"` : "disabled"} style="transform:translateY(${Math.abs(k) * 5 - (on ? 26 : 0)}px) rotate(${k * 6}deg)">${cardInner(c)}</button>`;
   }).join("");
-  const note = mine && r.must_call ? `<div class="cfs-note hot up">Карт нет — остаётся только «Не верю!»</div>` : "";
+  const note = mine && r.must_call ? `<div class="cfs-note hot up">Карт немає — лишається тільки «Не вірю!»</div>` : "";
   return `${note}<div class="cfs-hand ${canPlay ? "live" : ""}">${cards}</div>
-    ${mine ? `<div class="cfs-act">${r.can_call ? `<button class="act call" data-a="bluff-call">НЕ ВЕРЮ!</button>` : ""}${canPlay ? `<button class="act fire" data-a="bluff-play" ${sel.length ? "" : "disabled"}>ПОЛОЖИТЬ${sel.length ? `<small>${sel.length}</small>` : ""}</button>` : ""}</div>` : ""}`;
+    ${mine ? `<div class="cfs-act">${r.can_call ? `<button class="act call" data-a="bluff-call">НЕ ВІРЮ!</button>` : ""}${canPlay ? `<button class="act fire" data-a="bluff-play" ${sel.length ? "" : "disabled"}>ПОКЛАСТИ${sel.length ? `<small>${sel.length}</small>` : ""}</button>` : ""}</div>` : ""}`;
 }
 
 // страница на весь экран и горизонтально: если телефон вертикальный — поворачиваем всю страницу (body.cfs-rot)
@@ -238,44 +238,44 @@ window.addEventListener("resize", () => { if (S.screen === "room" && S.room && C
 function rouLobby() {
   const r = S.room, s = r.settings, mode = modeOf(r), M = { roulette: Roulette, revolver: Revolver, bluff: Bluff }[mode];
   const enough = r.players.filter((p) => p.online).length >= M.MIN_PLAYERS;
-  const title = { roulette: "Последний заряд", revolver: "Русская рулетка", bluff: "Верю — не верю" }[mode];
-  const line = mode === "revolver" ? `❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🔫 ${Revolver.CHAMBERS} гнёзд, 1 патрон`
-    : mode === "bluff" ? `⏱ Ход: <b>${s.turnTime} с</b> · 🎴 по ${Bluff.HAND} карт · 🔫 у каждого свой револьвер`
-    : `❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🎒 Предметов за зарядку: <b>${s.items}</b> (не больше ${Roulette.MAX_ITEMS})`;
-  return lobbyBento({ kicker: "Подвал", title, codeLabel: "Код двери", countLabel: "Мест", seats: "За столом", max: M.MAX_PLAYERS,
-    settings: "rou-settings", scene: "cellar", rulesLabel: "Правила стола",
-    rules: `<div class="small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, банк ${s.stake * Math.min(r.players.length, M.MAX_PLAYERS)}${mode === "revolver"  ? ", последний забирает всё + 🎯 награда за головы" : ", выживший забирает всё"}<br>` : "🎲 На интерес<br>"}${line}</div>
-      <button class="btn ghost small mt" data-a="rou-rules">📖 Как играть</button>`,
-    enough, start: "Закрыть дверь и начать", waitText: `Ждём игроков (минимум ${M.MIN_PLAYERS})`, hostWait: "Ждём, когда хост закроет дверь…" });
+  const title = { roulette: "Останній заряд", revolver: "Револьверна рулетка", bluff: "Вірю — не вірю" }[mode];
+  const line = mode === "revolver" ? `❤️ Сердець: <b>${s.hp}</b> · ⏱ Хід: <b>${s.turnTime} с</b> · 🔫 ${Revolver.CHAMBERS} гнізд, 1 набій`
+    : mode === "bluff" ? `⏱ Хід: <b>${s.turnTime} с</b> · 🎴 по ${Bluff.HAND} карт · 🔫 у кожного свій револьвер`
+    : `❤️ Сердець: <b>${s.hp}</b> · ⏱ Хід: <b>${s.turnTime} с</b> · 🎒 Предметів за зарядку: <b>${s.items}</b> (не більше ${Roulette.MAX_ITEMS})`;
+  return lobbyBento({ kicker: "Підвал", title, codeLabel: "Код дверей", countLabel: "Місць", seats: "За столом", max: M.MAX_PLAYERS,
+    settings: "rou-settings", scene: "cellar", rulesLabel: "Правила столу",
+    rules: `<div class="small">${s.stake ? `🪙 <b>На монети: ставка ${s.stake}</b>, банк ${s.stake * Math.min(r.players.length, M.MAX_PLAYERS)}${mode === "revolver"  ? ", останній забирає все + 🎯 нагорода за голови" : ", той, хто вижив, забирає все"}<br>` : "🎲 На інтерес<br>"}${line}</div>
+      <button class="btn ghost small mt" data-a="rou-rules">📖 Як грати</button>`,
+    enough, start: "Зачинити двері й почати", waitText: `Чекаємо гравців (мінімум ${M.MIN_PLAYERS})`, hostWait: "Чекаємо, поки хост зачинить двері…" });
 }
 
 function rouEnd() {
   const r = S.room, w = r.players.find((p) => p.id === r.winner);
   const rw = S.reward && S.reward.key === store.lastGame ? S.reward.sum : 0;
-  return `<div class="win rou-win"><div class="kicker">${r.winner === S.me ? "ТЫ ВЫБРАЛСЯ(ЛАСЬ) ИЗ ПОДВАЛА" : "ДВЕРЬ ОТКРЫЛАСЬ"}</div>
-      ${w ? `<div class="mt">${av(w, "big")}</div><h2>${nm(w)}</h2><p>последний(яя) за столом${w.stakes ? ` · ставок: ${w.stakes}` : ""}${r.pot ? ` · банк 🪙${r.pot}` : ""}${isRev(r) && w.bounty ? ` · 🎯 награда 🪙${w.bounty}` : ""}</p>` : "<h2>Никто</h2>"}
+  return `<div class="win rou-win"><div class="kicker">${r.winner === S.me ? "ТИ ВИБРАВСЯ(ЛАСЯ) З ПІДВАЛУ" : "ДВЕРІ ВІДЧИНИЛИСЯ"}</div>
+      ${w ? `<div class="mt">${av(w, "big")}</div><h2>${nm(w)}</h2><p>останній(я) за столом${w.stakes ? ` · ставок: ${w.stakes}` : ""}${r.pot ? ` · банк 🪙${r.pot}` : ""}${isRev(r) && w.bounty ? ` · 🎯 нагорода 🪙${w.bounty}` : ""}</p>` : "<h2>Ніхто</h2>"}
       ${rw ? `<div class="reward-coins">${PX() ? Pixel.sprite("coin", 3) : "🪙"} +${rw} монет</div>` : ""}</div>
-    <div class="row mt">${isHost() ? `<button class="btn grow" data-a="again">🔁 Ещё партия</button>` : `<div class="card center grow muted small">Хост может начать новую партию</div>`}
-    <button class="btn ghost grow" data-a="leave">Наверх</button></div>`;
+    <div class="row mt">${isHost() ? `<button class="btn grow" data-a="again">🔁 Ще партія</button>` : `<div class="card center grow muted small">Хост може почати нову партію</div>`}
+    <button class="btn ghost grow" data-a="leave">Нагору</button></div>`;
 }
 
 function rouSettingsSheet() {
   const s = S.room.settings, mode = modeOf(S.room), M = { roulette: Roulette, revolver: Revolver, bluff: Bluff }[mode];
   const opt = (key, list, fmt) => `<div class="chips">${list.map((v) => `<button class="pill ${s[key] === v ? "on" : ""}" data-a="rou-set" data-v="${key}:${v}">${fmt(v)}</button>`).join("")}</div>`;
-  return `<h2>⚙️ Правила стола</h2>
-    ${mode === "bluff" ? "" : `<div class="section-title">Сердец у каждого</div>${opt("hp", M.HP_OPTIONS, (v) => "❤️".repeat(v))}`}
-    <div class="section-title">Время на ход</div>${opt("turnTime", M.TURN_TIMES, (v) => `${v} с`)}
-    ${mode === "roulette" ? `<div class="section-title">Предметов за каждую зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметов"))}<div class="tiny muted">Больше ${Roulette.MAX_ITEMS} предметов на руках не бывает</div>` : ""}
-    <div class="section-title">Ставка (монеты, которые ты нафармил)</div>${opt("stake", M.STAKES, (v) => (v ? `🪙 ${v}` : "на интерес"))}
+  return `<h2>⚙️ Правила столу</h2>
+    ${mode === "bluff" ? "" : `<div class="section-title">Сердець у кожного</div>${opt("hp", M.HP_OPTIONS, (v) => "❤️".repeat(v))}`}
+    <div class="section-title">Час на хід</div>${opt("turnTime", M.TURN_TIMES, (v) => `${v} с`)}
+    ${mode === "roulette" ? `<div class="section-title">Предметів за кожну зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметів"))}<div class="tiny muted">Більше ${Roulette.MAX_ITEMS} предметів на руках не буває</div>` : ""}
+    <div class="section-title">Ставка (монети, які ти нафармив)</div>${opt("stake", M.STAKES, (v) => (v ? `🪙 ${v}` : "на інтерес"))}
     ${stakeOwnRow(s.stake, M.STAKE_MAX, M.STAKES)}
-    <div class="small muted mt">Каждый за столом ставит одинаково. Последний за столом забирает весь банк.${mode === "revolver" ? ` С живыми игроками ещё и награда за голову: +${Revolver.BOUNTY} 🪙 за каждого выбитого.` : ""}</div>`;
+    <div class="small muted mt">Кожен за столом ставить однаково. Останній за столом забирає весь банк.${mode === "revolver" ? ` Із живими гравцями ще й нагорода за голову: +${Revolver.BOUNTY} 🪙 за кожного вибитого.` : ""}</div>`;
 }
 
 // своя сумма ставки — больше, чем на кнопках (общая для подвала и блэкджека)
 function stakeOwnRow(cur, max, presets) {
   return `<div class="stake-own mt"><input class="input" id="stake-own" type="number" inputmode="numeric" min="1" max="${max}" step="1" placeholder="Своя ставка: 1–${max}" value="${cur && !presets.includes(cur) ? cur : ""}">
-    <button class="btn small" data-a="stake-own" data-v="${max}">Поставить</button></div>
-    ${cur && !presets.includes(cur) ? `<div class="tiny muted mt">Сейчас своя ставка: 🪙 ${cur}</div>` : ""}`;
+    <button class="btn small" data-a="stake-own" data-v="${max}">Поставити</button></div>
+    ${cur && !presets.includes(cur) ? `<div class="tiny muted mt">Зараз своя ставка: 🪙 ${cur}</div>` : ""}`;
 }
 
 /* ---------------------------------------------------------------- 3D и анимации событий */
@@ -293,7 +293,7 @@ function rouMount() {
       const it = S.rouItem != null && me ? RI()[me.items[S.rouItem]] : null;
       if (it && it.target) { if (it.steal) { S.rouSteal = pid; haptic(); render(); } else ROU_ACTIONS["rou-use"](`${S.rouItem}:${pid}`); return; }
       const p = r.players.find((x) => x.id === pid);
-      if (isRev(r) && p && p.brave) { toast(`${p.name} — храбрец: до своего хода в него(неё) целиться нельзя`); return; }
+      if (isRev(r) && p && p.brave) { toast(`${p.name} — сміливець: до свого ходу в нього(неї) цілитися не можна`); return; }
       ROU_ACTIONS["rou-aim"](pid);
     };
     // нажал на свой предмет на столе: выбрать (ещё раз — снять выбор)
@@ -302,7 +302,7 @@ function rouMount() {
       S.rouItem = S.rouItem === it.index ? null : it.index; S.rouSteal = null; haptic(); render();
     };
     // нажал на револьвер в руке: крутануть барабан (раз за зарядку)
-    Cellar.onPickGun = () => { const me = rouMe(); if (!me || me.spun) return toast("Барабан в эту зарядку уже крутили"); ROU_ACTIONS["rev-spin"](); };
+    Cellar.onPickGun = () => { const me = rouMe(); if (!me || me.spun) return toast("Барабан у цю зарядку вже крутили"); ROU_ACTIONS["rev-spin"](); };
     Cellar.onSpin = () => Sfx.spin();
     Cellar.select(S.rouItem);
   }
@@ -401,14 +401,14 @@ function rouPlay1(e, r) {
       else if (e.live) { (rv ? Sfx.revBang : Sfx.bang)(); notify("warning"); try { tg && tg.HapticFeedback.impactOccurred("heavy"); } catch (x) { /* нет */ } }
       else (rv ? Sfx.revClick : Sfx.click)();
       msg((e.live ? "bang" : "blank") + (e.live && (e.absorbed || e.redirected) ? " long" : ""),
-        e.live ? (e.absorbed ? "БАХ! ЖИЛЕТ" : e.dice ? "РИКОШЕТ!" : e.redirected ? "ЗЕРКАЛО!" : e.dmg > 1 ? "БАХ! ×2" : "БАХ!") : "щёлк");
+        e.live ? (e.absorbed ? "БАХ! ЖИЛЕТ" : e.dice ? "РИКОШЕТ!" : e.redirected ? "ДЗЕРКАЛО!" : e.dmg > 1 ? "БАХ! ×2" : "БАХ!") : "клац");
       if (e.live && e.out) setTimeout(Sfx.thud, e.death === "head" ? 950 : 600);
     }, tm.when * 1000);
   } else if (e.kind === "load") {
     Sfx.spin();
-    if (rv) msg("load", "1 патрон из " + (e.chambers || 6));
-    else { msg("load", `${e.total} патронов`); setTimeout(() => rouLoadReveal(e), 400); }
-  } else if (e.kind === "spin") { Sfx.cylSpin(); msg("load", "барабан раскручен"); }
+    if (rv) msg("load", "1 набій із " + (e.chambers || 6));
+    else { msg("load", `${e.total} набоїв`); setTimeout(() => rouLoadReveal(e), 400); }
+  } else if (e.kind === "spin") { Sfx.cylSpin(); msg("load", "барабан розкручено"); }
   else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); if (e.item === "freeze") Sfx.bottle(); if (["flashlight", "box", "ear", "spin", "thief"].includes(e.item)) setTimeout(() => rouReveal(e), e.item === "spin" || e.item === "thief" ? 600 : 1600); }
   else if (e.kind === "win") Sfx.thud();
 }
@@ -418,7 +418,7 @@ function bluffPlay1(e, r, tm) {
   const msg = (cls, text) => { const m = document.getElementById("stage-msg"); if (m) { m.className = "stage-msg show " + cls; m.textContent = text; } };
   if (e.kind === "deal") { Sfx.shuffle(); msg("load", Bluff.RANKS[e.rank].many.toUpperCase()); }
   else if (e.kind === "play") Sfx.card();
-  else if (e.kind === "call") { Sfx.liar(); msg("bang", "НЕ ВЕРЮ!"); haptic("heavy"); setTimeout(() => bluffReveal(e, r), 750); }
+  else if (e.kind === "call") { Sfx.liar(); msg("bang", "НЕ ВІРЮ!"); haptic("heavy"); setTimeout(() => bluffReveal(e, r), 750); }
   else if (e.kind === "start") setTimeout(() => rouPotIntro(r), 300);
   else if (e.kind === "shot") {
     rouHeart(e, tm);
@@ -427,7 +427,7 @@ function bluffPlay1(e, r, tm) {
       if (e.live && e.hit === S.me) rouHurt(e);
       else if (e.live) { Sfx.revBang(); notify("warning"); try { tg && tg.HapticFeedback.impactOccurred("heavy"); } catch (x) { /* нет */ } }
       else Sfx.revClick();
-      msg(e.live ? "bang" : "blank", e.live ? "БАХ!" : "щёлк");
+      msg(e.live ? "bang" : "blank", e.live ? "БАХ!" : "клац");
       if (e.live && e.out) setTimeout(Sfx.thud, 950);
     }, tm.when * 1000);
   } else if (e.kind === "win") Sfx.thud();
@@ -438,8 +438,8 @@ function rouPotIntro(r) {
   if (!r.pot && !bounty) return;
   const old = document.getElementById("rou-reveal"); if (old) old.remove();
   const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal pot";
-  d.innerHTML = `<div class="rr-card">${r.pot ? `<div class="rr-small">БАНК ПАРТИИ</div><div class="rr-big">🪙 ${r.pot}</div><div class="rr-small">заберёт последний за столом</div>` : `<div class="rr-big">🎯 Награда за голову</div>`}
-    ${bounty ? `<div class="rr-small mt">🎯 За каждого выбитого — <b>+${Revolver.BOUNTY} 🪙 над головой</b>. Выбьют тебя — всё, что над тобой, заберёт стрелок. Победишь — заберёшь банк и свою награду.</div>` : ""}</div>`;
+  d.innerHTML = `<div class="rr-card">${r.pot ? `<div class="rr-small">БАНК ПАРТІЇ</div><div class="rr-big">🪙 ${r.pot}</div><div class="rr-small">забере останній за столом</div>` : `<div class="rr-big">🎯 Нагорода за голову</div>`}
+    ${bounty ? `<div class="rr-small mt">🎯 За кожного вибитого — <b>+${Revolver.BOUNTY} 🪙 над головою</b>. Виб’ють тебе — усе, що над тобою, забере стрілець. Переможеш — забереш банк і свою нагороду.</div>` : ""}</div>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d);
   setTimeout(() => d.classList.add("fade"), 3600);
@@ -448,16 +448,16 @@ function rouPotIntro(r) {
 
 // вскрытие: чьи карты, что он сказал, каждая карта с подписью и почему правда или враньё
 function bluffReveal(e, r) {
-  const nm = (id) => (id === S.me ? "ты" : ((r.players.find((p) => p.id === id) || {}).name || "?"));
+  const nm = (id) => (id === S.me ? "ти" : ((r.players.find((p) => p.id === id) || {}).name || "?"));
   const many = Bluff.RANKS[e.rank].many.toLowerCase(), bad = e.cards.filter((c) => c !== e.rank && c !== "J");
-  const why = e.truth ? (e.cards.includes("J") ? `все карты — ${many} (джокер подходит за любую)` : `все карты — ${many}`)
+  const why = e.truth ? (e.cards.includes("J") ? `усі карти — ${many} (джокер підходить за будь-яку)` : `усі карти — ${many}`)
     : `${bad.map((c) => CARD_NAME[c]).join(", ")} — не ${Bluff.RANKS[e.rank].forms[0]}`;
   const old = document.getElementById("rou-reveal"); if (old) old.remove();
   const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal bluff " + (e.truth ? "blank" : "live");
-  d.innerHTML = `<div class="rr-card"><div class="rr-small">${esc(nm(e.who))} не поверил(а). Вскрываем карты: <b>${esc(nm(e.target))}</b></div>
-    <div class="rr-small">сказал(а): «${esc(Bluff.claimText(e.cards.length, e.rank))}»</div>
+  d.innerHTML = `<div class="rr-card"><div class="rr-small">${esc(nm(e.who))} не повірив(ла). Розкриваємо карти: <b>${esc(nm(e.target))}</b></div>
+    <div class="rr-small">сказав(ла): «${esc(Bluff.claimText(e.cards.length, e.rank))}»</div>
     <div class="bl-cards">${e.cards.map((c, i) => `<div class="bl-c" style="--i:${i}"><span class="bcard r-${c} ${c === e.rank || c === "J" ? "ok" : "bad"}">${cardInner(c)}</span><small>${CARD_NAME[c]}</small></div>`).join("")}</div>
-    <div class="rr-big">${e.truth ? "ПРАВДА" : "ВРАНЬЁ!"}</div><div class="rr-small">${esc(why)}</div><div class="rr-small">Стреляет в себя: <b>${esc(nm(e.loser))}</b></div></div>`;
+    <div class="rr-big">${e.truth ? "ПРАВДА" : "БРЕХНЯ!"}</div><div class="rr-small">${esc(why)}</div><div class="rr-small">Стріляє в себе: <b>${esc(nm(e.loser))}</b></div></div>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d);
   setTimeout(() => d.classList.add("fade"), 2300);
@@ -467,10 +467,10 @@ function bluffReveal(e, r) {
 // два зеркала: пуля мечется по столу, а у каждого (кроме стрелка) катится кубик 1–50
 function rouDice(e, r) {
   const ids = Object.keys(e.dice || {}); if (!ids.length) return;
-  const nm = (id) => (id === S.me ? "Ты" : ((r.players.find((p) => p.id === id) || {}).name || "?"));
+  const nm = (id) => (id === S.me ? "Ти" : ((r.players.find((p) => p.id === id) || {}).name || "?"));
   const old = document.getElementById("rou-dice"); if (old) old.remove();
   const d = document.createElement("div"); d.id = "rou-dice"; d.className = "rou-dice";
-  d.innerHTML = `<div class="rd-card"><div class="rd-t">🪞🪞 Двойной рикошет!</div><div class="rd-s">Пуля мечется между зеркалами. Кубики 1–50: у кого больше — в того и попадёт</div>
+  d.innerHTML = `<div class="rd-card"><div class="rd-t">🪞🪞 Подвійний рикошет!</div><div class="rd-s">Куля метається між дзеркалами. Кубики 1–50: у кого більше — у того й влучить</div>
     ${ids.map((id) => `<div class="rd-row" data-id="${esc(id)}"><span class="rd-n">${esc(nm(id))}</span><b class="rd-v">?</b></div>`).join("")}</div>`;
   document.body.appendChild(d);
   Sfx.dice();
@@ -494,10 +494,10 @@ function rouLoadReveal(e) {
   const shells = [...Array(e.live).fill("live"), ...Array(e.blank).fill("blank")];
   const old = document.getElementById("rou-reveal"); if (old) old.remove();
   const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal load";
-  d.innerHTML = `<div class="rr-card"><div class="rr-big">🔫 Заряжено ${e.total} ${e.total < 5 ? "патрона" : "патронов"}</div>
+  d.innerHTML = `<div class="rr-card"><div class="rr-big">🔫 Заряджено ${e.total} ${e.total < 5 ? "набої" : "набоїв"}</div>
     <div class="rr-shells">${shells.map((k, i) => `<i class="sh ${k}" style="--i:${i}"></i>`).join("")}</div>
-    <div class="rr-count"><b class="c-live">🔴 ${e.live} ${e.live === 1 ? "боевой" : "боевых"}</b><b class="c-blank">⚪ ${e.blank} ${e.blank === 1 ? "холостой" : "холостых"}</b></div>
-    <div class="rr-small">${e.rerolled ? "Все положили холостые — подвал перезарядил свои патроны.<br>" : ""}${e.total - e.house} от игроков и ${e.house} от подвала. Порядок — случайный, кто что положил — тайна.</div></div>`;
+    <div class="rr-count"><b class="c-live">🔴 ${e.live} ${e.live === 1 ? "бойовий" : "бойових"}</b><b class="c-blank">⚪ ${e.blank} ${e.blank === 1 ? "холостий" : "холостих"}</b></div>
+    <div class="rr-small">${e.rerolled ? "Усі поклали холості — підвал перезарядив свої набої.<br>" : ""}${e.total - e.house} від гравців і ${e.house} від підвалу. Порядок — випадковий, хто що поклав — таємниця.</div></div>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d);
   setTimeout(() => d.classList.add("mix"), 1300);
@@ -517,7 +517,7 @@ function rouHurt(e) {
     const x = Math.random() * 100, y = Math.random() * 70, sz = 18 + Math.random() * 70, run = 30 + Math.random() * 160;
     drops += `<i style="left:${x}%;top:${y}%;--s:${sz | 0}px;--run:${run | 0}px;--d:${(Math.random() * .4).toFixed(2)}s"></i>`;
   }
-  d.innerHTML = `<div class="rh-flash"></div><div class="rh-drops">${drops}</div><div class="rh-txt">${e.out ? "ТЫ ВЫБЫЛ(А)" : e.dmg > 1 ? "−2 ❤" : "−1 ❤"}</div>`;
+  d.innerHTML = `<div class="rh-flash"></div><div class="rh-drops">${drops}</div><div class="rh-txt">${e.out ? "ТИ ВИБУВ(ЛА)" : e.dmg > 1 ? "−2 ❤" : "−1 ❤"}</div>`;
   document.body.appendChild(d);
   setTimeout(() => d.classList.add("fade"), 2600);
   setTimeout(() => d.remove(), 4200);
@@ -529,31 +529,31 @@ function rouReveal(e) {
   const mine = e.who === S.me, it = RI()[e.item] || {}, nm = (id) => ((r.players.find((p) => p.id === id) || {}).name || "?");
   let big = "", small = "", cls = "";
   if (mine && e.item === "flashlight") {
-    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("🔦")) || "", m = /№(\d+).+— (БОЕВОЙ|холостой)/.exec(n);
+    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("🔦")) || "", m = /№(\d+).+— (БОЙОВИЙ|холостий)/.exec(n);
     if (!m) return;
-    const k = Number(m[1]), live = m[2] === "БОЕВОЙ";
+    const k = Number(m[1]), live = m[2] === "БОЙОВИЙ";
     cls = live ? "live" : "blank";
-    big = `${k === 1 ? "Следующий патрон" : `Патрон №${k}`} — ${live ? "БОЕВОЙ" : "холостой"}`;
-    small = k === 1 ? "Это тот, что выстрелит прямо сейчас" : `№1 — следующий выстрел. Этот выстрелит ${k}-м по счёту (если никто не встряхнёт дробовик)`;
+    big = `${k === 1 ? "Наступний набій" : `Набій №${k}`} — ${live ? "БОЙОВИЙ" : "холостий"}`;
+    small = k === 1 ? "Це той, що вистрілить просто зараз" : `№1 — наступний постріл. Цей вистрілить ${k}-м за ліком (якщо ніхто не струсне рушницю)`;
   } else if (mine && e.item === "box") {
-    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("📦")) || "", live = /БОЕВОЙ/.test(n);
+    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("📦")) || "", live = /БОЙОВИЙ/.test(n);
     if (!n) return;
     cls = live ? "live" : "blank";
-    big = `Следующий выстрел — ${live ? "БОЕВОЙ" : "холостой"}`;
-    small = live ? "Стреляй в соперника — или отпили стволы 🪚" : "Можно смело стрелять в себя: холостой в себя — ещё один ход";
+    big = `Наступний постріл — ${live ? "БОЙОВИЙ" : "холостий"}`;
+    small = live ? "Стріляй у суперника — або відпиляй стволи 🪚" : "Можна сміливо стріляти в себе: холостий у себе — ще один хід";
   } else if (mine && e.item === "ear") {
-    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("👂")) || "", none = /ничего не знает/.test(n);
+    const n = (r.notes || []).slice().reverse().find((t) => t.startsWith("👂")) || "", none = /нічого не знає/.test(n);
     if (!n) return;
-    const what = n.replace(/^👂 Подслушал\(а\) [^:]+: /, "");
-    cls = none ? "" : /БОЕВОЙ/.test(what) ? "live" : "blank";
-    big = none ? `${nm(e.target)} ничего не знает про патроны` : what.charAt(0).toUpperCase() + what.slice(1);
-    small = none ? "Он(а) ещё не пользовался(ась) фонариком или шкатулкой" : `Это знает ${nm(e.target)} — теперь знаешь и ты. №1 — следующий выстрел`;
+    const what = n.replace(/^👂 Підслухав\(ла\) [^:]+: /, "");
+    cls = none ? "" : /БОЙОВИЙ/.test(what) ? "live" : "blank";
+    big = none ? `${nm(e.target)} нічого не знає про набої` : what.charAt(0).toUpperCase() + what.slice(1);
+    small = none ? "Він(вона) ще не користувався(лася) ліхтариком чи скринькою" : `Це знає ${nm(e.target)} — тепер знаєш і ти. №1 — наступний постріл`;
   } else if (e.item === "spin") {
-    big = "Патроны перемешаны"; small = "Всё, что знали про порядок патронов, — больше не верно";
+    big = "Набої перемішано"; small = "Усе, що знали про порядок набоїв, — уже не так";
   } else if (e.item === "thief") {
     if (!mine && e.target !== S.me) return;                         // чужую кражу видно на столе — без надписи
     const st = RI()[e.stolen] || {};
-    big = `${mine ? "Ты стащил(а)" : e.target === S.me ? `${nm(e.who)} стащил(а) у тебя` : `${nm(e.who)} стащил(а)`}: ${st.emoji || ""} ${st.name || ""}`; small = "";
+    big = `${mine ? "Ти поцупив(ла)" : e.target === S.me ? `${nm(e.who)} поцупив(ла) в тебе` : `${nm(e.who)} поцупив(ла)`}: ${st.emoji || ""} ${st.name || ""}`; small = "";
   } else return;                                                     // чужой фонарик/шкатулка/подслушка — только анимация, без надписей
   const old = document.getElementById("rou-reveal"); if (old) old.remove();
   const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal " + cls;
@@ -570,7 +570,7 @@ function rouStake(room) {
   const tbl = Api.table(room);
   if (tbl) {                                                         // банк стола на сервере: ставка уходит сразу, банк получит выживший
     const key = "rb:" + tbl; S.rouBank = S.rouBank || {};
-    if (!S.rouBank[key]) { S.rouBank[key] = 1; Api.bet(tbl, "g", "ante", room.stake).then(() => toast(`Ставка ${room.stake} монет в банке`)).catch((e) => toast("Ставка не списалась: " + e.message)); }
+    if (!S.rouBank[key]) { S.rouBank[key] = 1; Api.bet(tbl, "g", "ante", room.stake).then(() => toast(`Ставка ${room.stake} монет у банку`)).catch((e) => toast("Ставка не списалася: " + e.message)); }
     if (room.phase === "end" && isHost() && !S.rouBank[key + ":s"]) {
       S.rouBank[key + ":s"] = 1;
       setTimeout(() => Api.settle(tbl, "g", room.payout || (room.winner ? { [room.winner]: room.pot } : {})).catch(() => { S.rouBank[key + ":s"] = 0; }), 2000);
@@ -580,7 +580,7 @@ function rouStake(room) {
   const key = "rs:" + room.code + ":" + room.game_no;
   if (store.lastRouStake === key) return;
   store.lastRouStake = key; store.coins = Math.max(0, (store.coins || 0) - room.stake);
-  saveProfile(); syncProfile(); toast(`Ставка ${room.stake} монет в банке`);
+  saveProfile(); syncProfile(); toast(`Ставка ${room.stake} монет у банку`);
 }
 
 function recordRoulette(room) {
@@ -609,16 +609,16 @@ const ROU_ACTIONS = {
   "rev-spin": () => { if (!S.room || S.room.turn !== S.me || BQ.busy) return; send({ t: "act", slot: "spin" }); haptic("medium"); },
   "stake-own": (v) => {                                                 // своя ставка: проверяем, хватает ли своих монет
     const max = Number(v) || 10000, el = document.getElementById("stake-own"), n = Math.floor(Number(el && el.value));
-    if (!(n >= 1 && n <= max)) return toast(`Ставка — целое число от 1 до ${max}`);
+    if (!(n >= 1 && n <= max)) return toast(`Ставка — ціле число від 1 до ${max}`);
     const have = (Api.state && Api.state.coins != null) ? Api.state.coins : store.coins || 0;
-    if (n > have) return toast(`У тебя только ${have} монет`);
+    if (n > have) return toast(`У тебе тільки ${have} монет`);
     send({ t: "settings", settings: { stake: n } }); haptic("medium"); S.sheet = null; renderOverlay();
   },
   "rou-settings": () => { S.sheet = { type: "rou-settings" }; renderOverlay(); },
   "rou-rules": () => { S.sheet = { type: "rou-rules" }; renderOverlay(); },
-  "rou-rot": () => { store.rouRot = store.rouRot === false; saveProfile(); toast(store.rouRot === false ? "Экран не поворачивается" : "Горизонтальный вид"); rouFs(); },
+  "rou-rot": () => { store.rouRot = store.rouRot === false; saveProfile(); toast(store.rouRot === false ? "Екран не повертається" : "Горизонтальний вигляд"); rouFs(); },
   "bluff-pick": (v) => { const i = Number(v), sel = (S.bluffSel || []).slice(), j = sel.indexOf(i);
-    if (j >= 0) sel.splice(j, 1); else if (sel.length >= Bluff.MAX_PLAY) return toast(`Не больше ${Bluff.MAX_PLAY} карт за раз`); else sel.push(i);
+    if (j >= 0) sel.splice(j, 1); else if (sel.length >= Bluff.MAX_PLAY) return toast(`Не більше ${Bluff.MAX_PLAY} карт за раз`); else sel.push(i);
     S.bluffSel = sel; haptic(); render(); },
   "bluff-play": () => { const r = S.room, sel = S.bluffSel || []; if (!r || r.turn !== S.me || BQ.busy || !sel.length) return;
     send({ t: "act", slot: "play", cards: sel.slice(), expect: (r.hand || []).slice() }); S.bluffSel = []; Sfx.card(); haptic("medium"); },

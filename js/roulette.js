@@ -13,17 +13,17 @@
   // своя ставка: любое целое от 0 до STAKE_MAX (кнопки — только подсказки)
   const okStake = (v) => Number.isInteger(v) && v >= 0 && v <= STAKE_MAX;
   const ITEMS = {
-    flashlight: { name: "Фонарик", emoji: "🔦", desc: "Подсветить один случайный патрон в магазине — узнаешь, боевой ли он" },
-    spin: { name: "Встряска", emoji: "🔄", desc: "Встряхнуть дробовик: оставшиеся патроны перемешаются" },
-    mirror: { name: "Зеркальце", emoji: "🪞", desc: "Следующий боевой выстрел в тебя от соперника уйдёт обратно в стрелка. Если зеркальце есть и у стрелка — пуля мечется по столу, и кубики (1–50) решают, в кого она попадёт" },
-    vest: { name: "Жилет", emoji: "🦺", desc: "Поглотит одно попадание" },
-    freeze: { name: "Бутылка", emoji: "🍾", desc: "Швырнуть бутылку сопернику в голову: над ним закружатся звёздочки, и он пропустит свой следующий ход", target: true },
-    medkit: { name: "Аптечка", emoji: "💉", desc: "Вернуть одно сердце" },
-    ear: { name: "Подслушка", emoji: "👂", desc: "Подслушать соперника: узнаешь всё, что он знает про патроны (что ему показали фонарик и шкатулка)", target: true },
-    box: { name: "Шкатулка", emoji: "📦", desc: "Внутри записка: какой патрон следующий. Видишь только ты" },
-    saw: { name: "Ножовка", emoji: "🪚", desc: "Отпилить стволы: следующий выстрел снимет 2 сердца. Сгорает даже на холостом" },
-    thief: { name: "Перчатка вора", emoji: "🧤", desc: "Стащить у соперника любой его предмет себе", target: true, steal: true },
-    stake: { name: "Ставка", emoji: "🪙", desc: "Поставить на себя: если выживешь до конца, получишь +15 монет за каждую ставку" },
+    flashlight: { name: "Ліхтарик", emoji: "🔦", desc: "Підсвітити один випадковий набій у магазині — дізнаєшся, чи бойовий він" },
+    spin: { name: "Струс", emoji: "🔄", desc: "Струснути рушницю: решта набоїв перемішається" },
+    mirror: { name: "Дзеркальце", emoji: "🪞", desc: "Наступний бойовий постріл у тебе від суперника полетить назад у стрільця. Якщо дзеркальце є й у стрільця — куля метається столом, і кубики (1–50) вирішують, у кого вона влучить" },
+    vest: { name: "Жилет", emoji: "🦺", desc: "Поглине одне влучання" },
+    freeze: { name: "Пляшка", emoji: "🍾", desc: "Пожбурити пляшку суперникові в голову: над ним закружляють зірочки, і він пропустить свій наступний хід", target: true },
+    medkit: { name: "Аптечка", emoji: "💉", desc: "Повернути одне серце" },
+    ear: { name: "Прослушка", emoji: "👂", desc: "Підслухати суперника: дізнаєшся все, що він знає про набої (що йому показали ліхтарик і скринька)", target: true },
+    box: { name: "Скринька", emoji: "📦", desc: "Усередині записка: який набій наступний. Бачиш тільки ти" },
+    saw: { name: "Ножівка", emoji: "🪚", desc: "Відпиляти стволи: наступний постріл зніме 2 серця. Згорає навіть на холостому" },
+    thief: { name: "Рукавичка злодія", emoji: "🧤", desc: "Поцупити в суперника будь-який його предмет собі", target: true, steal: true },
+    stake: { name: "Ставка", emoji: "🪙", desc: "Поставити на себе: якщо доживеш до кінця, отримаєш +15 монет за кожну ставку" },
   };
   const KEYS = Object.keys(ITEMS);
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -71,8 +71,8 @@
 
     join(m) {
       if (this.members[m.id]) { Object.assign(this.members[m.id], { online: true, name: m.name, avatar: m.avatar, photo: m.photo, look: m.look }); this.touch(); return; }
-      if (this.phase !== "lobby" && this.phase !== "end") throw new GameError("Игра уже идёт — дождитесь следующей партии");
-      if (this.order.length >= MAX_PLAYERS) throw new GameError(`За столом только ${MAX_PLAYERS} места`);
+      if (this.phase !== "lobby" && this.phase !== "end") throw new GameError("Гра вже триває — дочекайтеся наступної партії");
+      if (this.order.length >= MAX_PLAYERS) throw new GameError(`За столом лише ${MAX_PLAYERS} місця`);
       this.members[m.id] = m; this.order.push(m.id); this.touch();
     }
 
@@ -82,13 +82,13 @@
       else if (this.phase === "end") this.members[pid].online = false;   // сидевший за столом остаётся в итогах
       else {
         this.members[pid].online = false;
-        if (this.hp[pid] > 0) { this.hp[pid] = 0; (this.deaths = this.deaths || {})[pid] = "left"; this.event({ kind: "left", who: pid, text: `${this.name(pid)} встаёт из-за стола и уходит` }); this.afterDamage(); }
+        if (this.hp[pid] > 0) { this.hp[pid] = 0; (this.deaths = this.deaths || {})[pid] = "left"; this.event({ kind: "left", who: pid, text: `${this.name(pid)} встає з-за столу й іде` }); this.afterDamage(); }
       }
       this.touch();
     }
 
     kick(by, pid) {
-      if (by !== this.host || pid === this.host || this.phase !== "lobby") throw new GameError("Нельзя");
+      if (by !== this.host || pid === this.host || this.phase !== "lobby") throw new GameError("Не можна");
       this.leave(pid);
     }
 
@@ -102,12 +102,12 @@
     event(e) { this.eventN += 1; e.n = this.eventN; this.events.push(e); this.events = this.events.slice(-30); return e; }
 
     start(by) {
-      if (by !== this.host) throw new GameError("Начать может только хост");
-      if (!["lobby", "end"].includes(this.phase)) throw new GameError("Игра уже идёт");
+      if (by !== this.host) throw new GameError("Почати може лише хост");
+      if (!["lobby", "end"].includes(this.phase)) throw new GameError("Гра вже триває");
       const online = this.order.filter((p) => this.members[p].online);
-      if (online.length < MIN_PLAYERS) throw new GameError(`Нужно минимум ${MIN_PLAYERS} игрока`);
+      if (online.length < MIN_PLAYERS) throw new GameError(`Потрібно щонайменше ${MIN_PLAYERS} гравці`);
       const poor = online.slice(0, MAX_PLAYERS).filter((p) => this.settings.stake && Number((this.members[p].look || {}).c || 0) < this.settings.stake);
-      if (poor.length) throw new GameError(`Не хватает монет на ставку ${this.settings.stake}: ${poor.map((p) => this.name(p)).join(", ")}`);
+      if (poor.length) throw new GameError(`Бракує монет на ставку ${this.settings.stake}: ${poor.map((p) => this.name(p)).join(", ")}`);
       this.resetGame();
       this.gameNo = (this.gameNo || 0) + 1;                       // номер партии — чтобы телефоны поняли, что стол новый
       this.seats = online.slice(0, MAX_PLAYERS);
@@ -116,12 +116,12 @@
       this.seats.forEach((p, i) => { this.chars[p] = looks[i % CHAR_N]; });
       this.chat = { all: [] };
       this.turn = pick(this.seats);
-      this.event({ kind: "start", text: "Дверь подвала закрылась. Лампа качается над столом." });
+      this.event({ kind: "start", text: "Двері підвалу зачинилися. Лампа гойдається над столом." });
       this.startLoad();
     }
 
     backToLobby(by) {
-      if (by !== this.host || this.phase !== "end") throw new GameError("Нельзя");
+      if (by !== this.host || this.phase !== "end") throw new GameError("Не можна");
       this.phase = "lobby";
       this.order.filter((p) => !this.members[p].online).forEach((p) => this.leave(p));
       this.resetGame(); this.deadline = null; this.touch();
@@ -135,9 +135,9 @@
     }
 
     load(pid, value) {
-      if (!(this.hp[pid] > 0)) throw new GameError("Ты уже не за столом");
-      if (!["live", "blank"].includes(value)) throw new GameError("Боевой или холостой?");
-      if (this.phase !== "load") throw new GameError("Сейчас не зарядка");
+      if (!(this.hp[pid] > 0)) throw new GameError("Ти вже не за столом");
+      if (!["live", "blank"].includes(value)) throw new GameError("Бойовий чи холостий?");
+      if (this.phase !== "load") throw new GameError("Зараз не зарядка");
       this.contrib[pid] = value; this.touch();
       if (this.alive().every((p) => this.contrib[p])) this.finishLoad();
     }
@@ -155,7 +155,7 @@
       const n = this.settings.items;
       this.alive().forEach((p) => { for (let i = 0; i < n && this.items[p].length < MAX_ITEMS; i++) this.items[p].push(pick(KEYS)); });
       this.event({ kind: "load", total: this.loadTotal, house, live: this.liveTotal, blank: this.blankTotal, rerolled,
-        text: `${rerolled ? "Все положили холостые — подвал перезарядил свои. " : ""}Дробовик заряжен: ${this.loadTotal} патронов — 🔴 ${this.liveTotal} боевых и ⚪ ${this.blankTotal} холостых (${this.alive().length} от вас, ${house} от подвала). Порядок — случайный${n ? `. Каждому выдано предметов: ${n}` : ""}` });
+        text: `${rerolled ? "Усі поклали холості — підвал перезарядив свої. " : ""}Рушницю заряджено: ${this.loadTotal} набоїв — 🔴 ${this.liveTotal} бойових і ⚪ ${this.blankTotal} холостих (${this.alive().length} від вас, ${house} від підвалу). Порядок — випадковий${n ? `. Кожному видано предметів: ${n}` : ""}` });
       if (!(this.hp[this.turn] > 0)) this.turn = this.nextAfter(this.turn);
       this.startTurn();
     }
@@ -172,7 +172,7 @@
       let guard = 0;
       while (this.status[this.turn] && this.status[this.turn].frozen && guard++ < 8) {
         this.status[this.turn].frozen = false;
-        this.event({ kind: "skip", who: this.turn, text: `${this.name(this.turn)} ещё видит звёздочки после бутылки и пропускает ход 💫` });
+        this.event({ kind: "skip", who: this.turn, text: `${this.name(this.turn)} ще бачить зірочки після пляшки й пропускає хід 💫` });
         this.turn = this.nextAfter(this.turn);
       }
       this.aim = null;
@@ -182,71 +182,71 @@
 
     // игрок наводит ствол — все видят, в кого
     setAim(pid, target) {
-      if (this.phase !== "play" || pid !== this.turn) throw new GameError("Сейчас не твой ход");
-      if (!(this.hp[target] > 0)) throw new GameError("Он(а) уже не за столом");
+      if (this.phase !== "play" || pid !== this.turn) throw new GameError("Зараз не твій хід");
+      if (!(this.hp[target] > 0)) throw new GameError("Він(вона) вже не за столом");
       this.aim = target; this.touch();
     }
 
     useItem(pid, idx, target, pickIdx, expect) {
-      if (this.phase !== "play" || pid !== this.turn) throw new GameError("Сейчас не твой ход");
+      if (this.phase !== "play" || pid !== this.turn) throw new GameError("Зараз не твій хід");
       const key = this.items[pid][idx];
-      if (!key) throw new GameError("Нет такого предмета");
-      if (expect != null && key !== expect) throw new GameError("Предметы уже поменялись — выбери ещё раз");
+      if (!key) throw new GameError("Немає такого предмета");
+      if (expect != null && key !== expect) throw new GameError("Предмети вже змінилися — обери ще раз");
       const st = this.status[pid], nm = this.name(pid), it = ITEMS[key];
-      if (it.target && !(this.hp[target] > 0 && target !== pid)) throw new GameError("Выбери соперника за столом");
+      if (it.target && !(this.hp[target] > 0 && target !== pid)) throw new GameError("Обери суперника за столом");
       if (key === "flashlight") {
         const i = Math.floor(Math.random() * this.drum.length);
         this.know(pid, i, this.drum[i]);
-        this.note(pid, `🔦 Патрон №${i + 1} по очереди — ${this.drum[i] === "live" ? "БОЕВОЙ" : "холостой"}${i === 0 ? " (это следующий выстрел)" : ` (будет ${i + 1}-м выстрелом)`}`);
-        this.event({ kind: "item", item: key, who: pid, text: `${nm} светит фонариком в магазин` });
+        this.note(pid, `🔦 Набій №${i + 1} за чергою — ${this.drum[i] === "live" ? "БОЙОВИЙ" : "холостий"}${i === 0 ? " (це наступний постріл)" : ` (буде ${i + 1}-м пострілом)`}`);
+        this.event({ kind: "item", item: key, who: pid, text: `${nm} світить ліхтариком у магазин` });
       } else if (key === "spin") {
         shuffle(this.drum); this.peek = {};                       // все прежние подсказки больше не верны
-        this.event({ kind: "item", item: key, who: pid, text: `${nm} встряхивает дробовик. Всё, что вы знали, — уже неправда` });
+        this.event({ kind: "item", item: key, who: pid, text: `${nm} струшує рушницю. Усе, що ви знали, — уже неправда` });
       } else if (key === "mirror") {
-        if (st.mirror) throw new GameError("Зеркальце уже стоит");
-        st.mirror = true; this.event({ kind: "item", item: key, who: pid, text: `${nm} ставит перед собой зеркальце` });
+        if (st.mirror) throw new GameError("Дзеркальце вже стоїть");
+        st.mirror = true; this.event({ kind: "item", item: key, who: pid, text: `${nm} ставить перед собою дзеркальце` });
       } else if (key === "vest") {
-        if (st.vest) throw new GameError("Жилет уже надет");
-        st.vest = true; this.event({ kind: "item", item: key, who: pid, text: `${nm} надевает жилет` });
+        if (st.vest) throw new GameError("Жилет уже вдягнено");
+        st.vest = true; this.event({ kind: "item", item: key, who: pid, text: `${nm} вдягає жилет` });
       } else if (key === "freeze") {
         this.status[target].frozen = true;
-        this.event({ kind: "item", item: key, who: pid, target, text: `${nm} швыряет бутылку в ${this.name(target)} — БАЦ! Звёздочки над головой, пропустит ход 🍾💫` });
+        this.event({ kind: "item", item: key, who: pid, target, text: `${nm} жбурляє пляшку в ${this.name(target)} — БАЦ! Зірочки над головою, пропустить хід 🍾💫` });
       } else if (key === "medkit") {
-        if (this.hp[pid] >= this.settings.hp) throw new GameError("Сердца и так полные");
-        this.hp[pid] += 1; this.event({ kind: "item", item: key, who: pid, text: `${nm} колет аптечку и возвращает сердце` });
+        if (this.hp[pid] >= this.settings.hp) throw new GameError("Серця й так повні");
+        this.hp[pid] += 1; this.event({ kind: "item", item: key, who: pid, text: `${nm} коле аптечку й повертає серце` });
       } else if (key === "box") {
         const next = this.drum[0]; this.know(pid, 0, next);
-        this.note(pid, `📦 Записка в шкатулке: «Следующий — ${next === "live" ? "БОЕВОЙ" : "холостой"}»`);
-        this.event({ kind: "item", item: key, who: pid, text: `${nm} открывает шкатулку и молча читает записку` });
+        this.note(pid, `📦 Записка в скриньці: «Наступний — ${next === "live" ? "БОЙОВИЙ" : "холостий"}»`);
+        this.event({ kind: "item", item: key, who: pid, text: `${nm} відкриває скриньку й мовчки читає записку` });
       } else if (key === "thief") {
         const theirs = this.items[target];
-        if (!theirs.length) throw new GameError("У него(неё) ничего нет");
+        if (!theirs.length) throw new GameError("У нього(неї) нічого немає");
         const k = Number.isInteger(pickIdx) && theirs[pickIdx] ? pickIdx : Math.floor(Math.random() * theirs.length);
         const stolen = theirs.splice(k, 1)[0];
         this.items[pid].splice(idx, 1, stolen);                    // перчатка уходит, на её место — добыча
-        this.event({ kind: "item", item: key, who: pid, target, stolen, text: `${nm} тянется через стол и забирает у ${this.name(target)}: ${ITEMS[stolen].emoji} ${ITEMS[stolen].name}` });
+        this.event({ kind: "item", item: key, who: pid, target, stolen, text: `${nm} тягнеться через стіл і забирає в ${this.name(target)}: ${ITEMS[stolen].emoji} ${ITEMS[stolen].name}` });
         this.touch();
         return;
       } else if (key === "saw") {
-        if (this.sawed) throw new GameError("Стволы уже отпилены");
+        if (this.sawed) throw new GameError("Стволи вже відпиляно");
         this.sawed = true;
-        this.event({ kind: "item", item: key, who: pid, text: `${nm} отпиливает стволы. Следующий выстрел снимет два сердца` });
+        this.event({ kind: "item", item: key, who: pid, text: `${nm} відпилює стволи. Наступний постріл зніме два серця` });
       } else if (key === "stake") {
         this.stakes[pid] = (this.stakes[pid] || 0) + 1;
-        this.event({ kind: "item", item: key, who: pid, text: `${nm} кладёт монету на стол: ставка на себя (×${this.stakes[pid]})` });
+        this.event({ kind: "item", item: key, who: pid, text: `${nm} кладе монету на стіл: ставка на себе (×${this.stakes[pid]})` });
       } else if (key === "ear") {                                  // подслушка: что знает он — теперь знаешь и ты
         const theirs = Object.entries((this.peek || {})[target] || {}).sort((x, y) => x[0] - y[0]);
         theirs.forEach(([i, t]) => this.know(pid, +i, t));
-        this.note(pid, `👂 Подслушал(а) ${this.name(target)}: ${theirs.length ? theirs.map(([i, t]) => `${+i === 0 ? "следующий выстрел" : `${+i + 1}-й выстрел`} — ${t === "live" ? "БОЕВОЙ" : "холостой"}`).join(", ") : "ничего не знает про патроны"}`);
-        this.event({ kind: "item", item: key, who: pid, target, text: `${nm} подслушивает ${this.name(target)}` });
+        this.note(pid, `👂 Підслухав(ла) ${this.name(target)}: ${theirs.length ? theirs.map(([i, t]) => `${+i === 0 ? "наступний постріл" : `${+i + 1}-й постріл`} — ${t === "live" ? "БОЙОВИЙ" : "холостий"}`).join(", ") : "нічого не знає про набої"}`);
+        this.event({ kind: "item", item: key, who: pid, target, text: `${nm} підслуховує ${this.name(target)}` });
       }
       this.items[pid].splice(idx, 1);
       this.touch();
     }
 
     shoot(pid, target) {
-      if (this.phase !== "play" || pid !== this.turn) throw new GameError("Сейчас не твой ход");
-      if (!(this.hp[target] > 0)) throw new GameError("Он(а) уже не за столом");
+      if (this.phase !== "play" || pid !== this.turn) throw new GameError("Зараз не твій хід");
+      if (!(this.hp[target] > 0)) throw new GameError("Він(вона) вже не за столом");
       const shell = this.drum.shift();
       if (this.fired) this.fired[shell === "live" ? "live" : "blank"]++;
       Object.keys(this.peek || {}).forEach((p) => {                // подсказки сдвигаются: №2 стал следующим
@@ -275,11 +275,11 @@
       if (out) this.deaths[hit] = pick(["table", "head", "flyback", "chest", "limb"]);
       const wait = +((self ? .9 + Math.random() * 1.9 : .5 + Math.random() * 1.4)).toFixed(2);   // палец на спуске: заминка, одна на всех
       const who = this.name(pid), tn = this.name(target);
-      const text = !live ? (self ? `${who} стреляет в себя… щёлк. Холостой — ещё один ход` : `${who} стреляет в ${tn}… щёлк. Холостой`)
-        : dice ? `${who} стреляет в ${tn} — два зеркала! Пуля мечется по столу, кубики решили: ${this.name(hit)}${absorbed ? ", но жилет спасает" : out ? " — и он(а) падает" : ""}`
-        : redirected ? `${who} стреляет в ${tn} — зеркальце! Пуля уходит в самого стрелка${absorbed ? ", но жилет спасает" : ""}`
-        : absorbed ? `${who} стреляет в ${self ? "себя" : tn} — БАХ! Жилет принял удар`
-        : `${who} стреляет в ${self ? "себя" : tn}${dmg > 1 ? " из обреза" : ""} — БАХ! ${this.hp[hit] > 0 ? (dmg > 1 ? "Минус два сердца" : "Минус сердце") : `${this.name(hit)} падает со стула`}`;
+      const text = !live ? (self ? `${who} стріляє в себе… клац. Холостий — ще один хід` : `${who} стріляє в ${tn}… клац. Холостий`)
+        : dice ? `${who} стріляє в ${tn} — два дзеркала! Куля метається столом, кубики вирішили: ${this.name(hit)}${absorbed ? ", але жилет рятує" : out ? " — і він(вона) падає" : ""}`
+        : redirected ? `${who} стріляє в ${tn} — дзеркальце! Куля летить у самого стрільця${absorbed ? ", але жилет рятує" : ""}`
+        : absorbed ? `${who} стріляє в ${self ? "себе" : tn} — БАХ! Жилет прийняв удар`
+        : `${who} стріляє в ${self ? "себе" : tn}${dmg > 1 ? " з обріза" : ""} — БАХ! ${this.hp[hit] > 0 ? (dmg > 1 ? "Мінус два серця" : "Мінус серце") : `${this.name(hit)} падає зі стільця`}`;
       this.event({ kind: "shot", who: pid, target, hit, live, redirected, absorbed, self, dmg, out, death: out ? this.deaths[hit] : null, dice, wait, text });
       this.afterShot(pid, !live && self, (dice ? DICE_PAUSE : SHOT_PAUSE) + wait);
     }
@@ -302,7 +302,7 @@
       const alive = this.alive();
       if (alive.length > 1) return false;
       this.winner = alive[0] || null;
-      this.event({ kind: "win", who: this.winner, text: this.winner ? `${this.name(this.winner)} — последний(яя) за столом` : "За столом никого не осталось" });
+      this.event({ kind: "win", who: this.winner, text: this.winner ? `${this.name(this.winner)} — останній(я) за столом` : "За столом нікого не лишилося" });
       this.phase = "end"; this.deadline = null; this.total = null; this.touch();
       return true;
     }
@@ -312,11 +312,11 @@
       if (d.slot === "item") return this.useItem(pid, Number(d.index), d.target, d.pick == null ? null : Number(d.pick), typeof d.key === "string" ? d.key : null);
       if (d.slot === "shoot") return this.shoot(pid, d.target);
       if (d.slot === "aim") return this.setAim(pid, d.target);
-      throw new GameError("Сейчас нельзя");
+      throw new GameError("Зараз не можна");
     }
 
     skip(by) {
-      if (by !== this.host) throw new GameError("Только хост");
+      if (by !== this.host) throw new GameError("Лише хост");
       if (this.phase !== "lobby" && this.phase !== "end") this.advance();
     }
 
@@ -329,7 +329,7 @@
         if (!this.drum.length) this.startLoad(); else this.startTurn();
       } else if (this.phase === "play") {                       // время вышло — палец сам жмёт на спуск
         if (!(this.hp[this.turn] > 0)) { this.turn = this.nextAfter(this.turn); return this.startTurn(); }
-        this.event({ kind: "timeout", who: this.turn, text: `${this.name(this.turn)} слишком долго думал(а) — рука дрогнула` });
+        this.event({ kind: "timeout", who: this.turn, text: `${this.name(this.turn)} надто довго думав(ла) — рука здригнулася` });
         this.shoot(this.turn, this.turn);
       }
     }
@@ -356,7 +356,7 @@
       });
       return {
         game: "roulette", mode: "shotgun", game_no: this.gameNo || 0, code: this.code, host: this.host, version: this.version, now: Math.round(this.clock() * 1000),
-        theme: { key: "roulette", title: "Последний заряд", emoji: "🎯", accent: "#c0141f", accent2: "#3a0a0a" },
+        theme: { key: "roulette", title: "Останній заряд", emoji: "🎯", accent: "#c0141f", accent2: "#3a0a0a" },
         settings: this.settings, phase: this.phase, deadline: this.deadline ? Math.round(this.deadline * 1000) : null, total: this.total,
         players, seats: this.seats.slice(), sawed: !!this.sawed, stake: this.settings.stake || 0, pot: (this.settings.stake || 0) * this.seats.length, turn: this.turn, aim: this.phase === "play" ? this.aim || null : null, winner: this.winner, maxHp: this.settings.hp,
         drum: { left: this.drum.length, total: this.loadTotal, house: this.house, live: this.liveTotal || 0, blank: this.blankTotal || 0,

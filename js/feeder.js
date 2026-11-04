@@ -3,10 +3,10 @@
 "use strict";
 const FEEDER_ORDER = ["wood", "copper", "gold", "pass"];
 const FEEDER_INFO = {
-  wood: { name: "Деревянная кормушка", dur: "1 день", how: "в лавке за 200 🪙", tier: 0 },
-  copper: { name: "Медная кормушка", dur: "7 дней", how: "за 49 ⭐", tier: 1 },
-  gold: { name: "Золотая кормушка", dur: "30 дней", how: "за 149 ⭐", tier: 3 },
-  pass: { name: "Сезонная кормушка", dur: "7 дней", how: "из премиум-пропуска", tier: 2 },
+  wood: { name: "Дерев’яна годівничка", dur: "1 день", how: "у крамниці за 200 🪙", tier: 0 },
+  copper: { name: "Мідна годівничка", dur: "7 днів", how: "за 49 ⭐", tier: 1 },
+  gold: { name: "Золота годівничка", dur: "30 днів", how: "за 149 ⭐", tier: 3 },
+  pass: { name: "Сезонна годівничка", dur: "7 днів", how: "з преміум-перепустки", tier: 2 },
 };
 const feederArtCache = {};
 // рисунок 32×32: подставка, миска с кормом, бункер; у каждой кормушки — свои материалы и украшения
@@ -50,7 +50,7 @@ function feederUrl(kind) {
 function feederArt(kind, px = 56, on = false) {
   return `<span class="fdr-art k-${kind} ${on ? "on" : ""}" style="width:${px}px;height:${px}px"><img src="${feederUrl(kind)}" alt=""><i></i><i></i><i></i></span>`;
 }
-const feederLeft = (sec) => (sec >= 86400 ? `${Math.floor(sec / 86400)} д ${Math.floor((sec % 86400) / 3600)} ч` : sec >= 3600 ? `${Math.floor(sec / 3600)} ч ${Math.floor((sec % 3600) / 60)} мин` : `${Math.max(1, Math.floor(sec / 60))} мин`);
+const feederLeft = (sec) => (sec >= 86400 ? `${Math.floor(sec / 86400)} д ${Math.floor((sec % 86400) / 3600)} год` : sec >= 3600 ? `${Math.floor(sec / 3600)} год ${Math.floor((sec % 3600) / 60)} хв` : `${Math.max(1, Math.floor(sec / 60))} хв`);
 const feederHave = (fd) => FEEDER_ORDER.reduce((a, k) => a + ((fd && fd.have && fd.have[k]) || 0), 0);
 
 // карточка на экране «Мои питомцы»
@@ -59,52 +59,52 @@ function feederCard() {
   const have = feederHave(fd), best = FEEDER_ORDER.slice().reverse().find((k) => fd.have[k] > 0) || "wood";
   if (fd.active) {
     const left = fd.until - Math.floor(Date.now() / 1000), k = FEEDER_INFO[fd.kind] ? fd.kind : "wood";
-    return `<button class="card fdr-card on" data-a="feeder-open">${feederArt(k, 58, true)}<div class="grow"><b>🪣 Кормушка работает</b>
-      <div class="small">${esc(FEEDER_INFO[k].name)} · ещё ${feederLeft(left)}</div><div class="small muted">Кормит сама, когда сытость ниже 40%${have ? ` · в запасе ещё ${have}` : ""}</div></div><span class="pill on">ВКЛ</span></button>`;
+    return `<button class="card fdr-card on" data-a="feeder-open">${feederArt(k, 58, true)}<div class="grow"><b>🪣 Годівничка працює</b>
+      <div class="small">${esc(FEEDER_INFO[k].name)} · ще ${feederLeft(left)}</div><div class="small muted">Годує сама, коли ситість нижче 40%${have ? ` · у запасі ще ${have}` : ""}</div></div><span class="pill on">УВІМК</span></button>`;
   }
-  return `<button class="card fdr-card" data-a="feeder-open">${feederArt(best, 58)}<div class="grow"><b>🪣 Кормушка</b>
-    <div class="small muted">${have ? `В запасе: ${have}. Включи — и она сама будет кормить питомцев, даже когда тебя нет` : "Сама кормит питомцев, пока тебя нет в игре. Есть в лавке"}</div></div>
-    <span class="pill">${have ? "Включить" : "В лавку"}</span></button>`;
+  return `<button class="card fdr-card" data-a="feeder-open">${feederArt(best, 58)}<div class="grow"><b>🪣 Годівничка</b>
+    <div class="small muted">${have ? `У запасі: ${have}. Увімкни — і вона сама годуватиме улюбленців, навіть коли тебе немає` : "Сама годує улюбленців, поки тебе немає в грі. Є в крамниці"}</div></div>
+    <span class="pill">${have ? "Увімкнути" : "У крамницю"}</span></button>`;
 }
 // няня: только внимание — играет, гладит, развлекает (и ночью), не кормит. Сутки за монеты, месяц — за звёзды
 function nannyCard() {
   const n = Api.state && Api.state.nanny; if (!n) return "";
   const left = n.until - Math.floor(Date.now() / 1000);
-  if (n.active) return `<div class="card fdr-card nanny on"><span class="nn-ico">👩‍🍼</span><div class="grow"><b>Няня работает</b><div class="small">ещё ${feederLeft(left)} · играет, гладит, не даёт скучать — даже ночью</div>
-    <div class="small muted">Не кормит — для еды нужна кормушка</div></div><button class="btn ghost small" data-a="nanny-buy" ${S.profile.coins < n.price ? "disabled" : ""}>+1 день</button></div>`;
-  return `<div class="card fdr-card nanny"><span class="nn-ico">👩‍🍼</span><div class="grow"><b>Няня для питомцев</b><div class="small muted">Играет, гладит и развлекает, пока тебя нет — внимание не падает, депрессии не будет. Не кормит.</div>
-    <div class="row nn-btns"><button class="btn small" data-a="nanny-buy" ${S.profile.coins < n.price ? "disabled" : ""}>Сутки · 🪙 ${n.price}</button><button class="btn small star" data-a="stars-buy" data-v="nanny_month">Месяц · ${n.stars} ⭐</button></div></div></div>`;
+  if (n.active) return `<div class="card fdr-card nanny on"><span class="nn-ico">👩‍🍼</span><div class="grow"><b>Няня працює</b><div class="small">ще ${feederLeft(left)} · грається, гладить, не дає нудьгувати — навіть уночі</div>
+    <div class="small muted">Не годує — для їжі потрібна годівничка</div></div><button class="btn ghost small" data-a="nanny-buy" ${S.profile.coins < n.price ? "disabled" : ""}>+1 день</button></div>`;
+  return `<div class="card fdr-card nanny"><span class="nn-ico">👩‍🍼</span><div class="grow"><b>Няня для улюбленців</b><div class="small muted">Грається, гладить і розважає, поки тебе немає — увага не падає, депресії не буде. Не годує.</div>
+    <div class="row nn-btns"><button class="btn small" data-a="nanny-buy" ${S.profile.coins < n.price ? "disabled" : ""}>Доба · 🪙 ${n.price}</button><button class="btn small star" data-a="stars-buy" data-v="nanny_month">Місяць · ${n.stars} ⭐</button></div></div></div>`;
 }
 // окно выбора: все кормушки с количеством; включить — с подтверждением
 function feederSheet() {
   const fd = Api.state && Api.state.feeder; if (!fd) return "";
   const now = Math.floor(Date.now() / 1000);
-  return `<h2>🪣 Кормушки</h2><div class="small muted mt">Кормит всех питомцев едой из кладовки, когда сытость ниже 40%. Знает любимую еду — даёт её, иначе любую, кроме нелюбимой. Спящих не будит.</div>
-    ${fd.active ? `<div class="card fdr-now mt">${feederArt(fd.kind || "wood", 40, true)}<div class="grow small">Работает ещё <b>${feederLeft(fd.until - now)}</b>. Новая кормушка добавит своё время.</div></div>` : ""}
+  return `<h2>🪣 Годівнички</h2><div class="small muted mt">Годує всіх улюбленців їжею з комори, коли ситість нижче 40%. Знає улюблену їжу — дає її, інакше будь-яку, крім нелюбої. Сплячих не будить.</div>
+    ${fd.active ? `<div class="card fdr-now mt">${feederArt(fd.kind || "wood", 40, true)}<div class="grow small">Працює ще <b>${feederLeft(fd.until - now)}</b>. Нова годівничка додасть свій час.</div></div>` : ""}
     <div class="fdr-list mt">${FEEDER_ORDER.map((k) => { const n = fd.have[k] || 0, I = FEEDER_INFO[k];
-      return `<div class="fdr-row t${I.tier} ${n ? "" : "none"}">${feederArt(k, 52, false)}<div class="grow"><b>${esc(I.name)}</b><div class="small muted">${I.dur} · ${n ? `у тебя ${n}` : esc(I.how)}</div></div>
-        ${n ? `<button class="btn small" data-a="feeder-use" data-v="${k}">Включить</button>` : k === "wood" ? `<button class="btn ghost small" data-a="feeder-shop">В лавку</button>` : k === "pass" ? "" : `<button class="btn ghost small" data-a="stars-buy" data-v="${k === "copper" ? "feeder_week" : "feeder_month"}">${k === "copper" ? "49" : "149"} ⭐</button>`}</div>`; }).join("")}</div>`;
+      return `<div class="fdr-row t${I.tier} ${n ? "" : "none"}">${feederArt(k, 52, false)}<div class="grow"><b>${esc(I.name)}</b><div class="small muted">${I.dur} · ${n ? `у тебе ${n}` : esc(I.how)}</div></div>
+        ${n ? `<button class="btn small" data-a="feeder-use" data-v="${k}">Увімкнути</button>` : k === "wood" ? `<button class="btn ghost small" data-a="feeder-shop">У крамницю</button>` : k === "pass" ? "" : `<button class="btn ghost small" data-a="stars-buy" data-v="${k === "copper" ? "feeder_week" : "feeder_month"}">${k === "copper" ? "49" : "149"} ⭐</button>`}</div>`; }).join("")}</div>`;
 }
 // раздел лавки
 function feederShop() {
   const fd = Api.state && Api.state.feeder; if (!fd) return "";
   const price = (fd.kinds && fd.kinds.wood && fd.kinds.wood.price) || 200;
-  return `<div class="section-title">🪣 Кормушки</div><div class="fdr-shop">
-    <div class="fdr-row t0">${feederArt("wood", 52)}<div class="grow"><b>Деревянная</b><div class="small muted">1 день сама кормит${fd.have.wood ? ` · есть ${fd.have.wood}` : ""}</div></div>
+  return `<div class="section-title">🪣 Годівнички</div><div class="fdr-shop">
+    <div class="fdr-row t0">${feederArt("wood", 52)}<div class="grow"><b>Дерев’яна</b><div class="small muted">1 день сама годує${fd.have.wood ? ` · є ${fd.have.wood}` : ""}</div></div>
       <button class="btn small" data-a="feeder-buy" ${S.profile.coins < price ? "disabled" : ""}>🪙 ${price}</button></div>
-    <div class="fdr-row t1">${feederArt("copper", 52)}<div class="grow"><b>Медная</b><div class="small muted">7 дней${fd.have.copper ? ` · есть ${fd.have.copper}` : ""}</div></div>
+    <div class="fdr-row t1">${feederArt("copper", 52)}<div class="grow"><b>Мідна</b><div class="small muted">7 днів${fd.have.copper ? ` · є ${fd.have.copper}` : ""}</div></div>
       <button class="btn small star" data-a="stars-buy" data-v="feeder_week">49 ⭐</button></div>
-    <div class="fdr-row t3">${feederArt("gold", 52)}<div class="grow"><b>Золотая</b><div class="small muted">30 дней${fd.have.gold ? ` · есть ${fd.have.gold}` : ""}</div></div>
+    <div class="fdr-row t3">${feederArt("gold", 52)}<div class="grow"><b>Золота</b><div class="small muted">30 днів${fd.have.gold ? ` · є ${fd.have.gold}` : ""}</div></div>
       <button class="btn small star" data-a="stars-buy" data-v="feeder_month">149 ⭐</button></div></div>
-    <div class="small muted mt">Купленная кормушка лежит в запасе, пока ты её не включишь — кнопка «🪣 Кормушка» на вкладке «Мои».</div>`;
+    <div class="small muted mt">Куплена годівничка лежить у запасі, доки ти її не ввімкнеш — кнопка «🪣 Годівничка» на вкладці «Мої».</div>`;
 }
 // оплата звёздами: счёт открывается прямо в Telegram, товар выдаёт сервер после оплаты
 function starsBuy(what) {
   return Api.call("/api/stars/invoice", { what }).then((r) => {
     const tg = window.Telegram && window.Telegram.WebApp;
     const done = (status) => {
-      if (status === "paid") { notify("success"); haptic("heavy"); toast("⭐ Оплачено! Сейчас всё появится"); setTimeout(() => Api.refresh().then(render).catch(() => {}), 1500); setTimeout(() => Api.refresh().then(render).catch(() => {}), 5000); }
-      else if (status === "failed") toast("Оплата не прошла");
+      if (status === "paid") { notify("success"); haptic("heavy"); toast("⭐ Оплачено! Зараз усе з’явиться"); setTimeout(() => Api.refresh().then(render).catch(() => {}), 1500); setTimeout(() => Api.refresh().then(render).catch(() => {}), 5000); }
+      else if (status === "failed") toast("Оплата не пройшла");
     };
     if (tg && tg.openInvoice) tg.openInvoice(r.link, done); else window.open(r.link, "_blank");
   }).catch((e) => toast(e.message));
@@ -112,19 +112,19 @@ function starsBuy(what) {
 const FEEDER_ACTIONS = {
   "feeder-open": () => { const fd = Api.state && Api.state.feeder; if (fd && !fd.active && !feederHave(fd)) { S.petTab = "shop"; S.petSel = null; render(); window.scrollTo(0, 0); return; } S.sheet = { type: "feeder" }; haptic(); renderOverlay(); },
   "feeder-shop": () => { S.sheet = null; renderOverlay(); S.screen = "pets"; S.petTab = "shop"; S.petSel = null; render(); window.scrollTo(0, 0); },
-  "feeder-buy": () => Api.act("/api/feeder/buy", { qty: 1 }).then(() => { haptic("medium"); toast("🪣 Деревянная кормушка — в запасе"); render(); }).catch((e) => toast(e.message)),
+  "feeder-buy": () => Api.act("/api/feeder/buy", { qty: 1 }).then(() => { haptic("medium"); toast("🪣 Дерев’яна годівничка — у запасі"); render(); }).catch((e) => toast(e.message)),
   "feeder-use": (k) => {
     const fd = Api.state.feeder, I = FEEDER_INFO[k], tg = window.Telegram && window.Telegram.WebApp;
     const list = FEEDER_ORDER.filter((x) => fd.have[x]).map((x) => `${FEEDER_INFO[x].name.split(" ")[0].toLowerCase()}: ${fd.have[x]}`).join(", ");
-    const q = `Включить «${I.name}» на ${I.dur}?\nУ тебя: ${list}.${fd.active ? "\nКормушка уже работает — время добавится." : ""}`;
+    const q = `Увімкнути «${I.name}» на ${I.dur}?\nУ тебе: ${list}.${fd.active ? "\nГодівничка вже працює — час додасться." : ""}`;
     const go = () => Api.act("/api/feeder/use", { kind: k }).then((st) => { notify("success"); haptic("heavy"); S.sheet = null; renderOverlay();
-      toast(`🪣 Кормушка работает до ${new Date(st.feeder.until * 1000).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`); render(); }).catch((e) => toast(e.message));
+      toast(`🪣 Годівничка працює до ${new Date(st.feeder.until * 1000).toLocaleString("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`); render(); }).catch((e) => toast(e.message));
     if (tg && tg.showConfirm) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
   },
   "stars-buy": (what) => starsBuy(what),
   "nanny-buy": () => {
-    const n = Api.state.nanny, tg = window.Telegram && window.Telegram.WebApp, q = `Нанять няню на сутки за ${n.price} 🪙?${n.active ? "\nОна уже работает — время добавится." : ""}`;
-    const go = () => Api.act("/api/nanny/buy", {}).then(() => { notify("success"); haptic("medium"); toast("👩‍🍼 Няня присмотрит за питомцами"); render(); }).catch((e) => toast(e.message));
+    const n = Api.state.nanny, tg = window.Telegram && window.Telegram.WebApp, q = `Найняти няню на добу за ${n.price} 🪙?${n.active ? "\nВона вже працює — час додасться." : ""}`;
+    const go = () => Api.act("/api/nanny/buy", {}).then(() => { notify("success"); haptic("medium"); toast("👩‍🍼 Няня догляне улюбленців"); render(); }).catch((e) => toast(e.message));
     if (tg && tg.showConfirm) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
   },
 };
