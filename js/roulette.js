@@ -7,7 +7,7 @@
   const Engine = root.Engine || (typeof require !== "undefined" ? require("./engine.js") : null);
   const { GameError } = Engine;
 
-  const MIN_PLAYERS = 2, MAX_PLAYERS = 4, MAX_ITEMS = 6, CHAT_LIMIT = 80;
+  const MIN_PLAYERS = 2, MAX_PLAYERS = 4, MAX_ITEMS = 4, CHAT_LIMIT = 80;   // больше 4 предметов не держит никто: у кого 4 — новых не дают
   const LOAD_SECONDS = 20, SHOT_PAUSE = 2.4, DICE_PAUSE = 6.2, CHAR_N = 10;
   const HP_OPTIONS = [2, 3, 4, 5], TURN_TIMES = [20, 30, 45, 60], ITEM_OPTIONS = [0, 1, 2, 3], STAKES = [0, 10, 25, 50, 100, 250, 500, 1000], STAKE_MAX = 10000;
   // своя ставка: любое целое от 0 до STAKE_MAX (кнопки — только подсказки)
@@ -367,7 +367,7 @@
     }
   }
 
-  const api = { RouletteRoom, ITEMS, KEYS, HP_OPTIONS, TURN_TIMES, ITEM_OPTIONS, STAKES, STAKE_MAX, CHAR_N, MIN_PLAYERS, MAX_PLAYERS };
+  const api = { RouletteRoom, ITEMS, KEYS, HP_OPTIONS, TURN_TIMES, ITEM_OPTIONS, STAKES, STAKE_MAX, CHAR_N, MIN_PLAYERS, MAX_PLAYERS, MAX_ITEMS };
   root.Roulette = api;
   Engine.RouletteRoom = RouletteRoom;
   if (typeof module !== "undefined") module.exports = api;

@@ -223,6 +223,7 @@ body[data-screen="profile"][data-pstyle="badge"] .top h1, body[data-screen="prof
 .avatar i.frame.strip { display: block; background-repeat: no-repeat; background-position: 0 0; image-rendering: pixelated; }
 .avatar i.frame.s4 { background-size: 400% 100%; animation: strip4 1s steps(4, jump-none) infinite; }
 .avatar i.frame.s6 { background-size: 600% 100%; animation: strip6 1s steps(6, jump-none) infinite; }
+.avatar i.frame.s8 { background-size: 800% 100%; animation: strip8 1s steps(8, jump-none) infinite; }
 @keyframes strip4 { from { background-position: 0 0; } to { background-position: 100% 0; } }
 @keyframes strip6 { from { background-position: 0 0; } to { background-position: 100% 0; } }
 
@@ -351,3 +352,5 @@ body[data-screen="profile"][data-pstyle="s_dragon"] { --bg: #2a0608; --card: #4a
 @keyframes fx-toxic { 50% { color: #ecffb0; text-shadow: 0 0 10px #7aff2a, 0 0 22px #3aff2a; } }
 .fx-ghosty { color: #e8f0ff !important; text-shadow: 0 0 6px #9ab8ff !important; animation: fx-ghosty 2.4s ease-in-out infinite; }
 @keyframes fx-ghosty { 50% { opacity: .25; filter: blur(1px); } }
+
+@keyframes strip8 { from { background-position: 0 0; } to { background-position: 100% 0; } }

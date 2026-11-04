@@ -147,7 +147,8 @@
     ["bell", "Колокольчик", "🔔", 0], ["duck", "Резиновая уточка", "🦆", 1], ["feather", "Перо на палочке", "🪶", 1], ["frisbee", "Фрисби", "🥏", 1], ["box", "Коробка", "📦", 1],
     ["cucumber", "Огурец", "🥒", 1], ["teddy", "Плюшевый мишка", "🧸", 2], ["yoyo", "Йо-йо", "🪀", 2], ["kite", "Воздушный змей", "🪁", 2], ["laser", "Лазерная указка", "🔴", 3], ["rocket", "Космо-ракета", "🚀", 3]];
   const HATS = [["party", "Колпак", 0], ["bow", "Бантик", 0], ["flower", "Цветочек", 0], ["ushanka", "Ушанка", 1], ["tophat", "Цилиндр", 1], ["propeller", "Кепка с пропеллером", 1],
-    ["chef", "Поварской колпак", 1], ["bucket", "Ведро", 2], ["viking", "Шлем викинга", 2], ["kingcrown", "Корона короля питомцев", 3]];
+    ["chef", "Поварской колпак", 1], ["bucket", "Ведро", 2], ["viking", "Шлем викинга", 2], ["kingcrown", "Корона короля питомцев", 3],
+    ["phalo", "Сияющий нимб", 4], ["pcrown", "Звёздная корона", 4]];                  // последние два — только из премиум-пропуска
   // «фишки»: особенности с настоящим влиянием на игру. Порядок обязан совпадать с server/worker.js
   const PERKS = [
     ["glutton", "Обжора", "🍗", "еда насыщает его меньше — проголодается быстро, корми чаще (зато каждая кормёжка радует)"],
@@ -238,7 +239,7 @@
     const dis = FOOD_KEYS[(FOOD_KEYS.indexOf(fav) + 1 + (byte(dna, 6) % (FOOD_KEYS.length - 1))) % FOOD_KEYS.length];
     const all = muts(dna), ms = all.filter((m) => m.group !== "collect"), pair = ms.some((m) => m.key === "pair"), p2 = pair ? partner(dna) : null, cl = collectOf(dna);
     return {
-      name: fullName(dna), social: byte(dna, 4) % 3, fav, dis, shape: SHAPES[byte(dna, 2) % SHAPES.length],
+      name: fullName(dna), social: byte(dna, 4) % 3, fav, dis, shape: isGen2(dna) && byte(dna, 2) % 17 >= 7 ? SHAPES2[byte(dna, 2) % 17 - 7] : SHAPES[byte(dna, 2) % SHAPES.length], gen2: isGen2(dna), menace: isGen2(dna) && isMenace(dna),
       temper: TEMPER[byte(dna, 12) % TEMPER.length], hobby: HOBBY[byte(dna, 11) % HOBBY.length], quirk: QUIRK[byte(dna, 13) % QUIRK.length],
       code: String(dna).slice(0, 4).toUpperCase() + "-" + String(dna).slice(28, 32).toUpperCase(),
       perks: perks(dna), quirkIdx: byte(dna, 13) % QUIRK.length, hobbyIdx: byte(dna, 11) % HOBBY.length, chrono: chrono(dna), toys: toyPrefs(dna),
@@ -304,12 +305,26 @@
     };
   }
 
+  /* ---------------------------------------------------------------- второе поколение: новые формы, глаза, рты и детали.
+     Метка — контрольная сумма в байтах 14–15 (ставит сервер при рождении). У питомцев, созданных раньше, её нет — их облик не меняется */
+  function isGen2(dna) {
+    const hex = String(dna).slice(0, 32); if (hex.length < 32) return false;
+    let h = 0x9e37; for (let i = 0; i < 14; i++) h = ((h * 31) ^ parseInt(hex.slice(i * 2, i * 2 + 2), 16) ^ (h >>> 7)) & 0xffff;
+    return parseInt(hex.slice(28, 32), 16) === h;
+  }
+  const SHAPES2 = ["Растекашка", "Двойняшка", "Кристаллик", "Грибок", "Облачко", "Пушистик", "Броненосец", "Гусеничка", "Голем", "Звёздочка"];
+  const MENACE = [2, 6, 8, 9];                                                   // гордый, ворчливый, храбрый, хитрый — выглядят грозно
+  const isMenace = (dna) => MENACE.includes(byte(dna, 12) % 10);
+
   /* ---------------------------------------------------------------- форма тела по генам */
   const W = 40;
-  function geo(dna, f, dead, cx, bottom, scale, M) {
-    const shape = M.ghost ? 4 : byte(dna, 2) % 7;
+  function geo(dna, f, dead, cx, bottom, scale, M, g2) {
+    const shape = M.ghost ? 4 : g2 ? byte(dna, 2) % 17 : byte(dna, 2) % 7;
     let rx = 7 + (byte(dna, 8) >> 6) + (shape === 3 || shape === 0 ? 1 : 0), ry = 7 + ((byte(dna, 9) >> 6) & 1) + (shape === 2 ? 2 : 0);
     if (shape === 2) rx -= 1;
+    if (shape === 7 || shape === 13) { rx += 1; ry -= 1; }                     // растекашка и броненосец — шире и ниже
+    if (shape === 10) { rx -= 1; ry += 1; }                                    // грибок — шляпка шире тела
+    if (shape === 14) ry += 2;                                                 // гусеничка — высокая
     rx *= scale; ry *= scale;
     if (!dead && !M.ghost && (f === 1 || f === 3)) { rx += 1; ry -= 1; }
     const cy = bottom - ry;
@@ -322,10 +337,21 @@
         case 4: return v < 0 ? u * u + v * v <= 1 : Math.abs(u) <= 1 && v <= .82 + .16 * Math.sin(u * Math.PI * 2.5 + f * 1.3);
         case 5: return u ** 4 + v ** 4 <= 1;
         case 6: { const w = Math.sqrt(Math.max(.02, (v + 1) / 2)); return (u / w) ** 2 + v * v <= 1 && v > -1; }
+        case 7: return v < .25 ? u * u + v * v <= 1 : Math.abs(u) <= .97 + (v - .25) * .55 + (Math.sin(u * 9 + f * .9) > .6 ? .06 : 0);   // растекается лужицей
+        case 8: return ((u + .5) / .55) ** 2 + ((v + .05) / .9) ** 2 <= 1 || ((u - .5) / .55) ** 2 + ((v + .05) / .9) ** 2 <= 1 || (v > .35 && Math.abs(u) < .9);   // два шарика срослись
+        case 9: return v < 0 ? Math.abs(u) + Math.abs(v) * .66 <= 1 : Math.abs(u) <= 1 - v * .38;   // гранёный кристалл
+        case 10: return v < -.1 ? (u / 1.32) ** 2 + ((v + .1) / .9) ** 2 <= 1 : Math.abs(u) <= .66 + (v > .75 ? .08 : 0);   // шляпка и ножка
+        case 11: return ((u + .52) / .5) ** 2 + ((v + .02) / .55) ** 2 <= 1 || (u / .62) ** 2 + ((v + .4) / .6) ** 2 <= 1 || ((u - .52) / .5) ** 2 + ((v + .02) / .55) ** 2 <= 1 || (v > 0 && Math.abs(u) < .96);   // облачко
+        case 12: { const a = Math.atan2(v, u), r = .9 + .11 * Math.sin(a * 11 + f * .8); return u * u + v * v <= r * r; }   // пушистик: шерсть торчит
+        case 13: return v <= .82 && (u / 1.12) ** 2 + ((v - .62) / 1.55) ** 2 <= 1;   // панцирь броненосца
+        case 14: return u * u / .34 + ((v + .5) / .5) ** 2 <= 1 || (u / .78) ** 2 + ((v - .32) / .66) ** 2 <= 1;   // гусеничка: голова и туловище
+        case 15: return u ** 6 + v ** 6 <= 1 && !(Math.abs(u) > .78 && v < -.72);   // голем: каменная глыба
+        case 16: { const a = Math.atan2(v, u), r = .74 + .26 * Math.cos(5 * a + Math.PI / 2); return u * u + v * v <= r * r; }   // звёздочка
         default: return u * u + v * v <= 1;
       }
     };
-    const top = Math.round(cy - ry * (shape === 6 ? 1 : .92)), eyeY = Math.round(cy - ry * .12);
+    const top = Math.round(cy - ry * (shape === 6 ? 1 : shape === 7 || shape === 13 ? .95 : shape === 14 ? 1 : .92));
+    const eyeY = Math.round(cy - ry * (shape === 10 ? -.28 : shape === 14 ? .52 : shape === 7 ? .3 : shape === 16 ? .02 : .12));
     return { shape, rx, ry, cx, cy, bottom, inside, top, eyeY, eX: Math.max(2, Math.round(rx * .4)), mY: eyeY + 3, ex: Math.round(rx * .55) };
   }
 
@@ -557,7 +583,10 @@
     if (sleep && !dead) f = f % 2 ? 1 : 0;                                       // спит: только медленное дыхание
     const g = Array.from({ length: W }, () => Array(W).fill(null));
     const solid = Array.from({ length: W }, () => Array(W).fill(false));
-    const put = (x, y, c, s = true) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < W) { g[y][x] = c; if (s) solid[y][x] = true; } };
+    const mask = Array.from({ length: W }, () => new Uint8Array(W));             // 1 — само тело (на него ляжет светотень), 2 — контур
+    let MODE = 0;
+    const put = (x, y, c, s = true) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < W && y < W) { g[y][x] = c; mask[y][x] = MODE; if (s) solid[y][x] = true; } };
+    const G2 = isGen2(dna), menace = G2 && isMenace(dna);
     const empty = (x, y) => { x = Math.round(x); y = Math.round(y); return x >= 0 && y >= 0 && x < W && y < W && !g[y][x]; };
     const isSolid = (x, y) => solid[Math.round(y)] && solid[Math.round(y)][Math.round(x)];
     const side = (fn) => { fn(-1); fn(1); };
@@ -567,7 +596,7 @@
     const bottom = 36.5 - (M.ghost && live ? [1, 2, 3, 2, 1, 0][f] + 1 : 0);
     const genes = M.cerberus ? [{ dna, cx: 8.5, s: .72, lift: 4 }, { dna: partner(dna), cx: 19.5, s: .84, lift: 9 }, { dna: partner(partner(dna)), cx: 30.5, s: .72, lift: 4 }]
       : M.twins || M.pair ? [{ dna, cx: 13.5 }, { dna: M.pair ? partner(dna) : dna, cx: 25.5 }] : [{ dna, cx: 19.5 }];
-    const B = genes.map((b) => Object.assign(b, { P: palette(b.dna, rarity, M), G: geo(b.dna, live ? f : 0, dead, b.cx, bottom - (b.lift || 0), scale * (b.s || 1), M) }));
+    const B = genes.map((b) => Object.assign(b, { P: palette(b.dna, rarity, M), G: geo(b.dna, live ? f : 0, dead, b.cx, bottom - (b.lift || 0), scale * (b.s || 1), M, G2) }));
     const P0 = B[0].P;
 
     // ---- сзади тела: плащи, крылья, кристаллы, хвост демона
@@ -601,9 +630,22 @@
     // ---- тела по генам
     (M.cerberus ? [B[0], B[2], B[1]] : B).forEach(({ G, P, dna: d }) => {
       const { cx, cy, rx, ry, top, ex } = G;
+      MODE = 1;
       for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (G.inside(x, y)) {
         const u = (x + .5 - cx) / rx, v = (y + .5 - cy) / ry, dy = Math.round(v * 3), lit = -(u * .55 + v * .75);
         put(x, y, lit > .62 ? P.light(dy) : lit < -.55 ? P.dark(dy) : P.body(dy));
+      }
+      MODE = 0;
+      // новые формы: свои детали (капли, шляпка в крапинку, грани, панцирь, трещины, сросшиеся шарики)
+      if (G2) {
+        const sh = G.shape;
+        if (sh === 7) [-.62, .18, .7].forEach((k, i) => { const x = Math.round(cx + k * rx), y0 = Math.round(cy + ry * .98); for (let j = 0; j < 2 + ((f + i) % 3); j++) put(x, y0 + j, j ? P.body(3) : P.dark(3)); });
+        if (sh === 9) for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (G.inside(x, y) && Math.abs((x - cx) - (y - cy) * .4) < .6) put(x, y, P.light(0));
+        if (sh === 10) for (let k = 0; k < 6; k++) { const x = Math.round(cx + (((byte(d, k) % 13) - 6) / 6) * rx * 1.1), y = Math.round(cy - ry * (.55 + (byte(d, k + 6) % 4) * .1)); if (G.inside(x, y) && G.inside(x + 1, y)) { put(x, y, "#fff6e8"); put(x + 1, y, "#fff6e8"); put(x, y + 1, "#f0e0c8"); } }
+        if (sh === 10) for (let x = Math.round(cx - rx * 1.2); x <= Math.round(cx + rx * 1.2); x++) { const y = Math.round(cy - ry * .1); if (G.inside(x, y)) put(x, y, P.dark(1)); }
+        if (sh === 13) [.05, .35, .62].forEach((k) => { const y = Math.round(cy - ry * .6 + k * ry * 1.3); for (let x = 0; x < W; x++) if (G.inside(x, y) && G.inside(x, y - 1)) put(x, y, P.dark(1)); });
+        if (sh === 14) for (let x = 0; x < W; x++) { const y = Math.round(cy - ry * .05); if (G.inside(x, y) && !G.inside(x, y - 2)) put(x, y, P.dark(0)); }
+        if (sh === 15) [[-.4, -.5, 1, 1], [.3, -.1, -1, 1], [-.1, .4, 1, 1]].forEach(([a, b, sx, sy]) => { let x = cx + a * rx, y = cy + b * ry; for (let j = 0; j < 4; j++) { if (G.inside(Math.round(x), Math.round(y))) put(x, y, P.dark(2)); x += sx * (j % 2 ? 1 : 0); y += sy; } });
       }
       const inB = (x, y) => G.inside(Math.round(x), Math.round(y));
       const pat = M.mummy || M.skeleton || M.cosmic || M.shadow || M.cerberus ? 0 : byte(d, 10) % 7;
@@ -613,7 +655,10 @@
       if (pat === 4) for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (inB(x, y) && y > cy + ry * .25) put(x, y, (x + y) % 2 ? P.accent : P.accentDark);
       if (pat === 5) [[-.5, -.55], [.45, -.7], [.1, -.85]].forEach(([a, b]) => { const sx = cx + a * rx, sy = cy + b * ry; if (inB(sx, sy)) { put(sx, sy, "#fff6c0"); put(sx - 1, sy, P.accent); put(sx + 1, sy, P.accent); put(sx, sy - 1, P.accent); put(sx, sy + 1, P.accent); } });
       // уши / рога / антенны по генам (оборотню — волчьи, магу их закрывает шляпа)
-      const ears = M.werewolf || M.cerberus ? 8 : M.wizard ? -1 : byte(d, 7) % 8;
+      const ears = M.werewolf || M.cerberus ? 8 : M.wizard ? -1 : G2 ? (menace && byte(d, 7) % 3 === 0 ? 8 : byte(d, 7) % 12) : byte(d, 7) % 8;
+      if (ears === 9) side((s) => { const bx = Math.round(cx + s * ex); for (let a = -1; a <= 1; a++) for (let b = -2; b <= 0; b++) if (a * a + (b + 1) * (b + 1) <= 2) put(bx + a, top + b, a === 0 && b === -1 ? "#ffb3c8" : P.dark(-3)); });   // медвежьи кругляши
+      if (ears === 10) side((s) => { const bx = Math.round(cx + s * (rx * .82)); for (let i = 0; i < 7; i++) { put(bx + s * Math.floor(i / 3), top + 1 + i, P.dark(0)); put(bx + s * (1 + Math.floor(i / 3)), top + 1 + i, i > 1 && i < 6 ? P.body(0) : P.dark(0)); } });   // висячие, как у спаниеля
+      if (ears === 11) side((s) => { const bx = cx + s * ex; for (let i = 0; i < 5; i++) for (let j = 0; j < 4 - Math.floor(i * .8); j++) put(bx + j - (3 - i) / 2, top + 1 - i, i > 0 && i < 3 && j === 1 ? "#ffb3c8" : P.body(-3)); put(bx + s, top - 5, P.line); put(bx + s, top - 6, P.line); });   // рысьи кисточки
       if (ears === 1) side((s) => { const bx = cx + s * ex; for (let i = 0; i < 4; i++) for (let j = 0; j < 4 - i; j++) put(bx + j - (3 - i) / 2, top + 1 - i, i > 0 && i < 3 && j === Math.floor((3 - i) / 2) ? "#ffb3c8" : P.body(-3)); });
       if (ears === 2) side((s) => { for (let i = 0; i < 7; i++) { put(cx + s * (ex - 1), top - i, P.body(-3)); put(cx + s * ex, top - i, i > 1 && i < 6 ? "#ffb3c8" : P.body(-3)); } });
       if (ears === 3) side((s) => { [[0, 0], [1, 0], [0, -1], [1, -1], [s < 0 ? -1 : 2, 0], [s < 0 ? -1 : 2, -1], [0, -2], [1, -2]].forEach(([a, b]) => put(cx + s * ex + a - .5, top + b, P.dark(-3))); });
@@ -622,6 +667,7 @@
       if (ears === 6) { put(cx, top - 1, "#3b8f3b"); put(cx, top - 2, "#3b8f3b"); for (let i = 0; i < 3; i++) { put(cx + 1 + i, top - 3 - (i === 1 ? 1 : 0), "#6fd16f"); put(cx - 1 - i, top - 2 - (i === 1 ? 1 : 0), "#4fb34f"); } }
       if (ears === 7) side((s) => { const wx = cx + s * (rx + .5); for (let i = 0; i < 4; i++) for (let j = 0; j < 3 - (i >> 1); j++) put(wx + s * j, cy - 1 + i - (wave ? 1 : 0), i === 0 ? P.light(0) : P.accent); });
       if (ears === 8) side((s) => { const bx = cx + s * ex; for (let i = 0; i < 6; i++) { const w = Math.max(0, 2 - Math.floor(i / 2)); for (let j = -w; j <= w; j++) put(bx + j + s * Math.floor(i / 3), top + 1 - i, j === 0 && i > 0 && i < 4 ? (M.cerberus ? "#8a8a8a" : "#e8a0a8") : P.dark(-3)); } });
+      if (menace && !M.spikes && G.shape !== 15) [-.5, -.18, .18, .5].forEach((k, i) => { const x = Math.round(cx + k * rx); let y = 0; while (y < W && !G.inside(x, y)) y++; if (y >= W || y < 2) return; put(x, y - 1, P.dark(-2)); if (i === 1 || i === 2) put(x, y - 2, P.line); });
       // хвост, лапки
       const tail = M.demon || M.cerberus ? 0 : byte(d, 14) % 4, tx = Math.round(cx + rx), ty = Math.round(cy + ry * .45);
       if (tail === 1) { put(tx, ty, P.body(1)); put(tx + 1, ty - 1, P.body(1)); }
@@ -721,13 +767,13 @@
     // ---- контур
     const out = [];
     for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (!solid[y][x] && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => solid[y + b] && solid[y + b][x + a])) out.push([x, y]);
-    out.forEach(([x, y]) => put(x, y, P0.line, false));
+    MODE = 2; out.forEach(([x, y]) => put(x, y, P0.line, false)); MODE = 0;
 
     // ---- космос внутри тела
     if (M.cosmic && live) B.forEach(({ G, dna: d }) => { for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) if (G.inside(x, y) && ((x * 7 + y * 13 + byte(d, (x + y) % 16)) % 19) === 0) put(x, y, (x + y + f) % 3 === 0 ? "#ffffff" : (x + f) % 2 ? "#9fb0ff" : "#ffe9a8", false); });
 
     // ---- мордочки
-    const blink = live && (f === 5 || sleep);
+    const blink = live && (f === 5 || sleep), look = live && !sleep ? (f === 2 ? -1 : f === 4 ? 1 : 0) : 0;   // кадры 2 и 4 — косится влево/вправо
     B.forEach(({ G, P, dna: d }) => {
       const { cx, eyeY, eX, mY } = G, E = P.eye;
       const dot = (x, y, col = E) => {
@@ -748,9 +794,17 @@
         if (kind === "socket") { [[-1, -1], [0, -1], [1, -1], [-1, 0], [0, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].forEach(([a, b]) => put(x + a, y + b, "#0a0810")); put(x, y, wave ? "#ffffff" : "#c8c8ff"); return; }
         if (kind === "laser") { put(x, y, "#ff2020"); put(x + 1, y, "#ffb0b0"); put(x, y + 1, "#c00000"); put(x + 1, y + 1, "#ff2020"); return; }
         if (kind === "patch") { for (let a = -1; a <= 2; a++) for (let b = -1; b <= 1; b++) put(x + a, y + b, "#121014"); for (let i = 1; i < 6; i++) put(x - i, y - 1 - Math.ceil(i / 2), "#121014"); return; }
+        // второе поколение
+        if (kind === "sparkle") { for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) put(x + a, y + b, E); put(x - 1, y - 1, "#ffffff"); put(x + 1, y + 1, P.light(0)); put(x, y - 2, E); return; }
+        if (kind === "lashes") { put(x, y, E); put(x + 1, y, E); put(x, y + 1, E); put(x + 1, y + 1, E); put(x + 1, y, "#ffffff"); const o = x < cx ? -1 : 2; put(x + o, y - 1, E); put(x + o + (o < 0 ? -1 : 1), y - 2, E); return; }
+        if (kind === "slant") { const o = x < cx ? 1 : -1; put(x - 1, y - (o > 0 ? 1 : 0), E); put(x, y, E); put(x + 1, y - (o < 0 ? 1 : 0), E); put(x, y + 1, E); put(x + 1, y + 1, E); put(x - 1, y - 2 + (o > 0 ? 0 : 1), P.line); put(x, y - 2 + (o > 0 ? 1 : 0), P.line); put(x + 1, y - 2 + (o < 0 ? 0 : 1), P.line); return; }
+        if (kind === "spiral") { [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]].forEach(([a, b], i) => put(x + a, y + b, (i + f) % 3 ? "#ffffff" : E)); put(x, y, E); return; }
+        if (kind === "glow") { const c = hsl(P.hue2, 100, 62); put(x - 1, y, c); put(x, y, "#ffffff"); put(x + 1, y, c); put(x, y + 1, hsl(P.hue2, 100, 40)); return; }
+        if (kind === "beady") { put(x, y, E); put(x + 1, y, E); return; }
         return dot(x, y);
       };
       let kind = ["dot", "big", "sleepy", "cyclops", "three", "angry", rarity >= 2 ? "star" : "big", rarity >= 3 ? "heart" : "dot"][byte(d, 8) % 8];
+      if (G2) kind = (menace ? ["slant", "glow", "angry", "beady", "slant", "cyclops", "dot", "three"] : ["sparkle", "lashes", "big", "sparkle", "spiral", "sleepy", rarity >= 2 ? "star" : "lashes", rarity >= 3 ? "heart" : "sparkle"])[byte(d, 8) % 8];
       if (M.vampire || M.werewolf || M.demon || M.shadow || M.zombie || M.mummy || M.cyborg || M.pirate) kind = kind === "three" ? "three" : "dot";
       if (M.cerberus || M.threeeyes) kind = "three";
       else if (baby || teen) kind = baby ? "baby" : kind === "big" || kind === "heart" || kind === "star" ? kind : "teen";
@@ -770,8 +824,8 @@
         if (dead || blink) dot(cx - .5, eyeY); else { for (let a = -2; a <= 2; a++) for (let b = -2; b <= 1; b++) if (Math.abs(a) + Math.abs(b + .5) < 3.2) put(cx + a - .5, eyeY + b, "#ffffff"); put(cx - .5, eyeY - .5, "#14121c"); put(cx + .5, eyeY - .5, "#14121c"); put(cx - .5, eyeY + .5, "#14121c"); put(cx + .5, eyeY + .5, "#14121c"); }
       } else {
         const k = kind === "three" || kind === "angry" ? "dot" : kind;
-        eyeAt(cx - eX - .5, eyeY, M.hero ? "slit" : k);
-        if (!M.mummy) eyeAt(cx + eX - .5, eyeY, M.hero ? "slit" : M.cyborg ? "laser" : M.pirate ? "patch" : M.zombie ? "big" : k);   // у мумии второй глаз под бинтом
+        eyeAt(cx - eX - .5 + look, eyeY, M.hero ? "slit" : k);
+        if (!M.mummy) eyeAt(cx + eX - .5 + look, eyeY, M.hero ? "slit" : M.cyborg ? "laser" : M.pirate ? "patch" : M.zombie ? "big" : k);   // у мумии второй глаз под бинтом
         if (kind === "three") eyeAt(cx - .5, eyeY - 3, "dot");
         if ((kind === "angry" || M.demon) && live) { put(cx - eX - 2, eyeY - 2, P.line); put(cx - eX - 1, eyeY - 2, P.line); put(cx - eX, eyeY - 1, P.line); put(cx + eX + 1, eyeY - 2, P.line); put(cx + eX, eyeY - 2, P.line); put(cx + eX - 1, eyeY - 1, P.line); }
       }
@@ -783,6 +837,14 @@
       else if (M.werewolf || M.cerberus) { const mo = M.cerberus ? "#000000" : "#7a2030"; for (let a = -2; a <= 2; a++) put(cx + a - .5, mY, L); put(cx - .5, mY + 1, mo); put(cx + .5, mY + 1, mo); put(cx - 2.5, mY + 1, "#ffffff"); put(cx + 1.5, mY + 1, "#ffffff"); }
       else if (M.zombie) { put(cx - 1.5, mY, L); put(cx - .5, mY - 1, L); put(cx + .5, mY, L); put(cx + 1.5, mY - 1, L); put(cx - .5, mY, "#e8e4c8"); }
       else if (M.skeleton) { for (let a = -2; a <= 2; a++) { put(cx + a - .5, mY, (a + 2) % 2 ? "#0a0810" : "#e8e4d8"); put(cx + a - .5, mY + 1, (a + 3) % 2 ? "#0a0810" : "#e8e4d8"); } }
+      else if (G2 && byte(d, 9) % 12 >= 7) {
+        const m2 = byte(d, 9) % 12;
+        if (m2 === 7 || (menace && m2 === 9)) { for (let a = -2; a <= 1; a++) put(cx + a + .5, mY, L); put(cx - 1.5, mY + 1, "#ffffff"); put(cx + 1.5, mY + 1, "#ffffff"); put(cx - 1.5, mY + 2, "#e8e8f0"); put(cx + 1.5, mY + 2, "#e8e8f0"); }   // клыки
+        else if (m2 === 8) { put(cx - 2.5, mY, L); put(cx - 1.5, mY + 1, L); put(cx - .5, mY, L); put(cx + .5, mY + 1, L); put(cx + 1.5, mY, L); }                    // «ω»
+        else if (m2 === 9) { put(cx - 1.5, mY - 1, L); put(cx - .5, mY, L); put(cx + .5, mY, L); put(cx + 1.5, mY - 1, L); put(cx - .5, mY + 1, "#ff6a8a"); put(cx + .5, mY + 1, "#ff8aa8"); put(cx, mY + 2, "#ff6a8a"); }   // язык
+        else if (m2 === 10) { for (let a = -3; a <= 3; a++) { put(cx + a - .5, mY, L); if (Math.abs(a) < 3) put(cx + a - .5, mY + 1, a % 2 ? "#ffffff" : "#e0e0e8"); } put(cx - 3.5, mY - 1, L); put(cx + 2.5, mY - 1, L); }   // зубастая ухмылка
+        else { put(cx - 1.5, mY, "#ffa424"); put(cx - .5, mY, "#ffa424"); put(cx + .5, mY, "#ffa424"); put(cx - .5, mY + 1, "#d97a00"); put(cx - .5, mY - 1, "#ffc864"); }   // клювик
+      }
       else {
         const mouth = byte(d, 9) % 7;
         if (mouth === 0) { put(cx - 1.5, mY - 1, L); put(cx - .5, mY, L); put(cx + .5, mY, L); put(cx + 1.5, mY - 1, L); }
@@ -798,6 +860,16 @@
           [-6, 1], [5, 1], [-7, 0], [6, 0], [-7, -1], [6, -1], [-6, -2], [5, -2]];
         px.forEach(([k, b]) => put(cx - .5 + k, y0 + b, MU));
         [[-3, 0], [2, 0], [-1, -1]].forEach(([k, b]) => put(cx - .5 + k, y0 + b, HI));
+      }
+      if (G2 && live && !(M.cerberus || M.skeleton || M.ninja || M.mummy)) {
+        const ex1 = Math.round(cx - eX - .5), ex2 = Math.round(cx + eX - .5);
+        if (menace) {                                                              // грозные: нахмуренные брови, иногда шрам
+          if (kind !== "slant") { put(ex1 - 1, eyeY - 3, L); put(ex1, eyeY - 2, L); put(ex1 + 1, eyeY - 2, L); put(ex2 + 2, eyeY - 3, L); put(ex2 + 1, eyeY - 2, L); put(ex2, eyeY - 2, L); }
+          if (byte(d, 13) % 3 === 0) for (let i = 0; i < 4; i++) put(ex2 - 1 + i, eyeY - 2 + i, i % 2 ? "#c84a5a" : "#f0a0a8");
+        } else {                                                                   // милые: веснушки и румянец
+          if (byte(d, 13) % 2 === 0) [[-3, 1], [-2, 2], [-4, 2]].forEach(([a, b]) => { put(ex1 + a + 1, mY - 1 + b - 1, P.dark(0)); put(ex2 - a, mY - 1 + b - 1, P.dark(0)); });
+          put(cx - eX - 2.5, mY - 1, "#ff8fab"); put(cx - eX - 3.5, mY - 1, "#ffb0c4"); put(cx + eX + 1.5, mY - 1, "#ff8fab"); put(cx + eX + 2.5, mY - 1, "#ffb0c4");
+        }
       }
       if (live && (byte(d, 13) % 2 || baby) && !(M.cerberus || M.skeleton || M.zombie || M.mummy || M.ninja || M.shadow || M.cosmic || M.sixeyes)) { put(cx - eX - 2.5, mY - 1, "#ff8fab"); put(cx + eX + 1.5, mY - 1, "#ff8fab"); }
     });
@@ -843,7 +915,8 @@
       }
     }
     const hb = M.cerberus ? B[1] : B[0];
-    return { g, fx: sleep ? [] : fx, glow: live && rarity >= 3 ? P0.glow : null, ghost: !!M.ghost, glitch: !!M.glitch && live && !sleep, hatAt: hatPoint(solid, hb.G.cx) };
+    return { g, mask, fx: sleep ? [] : fx, glow: live && rarity >= 3 ? P0.glow : null, ghost: !!M.ghost, glitch: !!M.glitch && live && !sleep, hatAt: hatPoint(solid, hb.G.cx),
+      geo: { cx: hb.G.cx, cy: hb.G.cy, rx: hb.G.rx, ry: hb.G.ry }, tex: M.mummy || M.skeleton || M.cosmic || M.ghost ? 0 : (byte(dna, 11) >> 5) % 5, g2: G2 };
   }
 
   /* ---------------------------------------------------------------- «приколы» на голову: маленькие пиксельные шапки */
@@ -859,44 +932,122 @@
     bucket: [["  mmmmm  ", " mMMMMMm ", " mMMMMMm ", "mMMMMMMMm", "mmmmmmmmm"], { m: "#6a7484", M: "#a8b4c4" }],
     viking: [["h       h", "h       h", "hh mmm hh", " hmMMMmh ", " mMMMMMm ", "mmmmmmmmm"], { h: "#efe6cf", m: "#7a7a88", M: "#b4b4c4" }],
     kingcrown: [["y   y   y", "yy yry yy", "yyyyyyyyy", "yRyyByyGy", "YYYYYYYYY"], { y: "#ffd23f", Y: "#c8900a", r: "#ffffff", R: "#ff2a4a", B: "#3ec8ff", G: "#7aff6a" }],
+    phalo: [["  yyyyy  ", " y     y ", "  yyyyy  ", "         ", "         "], { y: "#ffe066", w: "#ffffff" }, ["  ywyyy  ", " w     y ", "  yyywy  ", "         ", "         "]],
+    pcrown: [["    w    ", "p  pPp  p", "pp ppp pp", "ppppppppp", "pYppBppYp", "YYYYYYYYY"], { p: "#a05bff", P: "#ff4fd8", Y: "#ffcf3a", B: "#3ec8ff", w: "#ffffff" },
+      ["   w w   ", "p  pPp  p", "pp ppp pp", "ppppppppp", "pYppBppYp", "YYYYYYYYY"]],
   };
-  function drawHat(x, ox, at, hat, f) {
-    const art = HAT_ART[hat];
+  function hatInto(fr, hat, f) {
+    const art = HAT_ART[hat], at = fr.hatAt;
     if (!art || !at || at[1] >= W) return;
     const rows = art[2] && f % 2 ? art[2] : art[0], pal = art[1], w = rows[0].length;
     const x0 = Math.round(at[0] - (w - 1) / 2), y0 = at[1] + 1 - rows.length;
-    rows.forEach((row, j) => [...row].forEach((ch, i) => { if (pal[ch]) { x.fillStyle = pal[ch]; x.fillRect(ox + x0 + i, y0 + j, 1, 1); } }));
-    if (hat === "kingcrown" && f % 3 === 0) { x.fillStyle = "#ffffff"; x.fillRect(ox + x0 + 4, y0 - 2, 1, 1); }
+    const set = (xx, yy, c) => { if (xx >= 0 && yy >= 0 && xx < W && yy < W) { fr.g[yy][xx] = c; if (fr.mask) fr.mask[yy][xx] = 0; } };
+    rows.forEach((row, j) => [...row].forEach((ch, i) => { if (pal[ch]) set(x0 + i, y0 + j, pal[ch]); }));
+    if (hat === "kingcrown" && f % 3 === 0) set(x0 + 4, y0 - 2, "#ffffff");
+  }
+
+  /* ---------------------------------------------------------------- высокое разрешение: 40 → 80 пикселей (Scale2x), объёмная светотень,
+     блик, фактура по генам (мех, чешуя, крапинки, полоски) и мягкий контур. Сами гены, цвета и черты — прежние */
+  const HR = 2, WH = W * HR;
+  const rgbaCache = {};
+  let probe = null;
+  function rgba(c) {
+    if (!c) return 0;
+    if (rgbaCache[c] !== undefined) return rgbaCache[c];
+    if (!probe) { const cv = document.createElement("canvas"); cv.width = cv.height = 1; probe = cv.getContext("2d", { willReadFrequently: true }); }
+    probe.clearRect(0, 0, 1, 1); probe.fillStyle = "#000"; probe.fillStyle = c; probe.fillRect(0, 0, 1, 1);
+    const d = probe.getImageData(0, 0, 1, 1).data;
+    return (rgbaCache[c] = ((d[3] << 24) | (d[2] << 16) | (d[1] << 8) | d[0]) >>> 0);
+  }
+  const shade = (v, k) => {                                                     // k > 0 — светлее, k < 0 — темнее
+    let r = v & 255, gg = (v >>> 8) & 255, b = (v >>> 16) & 255; const a = v >>> 24;
+    if (k > 0) { r += (255 - r) * k; gg += (255 - gg) * k; b += (255 - b) * k; } else { r *= 1 + k; gg *= 1 + k; b *= 1 + k; }
+    return ((a << 24) | (Math.round(b) << 16) | (Math.round(gg) << 8) | Math.round(r)) >>> 0;
+  };
+  // Scale2x (EPX): углы сглаживаются, мелкие детали остаются чёткими
+  function scale2x(src) {
+    const out = new Uint32Array(WH * WH), at = (x, y) => (x < 0 || y < 0 || x >= W || y >= W ? 0 : src[y * W + x]);
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const P = src[y * W + x], A = at(x, y - 1), Bq = at(x + 1, y), C = at(x - 1, y), D = at(x, y + 1);
+      const o = (y * 2) * WH + x * 2;
+      out[o] = C === A && C !== D && A !== Bq ? A : P;
+      out[o + 1] = A === Bq && A !== C && Bq !== D ? Bq : P;
+      out[o + WH] = D === C && D !== Bq && C !== A ? C : P;
+      out[o + WH + 1] = Bq === D && Bq !== A && D !== C ? D : P;
+    }
+    return out;
+  }
+  const BAY4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
+  function hiFrame(fr, seed, alpha) {
+    const src = new Uint32Array(W * W), msk = new Uint8Array(W * W);
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) { src[y * W + x] = rgba(fr.g[y][x]); msk[y * W + x] = fr.mask ? fr.mask[y][x] : 0; }
+    const out = scale2x(src), m2 = (x, y) => (x < 0 || y < 0 || x >= WH || y >= WH ? 0 : msk[(y >> 1) * W + (x >> 1)]);
+    const body = (x, y) => m2(x, y) === 1 && out[y * WH + x] >>> 24 > 0;
+    const G = fr.geo, tex = fr.tex || 0;
+    if (G) {
+      const hx = (G.cx - G.rx * .42) * HR, hy = (G.cy - G.ry * .5) * HR, hr = Math.max(2, G.rx * .3) * HR;
+      for (let y = 0; y < WH; y++) for (let x = 0; x < WH; x++) {
+        if (!body(x, y)) continue;
+        const i = y * WH + x; let v = out[i];
+        const edgeTL = !body(x - 1, y) || !body(x, y - 1) || !body(x - 1, y - 1), edgeBR = !body(x + 1, y + 1) || !body(x, y + 2) || !body(x + 2, y);
+        if (edgeTL) v = shade(v, .16);                                          // контровой свет сверху-слева
+        else if (edgeBR) v = shade(v, (BAY4[y & 3][x & 3] < 10 ? -.16 : -.08)); // тень снизу-справа
+        const dh = ((x - hx) / hr) ** 2 + ((y - hy) / (hr * .7)) ** 2;
+        if (dh < 1) v = shade(v, dh < .35 ? .42 : BAY4[y & 3][x & 3] < 8 ? .22 : .08);   // блик
+        const n = (x * 13 + y * 7 + seed) % 17;
+        if (tex === 1 && (x + y * 3 + seed) % 7 === 0 && !edgeTL) v = shade(v, -.1);                         // мех: короткие штрихи
+        else if (tex === 2 && ((x + (y >> 1) * 2) % 6 === 0) && (y % 4 === 1) && !edgeTL) v = shade(v, -.13);   // чешуя
+        else if (tex === 3 && n === 0) v = shade(v, .18);                                                     // крапинки
+        else if (tex === 4 && ((y + (x >> 2)) % 8 < 1)) v = shade(v, -.08);                                    // мягкие полоски
+        out[i] = v;
+      }
+      // контур: светлее там, где рядом освещённое тело (сверху-слева), темнее снизу
+      for (let y = 0; y < WH; y++) for (let x = 0; x < WH; x++) {
+        if (m2(x, y) !== 2) continue;
+        const i = y * WH + x;
+        if (body(x + 1, y + 1) && y < (G.cy * HR)) out[i] = shade(out[i], .22);
+      }
+    }
+    if (alpha < 1) for (let i = 0; i < out.length; i++) if (out[i]) { const a = Math.round((out[i] >>> 24) * alpha); out[i] = ((a << 24) | (out[i] & 0xffffff)) >>> 0; }
+    return out;
   }
 
   /* ---------------------------------------------------------------- в картинку */
   const cache = {};
   const FR = 6;
   function stripUrl(code, dead, sleep, hat, stage) {
-    const key = code + (stage ? "." + stage : "") + (dead ? ":dead" : "") + (sleep ? ":zz" : "") + (hat ? ":" + hat : "");
+    const key = code + (stage ? "." + stage : "") + (dead ? ":dead" : "") + (sleep ? ":zz" : "") + (hat ? ":" + hat : "") + ":hr2";
     if (cache[key]) return cache[key];
     if (typeof document === "undefined") return "";
-    const c = document.createElement("canvas"); c.width = W * FR; c.height = W;
-    const x = c.getContext("2d");
+    const c = document.createElement("canvas"); c.width = WH * FR; c.height = WH;
+    const x = c.getContext("2d"), seed = byte(code.slice(1), 3) + byte(code.slice(1), 9);
     for (let f = 0; f < FR; f++) {
       const fr = frame(code, dead ? 0 : f, dead, sleep, stage);
-      const ox = f * W;
+      const ox = f * WH;
+      if (hat) hatInto(fr, hat, f);
       if (fr.glow) {                                                    // мягкое свечение вокруг легендарных
-        x.globalAlpha = [.55, .4, .3, .4, .55, .45][f]; x.fillStyle = fr.glow;
-        for (let yy = 0; yy < W; yy++) for (let xx = 0; xx < W; xx++) if (!fr.g[yy][xx] && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => fr.g[yy + b] && fr.g[yy + b][xx + a])) x.fillRect(ox + xx, yy, 1, 1);
+        x.globalAlpha = [.5, .36, .26, .36, .5, .4][f]; x.fillStyle = fr.glow;
+        for (let yy = 0; yy < W; yy++) for (let xx = 0; xx < W; xx++) if (!fr.g[yy][xx] && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a2, b2]) => fr.g[yy + b2] && fr.g[yy + b2][xx + a2])) x.fillRect(ox + xx * HR, yy * HR, HR, HR);
+        x.globalAlpha = 1;
       }
-      x.globalAlpha = fr.ghost ? [.62, .7, .78, .7, .62, .55][f] : 1;
-      for (let yy = 0; yy < W; yy++) for (let xx = 0; xx < W; xx++) if (fr.g[yy][xx]) { x.fillStyle = fr.g[yy][xx]; x.fillRect(ox + xx, yy, 1, 1); }
-      x.globalAlpha = 1;
-      fr.fx.forEach(([sx, sy, col]) => { x.fillStyle = col; x.fillRect(ox + sx, sy, 1, 1); x.globalAlpha = .6; x.fillRect(ox + sx - 1, sy, 1, 1); x.fillRect(ox + sx + 1, sy, 1, 1); x.fillRect(ox + sx, sy - 1, 1, 1); x.fillRect(ox + sx, sy + 1, 1, 1); x.globalAlpha = 1; });
-      if (fr.glitch && f !== 2 && f !== 5) { x.globalAlpha = .55; x.fillStyle = "#ff00d4"; x.fillRect(ox + 9 + f, 20 + f, 3, 1); x.fillStyle = "#00f0ff"; x.fillRect(ox + 27 - f, 27 - f, 3, 1); x.globalAlpha = 1; }
+      const px = hiFrame(fr, seed, fr.ghost ? [.62, .7, .78, .7, .62, .55][f] : 1);
+      const tmp = document.createElement("canvas"); tmp.width = tmp.height = WH;
+      const tx = tmp.getContext("2d"), img = tx.createImageData(WH, WH);
+      new Uint32Array(img.data.buffer).set(px);
+      tx.putImageData(img, 0, 0);
+      x.drawImage(tmp, ox, 0);
+      fr.fx.forEach(([sx, sy, col]) => {                                // искры: крестик в высоком разрешении
+        x.fillStyle = col; x.fillRect(ox + sx * HR, sy * HR, HR, HR); x.globalAlpha = .55;
+        x.fillRect(ox + sx * HR - HR, sy * HR, HR, HR); x.fillRect(ox + sx * HR + HR, sy * HR, HR, HR); x.fillRect(ox + sx * HR, sy * HR - HR, HR, HR); x.fillRect(ox + sx * HR, sy * HR + HR, HR, HR);
+        x.globalAlpha = 1; x.fillStyle = "#ffffff"; x.fillRect(ox + sx * HR, sy * HR, 1, 1);
+      });
+      if (fr.glitch && f !== 2 && f !== 5) { x.globalAlpha = .55; x.fillStyle = "#ff00d4"; x.fillRect(ox + (9 + f) * HR, (20 + f) * HR, 3 * HR, HR); x.fillStyle = "#00f0ff"; x.fillRect(ox + (27 - f) * HR, (27 - f) * HR, 3 * HR, HR); x.globalAlpha = 1; }
       if (fr.glitch && (f === 2 || f === 5)) {                          // глитч: строки съезжают, цветная кайма
-        const y0 = 12 + (f * 3) % 12;
-        for (let yy = y0; yy < y0 + 3; yy++) { const row = x.getImageData(ox, yy, W, 1); x.clearRect(ox, yy, W, 1); x.putImageData(row, ox + (f === 2 ? 2 : -2), yy); }
-        x.clearRect(ox - 2, 0, 2, W); x.clearRect(ox + W, 0, 2, W);
-        x.globalAlpha = .7; x.fillStyle = "#ff00d4"; x.fillRect(ox + 8, y0 - 1, 6, 1); x.fillStyle = "#00f0ff"; x.fillRect(ox + 24, y0 + 4, 7, 1); x.globalAlpha = 1;
+        const y0 = (12 + (f * 3) % 12) * HR;
+        for (let yy = y0; yy < y0 + 3 * HR; yy++) { const row = x.getImageData(ox, yy, WH, 1); x.clearRect(ox, yy, WH, 1); x.putImageData(row, ox + (f === 2 ? 2 : -2) * HR, yy); }
+        x.clearRect(ox - 2 * HR, 0, 2 * HR, WH); x.clearRect(ox + WH, 0, 2 * HR, WH);
+        x.globalAlpha = .7; x.fillStyle = "#ff00d4"; x.fillRect(ox + 8 * HR, y0 - HR, 6 * HR, HR); x.fillStyle = "#00f0ff"; x.fillRect(ox + 24 * HR, y0 + 4 * HR, 7 * HR, HR); x.globalAlpha = 1;
       }
-      if (hat) drawHat(x, ox, fr.hatAt, hat, f);
     }
     if (dead) {                                                         // серым
       const img = x.getImageData(0, 0, c.width, c.height), d = img.data;
@@ -907,23 +1058,27 @@
   }
 
   function eggUrl(dna) {
-    const key = "egg:" + dna;
+    const key = "egg:" + dna + ":hr2";
     if (cache[key]) return cache[key];
     if (typeof document === "undefined") return "";
-    const c = document.createElement("canvas"); c.width = W * FR; c.height = W;
+    const c = document.createElement("canvas"); c.width = WH * FR; c.height = WH;
     const x = c.getContext("2d"), hue = Math.round(byte(dna, 3) * 360 / 256);
     const wob = [0, 0, 1, 0, -1, 0], ex = 19.5, ey = 24;
     const inEgg = (xx, yy) => { const u = (xx + .5 - ex) / 10, v = (yy + .5 - ey) / 13, w = v < 0 ? u / (1 + v * .28) : u; return w * w + v * v <= 1; };
     for (let f = 0; f < FR; f++) {
-      const ox = f * W + wob[f];
+      const g = Array.from({ length: W }, () => Array(W).fill(null)), mask = Array.from({ length: W }, () => new Uint8Array(W));
       for (let yy = 0; yy < W; yy++) for (let xx = 0; xx < W; xx++) {
         const inside = inEgg(xx, yy);
-        if (!inside && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => inEgg(xx + a, yy + b))) { x.fillStyle = "#2a2233"; x.fillRect(ox + xx, yy, 1, 1); }
+        if (!inside && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a2, b2]) => inEgg(xx + a2, yy + b2))) { g[yy][xx] = "#2a2233"; mask[yy][xx] = 2; }
         if (!inside) continue;
         const u = (xx + .5 - ex) / 10, v = (yy + .5 - ey) / 13, lit = -(u * .5 + v * .8), spot = ((xx * 7 + yy * 13 + byte(dna, (xx + yy) % 16)) % 23) < 2;
-        x.fillStyle = spot ? hsl(hue, 60, 52) : lit > .55 ? "#fffaf0" : lit < -.5 ? "#d8cfc0" : "#f1ead8";
-        x.fillRect(ox + xx, yy, 1, 1);
+        g[yy][xx] = spot ? hsl(hue, 60, 52) : lit > .55 ? "#fffaf0" : lit < -.5 ? "#d8cfc0" : "#f1ead8"; mask[yy][xx] = spot ? 0 : 1;
       }
+      const px = hiFrame({ g, mask, geo: { cx: ex, cy: ey, rx: 10, ry: 13 }, tex: 0 }, 0, 1);
+      const tmp = document.createElement("canvas"); tmp.width = tmp.height = WH;
+      const tx = tmp.getContext("2d"), img = tx.createImageData(WH, WH);
+      new Uint32Array(img.data.buffer).set(px); tx.putImageData(img, 0, 0);
+      x.drawImage(tmp, f * WH + wob[f] * HR, 0);
     }
     return (cache[key] = c.toDataURL());
   }
@@ -936,7 +1091,7 @@
     return `<i class="pet-spr ${opts.dead ? "dead" : ""} ${stage && !opts.egg ? "grow-" + stage : ""} ${opts.cls || ""}" style="width:${size}px;height:${size}px;background-image:url(${url})"></i>`;
   };
 
-  const api = { COLLECT, COLLECT_SETS, collectOf, asleepSec, hungerAt, funWant, RARITY, FOOD_KEYS, FOOD_EMOJI, SOCIAL, TEMPER, HOBBY, QUIRK, HOBBY_FX, QUIRK_FX, MUTATIONS, MG_EFFECTS, MG_COUNT, mgMut, mgName, syringe, receptive, STAGES, stageOf, TOYS, HATS, CHRONO, PERKS, perks, toyPrefs, chrono, sleepState, stats, skills, traits, name: fullName, muts, partner, rarityName, sprite, frame };
+  const api = { isGen2, SHAPES2, COLLECT, COLLECT_SETS, collectOf, asleepSec, hungerAt, funWant, RARITY, FOOD_KEYS, FOOD_EMOJI, SOCIAL, TEMPER, HOBBY, QUIRK, HOBBY_FX, QUIRK_FX, MUTATIONS, MG_EFFECTS, MG_COUNT, mgMut, mgName, syringe, receptive, STAGES, stageOf, TOYS, HATS, CHRONO, PERKS, perks, toyPrefs, chrono, sleepState, stats, skills, traits, name: fullName, muts, partner, rarityName, sprite, frame };
   root.Pets = api;
   if (typeof module !== "undefined") module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

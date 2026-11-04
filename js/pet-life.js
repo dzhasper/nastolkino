@@ -84,7 +84,8 @@ const pfxHtml = (fx) => (fx && PFX[fx] ? `<span class="pfx pfx-${fx}">${PFX[fx].
 // сцена питомца с занятием
 function petStageHtml(p, size = 190) {
   const a = petActivity(p);
-  return `<div class="pet-stage r${p.rarity}" data-a="pet-pet" id="pet-stage">
+  const lonely = !a.sleep && p.att != null && p.att < 25 && !p.den;              // дуется: тучка над головой, медленно покачивается
+  return `<div class="pet-stage r${p.rarity} ${lonely ? "sulk" : ""}" data-a="pet-pet" id="pet-stage">${lonely ? '<span class="sulk-cloud">☁️<i>💧</i><i>💧</i></span>' : ""}
     <div class="pet-act ${a.cls}">${Pets.sprite(petCode(p), size, { sleep: !!a.sleep })}${a.prop ? `<span class="pet-prop">${a.prop}</span>` : ""}${pfxHtml(a.fx)}</div>
     ${a.text ? `<div class="pet-bubble">${esc(a.text)}</div>` : ""}${a.note ? `<div class="pet-note">${esc(a.note)}</div>` : ""}<div class="pet-fx" id="pet-fx"></div></div>`;
 }
@@ -227,7 +228,7 @@ function careReveal() {
 }
 
 /* ---------------------------------------------------------------- ежедневные задания */
-const QUEST_TEXT = { feed: "Покорми питомца", pet: "Погладь питомца", play: "Поиграй с питомцем", case: "Открой любой кейс", battle: "Сразись в бою питомцев", buy: "Купи что-нибудь в лавке" };
+const QUEST_TEXT = { feed: "Покорми питомца", pet: "Погладь питомца", play: "Поиграй с питомцем", case: "Открой любой кейс", battle: "Сразись в бою питомцев", buy: "Купи что-нибудь в лавке", craft: "Создай вещь в мастерской" };
 function questsCard() {
   const q = Api.state && Api.state.quests;
   if (!q) return "";

@@ -41,21 +41,11 @@ function viewBlackjackRoom() {
 }
 
 function bjLobby() {
-  const r = S.room, s = r.settings;
-  const enough = r.players.filter((p) => p.online).length >= Blackjack.MIN_PLAYERS;
-  return `<div class="pxscene" style="background-image:url(${Pixel.scene("casino")})"></div>
-    <div class="top"><button class="avatar" data-a="leave">←</button><div class="grow"><h1>Стол</h1>
-      <div class="muted small">${r.players.length} из ${Blackjack.MAX_PLAYERS} мест</div></div>${coinPill()}</div>
-    <div class="card code-card"><div class="muted small">КОД СТОЛА</div><div class="code">${r.code}</div>
-      <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
-      <button class="btn small grow" data-a="share">📨 Позвать</button></div>${groupBtn(S.room)}</div>
-    <div class="section-title">За столом</div>${playerTiles(r.players, { kick: isHost(), peek: true })}
-    <div class="section-title">Ставки</div>
-    <div class="card"><div class="row"><div class="grow">${s.stake ? `🪙 <b>На монеты: ${s.stake} с каждого за раздачу</b><div class="small muted">Банк раздачи забирает лучший. Нужно иметь хотя бы ${s.stake} монет.</div>` : `🎲 <b>На интерес</b><div class="small muted">Без монет — просто кто кого.</div>`}</div>
-      ${isHost() ? `<button class="btn ghost small" data-a="bj-settings">⚙️</button>` : ""}</div></div>
-    ${Bots.bar(S.room)}
-    ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Раздать карты" : `Ждём игроков (минимум ${Blackjack.MIN_PLAYERS})`}</button>`
-      : `<div class="card center mt2 muted">⏳ Ждём, когда хост начнёт раздачу…</div>`}`;
+  const r = S.room, s = r.settings, enough = r.players.filter((p) => p.online).length >= Blackjack.MIN_PLAYERS;
+  return lobbyBento({ kicker: "Блэкджек", title: "Стол", codeLabel: "Код стола", countLabel: "Мест", seats: "За столом", max: Blackjack.MAX_PLAYERS, right: coinPill(),
+    settings: "bj-settings", scene: "casino", rulesLabel: "Ставки",
+    rules: s.stake ? `🪙 <b>На монеты: ${s.stake} с каждого за раздачу</b><div class="small">Банк раздачи забирает лучший. Нужно иметь хотя бы ${s.stake} монет.</div>` : `🎲 <b>На интерес</b><div class="small">Без монет — просто кто кого.</div>`,
+    enough, start: "Раздать карты", waitText: `Ждём игроков (минимум ${Blackjack.MIN_PLAYERS})`, hostWait: "Ждём, когда хост начнёт раздачу…" });
 }
 
 function bjSeat(p) {

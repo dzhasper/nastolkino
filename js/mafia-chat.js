@@ -5,7 +5,7 @@
 
 const MChat = (() => {
   let lastPhase = "", root = null, feed = null, gameKey = "", nodes = new Map(), priv = {}, marks = {}, atBottom = true, unread = 0, firstFill = true, inputSig = "";
-  const isMafia = (r) => r && !["draw", "roulette", "revolver", "blackjack", "spy"].includes(r.game);
+  const isMafia = (r) => r && !["draw", "roulette", "revolver", "bluff", "blackjack", "spy"].includes(r.game);
   const PHASES = ["reveal", "night", "day", "vote", "verdict"];
   const active = () => S.screen === "room" && isMafia(S.room) && PHASES.includes(S.room.phase) && store.mafiaView !== "cards";
   const hostNow = () => Date.now() + (S.offset || 0);

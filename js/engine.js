@@ -540,7 +540,7 @@
     constructor(send, hostProfile, settings, code, restore) {
       this.send = send;
       const kind = restore ? restore.kind : settings && settings.game;
-      const Kind = { draw: api.DrawRoom, roulette: api.RouletteRoom, revolver: api.RevolverRoom, blackjack: api.BlackjackRoom, spy: api.SpyRoom }[kind] || Room;   // мафия, рисовалка, подвал (дробовик и револьвер), блэкджек или шпион
+      const Kind = { draw: api.DrawRoom, roulette: api.RouletteRoom, revolver: api.RevolverRoom, bluff: api.BluffRoom, blackjack: api.BlackjackRoom, spy: api.SpyRoom }[kind] || Room;   // мафия, рисовалка, подвал (дробовик, револьвер, «Верю — не верю»), блэкджек или шпион
       this.room = restore ? new Kind(null, null, null, restore) : new Kind(code, member(hostProfile), settings);
       if (!restore && settings && settings.tour) { this.room.settings.tour = settings.tour; if ("stake" in this.room.settings) this.room.settings.stake = 0; }   // турнирный стол: только свои, без ставок
       this.listeners = [];

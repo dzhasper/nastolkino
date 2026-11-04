@@ -27,7 +27,7 @@ const Bots = (() => {
     const id = "bot_" + Date.now().toString(36) + (seq++);
     const name = NAMES.find((x) => !used.includes(x)) || "Бот №" + (room.order.length + 1);
     h.handle(id, { t: "hello", profile: { name, avatar: pick(AVA), look: { c: "999", frame: pick(["none", "wood", "gold", "neon"]) } } });
-    if (["blackjack", "roulette", "revolver"].includes(room.kind) && room.settings.stake) { room.updateSettings({ stake: 0 }); toast("С ботами — только на интерес, без монет"); }
+    if (["blackjack", "roulette", "revolver", "bluff"].includes(room.kind) && room.settings.stake) { room.updateSettings({ stake: 0 }); toast("С ботами — только на интерес, без монет"); }
     h.push(); start();
   }
   function removeAll() {
@@ -48,6 +48,7 @@ const Bots = (() => {
         if (room.kind === "draw") drawBot(h, room, id);
         else if (room.kind === "roulette") rouletteBot(h, room, id);
         else if (room.kind === "revolver") revolverBot(h, room, id);
+        else if (room.kind === "bluff") bluffBot(h, room, id);
         else if (room.kind === "blackjack") bjBot(h, room, id);
         else mafiaBot(h, room, id);
       } catch (e) { think(id, 2500, 3500); if (Bots.debug) console.error(e); }
@@ -583,6 +584,37 @@ const Bots = (() => {
     act(h, id, { slot: "shoot", target: plan.target }, 1200, 2000);
   }
 
+  /* ================================================================ «Верю — не верю»: знает только свои карты и то, что лежит на столе */
+  function bluffBot(h, room, id) {
+    if (room.phase !== "play" || room.turn !== id || !(room.hp[id] > 0)) return;
+    const m = mem(room, id), hand = room.hands[id] || [], rank = room.rank, last = room.last;
+    const good = (c) => c === rank || c === "J";
+    const tk = room.gameNo + ":" + room.round + ":" + room.pile + ":" + id;
+    if (m.turnKey !== tk) { m.turnKey = tk; m.slow = chance(.3); if (m.slow) return think(id, 1500, 3500); }
+    // можно ли верить последнему: сколько «нужных» карт ещё могло быть у него
+    if (last && last.by !== id && room.hp[last.by] > 0) {
+      const mine = hand.filter(good).length, pool = 8 - mine;                // 6 нужных + 2 джокера, минус мои
+      const before = room.pile - last.n;                                   // сколько уже положили до него — часть «нужных» могла уйти туда
+      let p = [0, .22, .4, .6][last.n] + Math.min(.25, before * .03) + (mine >= 4 ? .2 : 0) + (!room.hands[last.by].length ? .12 : 0);
+      if (!hand.filter(good).length && hand.length) p += .1;                // самому нечем крыть — проще не поверить
+      if (last.n > pool) p = 1;
+      if (!hand.length || chance(Math.min(.95, p))) {
+        if (chance(.4)) say(h, room, id, pick(["Не верю!", "Враньё!", "Ну-ка покажи", "Вскрываем", "Блефуешь"]));
+        return act(h, id, { slot: "call" }, 1500, 2500);
+      }
+    }
+    if (!hand.length) return;
+    const gi = hand.map((c, i) => (good(c) ? i : -1)).filter((i) => i >= 0), bi = hand.map((c, i) => (good(c) ? -1 : i)).filter((i) => i >= 0);
+    let cards;
+    if (gi.length) {
+      const k = Math.min(gi.length, chance(.5) ? 1 : chance(.7) ? 2 : 3);
+      cards = gi.slice(0, k);
+      if (cards.length < 3 && bi.length && chance(.18)) cards.push(bi[0]);   // иногда подмешивает лишнюю
+    } else cards = bi.slice(0, chance(.75) || bi.length < 2 ? 1 : 2);       // нечем крыть — блефует
+    if (chance(.25)) say(h, room, id, pick(["Честно-честно", "Верь мне", "Держи", "Ну?", "Ваш ход"]));
+    act(h, id, { slot: "play", cards }, 1300, 2600);
+  }
+
   /* ================================================================ блэкджек: играет от открытых карт соперников */
   const val = (c) => { const r = c.slice(0, -1); return r === "A" ? 11 : ["J", "Q", "K"].includes(r) ? 10 : Number(r); };
   const bjTotal = (cards) => { let t = 0, a = 0; cards.forEach((c) => { if (c.slice(0, -1) === "A") a++; t += val(c); }); while (t > 21 && a) { t -= 10; a--; } return t; };
@@ -613,7 +645,7 @@ const Bots = (() => {
   function bar(room) {
     if (!allowed() || !Net.isHost() || !room || room.game === "draw" || room.game === "spy" || (room.settings && room.settings.tour) || !["lobby", "end"].includes(room.phase)) return "";
     const n = room.players ? room.players.filter((p) => isBot(p.id)).length : 0;
-    return `<div class="card bot-bar"><div class="grow small">🤖 <b>Боты</b> — если не хватает игроков${n ? ` · ботов: ${n}` : ""}${n && ["blackjack", "roulette", "revolver"].includes(room.game) ? "<br><span class=\"muted\">с ботами — без ставок</span>" : ""}<br><span class=\"muted\">Победишь — по 🪙5 за каждого бота</span></div>
+    return `<div class="card bot-bar"><div class="grow small">🤖 <b>Боты</b> — если не хватает игроков${n ? ` · ботов: ${n}` : ""}${n && ["blackjack", "roulette", "revolver", "bluff"].includes(room.game) ? "<br><span class=\"muted\">с ботами — без ставок</span>" : ""}<br><span class=\"muted\">Победишь — по 🪙5 за каждого бота</span></div>
       <button class="btn small" data-a="bot-add">＋ Бот</button>${n ? `<button class="btn ghost small" data-a="bot-clear">Убрать</button>` : ""}</div>`;
   }
 

@@ -5,7 +5,7 @@
 function viewSpyMenu() {
   const step = (n, t, d) => `<div class="how"><b>${n}</b><div><div class="how-t">${t}</div><div class="muted small">${d}</div></div></div>`;
   return `<div class="fade-in">
-    <div class="spy-hero"><span>🕵️</span></div>
+    <div class="pxscene big" style="background-image:url(${Pixel.scene("spy")})"></div>
     <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>🕵️ Шпион</h1>
       <div class="muted small">Все знают, где вы. Кроме одного · ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS} игроков</div></div></div>
     <div class="card">
@@ -36,20 +36,11 @@ function spyBar(title, sub) {
 }
 function spyLobby() {
   const r = S.room, enough = r.players.filter((p) => p.online).length >= Spy.MIN_PLAYERS;
-  return `<div class="top"><button class="avatar" data-a="leave">←</button><div class="grow"><h1>Явочная квартира</h1>
-      <div class="muted small">${r.players.length} из ${Spy.MAX_PLAYERS} игроков</div></div></div>
-    <div class="card code-card"><div class="muted small">КОД КОМНАТЫ</div><div class="code">${r.code}</div>
-      <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
-      <button class="btn small grow" data-a="share">📨 Позвать друзей</button></div></div>
-    <div class="section-title">Игроки</div>
-    ${playerTiles(r.players, { kick: isHost(), peek: true })}
-    <div class="section-title">Правила</div>
-    <div class="card"><div class="row"><div class="grow"><b class="display">🕵️ Шпион</b>
-      <div class="small muted mt">⏱ ${Math.round(r.settings.time / 60)} мин на раунд · ${r.settings.rounds} ${plural(r.settings.rounds, "раунд", "раунда", "раундов")} · ${Spy.LOCATIONS.length} локаций</div></div>
-      ${isHost() ? `<button class="btn ghost small" data-a="spy-settings">⚙️</button>` : ""}</div>
-      <div class="small mt">Очки: поймали шпиона — всем по 1, обвинившему +1 сверху. Шпион угадал локацию — +3, ушёл от разоблачения — +2.</div></div>
-    ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Начать игру 🕵️" : `Ждём игроков (минимум ${Spy.MIN_PLAYERS})`}</button>`
-      : `<div class="card center mt2 muted">⏳ Ждём, когда хост начнёт игру…</div>`}`;
+  return lobbyBento({ kicker: "Шпион · комната", title: "Явочная квартира", max: Spy.MAX_PLAYERS, settings: "spy-settings", scene: "spy", rulesLabel: "Правила",
+    rules: `<b class="display">🕵️ Шпион</b>
+      <div class="small mt">⏱ ${Math.round(r.settings.time / 60)} мин на раунд · ${r.settings.rounds} ${plural(r.settings.rounds, "раунд", "раунда", "раундов")} · ${Spy.LOCATIONS.length} локаций</div>
+      <div class="small mt">Очки: поймали шпиона — всем по 1, обвинившему +1 сверху. Шпион угадал локацию — +3, ушёл от разоблачения — +2.</div>`,
+    enough, start: "Начать игру 🕵️", waitText: `Ждём игроков (минимум ${Spy.MIN_PLAYERS})` });
 }
 // карта: локация и роль или «ты шпион»
 function spyCardHtml(c, big) {

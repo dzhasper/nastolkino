@@ -197,3 +197,96 @@ details.rou-rules summary::after { content: " ▾"; color: #8a6e5a; } details.ro
 .rou-dice .rd-row.lose { opacity: .55; }
 .rou-dice.fade { transition: opacity .5s; opacity: 0; }
 .stage.rev { aspect-ratio: 4 / 3.7; }
+
+/* =====================================================================
+   ПАРТИЯ НА ВЕСЬ ЭКРАН: вид от первого лица, горизонтально.
+   Телефон держат вертикально — поворачиваем всю страницу на 90° (body.cfs-rot), всплывашки поворачиваются вместе с ней
+   ===================================================================== */
+body.cfs-on { overflow: hidden !important; }
+body.cfs-on .leave-fab, body.cfs-on .chat-fab, body.cfs-on .tabs { display: none !important; }
+body.cfs-rot { position: fixed !important; left: 0; top: 0; width: var(--fs-h, 100vh) !important; height: var(--fs-w, 100vw) !important; max-width: none !important;
+  min-height: 0 !important; max-height: none !important; margin: 0 !important; padding: 0 !important; transform-origin: 0 0; transform: translateX(var(--fs-w, 100vw)) rotate(90deg); overflow: hidden !important; }
+.cfs { position: fixed; inset: 0; z-index: 55; background: #000; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+  --pt: calc(var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px)); --gl: 10px; --gt: 8px; }
+body.cfs-rot .cfs { --gl: calc(10px + var(--pt)); }
+body:not(.cfs-rot) .cfs { --gt: calc(8px + var(--pt)); --gl: calc(10px + var(--tg-safe-area-inset-left, 0px)); }
+.stage.fs { position: absolute; inset: 0; margin: 0; aspect-ratio: auto; border: 0; }
+.stage.fs .stage-msg { top: 34%; }
+.cfs-top { position: absolute; left: var(--gl); right: 10px; top: var(--gt); z-index: 6; display: flex; align-items: flex-start; pointer-events: none; }
+.cfs-btns { display: flex; gap: 6px; pointer-events: auto; }
+.cfs-btns button { position: relative; width: 34px; height: 34px; display: grid; place-items: center; font-size: 16px; color: #e8d8c4; background: rgba(0, 0, 0, .55); border-radius: 10px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08); }
+.cfs-btns #chat-badge:not(:empty) { position: absolute; right: -4px; top: -4px; min-width: 16px; height: 16px; border-radius: 8px; background: #d0101a; font-size: 10px; display: grid; place-items: center; padding: 0 3px; }
+.cfs-mid { position: absolute; left: 50%; transform: translateX(-50%); top: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.cfs-turn, .cfs-rank, .cfs-timer, .cfs-note, .cfs-q { font-family: "NkDigitsHead", "Press Start 2P", monospace; text-shadow: 2px 2px 0 #000; }
+.cfs-turn { font-size: 9px; color: #e8c8a0; background: rgba(0, 0, 0, .6); padding: 5px 9px; letter-spacing: 1px; white-space: nowrap; }
+.cfs-turn.me { color: #ff3040; box-shadow: 0 0 0 1px #ff3040; animation: blink 1s steps(2) infinite; }
+.cfs-timer { font-size: 12px; color: #ff3040; }
+.cfs-timer.low { animation: blink .5s steps(2) infinite; }
+.cfs-rank { font-size: 9px; color: #e8d8c4; background: rgba(40, 0, 0, .78); padding: 6px 10px; box-shadow: 0 0 0 2px #000, 0 0 0 3px rgba(255, 210, 63, .45); letter-spacing: 1px; }
+.cfs-rank b { color: #ffd23f; }
+.cfs-hp { margin-left: auto; display: flex; gap: 4px; padding: 6px 8px; background: rgba(0, 0, 0, .5); }
+.cfs-hp .hrt { width: 16px; height: 14px; }
+.cfs-sub { position: absolute; left: var(--gl); bottom: 12px; z-index: 5; max-width: min(34%, 300px); font-size: 12px; line-height: 1.35; color: #e8d8c4; background: rgba(0, 0, 0, .62);
+  padding: 6px 9px; border-left: 3px solid #b0101a; opacity: 0; pointer-events: none; }
+.cfs-sub.show { animation: csub 5.2s linear forwards; }
+@keyframes csub { 0% { opacity: 0; transform: translateY(6px); } 5% { opacity: 1; transform: none; } 82% { opacity: 1; } 100% { opacity: 0; } }
+.cfs-note { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 5; font-size: 9px; color: #e8d8c4; background: rgba(0, 0, 0, .62); padding: 8px 12px; white-space: nowrap; letter-spacing: .5px; }
+.cfs-note.hot { color: #ffd23f; box-shadow: 0 0 0 1px #ffd23f; }
+.cfs-note.dim { background: transparent; color: rgba(232, 216, 196, .55); font-size: 8px; padding: 0; }
+.cfs-note .sh-live { color: #ff3040; } .cfs-note .sh-blank { color: #c8b8a0; }
+.cfs.bl .cfs-note.up { bottom: 118px; }
+/* кнопки действия: справа внизу, под большим пальцем */
+.cfs-act { position: absolute; right: 14px; bottom: 14px; z-index: 6; display: flex; gap: 12px; align-items: flex-end; }
+.act { width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; text-align: center; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 8px; line-height: 1.3;
+  color: #fff; text-shadow: 1px 1px 0 #000; background: radial-gradient(circle at 35% 30%, #5a4a40, #1e1612 70%); box-shadow: 0 0 0 3px #000, 0 0 0 5px #3a2a22, 0 8px 18px rgba(0, 0, 0, .6); transition: transform .1s; }
+.act:active { transform: scale(.94); }
+.act.fire { width: 94px; height: 94px; font-size: 10px; background: radial-gradient(circle at 35% 30%, #ff4a3a, #9a0010 68%); box-shadow: 0 0 0 3px #000, 0 0 0 6px #5a0008, 0 0 26px rgba(255, 30, 30, .45), 0 8px 18px rgba(0, 0, 0, .6); }
+.act.fire small { display: block; font-size: 14px; margin-top: 4px; }
+.act.self.on { background: radial-gradient(circle at 35% 30%, #ff8a3a, #8a2a00 70%); box-shadow: 0 0 0 3px #000, 0 0 0 5px #ffb020, 0 8px 18px rgba(0, 0, 0, .6); }
+.act.call { width: 86px; height: 86px; font-size: 9px; color: #1a0a00; text-shadow: none; background: radial-gradient(circle at 35% 30%, #ffe27a, #b07800 70%); box-shadow: 0 0 0 3px #000, 0 0 0 5px #5a3a00, 0 0 22px rgba(255, 200, 40, .45); }
+.act.ghost { width: 50px; height: 50px; font-size: 16px; background: rgba(0, 0, 0, .6); }
+.act.use { width: auto; height: 62px; border-radius: 16px; padding: 0 18px; font-size: 9px; display: flex; gap: 8px; align-items: center; background: radial-gradient(circle at 30% 30%, #ff4a3a, #9a0010 70%); }
+.act:disabled { opacity: .35; filter: grayscale(.7); }
+/* зарядка дробовика: два патрона */
+.cfs-load, .cfs-pick { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 6; text-align: center; }
+.cfs-q { font-size: 9px; color: #e8d8c4; margin-bottom: 10px; white-space: nowrap; }
+.cfs-load .row, .cfs-pick .row { gap: 14px; justify-content: center; }
+.shell { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 18px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 8px; color: #fff; background: rgba(0, 0, 0, .65); box-shadow: 0 0 0 3px #000; }
+.shell i { width: 22px; height: 48px; border-radius: 4px 4px 2px 2px; background: linear-gradient(90deg, #6a0008, #e02030 45%, #6a0008); box-shadow: inset 0 -12px 0 #c8a040, inset 0 -14px 0 #8a6a20; }
+.shell.blank i { background: linear-gradient(90deg, #5a5a50, #d8d0c0 45%, #5a5a50); }
+.shell.live { box-shadow: 0 0 0 3px #000, 0 0 0 5px #b0101a; } .shell.blank { box-shadow: 0 0 0 3px #000, 0 0 0 5px #8a8070; }
+.cfs-pick .pk { width: 56px; height: 56px; display: grid; place-items: center; background: rgba(0, 0, 0, .7); box-shadow: 0 0 0 3px #000, 0 0 0 5px #b0101a; }
+.cfs-pick .pk canvas.pix { width: 30px !important; height: 30px !important; }
+/* итог партии — поверх стола */
+.cfs-end { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(0, 0, 0, .5); overflow: auto; padding: 46px 16px 16px; }
+.cfs-endc { width: min(420px, 100%); background: rgba(14, 8, 6, .92); box-shadow: 0 0 0 3px #000, 0 0 0 5px #5a0008; padding: 14px; }
+.cfs-endc .win { margin: 0; padding: 4px 0 0; }
+.cfs-endc .win .avatar.big, .cfs-endc .win canvas { max-height: 64px; }
+/* свои предметы на столе: значок под предметом, нажимается */
+.c3-label.item.mine { pointer-events: auto; cursor: pointer; font-size: 14px; padding: 2px 5px; background: rgba(0, 0, 0, .55); box-shadow: 0 0 0 1px rgba(255, 74, 88, .7); }
+.c3-label.item.mine.sel { background: #b0101a; box-shadow: 0 0 0 2px #ffd23f; transform-origin: center; }
+.c3-label.claim { font-size: 12px; font-weight: 800; color: #1a0a00; background: #f0e6cc; padding: 4px 8px; border-radius: 10px; box-shadow: 0 0 0 2px #000; }
+.c3-label.claim.hot { color: #fff; background: #d0101a; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; }
+/* карты в руке («Верю — не верю») */
+.cfs-hand { position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); z-index: 5; display: flex; align-items: flex-end; }
+.bcard { position: relative; width: 62px; height: 90px; margin: 0 -7px; border-radius: 7px; background: #f0e6cc; color: #141014; box-shadow: 0 0 0 2px #2a1a10, 0 8px 16px rgba(0, 0, 0, .6);
+  display: block; transition: transform .15s; font-family: Georgia, serif; transform-origin: 50% 120%; }
+.bcard b { position: absolute; left: 6px; top: 4px; font-size: 16px; font-weight: 900; }
+.bcard b.br { left: auto; top: auto; right: 6px; bottom: 4px; transform: rotate(180deg); }
+.bcard i { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-size: 30px; }
+.bcard.r-Q, .bcard.r-J { color: #b0101a; }
+.bcard.r-J { background: linear-gradient(160deg, #fff4d8, #f0d8a0); }
+.bcard.on { box-shadow: 0 0 0 3px #ffd23f, 0 0 18px rgba(255, 210, 63, .6), 0 8px 16px rgba(0, 0, 0, .6); }
+.cfs-hand:not(.live) .bcard { filter: brightness(.75); }
+.cfs-hand .bcard:disabled { opacity: 1; }
+.rou-reveal.bluff .bl-cards { display: flex; gap: 10px; justify-content: center; margin: 12px 0 10px; }
+.rou-reveal.bluff .bcard { margin: 0; animation: blFlip .5s cubic-bezier(.2, .9, .3, 1.3) both; animation-delay: calc(var(--i) * .12s); }
+.rou-reveal.bluff .bcard.bad { box-shadow: 0 0 0 3px #ff2a2a, 0 0 20px rgba(255, 40, 40, .7); }
+.rou-reveal.bluff .bcard.ok { box-shadow: 0 0 0 3px #4ad26a, 0 0 16px rgba(80, 220, 120, .5); }
+@keyframes blFlip { from { transform: rotateY(90deg) scale(.6); } to { transform: none; } }
+.bm-mode.bluff .bm-ico { background: #1a2a4a; }
+.new-badge { display: inline-block; margin-left: 6px; font-size: 9px; font-weight: 900; color: #101418; background: #ffd23f; padding: 2px 6px; border-radius: 6px; vertical-align: middle; }
+/* всплывашки (чат, правила) в горизонтальном виде: не выше экрана и не во всю ширину */
+body.cfs-rot .sheet-body { max-height: calc(var(--fs-w, 100vw) * .88); }
+body.cfs-on .sheet-body { width: 100%; max-width: 560px; margin: 0 auto; }
+body.cfs-on .toast { bottom: 22px; }

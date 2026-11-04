@@ -115,8 +115,33 @@ function replayStart(fromStart) {
   const r = { i: 0, act: [0, 0], hp: { a: b.teams.a.map((f) => f.stats.hp), b: b.teams.b.map((f) => f.stats.hp) }, text: "", done: false };
   clearTimeout(replayTimer);
   if (!fromStart) { b.log.forEach((e) => replayApply(r, e)); r.i = b.log.length; r.done = true; }
+  r.intro = !!fromStart;
   S.replay = r;
-  if (fromStart) replayTimer = setTimeout(replayStep, 900);
+  if (fromStart) replayTimer = setTimeout(() => { if (S.replay !== r) return; r.intro = false; render(); replayTimer = setTimeout(replayStep, 500); }, 2600);   // заставка «питомец против питомца»
+}
+/* ---------------------------------------------------------------- эффекты боя: рассечение, вспышка, «стоп-кадр» удара, тряска, криты с врезкой,
+   уклонения, стихии атакующего, нокаут, салют победителю */
+const ELEM_FX = { fire: ["#ff8a1f", "#ffd23b"], ice: ["#7fe6ff", "#e8fbff"], storm: ["#fff27a", "#7af0ff"], shadow: ["#a05bff", "#3a1a6a"], slime: ["#7dff6a", "#2a8a1a"], crystal: ["#7fe6ff", "#ff8fd0"], bwfire: ["#ffffff", "#9a9a9a"] };
+function fighterElem(f) { try { const m = Pets.traits(f.dna).muts.find((x) => ELEM_FX[x.key]); return m ? m.key : null; } catch (e) { return null; } }
+function bfx(host, cls, html, ms = 900) { if (!host) return null; const n = document.createElement("div"); n.className = "bfx " + cls; if (html) n.innerHTML = html; host.appendChild(n); setTimeout(() => n.remove(), ms); return n; }
+function arenaShake(big) { const a = document.getElementById("arena"); if (!a) return; a.classList.remove("shake", "shake2"); void a.offsetWidth; a.classList.add(big ? "shake2" : "shake"); a.classList.add("hitstop"); setTimeout(() => a.classList.remove("hitstop"), big ? 140 : 80); }
+function sparks(host, cols, n = 10) { for (let i = 0; i < n; i++) { const p = bfx(host, "spark", "", 700); if (!p) return; const a = Math.random() * 6.28, d = 30 + Math.random() * 40; p.style.setProperty("--dx", Math.cos(a) * d + "px"); p.style.setProperty("--dy", Math.sin(a) * d - 10 + "px"); p.style.background = cols[i % cols.length]; } }
+function cutIn(f, side, label) {                                         // врезка суперудара: портрет атакующего на всю ширину
+  const a = document.getElementById("arena"); if (!a) return;
+  bfx(a, "cutin " + (side ? "from-r" : "from-l"), `<div class="ci-lines"></div><div class="ci-spr">${Pets.sprite(fightCode(f), 120)}</div><div class="ci-txt"><b>${esc(label)}</b><span>${esc(f.name)}</span></div>`, 900);
+}
+function battleFx(e, me, foe, att, side) {
+  const hostFoe = foe && foe.querySelector(".fspr"), hostMe = me && me.querySelector(".fspr"), el = ELEM_FX[fighterElem(att)] || ["#ffffff", "#ffd23b"];
+  if (e.t === "hit" || e.t === "double") { bfx(hostFoe, "slash", "", 500); bfx(hostFoe, "flash", "", 300); sparks(hostFoe, el, 8); arenaShake(false); }
+  if (e.t === "crit") { bfx(hostFoe, "slash x2", "", 600); bfx(hostFoe, "flash big", "", 420); sparks(hostFoe, el, 16); arenaShake(true); bfx(document.getElementById("arena"), "crit-word", "КРИТ!", 900); }
+  if (e.t === "miss") { foe && foe.classList.add("dodge"); setTimeout(() => foe && foe.classList.remove("dodge"), 500); bfx(hostFoe, "word miss", "мимо", 800); bfx(hostFoe, "whoosh", "", 400); }
+  if (e.t === "burn" || e.t === "burnon") sparks(e.t === "burn" ? hostMe : hostFoe, ["#ff8a1f", "#ffd23b", "#ff4a1f"], 12), bfx(e.t === "burn" ? hostMe : hostFoe, "flames", "🔥🔥🔥", 900);
+  if (e.t === "freeze" || e.t === "frozen") bfx(e.t === "freeze" ? hostFoe : hostMe, "ice", "", 1000);
+  if (e.t === "stun" || e.t === "boo" || e.t === "sing" || e.t === "charmed") bfx(e.t === "charmed" ? hostMe : hostFoe, "dizzy", e.t === "sing" || e.t === "charmed" ? "♪ ♫ ♪" : "💫", 1000);
+  if (e.t === "heal" || e.t === "drain") { bfx(hostMe, "heal", "✚ ✚ ✚", 1000); if (e.t === "drain") sparks(hostFoe, ["#ff3355", "#aa0022"], 8); }
+  if (e.t === "shield" || e.t === "box") bfx(hostMe, "shield", "", 900);
+  if (e.t === "revive" || e.t === "rebirth") bfx(hostMe, "pillar", "", 1200);
+  if (e.t === "out") { bfx(hostMe, "ko-stars", "💫", 1200); bfx(document.getElementById("arena"), "ko-word", "НОКАУТ!", 1100); arenaShake(true); }
 }
 const LOG_TEXT = {
   hit: (A, D, d) => `${A} бьёт ${D}: −${d}`, crit: (A, D, d) => `💥 Крит! ${A} наносит ${d}`, miss: (A, D) => `${D} уворачивается`,
@@ -132,14 +157,17 @@ function replayStep() {
   const b = S.battle, r = S.replay;
   if (!b || !r || r.done || S.screen !== "pets" || S.battleCode !== b.code) return;
   const e = b.log[r.i];
-  if (!e) { r.done = true; render(); notify(b.winner === b.side ? "success" : "warning"); if (b.winner === b.side) coinRain(); return; }
+  if (!e) { r.done = true; r.finale = true; render(); notify(b.winner === b.side ? "success" : "warning"); if (b.winner === b.side) coinRain(); return; }
   const prevAct = r.act.slice();
   r.i++; replayApply(r, e);
   const T = [b.teams.a, b.teams.b], nameOf = (s) => (T[s][r.act[s]] || T[s][T[s].length - 1]).name;
   r.text = (LOG_TEXT[e.t] || (() => ""))(nameOf(e.a), nameOf(1 - e.a), e.d);
   if (e.t === "in" || prevAct[0] !== r.act[0] || prevAct[1] !== r.act[1]) { render(); replayTimer = setTimeout(replayStep, 900); return; }   // новый боец — перерисовать арену
   const fa = document.getElementById("f0"), fb = document.getElementById("f1"), me = e.a === 0 ? fa : fb, foe = e.a === 0 ? fb : fa;
-  const hit = ["hit", "crit"].includes(e.t);
+  const hit = ["hit", "crit"].includes(e.t), att = T[e.a][r.act[e.a]] || T[e.a][0];
+  if (e.t === "crit" && !r.cut) { r.cut = true; r.i--; cutIn(att, e.a, "СУПЕРУДАР!"); haptic("medium"); replayTimer = setTimeout(replayStep, 720); return; }   // врезка перед критом
+  r.cut = false;
+  if (me && foe) battleFx(e, me, foe, att, e.a);
   if (me && foe) {
     if (hit || e.t === "double") { me.classList.remove("lunge"); void me.offsetWidth; me.classList.add("lunge"); }
     const target = ["burn", "heal", "drain", "frozen", "revive", "rebirth", "revenge", "shield", "out", "sleep", "charmed", "box", "sing", "boo"].includes(e.t) ? me : foe;
@@ -150,7 +178,7 @@ function replayStep() {
   arenaBars();
   const log = document.getElementById("blog"); if (log) log.textContent = r.text;
   if (e.t === "crit") haptic("heavy"); else if (hit) haptic("light");
-  replayTimer = setTimeout(replayStep, e.t === "crit" || e.t === "out" ? 900 : 620);
+  replayTimer = setTimeout(replayStep, e.t === "crit" || e.t === "out" ? 1000 : e.t === "miss" ? 700 : 650);
 }
 function arenaBars() {
   const b = S.battle, r = S.replay;
@@ -182,7 +210,12 @@ function arena(b) {
   const won = b.winner === b.side, wname = teamNames(T[b.winner]);
   const myReward = b.rewards && S.me.startsWith("tg") ? b.rewards[S.me.slice(2)] : null;
   const reward = myReward ? ` · +${myReward} 🪙` : "";
-  return `<div class="arena">${side(0)}<div class="vs">VS</div>${side(1)}</div>
+  const intro = r.intro ? `<div class="b-intro"><div class="bi-half l"><div class="bi-lines"></div><div class="bi-spr">${Pets.sprite(fightCode(T[0][0]), 130)}</div><div class="bi-name"><b>${esc(teamNames(T[0]))}</b><span>${esc(T[0][0].owner || "")}</span></div></div>
+      <div class="bi-half r"><div class="bi-lines"></div><div class="bi-spr">${Pets.sprite(fightCode(T[1][0]), 130)}</div><div class="bi-name"><b>${esc(teamNames(T[1]))}</b><span>${esc(T[1][0].owner || "")}</span></div></div>
+      <div class="bi-flash"></div><div class="bi-vs">VS</div><div class="bi-go">БОЙ!</div></div>` : "";
+  const fin = r.finale ? `<div class="b-win ${b.side == null || won ? "" : "lost"}">${Array.from({ length: 24 }, (_, i) => `<i style="--i:${i}"></i>`).join("")}</div>` : "";
+  if (r.finale) setTimeout(() => { r.finale = false; }, 50);
+  return `<div class="arena ${r.intro ? "intro" : ""}" id="arena">${intro}${side(0)}<div class="vs">VS</div>${side(1)}${fin}</div>
     <div class="card blog" id="blog">${esc(r.done ? "Бой окончен" : r.text || "Бой начинается…")}</div>
     ${r.done ? `<div class="card center bres ${b.side == null ? "" : won ? "won" : "lost"}"><div class="display">${b.side == null ? "🏆 " + esc(wname) : won ? "🏆 Победа!" : "Поражение"}</div>
         <div class="small muted mt">${b.side == null ? "победа в этом бою" : won ? `${esc(wname)} — сильнее${reward}` : `Победа за ${esc(wname)}. Питомцы немного расстроены${reward}`}</div>

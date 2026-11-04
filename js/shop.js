@@ -51,7 +51,7 @@ const Shop = (() => {
     ...(typeof Pets !== "undefined" && Pets.MG_COUNT ? Array.from({ length: Pets.MG_COUNT }, (_, i) => I("mg", String(i + 1), Pets.mgName(i + 1), 0, { mg: Pets.mgMut(i + 1).key })) : []),
     // кейс «Питомник»: игрушки (питомцы сами выбирают) и приколы на голову. Списки — из js/pets.js
     ...(typeof Pets !== "undefined" ? Pets.TOYS.map(([id, name, emoji, tier]) => I("toy", id, name, 0, { petcase: 1, tier, emoji }))
-      .concat(Pets.HATS.map(([id, name, tier]) => I("hat", id, name, 0, { petcase: 1, tier }))) : []),
+      .concat(Pets.HATS.map(([id, name, tier]) => (tier >= 4 ? I("hat", id, name, 0, { excl: 1, prem: 1, desc: "только в премиум-пропуске" }) : I("hat", id, name, 0, { petcase: 1, tier })))) : []),
     // сезонные кейсы: каждая вещь выпадает только из своего кейса (tier: 0 обычная … 3 легендарная)
     ...[["s_ice", [["title", "s_ice1", "Дитя метели", 0, { text: "Дитя метели" }], ["ava", "s_ice1", "Снеговик", 0, { emoji: "☃️" }], ["frame", "s_snow", "Снежинки", 1],
         ["title", "s_ice2", "Повелитель льда", 1, { text: "Повелитель льда" }], ["ava", "s_ice2", "Ледышка", 1, { emoji: "🧊" }], ["bg", "s_ice", "Северное сияние", 2],
@@ -113,16 +113,42 @@ const Shop = (() => {
     ["Зной", "#fff0d0", "#ff9a3a", "#8a2a0a", "#ffe066"], ["Звездопад", "#e8e0ff", "#8a7aff", "#1a1050", "#ffe066"], ["Листопад", "#fff0d8", "#e08a3a", "#6a2a0a", "#c8301a"],
     ["Тыквенная ночь", "#ffd8a0", "#ff7a18", "#2a1006", "#7aff6a"], ["Туманный", "#eef0f4", "#a8b0c0", "#3a4050", "#d8e8ff"], ["Снегопад", "#ffffff", "#c8e0ff", "#4a6a9a", "#ff3355"]];
   const MONTHS = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
-  const passFrame = ([, light, mid, dark, acc]) => (t, R, f, n) => {
-    t.bevel(light, mid, dark);
-    const shine = f / n;                                               // блик бежит по кругу
-    t.ring(1, (x, y, d, u) => (Math.abs(((u - shine + 1) % 1)) < .08 ? "#ffffff" : null), 1);
-    t.corners((x, y, i) => t.star(x, y, i % 2 ? acc : light, dark));
-    t.Rr(19, 0, 10, 5, dark); t.Rr(20, 1, 8, 3, mid); t.star(24, 2, acc, dark);
+  // рамка пропуска: двойной гранёный обод, по нему бегут волны света, вокруг летают искры, в углах мигают камни, сверху — герб сезона.
+  // Премиум — та же рамка, но в золоте и фиолете: две волны, вдвое больше искр, пульсирующий ореол и корона над гербом
+  const passFrame = ([, light, mid, dark, acc], prem) => (t, R, f, n) => {
+    const L = prem ? "#fff4c0" : light, M = prem ? "#ffcf3a" : mid, D = prem ? "#4a1680" : dark, AC = prem ? "#ff4fd8" : acc, ph = f / n;
+    if (prem) t.ring(1, (x, y, d, u) => ((Math.floor(u * 24) + f) % 3 === 0 ? (f % 2 ? "#ff4fd8aa" : "#ffcf3aaa") : "#ffcf3a44"), 6);   // ореол
+    const wave = (u, k) => { const q = ((u - ph * k) % 1 + 1) % 1; return Math.min(q, 1 - q); };
+    t.ring(6, (x, y, d, u, sd) => {
+      if (d === 0 || d === 5) return "#05030acc";
+      const w = Math.min(wave(u, 1), prem ? wave(u + .5, 1) : 1);
+      if (w < .035 && d < 4) return "#ffffff";
+      if (w < .07 && d < 4) return L;
+      if (d === 1) return sd === "t" || sd === "l" ? L : M;
+      if (d === 4) return prem ? AC : D;
+      return (sd === "t" || sd === "l") ? (d === 2 ? M : D) : (d === 2 ? D : "#05030a");
+    });
+    // камни в углах — вспыхивают по очереди
+    t.corners((x, y, i) => { t.Rr(x - 2, y - 2, 5, 5, "#05030a"); t.Rr(x - 1, y - 1, 3, 3, i === f % 4 ? "#ffffff" : i % 2 ? AC : L); t.P(x, y, i === f % 4 ? AC : "#ffffff"); });
+    // искры летают по кругу и тянут хвост
+    const sparks = prem ? 4 : 2;
+    for (let j = 0; j < sparks; j++) for (let tr = 0; tr < 3; tr++) {
+      const [sx, sy] = PER(ph + j / sparks - tr * .025, 7);
+      t.P(sx, sy, tr === 0 ? "#ffffff" : tr === 1 ? (prem ? AC : L) : (prem ? "#ffcf3a88" : M + "88"));
+    }
+    // герб сезона сверху: щит со звездой (у премиума — корона над ним)
+    t.Rr(19, 0, 10, 9, "#05030a"); t.Rr(20, 1, 8, 6, M); t.Rr(21, 7, 6, 1, M); t.Rr(22, 8, 4, 1, D); t.Rr(20, 1, 8, 1, L);
+    t.star(24, 4, f % 2 && prem ? "#ffffff" : AC, D);
+    if (prem) { [[19, 0], [24, -1], [28, 0]].forEach(([cx, cy]) => t.P(cx, cy + 1, f % 2 ? "#ffffff" : "#ffcf3a")); }
+    // лента снизу
+    t.Rr(17, 43, 14, 4, "#05030a"); t.Rr(18, 44, 12, 2, prem ? AC : M); t.Rr(18, 44, 12, 1, L);
+    if (f % 3 === 0) t.P(18 + ((f * 5) % 12), 44, "#ffffff");
   };
   for (let y = 26; y <= 30; y++) for (let m = 1; m <= 12; m++) {
     const tag = String(y) + String(m).padStart(2, "0"), th = PASS_THEMES[m - 1], when = `сезонный пропуск · ${MONTHS[m - 1]} 20${y}`;
-    ITEMS.push(I("frame", "ps" + tag, th[0], 0, { excl: 1, strip: 4, speed: 1.6, pass: tag, desc: when }),
+    ITEMS.push(I("frame", "ps" + tag, th[0], 0, { excl: 1, strip: 6, speed: 1.4, pass: tag, desc: when }),
+      I("frame", "pp" + tag, th[0] + " · премиум", 0, { excl: 1, strip: 8, speed: 1.1, pass: tag, prem: 1, desc: when + " · премиум-дорожка, 30-й уровень" }),
+      I("title", "pt" + tag + "p", `Премиум сезона «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Премиум «${th[0]}»`, desc: when + " · премиум, 30-й уровень" }),
       I("title", "pt" + tag + "a", `Сезон «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Сезон «${th[0]}»`, desc: when + " · 15-й уровень" }),
       I("title", "pt" + tag + "b", `Покоритель сезона «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Покоритель «${th[0]}»`, desc: when + " · 30-й уровень" }));
   }
@@ -365,7 +391,7 @@ const Shop = (() => {
       const sx = 15 + f * 3; t.P(sx, 2, "#ffffff"); t.P(sx - 1, 2, "#ffffffaa"); t.P(sx + 1, 2, "#ffffffaa"); t.P(sx, 1, "#ffffffaa"); t.P(sx, 3, "#ffffffaa");
     },
   });
-  ITEMS.filter((x) => x.cat === "frame" && x.pass).forEach((x) => { FRAMES[x.id] = passFrame(PASS_THEMES[Number(x.pass.slice(2)) - 1]); });   // рамки пропуска
+  ITEMS.filter((x) => x.cat === "frame" && x.pass).forEach((x) => { FRAMES[x.id] = passFrame(PASS_THEMES[Number(x.pass.slice(2)) - 1], !!x.prem); });   // рамки пропуска
   const frameCache = {};
   function frameUrl(key) {
     if (!FRAMES[key]) return "";

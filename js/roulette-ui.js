@@ -52,18 +52,50 @@ const Sfx = (() => {
     revBang: () => { noise(.7, 2600, 1.2, 3.4); tone(110, .35, .9, "sine", .35); },
     cylSpin: () => { for (let i = 0; i < 14; i++) setTimeout(() => tone(1400 - i * 40, .015, .1, "square"), i * 45 + i * i * 2); },
     dice: () => { for (let i = 0; i < 16; i++) setTimeout(() => tone(600 + Math.random() * 900, .02, .08, "square"), i * 100 + Math.random() * 40); },
+    card: () => { noise(.05, 5000, .25, 3); setTimeout(() => noise(.04, 3500, .18, 3), 60); },
+    shuffle: () => { for (let i = 0; i < 12; i++) setTimeout(() => noise(.03, 4200 + Math.random() * 1500, .16, 3), i * 45 + Math.random() * 20); },
+    liar: () => { tone(180, .25, .5, "square", .6); setTimeout(() => tone(120, .35, .5, "square", .5), 160); },
     bottle: () => { setTimeout(() => { tone(180, .12, .5, "square", .5); noise(.35, 6000, .45, 2); for (let i = 0; i < 5; i++) setTimeout(() => tone(2400 + Math.random() * 2400, .08, .08, "sine"), 40 + i * 50); }, 650); },   // бац и звон стекла
   };
 })();
-document.addEventListener("pointerdown", () => { if (S.screen === "room" && S.room && ["roulette", "revolver"].includes(S.room.game)) Sfx.unlock(); }, { passive: true });
+document.addEventListener("pointerdown", () => { if (S.screen === "room" && S.room && ["roulette", "revolver", "bluff"].includes(S.room.game)) Sfx.unlock(); }, { passive: true });
 
 const RI = () => Roulette.ITEMS;
 const rouMe = () => (S.room ? S.room.players.find((p) => p.id === S.me) : null);
 const hearts = (n, max) => Array.from({ length: max }, (_, i) => `<i class="hrt ${i < n ? "on" : ""}"></i>`).join("");
 
 /* ---------------------------------------------------------------- меню подвала: выбор режима */
-function viewRouletteMenu() {
+const CELLAR_GAMES = ["roulette", "revolver", "bluff"];
+const isRev = (r) => !!r && r.game === "revolver";
+const isBluff = (r) => !!r && r.game === "bluff";
+const modeOf = (r) => (isBluff(r) ? "bluff" : isRev(r) ? "revolver" : "roulette");
+const CONTROLS = `<p>🎮 <b>Управление — от первого лица.</b> Во время партии экран сам переходит в горизонтальный вид — поверни телефон. Нажми на соперника — ствол повернётся на него, «Выстрел» — нажать на спуск, «В себя» — навести ствол на себя. Пальцем влево-вправо — оглядеться.</p>`;
+function rouRulesHtml(mode) {
+  if (mode === "bluff") return `
+    <p>Колода: <b>6 королей, 6 дам, 6 тузов и 2 джокера</b>. Каждому раздают по ${Bluff.HAND} карт. Над столом висит карта — <b>что требует стол</b>: короли, дамы или тузы.</p>
+    <p>В свой ход кладёшь рубашкой вверх <b>1–3 карты</b> и говоришь, что это то, что требует стол. <b>Джокер</b> подходит за что угодно. Можно и соврать.</p>
+    <p>Следующий решает: поверить и положить свои — или сказать <b>«Не верю!»</b>. Карты вскрывают: соврал — стреляет лжец, сказал правду — стреляет тот, кто не поверил.</p>
+    <p>🔫 <b>У каждого свой револьвер</b>: шесть гнёзд, один патрон, где он — не знает никто. Барабан не крутят — каждый щелчок приближает патрон. Сколько раз ты уже нажимал(а) на спуск — помни сам(а).</p>
+    <p>Кончились карты — тебя пропускают. Остались карты только у одного — следующий обязан сказать «Не верю!». После выстрела — новая раздача и новая карта стола.</p>
+    <p>🪙 На монеты: каждый ставит одинаково, последний живой забирает весь банк.</p>
+    <p>🎮 Свои карты — внизу экрана: нажми на 1–3 карты и «Положить». Или «Не верю!», если не веришь тому, кто положил перед тобой.</p>`;
+  if (mode === "revolver") return `
+    <p>Револьвер на ${Revolver.CHAMBERS} гнёзд, патрон один, где он — не знает никто. Ходят по кругу. Никаких подсказок и счётчиков — только револьвер и нервы.</p>
+    <p>В свой ход выбираешь цель — <b>себя или любого за столом</b> — и жмёшь на спуск. Выстрелило — минус сердце (обычно оно одно), барабан перезаряжается.</p>
+    <p>🎖 <b>Храбрец.</b> Выстрелил(а) в себя и выжил(а) — берёшь со стола фишку храбреца, и до твоего следующего хода в тебя целиться нельзя.</p>
+    <p>🔄 Раз за зарядку можно <b>крутануть барабан</b> — нажми на револьвер у себя в руке.</p>
+    <p>🪙 <b>Деньги.</b> Каждый ставит одинаково. Выбил соперника — <b>забираешь все его фишки</b>. Погиб от своей руки — твои фишки остаются на столе и уходят победителю. В конце <b>половина банка делится по фишкам</b> (даже выбывшим — за их фишки), вторая половина — последнему за столом. Ни у кого нет фишек — весь банк победителю. Играете на интерес — за каждую фишку +${Revolver.CHIP_COIN} 🪙 (до ${Revolver.CHIP_COIN_MAX} за партию, если за столом нет ботов).</p>
+    ${CONTROLS}`;
   const it = Object.values(RI());
+  return `
+    <p>Перед каждой зарядкой <b>каждый тайно заряжает в дробовик один патрон</b> — боевой или холостой. Подвал докладывает ещё несколько своих.</p>
+    <p>Сразу после зарядки все видят, <b>сколько боевых и холостых</b> — один раз, потом считать придётся самому: счётчиков на экране нет.</p>
+    <p>В свой ход целишься <b>в себя или в соперника</b>. Холостой в себя — ходишь ещё раз. Боевой — минус сердце.</p>
+    <p>🎒 <b>Предметы</b> лежат перед тобой на столе — <b>не больше ${Roulette.MAX_ITEMS}</b>. У кого уже ${Roulette.MAX_ITEMS}, тому на следующей зарядке новых не дают. Нажми на свой предмет — и «Применить» (бутылку, подслушку и перчатку — потом на соперника). Что делает каждый — только здесь, в правилах: во время игры подсказок нет.</p>
+    <div class="rou-items mt">${it.map((x) => `<div class="ri">${emo(x.emoji, 24)}<div><b>${esc(x.name)}</b><div class="small muted">${esc(x.desc)}</div></div></div>`).join("")}</div>
+    ${CONTROLS}`;
+}
+function viewRouletteMenu() {
   return `<div class="fade-in">
     <div class="pxscene big" style="background-image:url(${Pixel.scene("cellar")})"></div>
     <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Подвал</h1>
@@ -75,179 +107,162 @@ function viewRouletteMenu() {
         <button class="btn" data-a="rou-create" data-v="roulette">Сесть за стол</button>
       </div>
       <div class="card bm-mode revolver">
-        <div class="bm-head"><div class="bm-ico">🔫</div><div class="grow"><b>Русская рулетка</b><div class="tiny muted">револьвер · ${Revolver.MIN_PLAYERS}–${Revolver.MAX_PLAYERS} игроков · большой круглый стол</div></div></div>
-        <p class="small">В барабане на ${Revolver.CHAMBERS} гнёзд — один патрон. По кругу: выбираешь, в кого стрелять, и жмёшь на спуск. Выстрелило — барабан перезаряжается. Последний живой забирает банк.</p>
+        <div class="bm-head"><div class="bm-ico">🔫</div><div class="grow"><b>Русская рулетка</b><div class="tiny muted">револьвер · ${Revolver.MIN_PLAYERS}–${Revolver.MAX_PLAYERS} игроков · фишки храбреца</div></div></div>
+        <p class="small">В барабане на ${Revolver.CHAMBERS} гнёзд — один патрон. Стреляешь в себя — берёшь фишку храбреца, выбиваешь соперника — забираешь его фишки. Банк делится по фишкам и победителю.</p>
         <button class="btn" data-a="rou-create" data-v="revolver">Сесть за стол</button>
       </div>
+      <div class="card bm-mode bluff">
+        <div class="bm-head"><div class="bm-ico">🎴</div><div class="grow"><b>Верю — не верю</b><span class="new-badge">NEW</span><div class="tiny muted">карты и свой револьвер · ${Bluff.MIN_PLAYERS}–${Bluff.MAX_PLAYERS} игрока</div></div></div>
+        <p class="small">Стол требует королей, дам или тузов. Кладёшь карты рубашкой вверх — правду или блеф. Не поверили и поймали — стреляешь в себя. Поверили зря — стреляют они.</p>
+        <button class="btn" data-a="rou-create" data-v="bluff">Сесть за стол</button>
+      </div>
     </div>
-    <details class="card rou-rules mt"><summary><b>Правила «Последнего заряда»</b></summary>
-      <p>Перед каждой зарядкой <b>каждый тайно заряжает в дробовик один патрон</b> — боевой или холостой. Подвал докладывает ещё несколько своих.</p>
-      <p>Потом все видят, <b>сколько всего патронов и сколько из них боевых и холостых</b> — но не порядок и не то, кто что положил. Если все патроны вышли холостыми, подвал перезаряжает свои.</p>
-      <p>В свой ход целишься <b>в себя или в соперника</b>. Холостой в себя — ходишь ещё раз. Боевой — минус сердце.</p>
-      <p>🪞 Зеркальце возвращает пулю в стрелка. Если зеркальце есть и у стрелка — пуля мечется по столу, а кубики 1–50 решают, кому она достанется.</p>
-      <div class="rou-items mt">${it.map((x) => `<div class="ri">${emo(x.emoji, 24)}<div><b>${esc(x.name)}</b><div class="small muted">${esc(x.desc)}</div></div></div>`).join("")}</div>
-    </details>
-    <details class="card rou-rules mt"><summary><b>Правила «Русской рулетки»</b></summary>
-      <p>Револьвер на ${Revolver.CHAMBERS} гнёзд, патрон один, где он — не знает никто. Ходят по кругу.</p>
-      <p>В свой ход выбираешь цель — <b>себя или любого за столом</b> — и жмёшь на спуск. Чем больше пустых щелчков подряд, тем ближе патрон: шанс виден на экране.</p>
-      <p>🎖 <b>Храбрец.</b> Выстрелил(а) в себя и выжил(а) — до твоего следующего хода в тебя целиться нельзя.</p>
-      <p>🔄 Раз за зарядку можно <b>крутануть барабан</b> — шансы снова 1 из ${Revolver.CHAMBERS}.</p>
-      <p>Выстрелило — минус сердце (обычно оно одно), барабан перезаряжается, игра идёт дальше. Последний живой забирает банк.</p>
-    </details>
+    <details class="card rou-rules mt"><summary><b>Правила «Последнего заряда»</b></summary>${rouRulesHtml("roulette")}</details>
+    <details class="card rou-rules mt"><summary><b>Правила «Русской рулетки»</b></summary>${rouRulesHtml("revolver")}</details>
+    <details class="card rou-rules mt"><summary><b>Правила «Верю — не верю»</b></summary>${rouRulesHtml("bluff")}</details>
     <div class="section-title">Или войди по коду</div>
     <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
       <button class="btn" data-a="join">Войти</button></div>
   </div>`;
 }
 
-/* ---------------------------------------------------------------- комната (оба режима подвала) */
-const isRev = (r) => !!r && r.game === "revolver";
+/* ---------------------------------------------------------------- комната: лобби — обычный экран, партия — на весь экран, от первого лица */
 function viewRouletteRoom() {
-  const r = S.room, rv = isRev(r);
+  const r = S.room;
   rouStake(r);
-  const panels = rv ? { lobby: rouLobby, play: revPlay, shot: revPlay, reload: revPlay, end: rouEnd }
-    : { lobby: rouLobby, load: rouLoad, play: () => rouInspect() + rouPlay(), shot: () => rouInspect() + rouPlay(), end: rouEnd };
-  const fk = r.code + (r.phase === "lobby" ? ":l" : r.phase === "end" ? ":e" : ":g");   // плавно — только вход в игру и итог, не каждый выстрел
-  const fade = S.rouFade !== fk; S.rouFade = fk;
-  const hud = r.phase === "lobby" ? "ПОДВАЛ" : rv ? (r.phase === "reload" ? "ПЕРЕЗАРЯДКА…" : `<span class="d-live">🎯 1/${r.cyl.left}</span> <i class="d-of">щелчков: ${r.cyl.fired}</i>`)
-    : r.phase === "load" ? "ЗАРЯДКА…" : `<span class="d-live">🔴${r.drum.liveLeft}</span> <span class="d-blank">⚪${r.drum.blankLeft}</span> <i class="d-of">из ${r.drum.total}</i>`;
-  return `${netBanner()}<div class="${fade ? "fade-in" : ""}">
-    <div class="stage ${rv ? "rev" : ""}" id="stage"><div class="stage-hud">
-      <div class="drum">${r.pot ? `<span class="pot">🪙${r.pot}</span> ` : ""}${hud}</div>
-      ${r.deadline && ["play", "load"].includes(r.phase) ? `<div class="stage-timer" id="timer" data-total="${r.total}"><span id="timer-num">${fmtTime(remaining())}</span></div>` : ""}
-      ${!rv && ["play", "shot", "load"].includes(r.phase) ? `<button class="snd" data-a="rou-view">${S.rouView === "table" ? "↩" : "🔍"}</button>` : ""}
-      <button class="snd" data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button>
-    </div><div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">загрузка подвала…</div>
-    ${["play", "shot"].includes(r.phase) && S.rouView !== "table" ? `<div class="turn-tag ${r.turn === S.me ? "me" : ""}">${r.turn === S.me ? "ТВОЙ ХОД" : `ХОДИТ: ${esc((r.players.find((p) => p.id === r.turn) || {}).name || "")}`}</div>` : ""}</div>
-    ${r.phase !== "lobby" ? (rv ? revStatusBar() : statusBar()) : ""}
-    ${(panels[r.phase] || rouLobby)()}
-    ${r.phase !== "lobby" ? `<div class="section-title">За столом</div>${rouSeats()}` : ""}
-    ${r.phase !== "lobby" ? `<div class="section-title">Что происходит</div><div class="card rou-log">${(r.events || []).filter((e) => !rouSecret(e)).slice().reverse().slice(0, 7).map((e, i) =>
-      `<div class="ev ${e.kind} ${i === 0 ? "new" : ""}">${esc(e.text)}</div>`).join("")}</div>` : ""}
-  </div>
-  ${r.players.length > 1 ? `<button class="chat-fab" data-a="chat">💬<span id="chat-badge"></span></button>` : ""}`;
+  if (r.phase === "lobby") {
+    const fk = r.code + ":l", fade = S.rouFade !== fk; S.rouFade = fk;
+    return `${netBanner()}<div class="${fade ? "fade-in" : ""}">
+      <div class="stage ${isRev(r) ? "rev" : ""}" id="stage"><div class="stage-hud"><div class="drum">ПОДВАЛ</div><button class="snd" data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button></div>
+        <div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">загрузка подвала…</div></div>
+      ${rouLobby()}</div>
+      ${r.players.length > 1 ? `<button class="chat-fab" data-a="chat">💬<span id="chat-badge"></span></button>` : ""}`;
+  }
+  S.rouFade = r.code + ":g";
+  return cellarFs(r);
 }
 
-function rouSeats() {
-  const r = S.room;
-  return `<div class="seats">${r.seats.map((id) => { const p = r.players.find((x) => x.id === id); if (!p) return "";
-    const st = p.status || {};
-    const canAim = r.phase === "play" && r.turn === S.me && p.alive && !BQ.busy && !(isRev(r) && p.brave && id !== S.me);
-    return `<div class="seat ${r.turn === id && ["play", "shot"].includes(r.phase) ? "turn" : ""} ${p.alive ? "" : "dead"} ${id === S.me ? "me" : ""} ${r.aim === id ? "aimed" : ""}" ${canAim ? `data-a="rou-aim" data-v="${id}"` : ""}>
-      ${av(p, "sm")}<div class="grow"><b>${id === S.me ? "Вы" : nm(p)}</b><div class="hearts">${r.maxHp > 1 || !isRev(r) ? hearts(p.hp, r.maxHp) : ""}</div>
-      ${isRev(r) ? `<div class="st">${p.brave && p.alive ? "🎖 храбрец" : ""}${p.spun ? " 🔄" : ""}${!p.alive ? "выбыл(а)" : ""}</div>`
-        : `<div class="inv">${p.items.map((k) => `<span title="${esc(RI()[k].name)}">${RI()[k].emoji}</span>`).join("") || '<span class="muted">пусто</span>'}</div>
-      <div class="st">${st.vest ? "🦺" : ""}${st.mirror ? "🪞" : ""}${st.frozen ? "💫" : ""}${p.stakes ? `🪙×${p.stakes}` : ""}${r.phase === "load" && p.alive ? (p.loaded ? " ✓ зарядил(а)" : " …") : ""}</div>`}</div></div>`; }).join("")}</div>`;
+function cellarFs(r) {
+  const me = rouMe(), seated = !!me && r.seats.includes(S.me), bl = isBluff(r), rv = isRev(r);
+  const mine = seated && me.alive && r.turn === S.me && r.phase === "play" && !BQ.busy;
+  const turnP = r.players.find((p) => p.id === r.turn) || {};
+  const tag = ["play", "shot"].includes(r.phase) ? `<div class="cfs-turn ${r.turn === S.me ? "me" : ""}">${r.turn === S.me ? "ТВОЙ ХОД" : "ХОДИТ: " + esc(turnP.name || "").toUpperCase()}</div>` : "";
+  const timer = r.deadline && ["play", "load"].includes(r.phase) ? `<div class="cfs-timer" id="timer" data-total="${r.total}"><span id="timer-num">${fmtTime(remaining())}</span></div>` : "";
+  const hp = seated && !bl && r.maxHp > 1 && me.alive ? `<div class="cfs-hp">${hearts(me.hp, r.maxHp)}</div>` : "";
+  const rank = bl && r.table && r.table.rank ? `<div class="cfs-rank">СТОЛ: <b>${Bluff.RANKS[r.table.rank].many.toUpperCase()}</b></div>` : "";
+  const sub = S.rouSub && Date.now() - S.rouSub.at < 5200 ? `<div class="cfs-sub show" id="cfs-sub" style="animation-delay:-${((Date.now() - S.rouSub.at) / 1000).toFixed(2)}s">${esc(S.rouSub.text)}</div>` : `<div class="cfs-sub" id="cfs-sub"></div>`;
+  const controls = r.phase === "end" ? `<div class="cfs-end"><div class="cfs-endc">${rouEnd()}</div></div>` : bl ? bluffControls(r, me, mine) : rv ? revControls(r, me, mine) : rouControls(r, me, mine);
+  return `${netBanner()}<div class="cfs ${bl ? "bl" : rv ? "rv" : "sg"}" id="cfs">
+    <div class="stage fs ${rv ? "rev" : ""}" id="stage"><div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">загрузка подвала…</div></div>
+    <div class="cfs-top">
+      <div class="cfs-btns"><button data-a="leave" title="Выйти">🚪</button><button data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button>${r.players.length > 1 ? `<button data-a="chat">💬<span id="chat-badge"></span></button>` : ""}<button data-a="rou-rot" title="Повернуть экран">⟲</button></div>
+      <div class="cfs-mid">${rank}${tag}${timer}</div>${hp}
+    </div>
+    ${sub}${controls}
+  </div>`;
 }
+
+const cfsWatch = (me) => (!me || me.seat < 0 ? `<div class="cfs-note">👀 Ты смотришь партию — следующую сыграешь за столом</div>` : !me.alive ? `<div class="cfs-note">Ты выбыл(а) — смотри, чем кончится</div>` : null);
+function fireBtns(r) {
+  const aim = r.aim, self = aim === S.me;
+  return `${aim ? "" : `<div class="cfs-note dim">нажми на соперника — или «В себя»</div>`}
+    <div class="cfs-act"><button class="act self ${self ? "on" : ""}" data-a="rou-aim" data-v="${S.me}">В СЕБЯ</button><button class="act fire" data-a="rou-fire" ${aim ? "" : "disabled"}>ВЫСТРЕЛ</button></div>`;
+}
+// «Последний заряд»: зарядка, предметы на столе, выстрел
+function rouControls(r, me) {
+  const w = cfsWatch(me); if (w) return w;
+  if (r.phase === "load") {
+    if (r.my_load) return `<div class="cfs-note">Заряжено: <b class="sh-${r.my_load}">${r.my_load === "live" ? "боевой" : "холостой"}</b>. Ждём остальных…</div>`;
+    return `<div class="cfs-load"><div class="cfs-q">Заряди один патрон — никто не увидит какой</div>
+      <div class="row"><button class="shell live" data-a="rou-load" data-v="live"><i></i>БОЕВОЙ</button><button class="shell blank" data-a="rou-load" data-v="blank"><i></i>ХОЛОСТОЙ</button></div></div>`;
+  }
+  if (!(r.turn === S.me && r.phase === "play") || BQ.busy) return "";
+  const sel = S.rouItem != null ? me.items[S.rouItem] : null, it = sel ? RI()[sel] : null;
+  const cancel = `<button class="act ghost" data-a="rou-item" data-v="">✕</button>`;
+  if (it && it.steal && S.rouSteal) {
+    const v = r.players.find((p) => p.id === S.rouSteal) || { items: [], name: "" };
+    return `<div class="cfs-pick"><div class="cfs-q">${emo(it.emoji, 16)} Что забрать у ${esc(v.name)}?</div>
+      <div class="row">${v.items.map((k, j) => `<button class="pk" data-a="rou-use" data-v="${S.rouItem}:${v.id}:${j}">${emo(RI()[k].emoji, 26)}</button>`).join("") || '<span class="muted small">у него(неё) пусто</span>'}</div></div>
+      <div class="cfs-act">${cancel}</div>`;
+  }
+  if (it && it.target) return `<div class="cfs-note hot">${emo(it.emoji, 16)} → нажми на соперника</div><div class="cfs-act">${cancel}</div>`;
+  if (it) return `<div class="cfs-act">${cancel}<button class="act use" data-a="rou-use" data-v="${S.rouItem}:">${emo(it.emoji, 18)} ПРИМЕНИТЬ</button></div>`;
+  return fireBtns(r);
+}
+// «Русская рулетка»: только выстрел — в соперника или в себя; барабан крутят, нажав на револьвер
+function revControls(r, me, mine) {
+  const w = cfsWatch(me); if (w) return w;
+  if (!mine) return me.brave ? `<div class="cfs-note">🎖 Ты храбрец — до твоего хода в тебя не целятся</div>` : "";
+  return fireBtns(r);
+}
+// «Верю — не верю»: свои карты внизу, «Положить» и «Не верю!»
+const CARD_HTML = { K: ["К", "♚"], Q: ["Д", "♛"], A: ["Т", "♠"], J: ["Дж", "★"] };
+function bluffControls(r, me, mine) {
+  const w = cfsWatch(me); if (w) return w;
+  const hand = r.hand || [], sel = (S.bluffSel || []).filter((i) => i < hand.length), n = hand.length;
+  const canPlay = mine && n > 0 && !r.must_call;
+  const cards = hand.map((c, i) => {
+    const k = i - (n - 1) / 2, on = sel.includes(i);
+    return `<button class="bcard r-${c} ${on ? "on" : ""}" ${canPlay ? `data-a="bluff-pick" data-v="${i}"` : "disabled"} style="transform:translateY(${Math.abs(k) * 5 - (on ? 26 : 0)}px) rotate(${k * 6}deg)"><b>${CARD_HTML[c][0]}</b><i>${CARD_HTML[c][1]}</i><b class="br">${CARD_HTML[c][0]}</b></button>`;
+  }).join("");
+  const note = mine && r.must_call ? `<div class="cfs-note hot up">Карт нет — остаётся только «Не верю!»</div>` : "";
+  return `${note}<div class="cfs-hand ${canPlay ? "live" : ""}">${cards}</div>
+    ${mine ? `<div class="cfs-act">${r.can_call ? `<button class="act call" data-a="bluff-call">НЕ ВЕРЮ!</button>` : ""}${canPlay ? `<button class="act fire" data-a="bluff-play" ${sel.length ? "" : "disabled"}>ПОЛОЖИТЬ${sel.length ? `<small>${sel.length}</small>` : ""}</button>` : ""}</div>` : ""}`;
+}
+
+// страница на весь экран и горизонтально: если телефон вертикальный — поворачиваем всю страницу (body.cfs-rot)
+function rouFs() {
+  const on = !!document.getElementById("cfs");
+  const rot = on && store.rouRot !== false && window.innerHeight > window.innerWidth;
+  const was = document.body.classList.contains("cfs-rot");
+  document.documentElement.style.setProperty("--fs-w", window.innerWidth + "px");
+  document.documentElement.style.setProperty("--fs-h", window.innerHeight + "px");
+  document.body.classList.toggle("cfs-on", on);
+  document.body.classList.toggle("cfs-rot", rot);
+  if (on !== !!S.rouFsOn) {
+    S.rouFsOn = on;
+    try { if (tg && tg.isVersionAtLeast && tg.isVersionAtLeast("8.0")) { if (on && !tg.isFullscreen) tg.requestFullscreen(); else if (!on && tg.isFullscreen) tg.exitFullscreen(); } } catch (e) { /* старый клиент */ }
+  }
+  if (on !== !!S.rouFsWas || rot !== was) { S.rouFsWas = on; if (typeof Cellar !== "undefined") setTimeout(() => Cellar.resize(), 30); }
+}
+window.addEventListener("resize", () => { if (S.screen === "room" && S.room && CELLAR_GAMES.includes(S.room.game)) rouFs(); });
 
 function rouLobby() {
-  const r = S.room, s = r.settings, rv = isRev(r), M = rv ? Revolver : Roulette;
+  const r = S.room, s = r.settings, mode = modeOf(r), M = { roulette: Roulette, revolver: Revolver, bluff: Bluff }[mode];
   const enough = r.players.filter((p) => p.online).length >= M.MIN_PLAYERS;
-  return `<div class="top"><button class="avatar" data-a="leave">←</button><div class="grow"><h1>${rv ? "Русская рулетка" : "Последний заряд"}</h1>
-      <div class="muted small">Подвал · ${r.players.length} из ${M.MAX_PLAYERS} мест за столом</div></div></div>
-    <div class="card code-card"><div class="muted small">КОД ДВЕРИ</div><div class="code">${r.code}</div>
-      <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
-      <button class="btn small grow" data-a="share">📨 Позвать</button></div>${groupBtn(r)}</div>
-    <div class="section-title">За столом</div>${playerTiles(r.players, { kick: isHost(), peek: true })}
-    <div class="section-title">Правила стола</div>
-    <div class="card"><div class="row"><div class="grow small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, выживший забирает банк ${s.stake * Math.min(r.players.length, M.MAX_PLAYERS)}<br>` : "🎲 На интерес<br>"}❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b>${rv ? ` · 🔫 ${Revolver.CHAMBERS} гнёзд, 1 патрон` : ` · 🎒 Предметов за зарядку: <b>${s.items}</b>`}</div>
-      ${isHost() ? `<button class="btn ghost small" data-a="rou-settings">⚙️</button>` : ""}</div></div>
-    ${Bots.bar(S.room)}
-    ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Закрыть дверь и начать" : `Ждём игроков (минимум ${M.MIN_PLAYERS})`}</button>`
-      : `<div class="card center mt2 muted">⏳ Ждём, когда хост закроет дверь…</div>`}`;
-}
-
-function rouLoad() {
-  const r = S.room, me = rouMe();
-  if (!me || !me.alive || r.seats.indexOf(S.me) < 0) return `<div class="card center">Остальные заряжают барабан…</div>`;
-  if (r.my_load) return `<div class="card center load-done">Ты зарядил(а) <b class="${r.my_load}">${r.my_load === "live" ? "БОЕВОЙ" : "холостой"}</b> патрон.
-    <div class="muted small mt">Никто не знает, что именно. Ждём остальных…</div></div>${hostSkip("Зарядить сейчас")}`;
-  return `<div class="card center"><b>Заряди один патрон</b><div class="muted small mt">Что ты положил(а), не увидит никто. Подвал добавит ещё несколько своих, и все узнают, сколько всего боевых и холостых — но не порядок.</div></div>
-    <div class="row mt load-btns"><button class="btn grow shell-live" data-a="rou-load" data-v="live">🔴 Боевой</button>
-      <button class="btn grow shell-blank" data-a="rou-load" data-v="blank">⚪ Холостой</button></div>`;
-}
-
-function rouInspect() {
-  const r = S.room, it = S.rouInspect;
-  if (S.rouView !== "table") return "";
-  if (!it) return `<div class="card center inspect"><b>🔍 Осмотр стола</b><div class="muted small mt">Нажми на любой предмет на столе — увидишь, что он делает. Свои вещи подписаны красным.</div>
-    <button class="btn ghost small mt" data-a="rou-view">↩ Вернуться</button></div>`;
-  const owner = r.players.find((p) => p.id === it.pid) || {}, mine = it.pid === S.me, info = RI()[it.key];
-  const list = owner.items || [];
-  if (list[it.index] !== it.key) { const j = list.indexOf(it.key); if (j < 0) { S.rouInspect = null; return rouInspect(); } it.index = j; }   // вещи сдвинулись (кража, использование)
-  const canUse = mine && r.phase === "play" && r.turn === S.me;
-  return `<div class="card inspect"><div class="row">${emo(info.emoji, 32)}<div class="grow"><b>${esc(info.name)}</b><div class="small muted">${mine ? "твой предмет" : "у игрока " + esc(owner.name || "")}</div></div></div>
-    <div class="small mt">${esc(info.desc)}</div>
-    <div class="row mt">${canUse ? `<button class="btn small grow" data-a="${info.target ? "rou-item" : "rou-use"}" data-v="${info.target ? it.index : it.index + ":"}">Использовать</button>` : ""}
-      <button class="btn ghost small grow" data-a="rou-view">↩ Вернуться</button></div></div>`;
-}
-
-function rouPlay() {
-  const r = S.room, me = rouMe();
-  if (!me || me.seat < 0) return `<div class="card center turn-wait">👀 Ты смотришь эту партию. Следующую сыграешь за столом.</div>`;
-  const mine = r.turn === S.me && r.phase === "play";
-  const turnP = r.players.find((p) => p.id === r.turn) || {};
-  const notes = (r.notes || []).slice().reverse();
-  let out = "";
-  if (!mine) {
-    out += `<div class="card center turn-wait">${r.phase === "shot" ? "…" : `Ходит <b>${esc(turnP.name || "")}</b>`}${me && !me.alive ? `<div class="muted small mt">Ты выбыл(а). Смотри, чем кончится</div>` : ""}
-      <div class="tiny muted mt">👀 Проведи пальцем по сцене влево-вправо, чтобы оглядеться, или нажми на игрока — посмотришь на него</div></div>`;
-  } else {
-    const opps = r.seats.map((id) => r.players.find((p) => p.id === id)).filter((p) => p && p.id !== S.me && p.alive);
-    const sel = S.rouItem != null ? me.items[S.rouItem] : null;
-    if (sel && RI()[sel].steal && S.rouSteal) {                         // что украсть
-      const v = r.players.find((p) => p.id === S.rouSteal);
-      out += `<div class="card"><b>🧤 Что стащить у ${esc(v.name)}?</b>
-        <div class="my-items mt">${v.items.map((k, j) => `<button class="mi" data-a="rou-use" data-v="${S.rouItem}:${v.id}:${j}">${emo(RI()[k].emoji, 24)}<span>${esc(RI()[k].name)}</span></button>`).join("") || '<div class="muted">У него(неё) пусто</div>'}</div>
-        <button class="btn ghost small mt" data-a="rou-item" data-v="">Отмена</button></div>`;
-    } else if (sel && RI()[sel].target) {
-      out += `<div class="card"><b>${emo(RI()[sel].emoji, 16)} ${esc(RI()[sel].name)}: на кого?</b>
-        <div class="aim mt">${opps.map((p) => RI()[sel].steal ? `<button class="btn ghost small" data-a="rou-steal" data-v="${p.id}">${esc(p.name)} · ${p.items.map((k) => RI()[k].emoji).join("") || "пусто"}</button>`
-          : `<button class="btn ghost small" data-a="rou-use" data-v="${S.rouItem}:${p.id}">${esc(p.name)}</button>`).join("")}</div>
-        <button class="btn ghost small mt" data-a="rou-item" data-v="">Отмена</button></div>`;
-    } else {
-      const aim = r.aim, aimP = r.players.find((p) => p.id === aim);
-      if (r.sawed) out += `<div class="sawed">🪚 Стволы отпилены — следующий выстрел снимет 2 сердца</div>`;
-      out += `<div class="your-turn">${aim ? (aim === S.me ? "СТВОЛ СМОТРИТ НА ТЕБЯ" : `ЦЕЛЬ: ${esc(aimP.name).toUpperCase()}`) : "ТВОЙ ХОД — ВЫБЕРИ ЦЕЛЬ"}</div>
-        <div class="targets"><button class="btn small ${aim === S.me ? "on" : "ghost"}" data-a="rou-aim" data-v="${S.me}">🎯 Себя</button>
-        ${opps.map((p) => `<button class="btn small ${aim === p.id ? "on" : "ghost"}" data-a="rou-aim" data-v="${p.id}">🎯 ${esc(p.name)}</button>`).join("")}</div>
-        <button class="btn fire mt" data-a="rou-fire" ${aim ? "" : "disabled"}>💥 Выстрел</button>
-        ${S.rouView === "table" ? "" : `<button class="btn ghost small mt" data-a="rou-view">🔍 Осмотреть стол и выбрать предмет</button>`}
-        <div class="small muted center mt">Можно нажать на игрока прямо за столом — дробовик повернётся на него. Холостой в себя — ещё один ход. Сначала можно использовать предметы.</div>`;
-    }
-    if (me.items.length) out += `<div class="section-title">Твои предметы</div><div class="my-items">${me.items.map((k, i) =>
-      `<button class="mi ${S.rouItem === i ? "on" : ""}" data-a="${RI()[k].target ? "rou-item" : "rou-use"}" data-v="${RI()[k].target ? i : i + ":"}" title="${esc(RI()[k].desc)}">${emo(RI()[k].emoji, 24)}<span>${esc(RI()[k].name)}</span></button>`).join("")}</div>`;
-  }
-  const known = r.known || [], heard = r.heard || [];
-  if (known.length || heard.length || notes.length) out += `<div class="card notes mt"><b>🗒 Что ты знаешь сейчас</b>
-    ${known.map((k) => `<div class="kn ${k.live ? "live" : "blank"}">${k.at === 1 ? "▶ Следующий выстрел" : `${k.at}-й выстрел отсюда`} — <b>${k.live ? "БОЕВОЙ" : "холостой"}</b></div>`).join("")}
-    ${heard.map((h) => `<div class="kn ${h.live ? "live" : "blank"}">👂 ${esc(h.name)} зарядил(а) — <b>${h.live ? "боевой" : "холостой"}</b></div>`).join("")}
-    ${!known.length && !heard.length ? `<div class="small muted">Сейчас ничего точно не известно</div>` : ""}
-    ${notes.length ? `<details class="mt"><summary class="tiny muted">Журнал подсказок</summary>${notes.map((n) => `<div class="n small">${esc(n)}</div>`).join("")}</details>` : ""}
-    <div class="tiny muted mt">Счёт идёт от следующего выстрела и сам сдвигается после каждого. Встряска 🔄 стирает всё</div></div>`;
-  return out;
+  const title = { roulette: "Последний заряд", revolver: "Русская рулетка", bluff: "Верю — не верю" }[mode];
+  const line = mode === "revolver" ? `❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🔫 ${Revolver.CHAMBERS} гнёзд, 1 патрон`
+    : mode === "bluff" ? `⏱ Ход: <b>${s.turnTime} с</b> · 🎴 по ${Bluff.HAND} карт · 🔫 у каждого свой револьвер`
+    : `❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🎒 Предметов за зарядку: <b>${s.items}</b> (не больше ${Roulette.MAX_ITEMS})`;
+  return lobbyBento({ kicker: "Подвал", title, codeLabel: "Код двери", countLabel: "Мест", seats: "За столом", max: M.MAX_PLAYERS,
+    settings: "rou-settings", scene: "cellar", rulesLabel: "Правила стола",
+    rules: `<div class="small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, банк ${s.stake * Math.min(r.players.length, M.MAX_PLAYERS)}${mode === "revolver" ? " — половина по фишкам храбреца" : ", выживший забирает всё"}<br>` : "🎲 На интерес<br>"}${line}</div>
+      <button class="btn ghost small mt" data-a="rou-rules">📖 Как играть</button>`,
+    enough, start: "Закрыть дверь и начать", waitText: `Ждём игроков (минимум ${M.MIN_PLAYERS})`, hostWait: "Ждём, когда хост закроет дверь…" });
 }
 
 function rouEnd() {
   const r = S.room, w = r.players.find((p) => p.id === r.winner);
   const rw = S.reward && S.reward.key === store.lastGame ? S.reward.sum : 0;
+  const share = r.payout ? r.payout[S.me] || 0 : 0, me = rouMe();
   return `<div class="win rou-win"><div class="kicker">${r.winner === S.me ? "ТЫ ВЫБРАЛСЯ(ЛАСЬ) ИЗ ПОДВАЛА" : "ДВЕРЬ ОТКРЫЛАСЬ"}</div>
-      ${w ? `<div class="mt">${av(w, "big")}</div><h2>${nm(w)}</h2><p>последний(яя) за столом${w.stakes ? ` · ставок: ${w.stakes}` : ""}</p>` : "<h2>Никто</h2>"}
+      ${w ? `<div class="mt">${av(w, "big")}</div><h2>${nm(w)}</h2><p>последний(яя) за столом${w.stakes ? ` · ставок: ${w.stakes}` : ""}${isRev(r) && w.chips ? ` · фишек: ${w.chips}` : ""}</p>` : "<h2>Никто</h2>"}
+      ${isRev(r) && me && me.chips && r.winner !== S.me ? `<p class="small">🎖 Твои фишки храбреца: ${me.chips}${share ? ` — доля банка 🪙 ${share}` : ""}</p>` : ""}
       ${rw ? `<div class="reward-coins">${PX() ? Pixel.sprite("coin", 3) : "🪙"} +${rw} монет</div>` : ""}</div>
-    ${isHost() ? `<button class="btn mt2" data-a="again">🔁 Ещё партия</button>` : `<div class="card center mt2 muted">Хост может начать новую партию</div>`}
-    <button class="btn ghost mt" data-a="leave">Подняться наверх</button>`;
+    <div class="row mt">${isHost() ? `<button class="btn grow" data-a="again">🔁 Ещё партия</button>` : `<div class="card center grow muted small">Хост может начать новую партию</div>`}
+    <button class="btn ghost grow" data-a="leave">Наверх</button></div>`;
 }
 
 function rouSettingsSheet() {
-  const s = S.room.settings, rv = isRev(S.room), M = rv ? Revolver : Roulette;
+  const s = S.room.settings, mode = modeOf(S.room), M = { roulette: Roulette, revolver: Revolver, bluff: Bluff }[mode];
   const opt = (key, list, fmt) => `<div class="chips">${list.map((v) => `<button class="pill ${s[key] === v ? "on" : ""}" data-a="rou-set" data-v="${key}:${v}">${fmt(v)}</button>`).join("")}</div>`;
   return `<h2>⚙️ Правила стола</h2>
-    <div class="section-title">Сердец у каждого</div>${opt("hp", M.HP_OPTIONS, (v) => "❤️".repeat(v))}
+    ${mode === "bluff" ? "" : `<div class="section-title">Сердец у каждого</div>${opt("hp", M.HP_OPTIONS, (v) => "❤️".repeat(v))}`}
     <div class="section-title">Время на ход</div>${opt("turnTime", M.TURN_TIMES, (v) => `${v} с`)}
-    ${rv ? "" : `<div class="section-title">Предметов за каждую зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметов"))}`}
+    ${mode === "roulette" ? `<div class="section-title">Предметов за каждую зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметов"))}<div class="tiny muted">Больше ${Roulette.MAX_ITEMS} предметов на руках не бывает</div>` : ""}
     <div class="section-title">Ставка (монеты, которые ты нафармил)</div>${opt("stake", M.STAKES, (v) => (v ? `🪙 ${v}` : "на интерес"))}
     ${stakeOwnRow(s.stake, M.STAKE_MAX, M.STAKES)}
-    <div class="small muted mt">Каждый за столом ставит одинаково. Выживший забирает весь банк.</div>`;
+    <div class="small muted mt">${mode === "revolver" ? "Каждый ставит одинаково. Половина банка делится по фишкам храбреца, остальное — последнему за столом." : "Каждый за столом ставит одинаково. Выживший забирает весь банк."}</div>`;
 }
 
 // своя сумма ставки — больше, чем на кнопках (общая для подвала и блэкджека)
@@ -257,93 +272,44 @@ function stakeOwnRow(cur, max, presets) {
     ${cur && !presets.includes(cur) ? `<div class="tiny muted mt">Сейчас своя ставка: 🪙 ${cur}</div>` : ""}`;
 }
 
-/* ---------------------------------------------------------------- строка состояния, как в старых шутерах */
-function statusBar() {
-  const r = S.room, me = rouMe();
-  const seated = me && r.seats.includes(S.me);
-  const hp = seated ? me.hp : 0;
-  return `<div class="dbar">
-    <div class="dcell"><b class="big">${seated ? hp : "—"}</b><span>СЕРДЦА</span></div>
-    <div class="dcell dshells"><b class="big"><i class="c-live">${r.drum.liveLeft}</i><i class="c-sep">/</i><i class="c-blank">${r.drum.blankLeft}</i></b><span>БОЕВ / ХОЛ</span></div>
-    <div class="dface"><canvas id="dface" width="24" height="24"></canvas></div>
-    <div class="dcell"><b class="big">${seated ? me.items.length : "—"}</b><span>ПРЕДМЕТЫ</span></div>
-    <div class="dcell"><b class="big">${r.seats.filter((id) => { const p = r.players.find((x) => x.id === id); return p && p.alive; }).length}</b><span>ИГРОКОВ</span></div>
-  </div>`;
-}
-
-function revStatusBar() {
-  const r = S.room, me = rouMe(), seated = me && r.seats.includes(S.me);
-  const alive = r.seats.filter((id) => { const p = r.players.find((x) => x.id === id); return p && p.alive; }).length;
-  return `<div class="dbar">
-    <div class="dcell"><b class="big">${seated ? (me.alive ? (r.maxHp > 1 ? me.hp : "ЖИВ") : "✝") : "—"}</b><span>${r.maxHp > 1 ? "СЕРДЦА" : "ТЫ"}</span></div>
-    <div class="dcell dshells"><b class="big"><i class="c-live">1</i><i class="c-sep">/</i><i class="c-blank">${r.cyl.left}</i></b><span>ШАНС</span></div>
-    <div class="dface"><canvas id="dface" width="24" height="24"></canvas></div>
-    <div class="dcell"><b class="big">${seated ? (me.spun ? "✗" : "✓") : "—"}</b><span>КРУТКА</span></div>
-    <div class="dcell"><b class="big">${alive}</b><span>ИГРОКОВ</span></div>
-  </div>`;
-}
-
-function revPlay() {
-  const r = S.room, me = rouMe();
-  if (!me || me.seat < 0) return `<div class="card center turn-wait">👀 Ты смотришь эту партию. Следующую сыграешь за столом.</div>`;
-  if (r.phase === "reload") return `<div class="card center turn-wait">🔄 Барабан перезаряжают: снова один патрон из ${r.cyl.chambers}…</div>`;
-  const turnP = r.players.find((p) => p.id === r.turn) || {};
-  if (r.turn !== S.me || r.phase !== "play") return `<div class="card center turn-wait">${r.phase === "shot" ? "…" : `Ходит <b>${esc(turnP.name || "")}</b> · шанс выстрела 1 из ${r.cyl.left}`}${!me.alive ? `<div class="muted small mt">Ты выбыл(а). Смотри, чем кончится</div>` : me.brave ? `<div class="small mt">🎖 Ты храбрец: до твоего хода в тебя не целятся</div>` : ""}
-      <div class="tiny muted mt">👀 Проведи пальцем по сцене влево-вправо, чтобы оглядеться, или нажми на игрока — посмотришь на него</div></div>`;
-  const opps = r.seats.map((id) => r.players.find((p) => p.id === id)).filter((p) => p && p.id !== S.me && p.alive);
-  const aim = r.aim, aimP = r.players.find((p) => p.id === aim), odds = r.cyl.left, busy = BQ.busy;
-  return `<div class="your-turn">${aim ? (aim === S.me ? "СТВОЛ У ТВОЕГО ВИСКА" : `ЦЕЛЬ: ${esc(aimP.name).toUpperCase()}`) : "ТВОЙ ХОД — В КОГО СТРЕЛЯТЬ?"}</div>
-    <div class="odds center small">Шанс, что выстрелит сейчас: <b>1 из ${odds}</b> · ${Math.round(100 / odds)}%</div>
-    <div class="targets"><button class="btn small ${aim === S.me ? "on" : "ghost"}" data-a="rou-aim" data-v="${S.me}">🎯 Себя</button>
-      ${opps.map((p) => p.brave ? `<button class="btn small ghost" disabled title="Храбрец">🎖 ${esc(p.name)}</button>` : `<button class="btn small ${aim === p.id ? "on" : "ghost"}" data-a="rou-aim" data-v="${p.id}">🎯 ${esc(p.name)}</button>`).join("")}</div>
-    <button class="btn fire mt" data-a="rou-fire" ${aim && !busy ? "" : "disabled"}>💥 Нажать на спуск</button>
-    ${me.spun ? "" : `<button class="btn ghost mt" data-a="rev-spin" ${busy ? "disabled" : ""}>🔄 Крутануть барабан — шанс снова 1 из ${r.cyl.chambers}</button>`}
-    <div class="small muted center mt">Выстрелишь в себя и выживешь — станешь 🎖 храбрецом: до твоего следующего хода в тебя не целятся. Цель можно выбрать, нажав на игрока за столом.</div>`;
-}
-
-// лицо в строке состояния: чем меньше сердец, тем больше крови
-function drawFace() {
-  const c = document.getElementById("dface"), me = rouMe();
-  if (!c || !me) return;
-  const g = c.getContext("2d"), r = S.room;
-  const blood = me.alive ? 1 - me.hp / r.maxHp : 1;
-  const paint = (img) => {
-    g.fillStyle = "#2a1a14"; g.fillRect(0, 0, 24, 24);
-    if (img) g.drawImage(img, 0, 0, 24, 24);
-    else { g.font = "20px sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(me.avatar || "🙂", 12, 13); }
-    let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    g.fillStyle = "#9a000c";
-    for (let i = 0; i < blood * 90; i++) { const x = rnd() * 24 | 0, y = rnd() * 24 | 0; g.fillRect(x, y, 1 + (rnd() < .3), 1); }
-    for (let i = 0; i < blood * 5; i++) { const x = 3 + rnd() * 18 | 0; g.fillRect(x, 2 + rnd() * 8 | 0, 1, 4 + rnd() * 10 | 0); }
-    if (!me.alive) { g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(0, 0, 24, 24); }
-  };
-  paint(null);
-  if (me.photo) { const img = new Image(); img.referrerPolicy = "no-referrer"; img.onload = () => paint(img); img.src = me.photo; }
-}
-
 /* ---------------------------------------------------------------- 3D и анимации событий */
 function rouTurnReset() {
-  const k = S.room ? S.room.code + ":" + S.room.turn + ":" + S.room.phase : "";
-  if (k !== S.rouTurnKey) { S.rouTurnKey = k; S.rouItem = null; S.rouSteal = null; }
+  const k = S.room ? S.room.code + ":" + S.room.turn + ":" + S.room.phase + ":" + ((S.room.table || {}).pile || 0) : "";
+  if (k !== S.rouTurnKey) { S.rouTurnKey = k; S.rouItem = null; S.rouSteal = null; S.bluffSel = []; }
 }
 
 function rouMount() {
+  rouFs();
   if (typeof Cellar !== "undefined") {
-    Cellar.onPick = (pid) => ROU_ACTIONS["rou-aim"](pid);
-    Cellar.onPickItem = (it) => { if (!S.room || !["play", "shot"].includes(S.room.phase)) return; S.rouInspect = it; if (S.rouView !== "table") { S.rouView = "table"; Cellar.setView("table"); } haptic(); render(); };
+    // нажал на соперника: предмет «на кого-то» — применить к нему, иначе — навести ствол
+    Cellar.onPick = (pid) => {
+      const r = S.room, me = rouMe(); if (!r || r.turn !== S.me || r.phase !== "play" || BQ.busy) return;
+      const it = S.rouItem != null && me ? RI()[me.items[S.rouItem]] : null;
+      if (it && it.target) { if (it.steal) { S.rouSteal = pid; haptic(); render(); } else ROU_ACTIONS["rou-use"](`${S.rouItem}:${pid}`); return; }
+      const p = r.players.find((x) => x.id === pid);
+      if (isRev(r) && p && p.brave) { toast(`${p.name} — храбрец: до своего хода в него(неё) целиться нельзя`); return; }
+      ROU_ACTIONS["rou-aim"](pid);
+    };
+    // нажал на свой предмет на столе: выбрать (ещё раз — снять выбор)
+    Cellar.onPickItem = (it) => {
+      const r = S.room; if (!r || r.game !== "roulette" || it.pid !== S.me || r.turn !== S.me || r.phase !== "play" || BQ.busy) return;
+      S.rouItem = S.rouItem === it.index ? null : it.index; S.rouSteal = null; haptic(); render();
+    };
+    // нажал на револьвер в руке: крутануть барабан (раз за зарядку)
+    Cellar.onPickGun = () => { const me = rouMe(); if (!me || me.spun) return toast("Барабан в эту зарядку уже крутили"); ROU_ACTIONS["rev-spin"](); };
     Cellar.onSpin = () => Sfx.spin();
+    Cellar.select(S.rouItem);
   }
   const el = document.getElementById("stage");
   if (!el) { if (typeof Cellar !== "undefined") Cellar.unmount(); return; }
   Cellar.mount(el, (err) => {
-    if (!S.room || !["roulette", "revolver"].includes(S.room.game) || document.getElementById("stage") !== el) return;   // экран уже сменился
+    if (!S.room || !CELLAR_GAMES.includes(S.room.game) || document.getElementById("stage") !== el) return;   // экран уже сменился
     const ld = document.getElementById("stage-loading");
     if (err) { if (ld) ld.textContent = err.message; return; }
     if (ld) ld.remove();
     Cellar.sync(S.room, S.me);
     rouEvents();
   });
-  drawFace();
 }
 
 /* ---------------------------------------------------------------- очередь: стол меняется только когда доиграла анимация
@@ -353,7 +319,7 @@ const BQ = { q: [], busy: false, timer: 0 };
 const bqKey = (r) => r.code + ":" + (r.game_no || 0) + (r.phase === "lobby" ? ":lobby" : "");
 function bqHold(m) {                                                    // true — сообщение придержано
   const r = m.room;
-  if (!r || !["roulette", "revolver"].includes(r.game)) return false;
+  if (!r || !CELLAR_GAMES.includes(r.game)) return false;
   const shown = S.room;
   if (S.screen !== "room" || !shown || shown.code !== r.code || typeof Cellar === "undefined" || !Cellar.ready() || S.rouGame !== bqKey(r) || !document.getElementById("stage")) { bqFlush(); return false; }
   const top = (x) => { const e = x.events || []; return e.length ? e[e.length - 1].n : 0; };
@@ -392,9 +358,16 @@ function rouEvents() {
 }
 
 // одно событие: 3D-анимация, звук и надпись — звук выстрела ровно в момент удара
+function rouSub(text) {
+  S.rouSub = { text, at: Date.now() };
+  const el = document.getElementById("cfs-sub"); if (!el) return;
+  el.textContent = text; el.style.animationDelay = "0s"; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+}
 function rouPlay1(e, r) {
   Cellar.event(e, r);
-  const rv = isRev(r), tm = Cellar.timing(e);
+  const rv = isRev(r) || isBluff(r), tm = Cellar.timing(e);
+  if (e.text && !rouSecret(e) && e.kind !== "load") setTimeout(() => rouSub(e.text), e.kind === "shot" ? tm.when * 1000 : e.kind === "call" ? 2300 : 0);
+  if (isBluff(r)) return bluffPlay1(e, r, tm);
   const msg = (cls, text) => { const m = document.getElementById("stage-msg"); if (m) { m.className = "stage-msg show " + cls; m.textContent = text; } };
   if (e.kind === "shot") {
     if (e.dice) setTimeout(() => rouDice(e, r), 1050);
@@ -415,6 +388,37 @@ function rouPlay1(e, r) {
   } else if (e.kind === "spin") { Sfx.cylSpin(); msg("load", "барабан раскручен"); }
   else if (e.kind === "item") { Sfx.blip(); if (e.item === "spin") Sfx.spin(); if (e.item === "saw") Sfx.saw(); if (e.item === "freeze") Sfx.bottle(); if (["flashlight", "box", "ear", "spin", "thief"].includes(e.item)) setTimeout(() => rouReveal(e), e.item === "spin" || e.item === "thief" ? 600 : 1600); }
   else if (e.kind === "win") Sfx.thud();
+}
+
+// «Верю — не верю»: раздача, карты на стол, вскрытие, выстрел
+function bluffPlay1(e, r, tm) {
+  const msg = (cls, text) => { const m = document.getElementById("stage-msg"); if (m) { m.className = "stage-msg show " + cls; m.textContent = text; } };
+  if (e.kind === "deal") { Sfx.shuffle(); msg("load", Bluff.RANKS[e.rank].many.toUpperCase()); }
+  else if (e.kind === "play") Sfx.card();
+  else if (e.kind === "call") { Sfx.liar(); msg("bang", "НЕ ВЕРЮ!"); haptic("heavy"); setTimeout(() => bluffReveal(e, r), 750); }
+  else if (e.kind === "shot") {
+    setTimeout(() => Sfx.cock(), 300);
+    setTimeout(() => {
+      if (e.live && e.hit === S.me) rouHurt(e);
+      else if (e.live) { Sfx.revBang(); notify("warning"); try { tg && tg.HapticFeedback.impactOccurred("heavy"); } catch (x) { /* нет */ } }
+      else Sfx.revClick();
+      msg(e.live ? "bang" : "blank", e.live ? "БАХ!" : "щёлк");
+      if (e.live && e.out) setTimeout(Sfx.thud, 950);
+    }, tm.when * 1000);
+  } else if (e.kind === "win") Sfx.thud();
+}
+// вскрытие: крупно карты и приговор
+function bluffReveal(e, r) {
+  const nm = (id) => (id === S.me ? "ты" : ((r.players.find((p) => p.id === id) || {}).name || "?"));
+  const old = document.getElementById("rou-reveal"); if (old) old.remove();
+  const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal bluff " + (e.truth ? "blank" : "live");
+  d.innerHTML = `<div class="rr-card"><div class="rr-small">${esc(nm(e.target))} сказал(а): «${esc(Bluff.claimText(e.cards.length, e.rank))}»</div>
+    <div class="bl-cards">${e.cards.map((c, i) => `<span class="bcard r-${c} ${c === e.rank || c === "J" ? "ok" : "bad"}" style="--i:${i}"><b>${CARD_HTML[c][0]}</b><i>${CARD_HTML[c][1]}</i><b class="br">${CARD_HTML[c][0]}</b></span>`).join("")}</div>
+    <div class="rr-big">${e.truth ? "ПРАВДА" : "ВРАНЬЁ!"}</div><div class="rr-small">Стреляет в себя: <b>${esc(nm(e.loser))}</b></div></div>`;
+  d.onclick = () => d.remove();
+  document.body.appendChild(d);
+  setTimeout(() => d.classList.add("fade"), 2000);
+  setTimeout(() => d.remove(), 2500);
 }
 
 // два зеркала: пуля мечется по столу, а у каждого (кроме стрелка) катится кубик 1–50
@@ -526,7 +530,7 @@ function rouStake(room) {
     if (!S.rouBank[key]) { S.rouBank[key] = 1; Api.bet(tbl, "g", "ante", room.stake).then(() => toast(`Ставка ${room.stake} монет в банке`)).catch((e) => toast("Ставка не списалась: " + e.message)); }
     if (room.phase === "end" && isHost() && !S.rouBank[key + ":s"]) {
       S.rouBank[key + ":s"] = 1;
-      setTimeout(() => Api.settle(tbl, "g", room.winner ? { [room.winner]: room.pot } : {}).catch(() => { S.rouBank[key + ":s"] = 0; }), 2000);
+      setTimeout(() => Api.settle(tbl, "g", room.payout || (room.winner ? { [room.winner]: room.pot } : {})).catch(() => { S.rouBank[key + ":s"] = 0; }), 2000);
     }
     return;
   }
@@ -545,8 +549,10 @@ function recordRoulette(room) {
   const won = room.winner === S.me;
   if (won) store.wins = (store.wins || 0) + 1;
   let sum = gameReward(room, won, me.alive);
-  if (won && room.pot) { if (Api.table(room)) [4000, 9000].forEach((ms) => setTimeout(() => Api.coins().then(() => render()).catch(() => {}), ms)); else store.coins += room.pot; sum += room.pot; }   // банк выжившему (с сервера — переводом)
+  const share = room.payout ? room.payout[S.me] || 0 : won ? room.pot || 0 : 0;   // банк: выжившему, в «Русской рулетке» — ещё и по фишкам храбреца
+  if (share) { if (Api.table(room)) [4000, 9000].forEach((ms) => setTimeout(() => Api.coins().then(() => render()).catch(() => {}), ms)); else store.coins += share; sum += share; }   // с сервера — переводом из банка стола
   if (won && me.stakes) { store.coins += me.stakes * 15; sum += me.stakes * 15; }
+  if (isRev(room) && !room.stake && me.chips && !botCount(room)) { const add = Math.min(Revolver.CHIP_COIN_MAX, me.chips * Revolver.CHIP_COIN); store.coins += add; sum += add; }   // на интерес — немного за храбрость
   store.lastGame = key; S.reward = { key, sum };
   saveProfile(); syncProfile();
 }
@@ -555,7 +561,7 @@ const ROU_ACTIONS = {
   "rou-create": (v) => {
     haptic("medium"); Sfx.unlock();
     S.screen = "connecting"; S.joining = ""; render();
-    Net.host({ game: v === "revolver" ? "revolver" : "roulette" }).catch((e) => { toast(e.message); S.screen = "roulette"; render(); });
+    Net.host({ game: ["revolver", "bluff"].includes(v) ? v : "roulette" }).catch((e) => { toast(e.message); S.screen = "roulette"; render(); });
   },
   "rev-spin": () => { if (!S.room || S.room.turn !== S.me || BQ.busy) return; send({ t: "act", slot: "spin" }); haptic("medium"); },
   "stake-own": (v) => {                                                 // своя ставка: проверяем, хватает ли своих монет
@@ -566,13 +572,20 @@ const ROU_ACTIONS = {
     send({ t: "settings", settings: { stake: n } }); haptic("medium"); S.sheet = null; renderOverlay();
   },
   "rou-settings": () => { S.sheet = { type: "rou-settings" }; renderOverlay(); },
+  "rou-rules": () => { S.sheet = { type: "rou-rules" }; renderOverlay(); },
+  "rou-rot": () => { store.rouRot = store.rouRot === false; saveProfile(); toast(store.rouRot === false ? "Экран не поворачивается" : "Горизонтальный вид"); rouFs(); },
+  "bluff-pick": (v) => { const i = Number(v), sel = (S.bluffSel || []).slice(), j = sel.indexOf(i);
+    if (j >= 0) sel.splice(j, 1); else if (sel.length >= Bluff.MAX_PLAY) return toast(`Не больше ${Bluff.MAX_PLAY} карт за раз`); else sel.push(i);
+    S.bluffSel = sel; haptic(); render(); },
+  "bluff-play": () => { const r = S.room, sel = S.bluffSel || []; if (!r || r.turn !== S.me || BQ.busy || !sel.length) return;
+    send({ t: "act", slot: "play", cards: sel.slice(), expect: (r.hand || []).slice() }); S.bluffSel = []; Sfx.card(); haptic("medium"); },
+  "bluff-call": () => { if (!S.room || S.room.turn !== S.me || BQ.busy) return; send({ t: "act", slot: "call" }); haptic("heavy"); },
   "rou-set": (v) => { const [k, val] = v.split(":"); send({ t: "settings", settings: { [k]: Number(val) } }); },
   "rou-load": (v) => { Sfx.load(); send({ t: "act", slot: "load", value: v }); haptic("medium"); },
-  "rou-item": (v) => { S.rouItem = v === "" ? null : Number(v); S.rouSteal = null; if (v !== "") { S.rouView = null; Cellar.setView(null); S.rouInspect = null; } haptic(); render(); },
+  "rou-item": (v) => { S.rouItem = v === "" ? null : Number(v); S.rouSteal = null; haptic(); render(); },
   "rou-steal": (v) => { S.rouSteal = v; haptic(); render(); },
-  "rou-use": (v) => { const [i, target, pick] = v.split(":"); const me = rouMe(); S.rouItem = null; S.rouSteal = null; S.rouInspect = null;
+  "rou-use": (v) => { const [i, target, pick] = v.split(":"); const me = rouMe(); S.rouItem = null; S.rouSteal = null;
     send({ t: "act", slot: "item", index: Number(i), key: me && me.items[Number(i)], target: target || null, pick: pick == null || pick === "" ? null : Number(pick) }); haptic("medium"); render(); },
-  "rou-view": () => { S.rouView = S.rouView === "table" ? null : "table"; S.rouInspect = null; Cellar.setView(S.rouView); haptic(); render(); },
   "rou-aim": (v) => { if (!S.room || S.room.turn !== S.me || S.room.phase !== "play" || BQ.busy) return; send({ t: "act", slot: "aim", target: v }); haptic(); },
   "rou-fire": () => { if (S.room && S.room.aim && !BQ.busy) { S.rouItem = null; send({ t: "act", slot: "shoot", target: S.room.aim }); haptic("heavy"); } },
   "rou-shoot": (v) => { S.rouItem = null; send({ t: "act", slot: "shoot", target: v }); haptic("heavy"); },

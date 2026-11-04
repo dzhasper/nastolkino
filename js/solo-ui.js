@@ -47,6 +47,7 @@ function viewSolo() {
   const tile = (screen, emoji, name, sub, extra = "") => `<button class="solo-tile ${extra}" data-a="go" data-v="${screen}"><span class="st-e">${emoji}</span><b>${name}</b><span class="small muted">${sub}</span></button>`;
   const recTxt = (k, unit, none = "рекорда нет") => (soloRec(k) != null ? `рекорд: ${soloRec(k)}${unit}` : none);
   return `<div class="fade-in">
+    <div class="pxscene big" style="background-image:url(${Pixel.scene("solo")})"></div>
     ${soloTop("Одиночные игры", "Против бота, на рекорд и с питомцем", "home")}
     <button class="card wheel-card ${wh && wh.ready ? "ready" : ""}" data-a="go" data-v="solo-wheel"><span class="wc-e">🎡</span><div class="grow"><b>Колесо фортуны</b>
       <div class="small muted">${!Api.on ? "Работает через сервер" : wh && wh.ready ? "Бесплатно раз в день — крути!" : "Уже крутил сегодня — приходи завтра"}</div></div><span class="pill ${wh && wh.ready ? "on" : ""}">${wh && wh.ready ? "Крутить" : "Завтра"}</span></button>
@@ -252,7 +253,7 @@ const FUN_GAMES = { fetch: ["🎾", "Апорт", "Брось мячик точ�
 function funPets() { return Api.on && Api.state ? Api.state.pets.filter((p) => p.alive && !p.egg && Date.now() / 1000 >= p.hatch) : []; }
 function viewPetFun() {
   const pets = funPets(), st = Api.on && Api.state;
-  const head = soloTop("Игры с питомцем", "Каждый питомец любит игры по-своему", S.funFrom || "solo");
+  const head = `<div class="pxscene big" style="background-image:url(${Pixel.scene("petfun")})"></div>` + soloTop("Игры с питомцем", "Каждый питомец любит игры по-своему", S.funFrom || "solo");
   if (!Api.on) return `<div class="fade-in">${head}<div class="card mt">Питомцы живут на сервере — открой Настолкино из бота.</div></div>`;
   if (!pets.length) return `<div class="fade-in">${head}<div class="card center mt">Питомцев пока нет — они вылупляются из яиц</div></div>`;
   const p = pets.find((x) => x.id === S.funPet) || pets.find((x) => x.id === st.main_pet) || pets[0];

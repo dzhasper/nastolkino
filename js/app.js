@@ -47,7 +47,7 @@ const SKINS = {
     team: { mafia: "Конкуренты", town: "Команда", solo: "Фрилансер", bounty: "Фрилансер" } },
 };
 const SOLO_SKINS = ["draw", "roulette", "blackjack"];
-const skinKey = () => (S.screen === "room" && S.room ? (S.room.game === "revolver" ? "roulette" : SOLO_SKINS.includes(S.room.game) ? S.room.game : S.room.settings.theme)
+const skinKey = () => (S.screen === "room" && S.room ? (S.room.game === "revolver" || S.room.game === "bluff" ? "roulette" : SOLO_SKINS.includes(S.room.game) ? S.room.game : S.room.settings.theme)
   : S.screen === "mafia" ? S.setup.theme : SOLO_SKINS.includes(S.screen) ? S.screen : "app");
 const SK = () => SKINS[skinKey()] || SKINS.classic;
 
@@ -196,7 +196,7 @@ function boot() {
   Net.onMessage = onMessage;
   Net.onStatus = (s) => { S.net = s; const el = document.getElementById("net-banner"); if (el) el.outerHTML = netBanner(); else if (S.screen === "room") render(); };
   loadProfile(() => {
-    S.pixel = store.pixel !== false;
+    S.pixel = store.pixel === true;                     // по умолчанию — «Бенто»; пиксельный стиль включается в профиле
     S.sound = store.sound !== false;
     S.registered = !!store.name;
     const startParam = tg && tg.initDataUnsafe ? tg.initDataUnsafe.start_param : null;
@@ -251,7 +251,7 @@ function onMessage(m, queued) {
   if (m.t === "state") {
     const prev = S.room;
     if (m.room.game === "draw") drawOnState(m.room);
-    if (m.room.game === "roulette" || m.room.game === "revolver") { S.room = m.room; rouTurnReset(); }
+    if (CELLAR_GAMES.includes(m.room.game)) { S.room = m.room; rouTurnReset(); }
     const keep = m.room.game === "draw" && S.screen === "room" && (drawKeepScreen(m.room, prev)
       || (m.room.phase === "guess" && prev && prev.phase === "guess" && document.activeElement && document.activeElement.id === "guess-input"));
     if (prev && prev.code === m.room.code && prev.phase === "lobby" && m.room.phase !== "lobby" && (S.groupPosted || {})[m.room.code] != null) groupDone(m.room.code, "start");   // в группе — «закрыто»
@@ -265,9 +265,9 @@ function onMessage(m, queued) {
       S.sel = { ability: 0, target: null, duel: false };
       if (m.room.phase === "reveal") { S.flipOpen = false; S.spyOpen = false; S.spyPeek = false; S.spyCross = {}; }
       if (prev && prev.phase !== m.room.phase) notify(m.room.phase === "end" ? "success" : "warning");
-      if (m.room.game !== "roulette" && m.room.game !== "revolver") window.scrollTo({ top: 0, behavior: "smooth" });
+      if (!CELLAR_GAMES.includes(m.room.game)) window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    if (m.room.phase === "end" && m.room.game !== "blackjack") (m.room.game === "draw" ? recordDraw : m.room.game === "spy" ? recordSpy : m.room.game === "roulette" || m.room.game === "revolver" ? recordRoulette : recordGame)(m.room);
+    if (m.room.phase === "end" && m.room.game !== "blackjack") (m.room.game === "draw" ? recordDraw : m.room.game === "spy" ? recordSpy : CELLAR_GAMES.includes(m.room.game) ? recordRoulette : recordGame)(m.room);
     render();
     renderChat();
     if (typeof cupRoom === "function") cupRoom(m.room);                 // турнирный стол: автостарт, итог партии
@@ -297,7 +297,8 @@ function render() {
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
   const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, league: viewLeague, pass: viewPass, cup: viewCup, mafia: viewMafia, spy: viewSpyMenu, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
-  $app.innerHTML = (screens[S.screen] || viewLoading)();
+  const gated = Api.on && Api.state && Api.state.gate && !Api.state.admin && !["register", "connecting", "loading"].includes(S.screen);   // админ сделал подписку на группу обязательной
+  $app.innerHTML = gated ? viewGate() : (screens[S.screen] || viewLoading)();
   renderOverlay();
   MChat.sync();                                                   // мафия в виде чата живёт поверх экрана
   if (PX()) Pixel.apply();
@@ -359,59 +360,67 @@ function tabs() {
 const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 
 function viewHome() {
-  const p = S.profile;
+  const p = S.profile, sc = (k) => `style="background-image:url(${Pixel.scene(k)})"`;
+  const g = (v, scene, name, pp, cls = "", extra = "", act = "go") => `<button class="tile img ${cls}" data-a="${act}" data-v="${v}" ${sc(scene)}>${pp ? `<span class="t-pp">${pp}</span>` : ""}${extra}<span class="t-nm">${name}</span></button>`;
   return `<div class="fade-in">
-    <div class="top"><div class="logo">${PX() ? Pixel.sprite("dice", 3) : "🎲"}</div><div class="grow"><h1>${esc(S.catalog.app)}</h1>
-      <div class="muted small">Привет, ${esc(p.name)}!</div></div>${coinPill()}</div>
-    ${dailyCard("mb")}
-    ${cupCard()}${passCard("mb")}
-    <div class="game-hero" data-a="go" data-v="mafia" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
-      ${PX() ? `<div class="big-emoji">${Pixel.emoji("🕴️", 40)}</div>` : '<div class="big-emoji">🕴️</div>'}
-      <div class="pill" style="background:rgba(255,255,255,.15)">🔥 ${S.catalog.min}–${S.catalog.max} игроков</div>
-      <h2 class="mt">Мафия</h2>
-      <p>6 сценариев: Классика, 90-е, Хэллоуин, Бункер, Дикий Запад, Корпоратив</p>
-      <button class="btn">Играть ▶</button>
+    <div class="home-top"><div class="grow"><small>Привет, ${esc(p.name)} 👋</small><h1>${esc(S.catalog.app)}</h1></div>${coinPill()}</div>
+    <div class="bento home-bento">
+      <button class="tile img w4 h2 big" data-a="go" data-v="mafia" ${sc("classic")}><span class="t-pp">🔥 ${S.catalog.min}–${S.catalog.max} игроков</span>
+        <span class="t-sub">6 сценариев: Классика, 90-е, Хэллоуин, Бункер, Дикий Запад, Корпоратив</span><span class="t-nm">Мафия</span><span class="t-go">Играть ▶</span></button>
+      ${cupTile()}
+      ${g("roulette", "cellar", "Подвал", `🩸 3D · до ${Revolver.MAX_PLAYERS}`, "w2 h2")}
+      ${wheelTile()}${petTile()}
+      ${g("blackjack", "casino", "Блэкджек", `🃏 ${Blackjack.MIN_PLAYERS}–${Blackjack.MAX_PLAYERS} · на монеты`, "w2")}
+      ${g("spy", "spy", "Шпион", `🕵️ ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS}`, "w2", '<span class="t-new">NEW</span>')}
+      ${passHomeTile()}
+      ${g("draw", "studio", "Рисовалка", `✏️ ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS}`, "w2")}
+      ${g("solo", "solo", "Соло", "", "s1")}
+      ${g("", "petfun", "С питомцем", "", "s1", "", "pet-games")}
+      <div class="tile w4 join"><input class="input" id="join-code" maxlength="4" placeholder="КОД" value="${esc(S.joinCode)}" autocomplete="off"><button class="btn" data-a="join">Войти</button></div>
     </div>
-    <div class="game-hero draw-hero mt2" data-a="go" data-v="draw" ${PX() ? `style="background-image:url(${Pixel.scene("studio")})"` : ""}>
-      <div class="pill" style="background:rgba(255,255,255,.15)">✨ Новинка · ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS} игроков</div>
-      <h2 class="mt">Рисовалка</h2>
-      <p>Один рисует слово — остальные угадывают. Художник раздаёт баллы</p>
-      <button class="btn">Рисовать ▶</button>
-    </div>
-    <div class="game-hero rou-hero mt2" data-a="go" data-v="roulette" ${PX() ? `style="background-image:url(${Pixel.scene("cellar")})"` : ""}>
-      <div class="pill" style="background:rgba(120,0,10,.55)">🩸 3D · 2 режима · до ${Revolver.MAX_PLAYERS} игроков</div>
-      <h2 class="mt">Подвал</h2>
-      <p>«Последний заряд» — дробовик и тайные патроны. «Русская рулетка» — револьвер, один патрон, большой стол</p>
-      <button class="btn">Спуститься ▶</button>
-    </div>
-    <div class="game-hero bj-hero mt2" data-a="go" data-v="blackjack" ${PX() ? `style="background-image:url(${Pixel.scene("casino")})"` : ""}>
-      <div class="pill" style="background:rgba(10,60,30,.7)">🃏 ${Blackjack.MIN_PLAYERS}–${Blackjack.MAX_PLAYERS} игроков · на монеты</div>
-      <h2 class="mt">Блэкджек</h2>
-      <p>Игроки против игроков. Честная раздача: колода проверяется на твоём телефоне</p>
-      <button class="btn">За стол ▶</button>
-    </div>
-    <div class="game-hero spy-home mt2" data-a="go" data-v="spy">
-      <div class="pill" style="background:rgba(20,60,70,.7)">🕵️ Новинка · ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS} игроков</div>
-      <h2 class="mt">Шпион</h2>
-      <p>Все знают, где вы находитесь. Кроме одного. Вычислите шпиона по ответам</p>
-      <button class="btn">Играть ▶</button>
-    </div>
-    <button class="game-hero solo-hero mt2" data-a="go" data-v="solo" ${PX() ? `style="background-image:url(${Pixel.scene("arcade")})"` : ""}>
-      <div class="pill" style="background:rgba(60,20,80,.7)">👤 один · против бота</div>
-      <h2 class="mt">Одиночные игры</h2>
-      <p>Колесо фортуны, блэкджек, «Выше или ниже», напёрстки — на монеты. Мемори, реакция, тир и змейка — просто так</p>
-      <span class="btn">Играть ▶</span>
-    </button>
-    <button class="game-hero petfun-hero mt2" data-a="pet-games" ${PX() ? `style="background-image:url(${Pixel.scene("studio")})"` : ""}>
-      <div class="pill" style="background:rgba(20,70,60,.7)">🐾 ты и питомец</div>
-      <h2 class="mt">Игры с питомцем</h2>
-      <p>Апорт, прятки и пузыри. Компанейские питомцы обожают играть, а одиночки любят тишину</p>
-      <span class="btn">Играть ▶</span>
-    </button>
-    <div class="section-title">Есть код комнаты?</div>
-    <div class="join-box"><input class="input" id="join-code" maxlength="4" placeholder="KQ7F" value="${esc(S.joinCode)}" autocomplete="off">
-      <button class="btn" data-a="join">Войти</button></div>
   </div>${tabs()}`;
+}
+// плитки главной: турнир (или лига), колесо/сундук, питомец, пропуск
+function cupTile() {
+  const c = Api.on && Api.state && Api.state.cup;
+  const show = c && (["reg", "play"].includes(c.status) || (c.status === "plan" && c.start_at - cupNow() < 4 * 3600) || (c.status === "done" && c.joined));
+  if (show) {
+    const left = Math.max(0, c.start_at - cupNow());
+    const v = c.status === "play" ? "Идёт" : c.status === "done" ? "Итоги" : fmtLeft2(left);
+    const s2 = c.status === "reg" ? (c.joined ? "✓ ты записан(а)" : "запись открыта") : c.status === "plan" ? "запись за 40 мин" : c.status === "play" ? (c.joined ? (c.out ? "ты выбыл(а)" : "🔥 ты в игре") : "смотри сетку") : "забери приз";
+    return `<button class="tile w2 cup ${c.big ? "big-cup" : ""} ${c.status === "play" ? "live" : ""} ${c.status === "reg" && !c.joined ? "hot" : ""}" data-a="go" data-v="cup">
+      ${c.status === "reg" && !c.joined ? '<span class="t-dot"></span>' : ""}<div class="t-k">${c.big ? "👑 Турнир месяца" : "🏆 Турнир дня"}</div><div class="t-v">${v}</div><div class="t-s">${s2}</div></button>`;
+  }
+  if (Api.on) return `<button class="tile w2" data-a="go" data-v="league"><div class="t-k">🏅 Лига недели</div><div class="t-v">Топ-10</div><div class="t-s">бои питомцев · призы</div></button>`;
+  return `<button class="tile w2" data-a="go" data-v="solo"><div class="t-k">🎯 Тренировка</div><div class="t-v">Против бота</div><div class="t-s">рекорды и монеты</div></button>`;
+}
+function wheelTile() {
+  if (Api.on) { const ready = wheelReady();
+    return `<button class="tile center ${ready ? "hot" : ""}" data-a="go" data-v="solo-wheel">${ready ? '<span class="t-dot"></span>' : ""}<div><div class="t-ico">🎡</div><div class="t-s" style="color:var(--text);font-weight:700">${ready ? "Крутить" : "Завтра"}</div></div></button>`; }
+  const ready = Shop.chestReady();
+  return `<button class="tile center ${ready ? "hot" : ""}" ${ready ? 'data-a="chest"' : ""}>${ready ? '<span class="t-dot"></span>' : ""}<div><div class="t-ico">🎁</div><div class="t-s" style="color:var(--text);font-weight:700">${ready ? "Сундук" : "Завтра"}</div></div></button>`;
+}
+function petTile() {
+  const st = Api.on && Api.state, list = st ? st.pets.filter((x) => x.alive) : [];
+  const mp = list.find((x) => x.id === st.main_pet && !x.egg) || list.find((x) => !x.egg) || list[0];
+  if (!mp) return `<button class="tile center" data-a="tab" data-v="pets"><div><div class="t-ico">🐾</div><div class="t-s" style="color:var(--text);font-weight:700">Питомцы</div></div></button>`;
+  if (mp.egg) return `<button class="tile center" data-a="tab" data-v="pets"><span class="t-pet">${Pets.sprite(mp.rarity + mp.dna, 54, { egg: true })}</span></button>`;
+  const h = Math.max(0, Math.min(100, Math.round(petLive(mp).hunger))), col = h < 25 ? "#ff4d5e" : h < 50 ? "#ffb020" : "#41d3a5";
+  const fdOn = st.feeder && st.feeder.active;
+  return `<button class="tile center" data-a="tab" data-v="pets">${h < 25 && !fdOn ? '<span class="t-dot"></span>' : ""}${fdOn ? '<span class="t-fdr" title="Кормушка работает">🪣</span>' : ""}<span class="t-pet">${Pets.sprite(petCode(mp), 56)}</span><span class="t-bar"><i style="width:${h}%;background:${col}"></i></span></button>`;
+}
+function passHomeTile() {
+  const p = passState(); if (!p) return "";
+  const lv = p.level, into = p.xp - lv * p.step, pct = lv >= p.max ? 100 : Math.round(into / p.step * 100);
+  return `<button class="tile w4" data-a="go" data-v="pass">${p.ready ? '<span class="t-dot"></span>' : ""}<div class="t-k">🎫 Пропуск «${esc(p.name)}» · уровень ${lv} из ${p.max}${p.ready ? ` · 🎁 наград: ${p.ready}` : ""}</div><div class="t-prog"><i style="width:${pct}%"></i></div></button>`;
+}
+
+// «подпишись на группу» — пока игрок не подписан, играть нельзя (включает админ в админ-боте)
+function viewGate() {
+  const g = Api.state.gate;
+  return `<div class="fade-in gate"><div class="gate-card"><img class="gate-ava" src="img/group/avatar.jpg" alt="">
+    <h1>Подпишись на группу</h1><p class="muted mt">Чтобы играть, подпишись на <b>${esc(g.title || "группу")}</b>: там турниры, их раунды и победители, приглашения в комнаты и публичные обмены. Писать туда может только бот — спама не будет.</p>
+    ${g.link ? `<button class="btn mt2" data-a="gate-open">📢 Подписаться</button>` : ""}<button class="btn ghost mt" data-a="gate-check">✅ Я подписался</button></div></div>`;
 }
 
 function myCard(lookOverride) {
@@ -582,17 +591,33 @@ function groupDone(code, why) {
   delete S.groupPosted[code];
   Api.call("/api/group/close", { code, why: why === "gone" ? "gone" : "start" }).catch(() => {});
 }
-// «Закинуть в группу»: хост выкладывает приглашение в общую группу бота (кнопка есть, только если группа подключена на сервере)
+// «Закинуть в группу»: хост выкладывает приглашение в общую группу бота (плитка есть, только если группа подключена на сервере)
 function groupBtn(r) {
   if (!r || !isHost() || r.phase !== "lobby" || !Api.state || !Api.state.group) return "";
   const posted = (S.groupPosted || {})[r.code];
-  return `<button class="btn ghost small mt wide" data-a="group-post" ${posted ? "disabled" : ""}>${posted ? "📢 Приглашение уже в группе" : `📢 Закинуть в группу ${esc(Api.state.group.title || "")}`}</button>`;
+  return `<button class="tile w2 t-act" data-a="group-post" ${posted ? "disabled" : ""}>${posted ? "📢 Уже в группе" : "📢 В группу"}</button>`;
+}
+// общее лобби всех игр: код, число игроков, настройки, стол, позвать/в группу, правила, старт
+function lobbyBento(o) {
+  const r = S.room, host = isHost(), grp = groupBtn(r), bots = Bots.bar(r);
+  return `<div class="lob-top"><button class="avatar" data-a="leave">←</button><div class="grow"><small>${esc(o.kicker || "Комната")}</small><h1>${esc(o.title)}</h1></div>${o.right || ""}</div>
+  <div class="bento lobby-bento">
+    <button class="tile ${host && o.settings ? "w2" : "w3"}" data-a="copy"><div class="t-k">${o.codeLabel || "Код комнаты"} · 📋</div><div class="t-code">${r.code}</div></button>
+    <div class="tile"><div class="t-k">${o.countLabel || "Игроков"}</div><div class="t-v">${r.players.length}<small>/${o.max}</small></div></div>
+    ${host && o.settings ? `<button class="tile center" data-a="${o.settings}"><span class="t-ico">⚙️</span></button>` : ""}
+    <div class="tile w4 t-players"><div class="t-k">${o.seats || "Игроки"}</div>${playerTiles(r.players, { kick: host, peek: true })}</div>
+    <button class="tile ${grp ? "w2" : "w4"} t-act" data-a="share">📨 Позвать друзей</button>${grp}
+    <div class="tile w4 t-rules ${o.scene ? "img" : ""}" ${o.scene ? `style="background-image:url(${Pixel.scene(o.scene)})"` : ""}>${o.rulesLabel ? `<div class="t-k">${o.rulesLabel}</div>` : ""}<div class="t-body">${o.rules}</div></div>
+    ${bots ? `<div class="tile w4 auto">${bots}</div>` : ""}
+    ${host ? `<button class="tile w4 t-start" data-a="start" ${o.enough ? "" : "disabled"}>${o.enough ? o.start : o.waitText}</button>`
+      : `<div class="tile w4 t-wait">⏳ ${o.hostWait || "Ждём, когда хост начнёт игру…"}</div>`}
+  </div>`;
 }
 function viewRoomInner() {
   const r = S.room;
   if (r.game === "draw") return viewDrawRoom();
   if (r.game === "spy") return viewSpyRoom();
-  if (r.game === "roulette" || r.game === "revolver") return viewRouletteRoom();
+  if (CELLAR_GAMES.includes(r.game)) return viewRouletteRoom();
   if (r.game === "blackjack") return viewBlackjackRoom();
   if (MChat.active()) return `<div class="mc-spacer"></div>`;
   const views = { lobby: viewLobby, reveal: viewReveal, night: viewNight, day: viewDay, vote: viewVote, verdict: viewVerdict, end: viewEnd };
@@ -602,31 +627,16 @@ function viewRoomInner() {
 }
 
 function viewLobby() {
-  const r = S.room;
-  const th = theme(r.settings.theme);
-  const enough = r.players.length >= S.catalog.min;
-  return `
-    <div class="top"><button class="avatar" data-a="leave">←</button><div class="grow"><h1>${esc(SK().lobby)}</h1>
-      <div class="muted small">${r.players.length} из ${S.catalog.max} игроков</div></div></div>
-    <div class="card code-card"><div class="muted small">КОД КОМНАТЫ</div><div class="code">${r.code}</div>
-      <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
-      <button class="btn small grow" data-a="share">📨 Позвать друзей</button></div>${groupBtn(S.room)}</div>
-    <div class="section-title">Игроки</div>
-    ${playerTiles(r.players, { kick: isHost(), peek: true })}
-    <div class="section-title">Сценарий</div>
-    <div class="card lobby-theme" style="${PX() ? "" : `background:linear-gradient(150deg, ${th.accent}33, ${th.accent2}66)`}">
-      <div class="row"><div style="font-size:40px">${emo(th.emoji, 16)}</div><div class="grow"><b class="display">${esc(th.title)}</b>
-        <div class="small" style="opacity:.85">${esc(th.tagline)}</div></div>
-        ${isHost() ? `<button class="btn ghost small" data-a="settings">⚙️</button>` : ""}</div>
-      <div class="small mt" style="opacity:.85">✨ ${esc(th.twist)}</div>
-      <div class="chips mt">${r.plan.map((x) => `<span class="pill" title="${esc(x.desc)}">${emo(x.emoji, 12)} ${esc(x.name)}${x.count > 1 ? " ×" + x.count : ""}</span>`).join("")}</div>
-      <div class="chips mt"><span class="pill">${r.mode.emoji} ${esc(r.mode.title)}</span>
-        <span class="pill">${r.settings.reveal ? "👁 Роли умерших видны" : "🙈 Роли скрыты"}</span>
-        <span class="pill">${r.settings.anonymous ? "🗳 Тайное голосование" : "🗳 Открытое голосование"}</span></div>
-    </div>
-    ${Bots.bar(S.room)}
-    ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Начать игру 🎬" : `Ждём игроков (минимум ${S.catalog.min})`}</button>`
-      : `<div class="card center mt2 muted">⏳ Ждём, когда хост начнёт игру…</div>`}`;
+  const r = S.room, th = theme(r.settings.theme);
+  const rules = `<div class="row"><div style="font-size:34px">${emo(th.emoji, 16)}</div><div class="grow"><b class="display">${esc(th.title)}</b>
+      <div class="small" style="opacity:.9">${esc(th.tagline)}</div></div></div>
+    <div class="small mt" style="opacity:.9">✨ ${esc(th.twist)}</div>
+    <div class="chips mt">${r.plan.map((x) => `<span class="pill" title="${esc(x.desc)}">${emo(x.emoji, 12)} ${esc(x.name)}${x.count > 1 ? " ×" + x.count : ""}</span>`).join("")}</div>
+    <div class="chips mt"><span class="pill">${r.mode.emoji} ${esc(r.mode.title)}</span>
+      <span class="pill">${r.settings.reveal ? "👁 Роли умерших видны" : "🙈 Роли скрыты"}</span>
+      <span class="pill">${r.settings.anonymous ? "🗳 Тайное голосование" : "🗳 Открытое голосование"}</span></div>`;
+  return lobbyBento({ kicker: "Мафия · комната", title: SK().lobby, max: S.catalog.max, settings: "settings", scene: r.settings.theme, rulesLabel: "Сценарий", rules,
+    enough: r.players.length >= S.catalog.min, start: "Начать игру 🎬", waitText: `Ждём игроков (минимум ${S.catalog.min})` });
 }
 
 function viewReveal() {
@@ -874,6 +884,8 @@ function renderOverlay() {
     body = S.room ? bjSettingsSheet() : "";
   } else if (S.sheet.type === "rou-settings") {
     body = rouSettingsSheet();
+  } else if (S.sheet.type === "rou-rules") {
+    body = S.room ? `<h2>📖 Как играть</h2><div class="rou-rules">${rouRulesHtml(modeOf(S.room))}</div>` : "";
   } else if (S.sheet.type === "spy-settings") {
     body = spySettingsSheet();
   } else if (S.sheet.type === "spy-guess") {
@@ -894,6 +906,8 @@ function renderOverlay() {
     body = playerSheet(S.sheet.data);
   } else if (S.sheet.type === "pet-hat") {
     body = petHatSheet();
+  } else if (S.sheet.type === "feeder") {
+    body = feederSheet();
   } else if (S.sheet.type === "pass-got") {
     body = passGotSheet();
   } else if (S.sheet.type === "gifts") {
@@ -1019,6 +1033,8 @@ const actions = {
     coinRain(); render();
   },
   peek: (v) => { S.sheet = { type: "peek", id: v }; haptic(); renderOverlay(); },
+  "gate-open": () => { const l = Api.state && Api.state.gate && Api.state.gate.link, tg = window.Telegram && window.Telegram.WebApp; if (!l) return; if (tg && tg.openTelegramLink && /^https:\/\/t\.me\//.test(l)) tg.openTelegramLink(l); else window.open(l, "_blank"); },
+  "gate-check": () => Api.act("/api/me", { gate: 1 }).then(() => { if (Api.state.gate) toast("Пока не вижу подписки — подпишись и нажми ещё раз"); else { notify("success"); toast("✅ Спасибо! Добро пожаловать"); } render(); }).catch((e) => toast(e.message)),
   "cancel-join": () => { Net.stop(); S.screen = "home"; render(); },
   tab: (v) => { S.screen = v; S.regName = ""; S.regAvatar = null; if (v === "shop") S.shopTry = null; render(); window.scrollTo(0, 0); },
   go: (v) => { S.screen = v; if (v === "petfun") { S.funFrom = "solo"; S.fun = null; } if (v === "pass") { S.passX = null; S.passSel = null; } if (v === "cup") { S.cup = null; S.cupAt = 0; S.cupWant = Api.state && Api.state.cup ? Api.state.cup.id : null; } render(); window.scrollTo(0, 0); },
@@ -1037,7 +1053,7 @@ const actions = {
   },
   "group-post": () => {
     const r = S.room; if (!r) return;
-    const M = { roulette: window.Roulette, revolver: window.Revolver, blackjack: window.Blackjack, draw: window.Draw }[r.game];
+    const M = { roulette: window.Roulette, revolver: window.Revolver, bluff: window.Bluff, blackjack: window.Blackjack, draw: window.Draw }[r.game];
     const max = (M && M.MAX_PLAYERS) || (S.catalog && S.catalog.max) || 12;
     Api.call("/api/group/room", { code: r.code, game: r.game || "mafia", title: r.theme ? r.theme.title : "", players: r.players.length, max, stake: (r.settings && r.settings.stake) || 0 })
       .then(() => { (S.groupPosted = S.groupPosted || {})[r.code] = 1; toast("📢 Приглашение в группе"); notify("success"); render(); })
@@ -1046,7 +1062,7 @@ const actions = {
   leave: () => {
     const go = () => { haptic("medium"); if (S.room && S.room.phase === "lobby" && isHost()) groupDone(S.room.code, "gone"); send({ t: "leave" }); };
     if (S.room && !["lobby", "end"].includes(S.room.phase)) {
-      const q = isHost() ? "Ты хост: если выйдешь, игра закончится у всех. Выйти?" : ["roulette", "revolver"].includes(S.room.game) ? "Выйти из игры? Ты встанешь из-за стола и выбудешь" : "Выйти из игры?";
+      const q = isHost() ? "Ты хост: если выйдешь, игра закончится у всех. Выйти?" : CELLAR_GAMES.includes(S.room.game) ? "Выйти из игры? Ты встанешь из-за стола и выбудешь" : "Выйти из игры?";
       if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
     } else go();
   },
@@ -1062,7 +1078,7 @@ const actions = {
     const code = S.room.code;
     const link = S.bot ? (S.miniapp ? `https://t.me/${S.bot}/${S.miniapp}?startapp=${code}` : `https://t.me/${S.bot}?start=${code}`)
       : `${location.origin}${location.pathname}?room=${code}`;
-    const game = { draw: "Го в рисовалку!", roulette: "Спускайся в подвал. Один дробовик, один стол.", revolver: "Спускайся в подвал. Револьвер, один патрон, шесть гнёзд.", blackjack: "Садись за стол, раздаю!", spy: "Го в Шпиона! Кто-то из нас не знает, где мы 🕵️" }[S.room.game] || "Го в мафию!";
+    const game = { draw: "Го в рисовалку!", roulette: "Спускайся в подвал. Один дробовик, один стол.", revolver: "Спускайся в подвал. Револьвер, один патрон, шесть гнёзд.", bluff: "Спускайся в подвал: карты, блеф и у каждого свой револьвер.", blackjack: "Садись за стол, раздаю!", spy: "Го в Шпиона! Кто-то из нас не знает, где мы 🕵️" }[S.room.game] || "Го в мафию!";
     const text = `${game} ${S.room.theme.emoji} «${S.room.theme.title}». Код комнаты: ${code}`;
     if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
     else if (navigator.share) navigator.share({ title: S.room.theme.title, text, url: link }).catch(() => {});
@@ -1114,7 +1130,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, CUP_ACTIONS, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, MChat.ACTIONS, PASS_ACTIONS, SPY_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
+Object.assign(actions, FEEDER_ACTIONS, CUP_ACTIONS, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, MChat.ACTIONS, PASS_ACTIONS, SPY_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");

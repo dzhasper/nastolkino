@@ -289,3 +289,19 @@ body.pixel .gp-row { border-radius: 0; }
 .lg-pet { width: 36px; height: 36px; display: grid; place-items: center; }
 .lg-pts { font-size: 18px; color: #ffd23f; }
 body.pixel .lg-row, body.pixel .league-card { border-radius: 0; }
+.pbar.att i { background: #ff6fa8; }
+.pbar.att.low i { background: #ff4d5e; }
+.pet-card .pbar + .pbar { margin-top: 3px; height: 5px; }
+.pet-card { position: relative; }
+.pet-card .pet-lonely { position: absolute; left: 8px; top: 6px; font-size: 14px; animation: lonelyBeat 1.4s ease-in-out infinite; }
+.pet-card.lonely .pet-spr { animation-duration: 1.8s !important; filter: saturate(.8); }
+@keyframes lonelyBeat { 50% { transform: scale(1.2); } }
+.att-hint { margin-top: 4px; }
+/* дуется без внимания */
+.pet-stage.sulk .pet-act { animation: sulkSway 3.2s ease-in-out infinite; filter: saturate(.75) brightness(.92); }
+.pet-stage .sulk-cloud { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); font-size: 34px; z-index: 3; animation: cloudFloat 2.6s ease-in-out infinite; pointer-events: none; }
+.pet-stage .sulk-cloud i { position: absolute; font-style: normal; font-size: 12px; left: 30%; top: 30px; animation: rainDrop 1.1s linear infinite; }
+.pet-stage .sulk-cloud i + i { left: 60%; animation-delay: .5s; }
+@keyframes sulkSway { 0%, 100% { transform: rotate(-3deg) translateY(2px); } 50% { transform: rotate(3deg) translateY(0); } }
+@keyframes cloudFloat { 50% { transform: translateX(-50%) translateY(-4px); } }
+@keyframes rainDrop { from { transform: translateY(0); opacity: 1; } to { transform: translateY(26px); opacity: 0; } }

@@ -1,4 +1,6 @@
-/* Подвал в 3D: «Последний заряд» (дробовик в центре стола на 2–4) и «Русская рулетка» (револьвер, большой круглый стол на 2–6).
+/* Подвал в 3D: «Последний заряд» (дробовик в центре стола на 2–4), «Русская рулетка» (револьвер, большой круглый стол на 2–6)
+   и «Верю — не верю» (карты: у каждого свой револьвер, над столом висит карта, которую требует стол).
+   Во время партии сцена — на весь экран, горизонтально (если телефон держат вертикально, страница повёрнута: body.cfs-rot).
    Стиль — игры конца 90-х: низкие полигоны, текстуры 32×32 без сглаживания, «дрожащие» вершины, кадр 240 px с урезанными цветами.
    Люди — js/cellar-people.js. Подписи (имена, предметы) — обычный HTML поверх сцены.
    Важное правило: состояние стола (сердца, звёздочки, раны, смерть) меняется только когда доиграла анимация —
@@ -10,7 +12,7 @@ const Cellar = (() => {
   let W = 240, H = 240, clock0 = 0, lastDraw = 0;
   const state = { mode: "shotgun", seats: [], figs: {}, me: null, gunYaw: 0, shake: 0, flash: 0, hurt: 0, flicker: 0, smoke: [], dust: null, view: null, evAim: null };
   let gun, rev, lamp, spot, bulb, redLight, candleLight, roomGroup, figGroup, decals, tableGroup;
-  const api = { onPick: null, onPickItem: null };
+  const api = { onPick: null, onPickItem: null, onPickGun: null };
   const P = () => window.CellarPeople;
 
   /* ---------------------------------------------------------------- загрузка three.js по требованию */
@@ -85,6 +87,42 @@ const Cellar = (() => {
     shells: () => tex(16, (g, s) => { g.fillStyle = "#8a1a12"; g.fillRect(0, 0, s, s); g.fillStyle = "#e8c040"; g.fillRect(0, 6, s, 4); g.fillStyle = "#2a0a06"; g.fillRect(3, 7, 10, 1); }),
     vest: () => tex(16, (g, s) => { noise(g, s, 70, 14, [.62, .8, .45]); g.fillStyle = "#24361a"; g.fillRect(0, 5, s, 1); g.fillRect(0, 11, s, 1); g.fillRect(7, 0, 1, s); }),
   };
+
+  // карты «Верю — не верю»: рубашка и лицо (король, дама, туз, джокер), рисуются кодом
+  const CARD_TEX = {};
+  function cardTex(rank) {
+    if (CARD_TEX[rank]) return CARD_TEX[rank];
+    const c = document.createElement("canvas"); c.width = 30; c.height = 42;
+    const g = c.getContext("2d");
+    if (rank === "back") {
+      g.fillStyle = "#e8dcc0"; g.fillRect(0, 0, 30, 42);
+      g.fillStyle = "#6a0c12"; g.fillRect(2, 2, 26, 38);
+      g.fillStyle = "#9a1a1e"; for (let y = 3; y < 40; y += 4) for (let x = 3 + ((y >> 2) % 2) * 2; x < 28; x += 4) g.fillRect(x, y, 2, 2);
+      g.fillStyle = "#e0b040"; g.fillRect(13, 17, 4, 8); g.fillRect(11, 19, 8, 4);
+    } else {
+      const red = rank === "Q" || rank === "J", ink = red ? "#b0101a" : "#141014";
+      g.fillStyle = "#f0e6cc"; g.fillRect(0, 0, 30, 42);
+      g.fillStyle = "#c8b890"; g.fillRect(0, 0, 30, 1); g.fillRect(0, 41, 30, 1); g.fillRect(0, 0, 1, 42); g.fillRect(29, 0, 1, 42);
+      g.fillStyle = ink; g.font = "bold 9px monospace"; g.textBaseline = "top";
+      const L = { K: "К", Q: "Д", A: "Т", J: "Дж" }[rank];
+      g.fillText(L, 2, 2);
+      g.save(); g.translate(28, 40); g.rotate(Math.PI); g.fillText(L, 0, 0); g.restore();
+      const px = (pts) => pts.forEach(([x, y, w, h]) => g.fillRect(x, y, w, h));
+      g.fillStyle = ink;
+      if (rank === "K") { px([[8, 12, 14, 3], [8, 8, 2, 4], [14, 7, 2, 5], [20, 8, 2, 4], [9, 15, 12, 10], [11, 25, 8, 6]]); g.fillStyle = "#e0b040"; px([[8, 11, 14, 2], [14, 6, 2, 2], [8, 7, 2, 2], [20, 7, 2, 2]]); g.fillStyle = "#f0e6cc"; px([[12, 18, 2, 2], [16, 18, 2, 2]]); }
+      if (rank === "Q") { px([[10, 9, 10, 3], [9, 12, 12, 12], [7, 24, 16, 8]]); g.fillStyle = "#e0b040"; px([[10, 7, 2, 2], [14, 6, 2, 3], [18, 7, 2, 2], [10, 9, 10, 1]]); g.fillStyle = "#f0e6cc"; px([[12, 15, 2, 2], [16, 15, 2, 2], [13, 20, 4, 1]]); }
+      if (rank === "A") { px([[14, 9, 2, 2], [12, 11, 6, 3], [10, 14, 10, 4], [9, 18, 12, 4], [10, 22, 4, 2], [16, 22, 4, 2], [14, 22, 2, 6], [11, 28, 8, 2]]); }
+      if (rank === "J") { g.fillStyle = "#b0101a"; px([[7, 10, 6, 4], [17, 10, 6, 4], [12, 8, 6, 6]]); g.fillStyle = "#2a6a2a"; px([[9, 14, 12, 3]]); g.fillStyle = "#e0b040"; px([[6, 9, 2, 2], [22, 9, 2, 2], [14, 6, 2, 2]]); g.fillStyle = "#e8c8a0"; px([[10, 17, 10, 9]]); g.fillStyle = "#141014"; px([[12, 20, 2, 2], [16, 20, 2, 2], [12, 23, 6, 1]]); g.fillStyle = "#b0101a"; px([[9, 26, 12, 6]]); }
+    }
+    const t = new T.CanvasTexture(c); t.magFilter = T.NearestFilter; t.minFilter = T.NearestFilter; t.generateMipmaps = false;
+    return (CARD_TEX[rank] = t);
+  }
+  const CARD_W = .15, CARD_H = .21;
+  // карта рубашкой вверх (лежит на столе); flip — лицом вверх
+  function cardMesh(rank) {
+    const edge = mat({ color: 0xe8dcc0 }), back = mat({ map: cardTex("back") }), face = mat({ map: cardTex(rank || "back") });
+    return new T.Mesh(new T.BoxGeometry(CARD_W, .004, CARD_H), [edge, edge, back, face, edge, edge]);
+  }
 
   /* ---------------------------------------------------------------- пост-обработка: урезание цветов + дизеринг */
   const POST_FS = `
@@ -266,6 +304,10 @@ const Cellar = (() => {
   }
 
   /* ---------------------------------------------------------------- игрок за столом */
+  function dropFig(f) {
+    figGroup.remove(f); disposeTree(f); f.userData.person.dispose();
+    if (f.userData.rv) { scene.remove(f.userData.rv); disposeTree(f.userData.rv); f.userData.rv = null; }
+  }
   function makeFigure(p, idx) {
     const g = new T.Group();
     const person = P().build(T, p.char != null ? p.char : idx, { snap });
@@ -285,7 +327,9 @@ const Cellar = (() => {
     const stars = makeStars(); person.head.add(stars);
     const pool = put(g, new T.Mesh(new T.CircleGeometry(.42, 9), mat({ color: 0x5a0008, transparent: true, opacity: .9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 })), 0, .787, .72, -Math.PI / 2);
     pool.position.z = .86; pool.visible = false;                                           // лужа под головой (растёт после смерти лицом в стол)
-    Object.assign(ud, { hearts, items, mirror, rug, rugM, chair, stars, pool });
+    const fan = new T.Group(); fan.position.set(0, 1.02, .5); fan.rotation.x = -.35; person.body.add(fan);   // карты в руках («Верю — не верю»)
+    const chips = new T.Group(); chips.position.set(.42, .785, .78); chips.scale.setScalar(1.7); g.add(chips);   // фишки храбреца (револьвер)
+    Object.assign(ud, { hearts, items, mirror, rug, rugM, chair, stars, pool, fan, chips, fanN: -1, chipN: -1 });
     g.userData = ud;
     return g;
   }
@@ -376,18 +420,18 @@ const Cellar = (() => {
   }
 
   // размеры стола и мест для режима
-  const GEO = { shotgun: { table: 1.5, R: 2.05, cam: [0, 2.15, 3.22] }, revolver: { table: 1.95, R: 2.5, cam: [0, 2.2, 3.12] } };
+  const GEO = { shotgun: { table: 1.5, R: 2.05, cam: [0, 2.15, 3.22] }, revolver: { table: 1.95, R: 2.5, cam: [0, 2.2, 3.12] }, bluff: { table: 1.5, R: 2.05, cam: [0, 2.1, 3.2] } };
   const geo = () => GEO[state.mode] || GEO.shotgun;
   function setMode(mode, force) {
     if (!force && state.mode === mode && tableGroup) return;
     state.mode = mode;
     if (tableGroup) { scene.remove(tableGroup); disposeTree(tableGroup); }
-    Object.values(state.figs).forEach((f) => { figGroup.remove(f); disposeTree(f); f.userData.person.dispose(); }); state.figs = {};
+    Object.values(state.figs).forEach((f) => { dropFig(f); }); state.figs = {};
     tableGroup = new T.Group(); scene.add(tableGroup);
-    const r = geo().table, red = mode === "revolver", seg = red ? 14 : 10;
+    const r = geo().table, red = mode === "revolver", cards = mode === "bluff", seg = red ? 14 : 10;
     spot.angle = red ? 1.12 : .9; spot.penumbra = red ? .6 : .5; spot.distance = red ? 12 : 10;   // большой стол — шире свет
     put(tableGroup, cyl(r, r, .1, mat({ map: TEX.wood(), flatShading: true }), seg), 0, .72, 0);
-    put(tableGroup, cyl(r - .28, r - .28, .102, mat({ map: TEX.felt(red), flatShading: true }), seg), 0, .722, 0);
+    put(tableGroup, cyl(r - .28, r - .28, .102, mat({ map: TEX.felt(red), color: cards ? 0x6a8ab0 : 0xffffff, flatShading: true }), seg), 0, .722, 0);
     put(tableGroup, new T.Mesh(new T.TorusGeometry(r - .27, .02, 3, seg), mat({ color: 0xa88a40, emissive: 0x1a1000 })), 0, .775, 0, Math.PI / 2, 0, Math.PI / seg);
     put(tableGroup, cyl(r + .06, r - .04, .08, mat({ color: 0x2e1a0c, flatShading: true }), seg), 0, .64, 0);
     put(tableGroup, cyl(.16, .26, .62, mat({ color: 0x2a1a0e, flatShading: true }), 6), 0, .31, 0);
@@ -407,8 +451,18 @@ const Cellar = (() => {
     if (gun) { scene.remove(gun); disposeTree(gun); gun = null; }
     if (rev) { scene.remove(rev); disposeTree(rev); rev = null; }
     if (red) { rev = makeRevolver(); rev.position.set(0, .8, 0); rev.rotation.set(0, .6, Math.PI / 2); scene.add(rev); state.revPos = rev.position.clone(); state.revQ = rev.quaternion.clone(); }
+    else if (cards) {                                                    // карта стола висит под лампой и медленно крутится; куча карт — в центре
+      const hang = new T.Group(); hang.position.set(0, 1.62, 0); tableGroup.add(hang);
+      put(hang, box(.006, .5, .006, mat({ color: 0x2a2a2a })), 0, .45, 0);
+      const fm = mat({ map: cardTex("K"), emissive: 0x1a1408 }), ed = mat({ color: 0xe8dcc0 });
+      const big = put(hang, new T.Mesh(new T.BoxGeometry(.34, .48, .006), [ed, ed, ed, ed, fm, fm]), 0, 0, 0);
+      put(hang, box(.05, .03, .012, mat({ color: 0x5a5a5a })), 0, .25, 0);
+      state.rankCard = { g: hang, mesh: big, mat: fm, rank: null };
+      state.pileG = new T.Group(); state.pileG.position.set(0, .782, 0); tableGroup.add(state.pileG); state.pileN = 0;
+    }
     else { gun = makeGun(); gun.scale.setScalar(1.4); gun.position.set(0, .86, 0); scene.add(gun); }
-    state.aim = null; state.spin = null; state.sawn = false; state.cam = null; state.look = null;
+    if (!cards) { state.rankCard = null; state.pileG = null; }
+    state.aim = null; state.spin = null; state.sawn = false; state.cam = null; state.look = null; state.claim = null; state.reveal = null;
     resetDecals();
   }
 
@@ -447,9 +501,16 @@ const Cellar = (() => {
   const headOf = (f) => { if (!f) return new T.Vector3(0, 1.4, 0); if (f.userData.rel === 0) return camera.position.clone().add(new T.Vector3(0, -.3, -.35)); const p = new T.Vector3(); f.userData.person.head.getWorldPosition(p); p.y += .15; return p; };
   const chestOf = (f) => { if (!f || f.userData.rel === 0) return headOf(f).add(new T.Vector3(0, -.3, 0)); const p = new T.Vector3(); f.userData.person.torso.getWorldPosition(p); return p; };
 
+  // куча карт рубашкой вверх в центре стола
+  function setPile(n) {
+    const g = state.pileG; if (!g || state.pileN === n) return;
+    while (g.children.length > n) { const m = g.children.pop(); m.geometry.dispose(); [].concat(m.material).forEach((x) => x.dispose()); }
+    while (g.children.length < n) { const k = g.children.length, c = cardMesh(null), a = rnd() * 6.28, d = .05 + rnd() * .2; c.position.set(Math.cos(a) * d, k * .0045, Math.sin(a) * d + .1); c.rotation.y = rnd() * 6.28; g.add(c); }
+    state.pileN = n;
+  }
   function sync(room, me) {
     if (!scene) return;
-    setMode(room.mode === "revolver" || room.game === "revolver" ? "revolver" : "shotgun");
+    setMode(room.game === "bluff" ? "bluff" : room.mode === "revolver" || room.game === "revolver" ? "revolver" : "shotgun");
     const seats = room.seats && room.seats.length ? room.seats : room.players.map((p) => p.id);
     const mine = seats.indexOf(me);
     const n = Math.max(2, seats.length + (mine < 0 ? 1 : 0));
@@ -460,7 +521,7 @@ const Cellar = (() => {
       if (!p) return;
       const rel = mine < 0 ? i + 1 : (i - mine + n) % n;
       let f = state.figs[pid];
-      if (f && p.char != null && f.userData.p.char !== p.char) { figGroup.remove(f); disposeTree(f); f.userData.person.dispose(); delete state.figs[pid]; f = null; }   // новая партия — новый персонаж
+      if (f && p.char != null && f.userData.p.char !== p.char) { dropFig(f); delete state.figs[pid]; f = null; }   // новая партия — новый персонаж
       if (!f) { f = makeFigure(p, i); figGroup.add(f); state.figs[pid] = f; }
       const sp = seatPos(rel, n);
       f.position.set(sp.x, 0, sp.z); f.rotation.y = sp.a + Math.PI;
@@ -481,9 +542,9 @@ const Cellar = (() => {
       const ik = shotgun ? (p.items || []).join(",") : "";
       if (ud.itemsKey !== ik) {
         ud.items.children.slice().forEach((m) => { ud.items.remove(m); disposeTree(m); });
-        (shotgun ? p.items || [] : []).forEach((k, j) => {
-          const m = itemMesh(k), col = j % 3, row = Math.floor(j / 3);
-          m.position.set((col - 1) * (rel === 0 ? .4 : .34), 0, (row - .5) * (rel === 0 ? .26 : .22));
+        (shotgun ? p.items || [] : []).forEach((k, j) => {              // до четырёх предметов в ряд
+          const m = itemMesh(k), cnt = Math.max(1, (p.items || []).length);
+          m.position.set((j - (cnt - 1) / 2) * (rel === 0 ? .3 : .27), 0, 0);
           m.rotation.y = ((j * 1.7) % 1 - .5) * .6; m.scale.setScalar(1.4);
           m.userData = { pid, index: j, key: k };
           m.traverse((o) => { o.userData.item = m; });
@@ -501,13 +562,41 @@ const Cellar = (() => {
         else if (was && !ud.vestTorn && rel !== 0) burst(chestOf(f), 0x4a6a32, 10, .6);
         ud.vestTorn = false;
       }
+      // карты в руках: сколько у игрока, столько рубашек веером (своих — нет, свои внизу экрана)
+      const fanN = state.mode === "bluff" && p.alive && rel !== 0 ? Math.max(0, p.cards || 0) : 0;
+      if (ud.fanN !== fanN) {
+        ud.fan.children.slice().forEach((m) => { ud.fan.remove(m); m.geometry.dispose(); });
+        for (let k = 0; k < fanN; k++) {
+          const c = new T.Mesh(state.fanGeo || (state.fanGeo = new T.BoxGeometry(CARD_W * .9, CARD_H * .9, .004)), state.fanMat || (state.fanMat = mat({ map: cardTex("back") })));
+          const a = (k - (fanN - 1) / 2) * .26; c.position.set(Math.sin(a) * .1, Math.cos(a) * .05 - .05, k * .003); c.rotation.z = -a; ud.fan.add(c);
+        }
+        ud.fanN = fanN;
+      }
+      ud.fan.visible = fanN > 0;
+      // свой револьвер у каждого («Верю — не верю»): лежит на столе перед игроком
+      if (state.mode === "bluff" && !ud.rv) { ud.rv = makeRevolver(); ud.rv.scale.setScalar(1.25); scene.add(ud.rv); ud.rvPos = worldOf(f, .4, .8, .74); ud.rvQ = new T.Quaternion(); ud.rv.position.copy(ud.rvPos); }
+      if (ud.rv) ud.rv.visible = !ud.dead || ud.deathKind !== "left";
+      // фишки храбреца стопкой (револьвер)
+      const chipN = state.mode === "revolver" ? Math.min(12, p.chips || 0) : 0;
+      if (ud.chipN !== chipN) {
+        ud.chips.children.slice().forEach((m) => { ud.chips.remove(m); m.geometry.dispose(); m.material.dispose(); });
+        for (let k = 0; k < chipN; k++) put(ud.chips, cyl(.05, .05, .014, mat({ color: k % 2 ? 0xe0203a : 0xffd23f, emissive: k % 2 ? 0x400008 : 0x5a3a00, flatShading: true }), 10), (k % 2) * .006, .008 + k * .016, 0, 0, k * .7);
+        if (chipN > ud.chipN && ud.chipN >= 0 && rel !== 0) burst(worldOf(f, .42, .9, .82), 0xffd23f, 8, .4, { size: .025, life: .5 });
+        ud.chipN = chipN;
+      }
       ud.frozen = !!st.frozen;
       ud.stars.visible = ud.frozen && !ud.dead && rel !== 0;
       if (!p.alive && !ud.dead) die(f, p.death || "table", true);
       if (p.alive && ud.dead) revive(f);
     });
-    Object.keys(state.figs).forEach((pid) => { if (!seats.includes(pid)) { const f = state.figs[pid]; figGroup.remove(f); disposeTree(f); f.userData.person.dispose(); delete state.figs[pid]; } });
+    Object.keys(state.figs).forEach((pid) => { if (!seats.includes(pid)) { const f = state.figs[pid]; dropFig(f); delete state.figs[pid]; } });
     state.turn = room.turn; state.phase = room.phase;
+    if (state.mode === "bluff" && room.table) {
+      const rc = state.rankCard;
+      if (rc && rc.rank !== room.table.rank) { rc.rank = room.table.rank; rc.mat.map = cardTex(room.table.rank || "back"); rc.mat.needsUpdate = true; if (room.table.rank) burst(rc.g.position.clone(), 0xffe0a0, 10, .4, { size: .025, life: .6, gravity: 0 }); }
+      setPile(room.table.pile || 0);
+      state.myCards = (room.hand || []).length;
+    }
     if (shotgun) {
       if (room.sawed && !state.sawn) sawOff();
       if (!room.sawed && state.sawn && !state.sawBackSoon) { state.sawBackSoon = true; setTimeout(() => { state.sawBackSoon = false; if (state.sawn) sawBack(); }, 1700); }
@@ -629,6 +718,13 @@ const Cellar = (() => {
   // when — момент удара (с начала анимации), hold — сколько держать старое состояние на экране
   function timing(e) {
     if (!e) return { when: 0, hold: 0 };
+    if (state.mode === "bluff") {                                    // «Верю — не верю»: раздача, ход, вскрытие, выстрел
+      if (e.kind === "deal") return { when: 0, hold: 1.3 };
+      if (e.kind === "play") return { when: 0, hold: .9 };
+      if (e.kind === "call") return { when: 0, hold: 2.9 };
+      if (e.kind === "shot") return { when: 1.35, hold: 1.35 + (e.live ? 1.4 : .9) };
+      return { when: 0, hold: e.kind === "redeal" ? .8 : 0 };
+    }
     if (e.kind === "shot") {
       if (state.mode === "revolver" || e.chance != null) { const w = e.self ? 1.15 : .95; return { when: w, hold: w + (e.live ? .9 : .5) }; }
       const w = e.dice ? 4.05 : e.redirected ? 1.05 : .7;
@@ -641,8 +737,54 @@ const Cellar = (() => {
     return { when: 0, hold: 0 };
   }
 
+  // летящая карта: из a в b по дуге (рубашкой вверх), потом исчезает
+  function flyCard(a, b, delay, dur, rank, done) {
+    const c = cardMesh(rank); c.visible = false; scene.add(c);
+    const spin = (rnd() - .5) * 3;
+    anim.push({ t: -delay, dur, step: (k) => { if (k <= 0) return; c.visible = true; c.position.lerpVectors(a, b, ease(k)); c.position.y += Math.sin(k * Math.PI) * .3; c.rotation.y = spin * (1 - k); },
+      done: () => { scene.remove(c); c.geometry.dispose(); [].concat(c.material).forEach((m) => m.dispose()); if (done) done(); } });
+  }
+  const handOf = (f) => (!f || f.userData.rel === 0 ? camera.localToWorld(new T.Vector3(0, -.55, -.7)) : f.userData.fan.localToWorld(new T.Vector3(0, 0, 0)));
+  const pileAt = () => new T.Vector3(0, .8, .1);
+  function bluffEvent(e) {
+    const f = state.figs[e.who];
+    if (e.kind === "deal") {
+      Object.values(state.figs).filter((x) => !x.userData.dead).forEach((x, i) => { for (let k = 0; k < 3; k++) flyCard(pileAt(), handOf(x), i * .12 + k * .07, .45); });
+      state.claim = null;
+    } else if (e.kind === "play") {
+      for (let k = 0; k < e.cnt; k++) flyCard(handOf(f), pileAt().add(new T.Vector3((rnd() - .5) * .2, 0, (rnd() - .5) * .2)), k * .1, .5);
+      state.claim = { pid: e.who, text: "«" + (window.Bluff ? Bluff.claimText(e.cnt, e.rank) : e.cnt) + "»", until: performance.now() + 9000 };
+      if (f) f.userData.use = performance.now() / 1000;
+    } else if (e.kind === "call") {                                   // «Не верю!»: последние карты взлетают и переворачиваются лицом
+      state.claim = { pid: e.who, text: "Не верю!", hot: true, until: performance.now() + 2600 };
+      state.reveal = { until: performance.now() + 5200 };
+      const n = e.cards.length;
+      e.cards.forEach((rk, i) => {
+        const c = cardMesh(rk); c.scale.setScalar(1.9); scene.add(c);
+        const to = new T.Vector3((i - (n - 1) / 2) * .36, 1.2, .55), from = pileAt();
+        const ok = rk === e.rank || rk === "J";
+        anim.push({ t: -i * .12, dur: .7, step: (k) => { if (k < 0) return; c.position.lerpVectors(from, to, ease(Math.max(0, k))); c.rotation.x = -Math.PI / 2 * ease(Math.max(0, k)); },
+          done: () => { burst(to.clone(), ok ? 0x5aff7a : 0xff2a2a, 10, .4, { size: .03, life: .6, gravity: 0 }); } });
+        anim.push({ t: 0, dur: 4.6, done: () => { anim.push({ t: 0, dur: .4, step: (k) => { c.position.y = 1.2 - k * .4; c.scale.setScalar(1.9 * (1 - k * .8)); }, done: () => { scene.remove(c); c.geometry.dispose(); [].concat(c.material).forEach((m) => m.dispose()); } }); } });
+      });
+    } else if (e.kind === "shot") {
+      state.firing = true; state.evAim = { who: e.who, target: e.who, until: performance.now() + timing(e).hold * 1000 + 300 };
+      anim.push({ t: 0, dur: timing(e).when, done: () => { fireBluff(e); state.firing = false; } });
+    }
+  }
+  function fireBluff(e) {
+    const f = state.figs[e.who]; if (!f || !f.userData.rv) return;
+    const ud = f.userData, r = ud.rv, mz = r.localToWorld(new T.Vector3(0, .05, .38));
+    ud.rvRecoil = e.live ? 1 : .25; ud.pull = performance.now() / 1000; ud.rvTurn = (ud.rvTurn || 0) + 1;
+    if (!e.live) { burst(mz, 0x8a8070, 3, .2, { size: .02, life: .4, gravity: -.2 }); return; }
+    state.flash = 1; state.shake = e.who === state.me ? 1 : .6; state.flicker = .7;
+    r.userData.muzzle.intensity = 6;
+    impact(f, Object.assign({ dmg: 1 }, e), mz);
+  }
+
   function event(e) {
     if (!scene || !e) return;
+    if (state.mode === "bluff") return bluffEvent(e);
     if (e.kind === "shot") {
       state.firing = true; state.evAim = { who: e.who, target: e.target, until: performance.now() + timing(e).hold * 1000 + 300 };
       if (state.mode === "revolver") {
@@ -790,19 +932,20 @@ const Cellar = (() => {
   /* ---------------------------------------------------------------- позы: куда смотрят, где руки, как падают */
   const tv = () => state.tv || (state.tv = { a: new T.Vector3(), b: new T.Vector3(), c: new T.Vector3(), pole: new T.Vector3() });
   function pose(f, t, dt, i) {
-    const ud = f.userData, ps = ud.person, rev0 = state.mode === "revolver";
-    const play = ["play", "shot", "reload"].includes(state.phase);
+    const ud = f.userData, ps = ud.person, rev0 = state.mode === "revolver", bl = state.mode === "bluff";
+    const play = ["play", "shot", "reload", "deal", "reveal"].includes(state.phase);
     const turn = state.turn === ud.pid && ["play", "shot"].includes(state.phase);
     const ev = state.evAim && performance.now() < state.evAim.until ? state.evAim : null;
     const aim = ev ? ev.target : state.aim;
     const aimedAt = aim === ud.pid && (ev ? ev.who : state.turn) !== ud.pid && !ud.dead;
-    const holder = rev0 && !ud.dead && play && ((ev && ev.who === ud.pid) || (!ev && turn));
+    const holder = (rev0 && !ud.dead && play && ((ev && ev.who === ud.pid) || (!ev && turn))) || (bl && !ud.dead && !!ev && ev.who === ud.pid);
     ud.jolt = Math.max(0, ud.jolt - dt * 2.2);
     if (ud.redT) { ud.redT = Math.max(0, ud.redT - dt); ps.setRed(Math.floor(t * 20) % 2 ? ud.redT * 2 : 0); }
     const lp = (cur, want, k) => cur + (want - cur) * Math.min(1, dt * k);
     // руки: точки в пространстве тела
     let L = [.2 + Math.sin(t * .7 + i) * .02, .8, .58], R = [-.2, .8, .58 + Math.sin(t * .9 + i) * .02], lean = .18, twist = 0;
     if (ud.frozen) { R = [-.1, 1.5, .18]; lean = .05; }
+    if (bl && ud.fanN > 0) { L = [.12, 1.0, .5]; R = [-.12, 1.0, .5]; lean = .08; }
     if (aimedAt) { L = [.3, 1.42, .28]; R = [-.3, 1.42, .28]; lean = -.14; }
     if (!rev0 && turn && state.aim && !aimedAt) { R = [-.08, .84, 1.0]; lean = .34; }
     if (ud.pull && t - ud.pull < .25) lean += .12;
@@ -833,14 +976,14 @@ const Cellar = (() => {
       if (aimedAt && shooter) look = headOf(shooter);
       else if (tgt && tgt !== f) look = headOf(tgt);
       else if (shooter && shooter !== f && play) look = headOf(shooter);
-      else if (state.mode === "shotgun") look = new T.Vector3(0, .9, 0);
+      else if (state.mode === "shotgun" || bl) look = new T.Vector3(0, .9, 0);
     }
     let wantY = 0, wantX = .05;
     if (look) { const lc = ps.body.worldToLocal(tv().a.copy(look)); wantY = Math.max(-1.1, Math.min(1.1, Math.atan2(lc.x, lc.z))); wantX = Math.max(-.5, Math.min(.6, Math.atan2(1.45 - lc.y, Math.hypot(lc.x, lc.z)) - ud.sp * .6)); }
-    if (holder && aim === ud.pid) { wantY = 0; wantX = .15; }
+    if (holder && (aim === ud.pid || bl)) { wantY = 0; wantX = .15; }
     ud.hy = lp(ud.hy, ud.dead ? (ud.deathKind === "table" ? .35 : 0) : wantY, 4);
     ud.hx = hx != null ? hx : lp(ud.hx, wantX - ud.jolt * .6, 5);
-    ps.head.rotation.set(ud.hx, ud.hy, ud.frozen && !ud.dead ? Math.sin(t * 3.2 + i) * .22 : holder && aim === ud.pid ? -.15 : 0);
+    ps.head.rotation.set(ud.hx, ud.hy, ud.frozen && !ud.dead ? Math.sin(t * 3.2 + i) * .22 : holder && (aim === ud.pid || bl) ? -.15 : 0);
     // кисти — плавно к нужным точкам, затем руки по IK
     ud.hands = ud.hands || { L: new T.Vector3(...L), R: new T.Vector3(...R) };
     const k = ud.dead ? 1 : Math.min(1, dt * (aimedAt ? 9 : 6));
@@ -872,7 +1015,7 @@ const Cellar = (() => {
     vm.visible = false; state.revWant = null; state.selfAim = 0; state.vmScale = 1.6;
     if (!onTable && hf.userData.rel === 0) {                           // у тебя в руке: вид из глаз
       vm.visible = true; state.vmScale = .62;
-      if (aim === state.me) { pos.copy(camera.localToWorld(tv().a.set(.2, .02, -.42))); look.copy(camera.localToWorld(tv().b.set(-.5, .05, -.3))); state.selfAim = 1; }
+      if (aim === state.me) { pos.copy(camera.localToWorld(tv().a.set(.25, .0, -.5))); look.copy(camera.localToWorld(tv().b.set(-.5, .05, -.36))); state.selfAim = 1; state.vmScale = .5; }
       else if (aim && state.figs[aim]) { pos.copy(camera.localToWorld(tv().a.set(.15, -.17, -.5))); look.copy(headOf(state.figs[aim])); }
       else { pos.copy(camera.localToWorld(tv().a.set(.16, -.22, -.5))); look.copy(camera.localToWorld(tv().b.set(.05, -.9, -2.4))); }
     } else if (!onTable) {
@@ -914,24 +1057,66 @@ const Cellar = (() => {
     rev.userData.muzzle.intensity = Math.max(0, rev.userData.muzzle.intensity - dt * 30);
   }
 
+  // «Верю — не верю»: у каждого свой револьвер. Лежит на столе; проигравший вскрытие поднимает его к виску
+  function placeBluff(t, dt) {
+    const ev = state.evAim && performance.now() < state.evAim.until ? state.evAim : null;
+    state.selfAim = 0;
+    Object.values(state.figs).forEach((f) => {
+      const ud = f.userData, r = ud.rv; if (!r) return;
+      const hold = ev && ev.who === ud.pid && !ud.dead, vm = r.userData.vm;
+      const pos = tv().a, look = tv().b;
+      let scale = 1.25; vm.visible = false;
+      if (hold && ud.rel === 0) {
+        vm.visible = true; scale = .5; state.selfAim = 1;
+        pos.copy(camera.localToWorld(new T.Vector3(.25, 0, -.5))); look.copy(camera.localToWorld(new T.Vector3(-.5, .05, -.36)));
+      } else if (hold) {
+        const ps = ud.person; ps.head.updateWorldMatrix(true, false);
+        pos.copy(ps.head.localToWorld(new T.Vector3(-.21, .17, .02))); look.copy(ps.head.localToWorld(new T.Vector3(.3, .17, 0)));
+      }
+      const k = Math.min(1, dt * (hold ? 9 : 5));
+      ud.rvPos = ud.rvPos || r.position.clone(); ud.rvQ = ud.rvQ || r.quaternion.clone();
+      const want = new T.Quaternion();
+      if (hold) { const m = new T.Matrix4().lookAt(look, pos, new T.Vector3(0, 1, 0)); want.setFromRotationMatrix(m); ud.rvPos.lerp(pos, k); }
+      else { ud.rvPos.lerp(worldOf(f, .42, .8, .74), k); want.setFromEuler(new T.Euler(0, f.rotation.y + 2.2, Math.PI / 2, "YXZ")); }
+      ud.rvQ.slerp(want, k);
+      r.position.copy(ud.rvPos); r.quaternion.copy(ud.rvQ);
+      r.scale.setScalar(r.scale.x + (scale - r.scale.x) * Math.min(1, dt * 8));
+      ud.rvRecoil = Math.max(0, (ud.rvRecoil || 0) - dt * 4);
+      if (ud.rvRecoil) r.rotateX(-ud.rvRecoil * .6);
+      const cylZ = (ud.rvTurn || 0) * Math.PI / 3;
+      r.userData.cyl.rotation.z += (cylZ - r.userData.cyl.rotation.z) * Math.min(1, dt * 12);
+      r.userData.hammer.rotation.x = hold ? -1.0 : -.5;
+      r.userData.muzzle.intensity = Math.max(0, r.userData.muzzle.intensity - dt * 30);
+      if (hold && ud.rel !== 0) P().reach(T, ud.person.arms.R, ud.rvPos, ud.person.body.localToWorld(new T.Vector3(-.9, 1.2, -.3)));
+    });
+  }
+
   /* ---------------------------------------------------------------- подписи поверх сцены (HTML): имена и предметы */
   const labelPool = [];
+  const rotOn = () => document.body.classList.contains("cfs-rot");
+  const hostW = () => (host ? host.clientWidth : 1), hostH = () => (host ? host.clientHeight : 1);
+  // точка сцены → координаты внутри сцены (CSS-пиксели, без учёта поворота страницы)
+  const toScreen = (w) => { const v = w.clone().project(camera); return { x: (v.x + 1) / 2 * hostW(), y: (1 - v.y) / 2 * hostH(), z: v.z }; };
+  // касание → координаты внутри сцены: страница может быть повёрнута на 90° (горизонтальный вид при вертикальном телефоне)
+  function local(ev) {
+    const r = canvas.getBoundingClientRect();
+    if (rotOn()) return { x: ev.clientY - r.top, y: r.right - ev.clientX };
+    return { x: ev.clientX - r.left, y: ev.clientY - r.top };
+  }
   function updateLabels() {
     if (!labelLayer || !host || !host.isConnected) return;
-    const rect = host.getBoundingClientRect(), Wd = rect.width, Hd = rect.height;
+    const Wd = hostW(), Hd = hostH();
     if (!Wd || !Hd) return;
-    const items = [], table = state.view === "table";
+    const items = [], now = performance.now(), topY = host.classList.contains("fs") ? 74 : 30;   // на весь экран — не залезать под верхнюю строку
     const ITEMS = window.Roulette ? Roulette.ITEMS : {};
     Object.values(state.figs).forEach((f) => {
       const ud = f.userData;
       if (ud.rel !== 0 && f.visible) items.push({ kind: "name", text: ud.name + (ud.brave && ud.alive ? " 🎖" : ""), world: worldOf(f, 0, ud.dead ? 1.3 : 2.1, 0), turn: state.turn === ud.pid && ["play", "shot"].includes(state.phase), dead: !ud.alive, prio: 0 });
-      const list = ud.items.children;
-      if (!list.length || !ud.items.visible) return;
-      if (table) list.forEach((m) => {
-        const info = ITEMS[m.userData.key] || { name: m.userData.key, emoji: "" };
-        items.push({ kind: "item", text: `${info.emoji} ${info.name}`, world: m.localToWorld(new T.Vector3(0, .11, 0)), mine: ud.rel === 0, data: m.userData, prio: ud.rel === 0 ? 1 : 2 });
+      if (state.claim && state.claim.pid === ud.pid && now < state.claim.until && ud.rel !== 0 && f.visible) items.push({ kind: "claim", text: state.claim.text, hot: state.claim.hot, world: worldOf(f, 0, 2.45, 0), prio: -1 });
+      if (ud.rel === 0 && ud.items.visible) ud.items.children.forEach((m) => {             // свои предметы подписаны значком — их можно нажать
+        const info = ITEMS[m.userData.key] || { emoji: "?" };
+        items.push({ kind: "item", text: info.emoji, world: m.localToWorld(new T.Vector3(0, -.02, .14)), mine: true, sel: m.userData.index === state.sel, data: m.userData, prio: 1, below: true });
       });
-      else items.push({ kind: "item", text: list.map((m) => (ITEMS[m.userData.key] || {}).emoji || "?").join(" "), world: worldOf(f, 0, .95, 1.0), mine: ud.rel === 0, prio: ud.rel === 0 ? 1 : 2 });
     });
     items.sort((a, b) => a.prio - b.prio);
     const taken = [];
@@ -944,12 +1129,12 @@ const Cellar = (() => {
       const el = labelPool[used] || (labelPool[used] = Object.assign(document.createElement("div"), { className: "c3-label" }));
       if (el.parentNode !== labelLayer) labelLayer.appendChild(el);
       used++;
-      const cls = `c3-label ${it.kind} ${it.mine ? "mine" : ""} ${it.turn ? "turn" : ""} ${it.dead ? "dead" : ""} ${table ? "big" : ""}`;
+      const cls = `c3-label ${it.kind} ${it.mine ? "mine" : ""} ${it.turn ? "turn" : ""} ${it.dead ? "dead" : ""} ${it.sel ? "sel" : ""} ${it.hot ? "hot" : ""}`;
       el.style.display = "block";
       if (el.textContent !== it.text || el._cls !== cls || !el._w) { el.className = cls; el.textContent = it.text; el._cls = cls; el._w = el.offsetWidth; el._h = el.offsetHeight; }
       const w = el._w, h = el._h;
-      const bx = { x: Math.max(2, Math.min(Wd - w - 2, x - w / 2)), y: Math.max(30, y - h), w, h };
-      for (let k = 0; k < 6 && hits(bx); k++) bx.y += h + 2;
+      const bx = { x: Math.max(2, Math.min(Wd - w - 2, x - w / 2)), y: Math.max(topY, it.below ? y : y - h), w, h };
+      for (let k = 0; k < 6 && hits(bx) && !it.below; k++) bx.y += h + 2;
       if (bx.y + h > Hd - 2) { el.style.display = "none"; return; }
       taken.push(bx);
       el.style.transform = `translate(${Math.round(bx.x)}px, ${Math.round(bx.y)}px)`;
@@ -981,7 +1166,9 @@ const Cellar = (() => {
     const want = new T.Vector3(0, 1.0, -.3), tf = state.figs[turnNow], af = state.figs[aimNow];
     if (table) want.set(0, .72, .2);
     else if (aimNow && turnNow === state.me && af && af.userData.rel !== 0) want.set(af.position.x * .62, 1.2, af.position.z * .62);
+    else if ((rev0 || state.mode === "bluff") && ev && aimNow === state.me) want.set(0, 1.05, -.6);
     else if (rev0 && aimNow === state.me) want.set(0, 1.05, -.6);
+    else if (!ev && state.reveal && performance.now() < state.reveal.until) want.set(0, 1.08, .3);
     else if (tf && turnNow !== state.me && tf.userData.rel !== 0) want.set(tf.position.x * .5, 1.1, tf.position.z * .5 - .1);
     const nowMs = performance.now(), fo = state.focus && state.figs[state.focus.pid];
     if (!table && state.free && (state.free.hold || nowMs - state.free.at < 3500)) {
@@ -995,7 +1182,7 @@ const Cellar = (() => {
     state.roll = (state.roll || 0) + ((state.selfAim ? -.13 : 0) - (state.roll || 0)) * Math.min(1, dt * 4);
     if (state.roll) camera.rotateZ(state.roll);
     camera.updateMatrixWorld();
-    if (!rev0) {                                                      // дробовик: раскрутка к цели, отдача
+    if (!rev0 && gun) {                                              // дробовик: раскрутка к цели, отдача
       if (state.spin) {
         const s = state.spin; s.t += dt; const k = Math.min(1, s.t / s.dur);
         const e = 1 - Math.pow(1 - k, 3) + Math.sin(k * Math.PI) * .04;
@@ -1013,6 +1200,10 @@ const Cellar = (() => {
     const lit = .55 + .45 * flick;
     Object.values(state.figs).forEach((f, i) => { pose(f, t, dt, i); });
     if (rev0) placeRevolver(t, dt);
+    if (state.mode === "bluff") placeBluff(t, dt);
+    const mf = state.figs[state.me];                                   // свой выбранный предмет приподнят
+    if (mf) mf.userData.items.children.forEach((m) => { const up = m.userData.index === state.sel ? .1 + Math.sin(t * 5) * .015 : 0; m.position.y += (up - m.position.y) * Math.min(1, dt * 8); });
+    if (state.rankCard) { state.rankCard.g.rotation.y = t * .6; state.rankCard.g.rotation.z = Math.sin(t * .9) * .05; }
     Object.values(state.figs).forEach((f) => { if (rev0 && f.userData.rel !== 0) { const ud = f.userData, ev2 = state.evAim && performance.now() < state.evAim.until ? state.evAim : null; if ((ev2 ? ev2.who : state.turn) === ud.pid && state.revWant && !ud.dead && ["play", "shot"].includes(state.phase)) { const pole = ud.person.body.localToWorld(new T.Vector3(-.9, (ev2 ? ev2.target : state.aim) === ud.pid ? 1.2 : -.4, -.3)); P().reach(T, ud.person.arms.R, state.revWant, pole); } } });
     void lit;
     // орбита пули между зеркалами, пока катятся кубики
@@ -1058,24 +1249,27 @@ const Cellar = (() => {
   /* ---------------------------------------------------------------- подключение к странице */
   function resize() {
     if (!host || !renderer) return;
-    const r = host.getBoundingClientRect();
-    W = 240; H = Math.max(140, Math.round((W * r.height) / Math.max(1, r.width)));
+    const rw = Math.max(1, hostW()), rh = Math.max(1, hostH()), wide = rw / rh > 1.3;
+    W = wide ? 320 : 240; H = Math.max(140, Math.round((W * rh) / rw));
     renderer.setSize(W, H, false);
     rt.setSize(W, H);
     post.uniforms.res.value.set(W, H);
-    camera.aspect = W / H; camera.fov = W / H < 1.1 ? (state.mode === "revolver" ? 70 : 66) : 56; camera.updateProjectionMatrix();
+    camera.aspect = W / H; camera.fov = W / H < 1.1 ? (state.mode === "revolver" ? 70 : 66) : W / H > 1.6 ? (state.mode === "revolver" ? 54 : 50) : 56; camera.updateProjectionMatrix();
   }
 
-  function pickAt(clientX, clientY) {
-    const r = canvas.getBoundingClientRect();
+  function pickAt(lx, ly) {
     const ray = state.ray || (state.ray = new T.Raycaster());
-    ray.setFromCamera(new T.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1), camera);
-    if (state.view === "table") {
-      const meshes = []; Object.values(state.figs).forEach((f) => f.userData.items.traverse((o) => { if (o.isMesh) meshes.push(o); }));
-      const h = ray.intersectObjects(meshes)[0];
-      if (h && api.onPickItem) { const it = h.object.userData.item; api.onPickItem(it.userData); highlight(it); }
-      return;
+    ray.setFromCamera(new T.Vector2((lx / hostW()) * 2 - 1, -(ly / hostH()) * 2 + 1), camera);
+    const near = (w, r) => { const p = toScreen(w); return p.z < 1 && Math.hypot(p.x - lx, p.y - ly) < r ? Math.hypot(p.x - lx, p.y - ly) : null; };
+    // свои предметы на столе: ближайший к пальцу
+    const mf = state.figs[state.me];
+    if (mf && mf.userData.items.visible && api.onPickItem) {
+      let best = null, bd = 40;
+      mf.userData.items.children.forEach((m) => { const d = near(m.localToWorld(new T.Vector3(0, .04, 0)), 40); if (d != null && d < bd) { bd = d; best = m; } });
+      if (best) { api.onPickItem(best.userData); return; }
     }
+    // револьвер: в «Русской рулетке» — крутануть барабан
+    if (state.mode === "revolver" && rev && api.onPickGun && state.turn === state.me && near(rev.position, 46) != null) { api.onPickGun(); return; }
     const meshes = [];
     Object.values(state.figs).forEach((f) => { if (f.userData.rel !== 0 && f.visible) f.userData.person.hit.forEach((m) => { m.userData.pid = f.userData.pid; meshes.push(m); }); });
     let hit = ray.intersectObjects(meshes)[0], pid = hit && hit.object.userData.pid;
@@ -1109,20 +1303,21 @@ const Cellar = (() => {
         postScene.add(new T.Mesh(new T.PlaneGeometry(2, 2), post));
         build();
         let down = null;
-        const tapStart = (ev) => { down = { x: ev.clientX, y: ev.clientY, t: performance.now() }; };
-        const tapEnd = (ev, fn) => { if (down && Math.hypot(ev.clientX - down.x, ev.clientY - down.y) < 10 && performance.now() - down.t < 450) fn(ev); down = null; };
+        const tapStart = (ev) => { const l = local(ev); down = { x: l.x, y: l.y, t: performance.now() }; };
+        const tapEnd = (ev, fn) => { const l = local(ev); if (down && Math.hypot(l.x - down.x, l.y - down.y) < 12 && performance.now() - down.t < 500) fn(l); down = null; };
         canvas.addEventListener("pointerdown", tapStart);
-        canvas.addEventListener("pointerup", (ev) => { if (state.free) state.free.hold = false; tapEnd(ev, () => pickAt(ev.clientX, ev.clientY)); });
+        canvas.addEventListener("pointerup", (ev) => { if (state.free) state.free.hold = false; tapEnd(ev, (l) => pickAt(l.x, l.y)); });
         canvas.addEventListener("pointercancel", () => { if (state.free) state.free.hold = false; });
         canvas.style.touchAction = "pan-y";
         canvas.addEventListener("pointermove", (ev) => {
-          if (!down || state.view === "table" || Math.abs(ev.clientX - down.x) < 8) return;
+          const l = local(ev);
+          if (!down || state.view === "table" || Math.abs(l.x - down.x) < 8) return;
           if (!state.free || !state.free.hold) {
             const look = state.look || new T.Vector3(0, 1, -.3), dx = look.x - camera.position.x, dy = look.y - camera.position.y, dz = look.z - camera.position.z;
-            state.free = { yaw: Math.atan2(dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)), at: performance.now(), hold: true, lx: ev.clientX };
+            state.free = { yaw: Math.atan2(dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)), at: performance.now(), hold: true, lx: l.x };
           }
           const f = state.free;
-          f.yaw = Math.max(-1.75, Math.min(1.75, f.yaw + (ev.clientX - f.lx) * .006)); f.lx = ev.clientX; f.at = performance.now(); state.focus = null;
+          f.yaw = Math.max(-1.75, Math.min(1.75, f.yaw + (l.x - f.lx) * .006)); f.lx = l.x; f.at = performance.now(); state.focus = null;
         });
         labelLayer = document.createElement("div"); labelLayer.className = "c3-labels";
         labelLayer.addEventListener("pointerdown", tapStart);
@@ -1152,11 +1347,12 @@ const Cellar = (() => {
     lit = it; anim.push({ t: 0, dur: .35, step: (k) => { it.position.y = Math.sin(k * Math.PI) * .12; } });
   }
   function setView(v) { state.view = v; }
+  function select(i) { state.sel = i == null ? null : i; }
 
   // новая партия — убрать кровь, гильзы и людей прошлой
   function reset() {
     if (!scene) return;
-    Object.values(state.figs).forEach((f) => { figGroup.remove(f); disposeTree(f); f.userData.person.dispose(); }); state.figs = {};
+    Object.values(state.figs).forEach((f) => { dropFig(f); }); state.figs = {};
     casings.forEach((m) => { scene.remove(m); disposeTree(m); }); casings.length = 0;
     if (state.sawn && gun) { gun.attach(gun.userData.front); gun.userData.front.position.set(0, 0, 0); gun.userData.front.quaternion.identity(); state.sawn = false; }
     resetDecals();
@@ -1164,5 +1360,7 @@ const Cellar = (() => {
   }
 
   window.addEventListener("resize", resize);
-  return Object.assign(api, { mount, unmount, sync, event, reset, resize, setView, timing, ready: () => !!renderer, _state: state });
+  // для проверок: где на экране (внутри сцены) голова игрока, свой предмет, револьвер
+  const _probe = { head: (pid) => state.figs[pid] && toScreen(headOf(state.figs[pid])), item: (i) => { const f = state.figs[state.me], m = f && f.userData.items.children[i]; return m && toScreen(m.localToWorld(new T.Vector3(0, .04, 0))); }, rev: () => rev && toScreen(rev.position) };
+  return Object.assign(api, { mount, unmount, sync, event, reset, resize, setView, select, timing, ready: () => !!renderer, _state: state, _probe });
 })();

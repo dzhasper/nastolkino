@@ -785,6 +785,112 @@ const Pixel = (() => {
     for (let i = 0; i < 9; i++) { const x = 20 + i * 34 + R() * 6, y = 20 + (i % 3) * 14 + R() * 10; t.line(x, 0, x, y, "#2a0a0a"); t.rect(x - 3, y, 7, 8, "#e8202a"); t.rect(x - 3, y + 2, 7, 1, "#ffd23f"); t.glow(x, y + 4, 7, "#ff8a3a"); }
     for (let i = 0; i < 30; i++) t.px(R() * W, 90 + R() * 40, "#ffd23f88");
   };
+  // ШПИОН: ночная крыша, прожекторы над городом, силуэт агента с биноклем и красным шарфом
+  SCENES.spy = (ctx, R, t) => {
+    t.grad(0, 118, ["#02070e", "#041220", "#08202e", "#0e3240", "#164650", "#1e5a5e"]);
+    t.stars(80, 70);
+    t.glow(258, 32, 38, "#2c5a60"); t.disc(258, 32, 16, "#dcefe8");
+    [[252, 27, 4], [263, 37, 3], [250, 39, 2], [266, 26, 2]].forEach(([x, y, r]) => t.disc(x, y, r, "#bcd6cf"));
+    const beam = (x0, k, c) => { for (let i = 0; i < 128; i++) { const y = 136 - i, w = 1.5 + i * .16, cx = x0 + i * k;
+      for (let x = -w; x <= w; x++) { const xx = Math.round(cx + x); if (BAYER[y & 3][xx & 3] < 5 - i / 40) t.px(xx, y, c); } } };
+    beam(84, -.42, "#5ab8b8"); beam(214, .36, "#5ab8b8");
+    for (let x = 0; x < W;) {                                // дальний город
+      const w = 12 + Math.floor(R() * 18), h = 30 + Math.floor(R() * 44);
+      t.rect(x, 128 - h, w, h, "#071822");
+      for (let wy = 131 - h; wy < 126; wy += 4) for (let wx = x + 2; wx < x + w - 1; wx += 3) if (R() < .1) t.px(wx, wy, R() < .7 ? "#7ac8c0" : "#e8d890");
+      x += w + 1;
+    }
+    for (let x = -6; x < W;) {                               // ближний ряд с окнами
+      const w = 22 + Math.floor(R() * 22), h = 26 + Math.floor(R() * 36), y = 136 - h;
+      building(t, R, x, y, w, h, { wall: "#0a1e28", shade: "#06141c", edge: "#123040", ledge: "#14364a", top: 4, gy: 6, gx: 5, side: 3, ww: 3, wh: 3,
+        lit: .18, lights: ["#9ae0d8", "#e8d890", "#f4f0e0"], dark: "#051018" });
+      if (R() < .35) { t.rect(x + w - 5, y - 12, 1, 12, "#1a3a44"); t.px(x + w - 5, y - 13, "#ff3a3a"); }
+      x += w + 3;
+    }
+    for (let i = 0; i < 70; i++) { const x = R() * W, y = R() * 120; t.px(x, y, "#5a8a9a66"); t.px(x - 1, y + 1, "#5a8a9a44"); }   // морось
+    // крыша
+    t.rect(0, 136, W, 24, "#03090e"); t.rect(0, 136, W, 2, "#1c3c48"); t.dither(0, 140, W, 20, "#0a1a22", .35);
+    t.rect(30, 120, 26, 16, "#06121a"); t.rect(30, 120, 26, 1, "#1c3c48"); t.rect(36, 112, 3, 8, "#0a1a22");            // вентиляция
+    t.rect(262, 116, 30, 20, "#06121a"); t.rect(262, 116, 30, 1, "#1c3c48"); for (let i = 0; i < 4; i++) t.rect(266 + i * 6, 120, 3, 12, "#0a1a22");
+    // агент: плащ, шляпа, бинокль, красный шарф — крупно, с бирюзовым контровым светом от города
+    const ax = 118, ay = 137, k = 1.5, P = (x, y, w, h, c) => t.rect(ax + x * k, ay + y * k, w * k, h * k, c);
+    t.glow(ax, ay - 40, 42, "#1e5058");
+    t.shadow(ax, ay + 1, 50, "#00000099");
+    for (let y = 0; y < 34; y++) { const w = 6 + y * .32; P(-w, -34 + y, w * 2, 1, y > 30 ? "#04080c" : "#0b1418"); P(-w, -34 + y, .7, 1, "#4aa8a8"); }
+    for (let i = 0; i < 9; i++) P(10 + i, -12 + Math.round(i * .4), 2, 1, "#0b1418");
+    P(-7, -34, 14, 3, "#101c22"); P(4, -30, 1, 22, "#162630");
+    P(-4, -43, 8, 9, "#0e181e"); P(-4, -43, 1, 9, "#4aa8a8"); P(-3, -37, 6, 2, "#c2263a"); P(2, -36, 5, 2, "#c2263a"); P(6, -35, 3, 1, "#a01c30");
+    P(-9, -46, 18, 2, "#060a0e"); P(-9, -46, 18, .7, "#3a8a8a"); P(-5, -52, 10, 6, "#0a1014"); P(-5, -52, 1, 6, "#4aa8a8"); P(-5, -48, 10, 1, "#2a3a40");
+    P(-10, -42, 6, 3, "#060a0e"); P(-12, -42, 3, 3, "#1a2a30"); P(-12, -41, 1, 1, "#9af0f0");
+    P(-8, -39, 3, 8, "#0b1418");
+    t.glow(ax - 18, ay - 62, 6, "#6ad0d0");
+  };
+  // ОДИНОЧНЫЕ ИГРЫ: зал игровых автоматов, колесо фортуны на стене, игровые экраны, ковёр с конфетти
+  SCENES.solo = (ctx, R, t) => {
+    t.grad(0, 104, ["#0a0418", "#140826", "#1e0c36", "#2a1046"]);
+    for (let x = 0; x < W; x += 16) t.rect(x, 0, 1, 104, "#22103a");
+    t.rect(0, 14, W, 2, "#ff3ea0"); t.glow(160, 15, 60, "#5a1a50"); t.rect(0, 16, W, 1, "#ffa0d8");
+    // колесо фортуны
+    const cx = 160, cy = 54, r = 30, cols = ["#ffd23f", "#ff3e7a", "#41d3a5", "#4a7bff", "#ff8a3d", "#a05bff", "#ffd23f", "#2ec5d6"];
+    t.glow(cx, cy, r + 14, "#5a2a6a");
+    for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) { const d = Math.hypot(x, y); if (d > r) continue;
+      const a = (Math.atan2(y, x) + Math.PI) / (Math.PI * 2), seg = Math.floor(a * 8);
+      t.px(cx + x, cy + y, d > r - 2 ? "#f4e0a0" : d < 4 ? "#2a1046" : cols[seg]); if (d > r - 3.5 && d <= r - 2 && (Math.round(a * 48) % 2 === 0)) t.px(cx + x, cy + y, "#ffffff"); }
+    t.disc(cx, cy, 3, "#f4e0a0"); t.rect(cx - 2, cy - r - 6, 5, 6, "#ff3e7a"); t.rect(cx - 1, cy - r, 3, 2, "#ff3e7a");
+    t.rect(cx - 3, cy + r, 7, 22, "#3a1a50");
+    // автоматы
+    const cab = (x, body, scr, kind) => {
+      t.rect(x, 52, 34, 60, body); t.rect(x, 52, 2, 60, "#ffffff22"); t.rect(x + 32, 52, 2, 60, "#00000055");
+      t.rect(x - 2, 46, 38, 8, body); t.rect(x + 2, 47, 30, 5, "#ffffff"); t.rect(x + 3, 48, 28, 3, scr);              // вывеска
+      t.rect(x + 4, 58, 26, 22, "#05020c"); t.rect(x + 5, 59, 24, 20, scr + "44"); t.glow(x + 17, 69, 16, scr + "66");
+      if (kind === 0) { for (let i = 0; i < 9; i++) t.rect(x + 7 + i * 2, 70 - (i > 5 ? i - 5 : 0) * 2, 2, 2, "#7cff7c"); t.px(x + 25, 64, "#ff4040"); }     // змейка
+      if (kind === 1) { t.disc(x + 17, 69, 7, "#ffffff"); t.disc(x + 17, 69, 5, "#ff3e3e"); t.disc(x + 17, 69, 3, "#ffffff"); t.disc(x + 17, 69, 1, "#ff3e3e"); }  // тир
+      if (kind === 2) { [[x + 9, "#f4f0e4"], [x + 16, "#c03030"], [x + 23, "#f4f0e4"]].forEach(([xx, c]) => { t.rect(xx - 2, 64, 6, 9, "#1a1a1a"); t.rect(xx - 1, 65, 4, 7, c); }); }   // карты
+      if (kind === 3) { [x + 9, x + 17, x + 25].forEach((xx, i) => { t.rect(xx - 3, 66 + (i === 1 ? -3 : 0), 6, 7, "#c08040"); t.rect(xx - 2, 65 + (i === 1 ? -3 : 0), 4, 1, "#e0a060"); }); t.disc(x + 17, 76, 2, "#ffffff"); }  // напёрстки
+      t.rect(x - 1, 82, 36, 8, "#00000055"); t.rect(x + 6, 84, 2, 4, "#1a1a1a"); t.disc(x + 7, 83, 2, "#ff3e3e"); t.disc(x + 18, 86, 2, "#ffd23f"); t.disc(x + 25, 86, 2, "#41d3a5");
+      t.rect(x + 12, 96, 10, 3, "#05020c"); t.rect(x + 14, 97, 6, 1, "#ffd23f");                                         // монетоприёмник
+    };
+    cab(18, "#3a1a8a", "#7cff7c", 0); cab(64, "#8a1a4a", "#ff6a6a", 1); cab(222, "#1a5a6a", "#f4f0e4", 2); cab(268, "#6a4a12", "#ffd23f", 3);
+    // пол-ковёр
+    t.rect(0, 112, W, 48, "#1a0a2e"); t.rect(0, 112, W, 1, "#ff3ea066");
+    for (let i = 0; i < 160; i++) { const x = R() * W, y = 114 + R() * 46; t.px(x, y, ["#ffd23f", "#ff3e7a", "#41d3a5", "#4a7bff", "#a05bff"][Math.floor(R() * 5)]); }
+    t.dither(0, 140, W, 20, "#0e0618", .4);
+    [[120, 130], [134, 136], [190, 132], [204, 140], [176, 146]].forEach(([x, y]) => { t.disc(x, y, 3, "#c8a020"); t.disc(x, y, 2, "#ffd23f"); t.px(x - 1, y - 1, "#fff6c0"); });
+    t.rect(140, 4, 40, 8, "#05020c"); t.rect(141, 5, 38, 6, "#ff3ea0"); for (let i = 0; i < 5; i++) t.rect(145 + i * 7, 6, 4, 4, "#05020c");      // «1P»-табло
+  };
+  // ИГРЫ С ПИТОМЦЕМ: солнечный парк — холмы, деревья, будка, мячик, палка, кусты для пряток, пузыри
+  SCENES.petfun = (ctx, R, t) => {
+    t.grad(0, 112, ["#5ab8f0", "#7cc8f4", "#9ad6f6", "#bfe6f8", "#dff2f6"]);
+    t.glow(52, 26, 30, "#fff4c0"); t.disc(52, 26, 12, "#fff6c8"); t.disc(52, 26, 9, "#ffe890");
+    const cloud = (x, y, s) => { t.disc(x, y, 6 * s, "#ffffff"); t.disc(x + 8 * s, y - 3 * s, 8 * s, "#ffffff"); t.disc(x + 18 * s, y, 6 * s, "#ffffff"); t.rect(x - 4 * s, y, 26 * s, 5 * s, "#ffffff"); t.rect(x - 4 * s, y + 4 * s, 26 * s, 1, "#d8eef8"); };
+    cloud(110, 22, 1); cloud(220, 16, 1.2); cloud(280, 36, .8);
+    t.ridge(92, 10, .03, "#7cc87c", "#a0e0a0");
+    t.ridge(108, 8, .05, "#4aa85a", "#7cd07c");
+    t.rect(0, 116, W, 44, "#3e9a4a"); t.dither(0, 118, W, 42, "#4aac56", .4); t.rect(0, 116, W, 1, "#7cd07c");
+    for (let i = 0; i < 90; i++) { const x = R() * W, y = 118 + R() * 42; t.px(x, y, "#2e7a3a"); t.px(x, y - 1, "#5ac06a"); }
+    const tree = (x, y, s) => { t.rect(x - 2, y - 18 * s, 5, 18 * s, "#6a4220"); t.rect(x - 2, y - 18 * s, 1, 18 * s, "#8a5a30");
+      t.ball(x, y - 26 * s, 13 * s, "#6ad06a", "#3ea04a", "#2a7a36"); t.ball(x - 9 * s, y - 20 * s, 8 * s, "#6ad06a", "#3ea04a", "#2a7a36"); t.ball(x + 9 * s, y - 21 * s, 9 * s, "#6ad06a", "#3ea04a", "#2a7a36"); };
+    tree(26, 118, 1.1); tree(296, 116, 1); tree(250, 110, .7);
+    // будка
+    t.rect(212, 96, 34, 24, "#c8603a"); t.rect(212, 96, 34, 2, "#e8805a"); t.rect(244, 96, 2, 24, "#8a3a20");
+    for (let y = 0; y < 14; y++) t.rect(229 - y * 1.4 - 2, 82 + y, y * 2.8 + 4, 1, y < 2 ? "#e85a3a" : "#a8402a");
+    t.rect(222, 104, 14, 16, "#2a1008"); t.disc(229, 104, 7, "#2a1008"); t.rect(220, 86, 18, 4, "#ffffff"); t.rect(222, 87, 14, 2, "#e85a3a");
+    // кусты для пряток (из одного торчат ушки)
+    t.ball(112, 118, 14, "#5ac85a", "#3a9a46", "#256a30"); t.ball(130, 120, 11, "#5ac85a", "#3a9a46", "#256a30");
+    t.rect(120, 102, 3, 5, "#f4c8a0"); t.rect(126, 102, 3, 5, "#f4c8a0"); t.px(121, 103, "#ff9ab0"); t.px(127, 103, "#ff9ab0");
+    // мячик, палка, косточка
+    t.shadow(172, 141, 14); t.ball(172, 134, 7, "#ff7070", "#e83a3a", "#a01e1e"); t.rect(166, 133, 13, 1, "#ffffff"); t.px(169, 130, "#ffffff");
+    t.line(60, 144, 80, 138, "#8a5a30"); t.line(60, 145, 80, 139, "#6a4220"); t.px(70, 140, "#6a4220");
+    t.rect(278, 140, 12, 3, "#f4efe0"); t.disc(278, 140, 2, "#f4efe0"); t.disc(278, 143, 2, "#f4efe0"); t.disc(290, 140, 2, "#f4efe0"); t.disc(290, 143, 2, "#f4efe0");
+    // пузыри
+    [[150, 60, 6], [168, 44, 4], [186, 66, 5], [140, 36, 3], [196, 40, 3], [176, 82, 4]].forEach(([x, y, r]) => {
+      for (let yy = -r; yy <= r; yy++) for (let xx = -r; xx <= r; xx++) { const d = Math.hypot(xx, yy); if (d <= r && d > r - 1.2) t.px(x + xx, y + yy, "#ffffffcc"); }
+      t.px(x - Math.round(r / 2), y - Math.round(r / 2), "#ffffff"); t.dither(x - r + 1, y - r + 1, r * 2 - 1, r * 2 - 1, "#c8f0ff55", .2); });
+    // цветы и забор
+    for (let x = 4; x < W; x += 12) { t.rect(x, 108, 2, 12, "#f4efe0"); t.rect(x - 1, 106, 4, 2, "#f4efe0"); }
+    t.rect(0, 111, W, 2, "#e0d8c4"); t.rect(0, 116, W, 2, "#e0d8c4");
+    for (let i = 0; i < 26; i++) { const x = R() * W, y = 124 + R() * 32; t.px(x, y, ["#ff6a9a", "#ffd23f", "#ffffff", "#a05bff"][i % 4]); t.px(x, y + 1, "#2e7a3a"); }
+  };
   SCENES.mafia = SCENES.classic;
 
   const cache = {};

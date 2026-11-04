@@ -41,24 +41,11 @@ const roundLabel = () => `Раунд ${S.room.turn} из ${S.room.turns}`;
 const settingLine = (s) => `✏️ ${s.drawTime} с на рисунок · ⌛ ${s.guessTime} с на ответ · 🔁 ${s.rounds === 1 ? "1 круг" : s.rounds + " круга"} · 📚 ${Draw.DIFFS[s.words]}`;
 
 function drawLobby() {
-  const r = S.room;
-  const enough = r.players.filter((p) => p.online).length >= Draw.MIN_PLAYERS;
-  return `
-    <div class="top"><button class="avatar" data-a="leave">←</button><div class="grow"><h1>Мастерская</h1>
-      <div class="muted small">${r.players.length} из ${Draw.MAX_PLAYERS} игроков</div></div></div>
-    <div class="card code-card"><div class="muted small">КОД КОМНАТЫ</div><div class="code">${r.code}</div>
-      <div class="row mt"><button class="btn ghost small grow" data-a="copy">📋 Скопировать</button>
-      <button class="btn small grow" data-a="share">📨 Позвать друзей</button></div>${groupBtn(S.room)}</div>
-    <div class="section-title">Игроки</div>
-    ${playerTiles(r.players, { kick: isHost(), peek: true })}
-    <div class="section-title">Правила</div>
-    <div class="card draw-rules">
-      <div class="row"><div class="grow"><b class="display">🎨 Рисовалка</b><div class="small muted mt">${settingLine(r.settings)}</div></div>
-        ${isHost() ? `<button class="btn ghost small" data-a="draw-settings">⚙️</button>` : ""}</div>
-      <div class="small mt">Каждый игрок нарисует ${r.settings.rounds === 1 ? "одну картинку" : r.settings.rounds + " картинки"}. Пока рисуют, чат закрыт — без подсказок!</div>
-    </div>
-    ${isHost() ? `<button class="btn mt2" data-a="start" ${enough ? "" : "disabled"}>${enough ? "Начать игру 🎬" : `Ждём игроков (минимум ${Draw.MIN_PLAYERS})`}</button>`
-      : `<div class="card center mt2 muted">⏳ Ждём, когда хост начнёт игру…</div>`}`;
+  const r = S.room, enough = r.players.filter((p) => p.online).length >= Draw.MIN_PLAYERS;
+  return lobbyBento({ kicker: "Рисовалка · комната", title: "Мастерская", max: Draw.MAX_PLAYERS, settings: "draw-settings", rulesLabel: "Правила",
+    rules: `<b class="display">🎨 Рисовалка</b><div class="small muted mt">${settingLine(r.settings)}</div>
+      <div class="small mt">Каждый игрок нарисует ${r.settings.rounds === 1 ? "одну картинку" : r.settings.rounds + " картинки"}. Пока рисуют, чат закрыт — без подсказок!</div>`,
+    enough, start: "Начать игру 🎬", waitText: `Ждём игроков (минимум ${Draw.MIN_PLAYERS})` });
 }
 
 function scoreBoard(opts = {}) {
