@@ -21,13 +21,21 @@ function battleLoadList() {
   Api.call("/api/battle/list", {}).then((r) => { S.battleList = r.battles; if (S.screen === "pets" && S.petTab === "battle" && !S.battleCode && !S.tourId) render(); }).catch(() => {});
   Api.call("/api/tour/list", {}).then((r) => { S.tourList = r.tours; if (S.screen === "pets" && S.petTab === "battle" && !S.battleCode && !S.tourId) render(); }).catch(() => {});
 }
+// повтор боя смотрят один раз и только участники; дальше — только итог
+const BSEEN = "nk_bseen";
+function battleSeen(code) { try { return JSON.parse(localStorage.getItem(BSEEN) || "[]").includes(code); } catch (e) { return true; } }
+function battleWatch(b) {
+  const watch = !!b && b.side != null && !battleSeen(b.code);
+  if (watch) try { const a = JSON.parse(localStorage.getItem(BSEEN) || "[]").filter((x) => x !== b.code); a.push(b.code); localStorage.setItem(BSEEN, JSON.stringify(a.slice(-300))); } catch (e) { /* приватный режим */ }
+  replayStart(watch);
+}
 function battleOpen(code) {
   S.screen = "pets"; S.petTab = "battle"; S.petSel = null; S.tourId = null; S.battleCode = String(code).toUpperCase(); S.battle = null; S.replay = null; S.battlePick = [];
   render();
   if (!Api.on) return;
   Api.call("/api/battle/get", { code: S.battleCode }).then((r) => {
     S.battle = r.battle;
-    if (r.battle.status === "done") replayStart(true);
+    if (r.battle.status === "done") battleWatch(r.battle);
     render();
   }).catch((e) => { toast(e.message); S.battleCode = null; render(); });
 }
@@ -81,6 +89,7 @@ function battleScreen() {
   let act = "";
   if (b.side != null) {
     act = `<button class="btn mt" data-a="battle-share">📨 ${free.a || free.b ? "Позвать соперника или друга в команду" : "Отправить ссылку"}</button>
+      ${Api.state && Api.state.group ? `<button class="btn ghost mt" data-a="battle-group" ${S.battleGrp === b.code ? "disabled" : ""}>${S.battleGrp === b.code ? "📢 Вызов уже в группе" : "📢 Выложить вызов в группу"}</button>` : ""}
       ${b.mine ? `<button class="btn ghost small mt" data-a="battle-cancel">Отменить вызов</button>` : ""}
       ${free[b.side ? "b" : "a"] ? `<button class="btn ghost small mt" data-a="battle-join" data-v="${b.side ? "b" : "a"}">＋ Добавить ещё своего бойца</button>` : ""}`;
   } else {
@@ -219,7 +228,7 @@ function arena(b) {
     <div class="card blog" id="blog">${esc(r.done ? "Бой окончен" : r.text || "Бой начинается…")}</div>
     ${r.done ? `<div class="card center bres ${b.side == null ? "" : won ? "won" : "lost"}"><div class="display">${b.side == null ? "🏆 " + esc(wname) : won ? "🏆 Победа!" : "Поражение"}</div>
         <div class="small muted mt">${b.side == null ? "победа в этом бою" : won ? `${esc(wname)} — сильнее${reward}` : `Победа за ${esc(wname)}. Питомцы немного расстроены${reward}`}</div>
-        <button class="btn ghost small mt" data-a="replay-again">▶️ Смотреть ещё раз</button></div>`
+</div>`
       : `<button class="btn ghost small mt" data-a="replay-skip">⏭ Пропустить</button>`}`;
 }
 
@@ -276,6 +285,10 @@ const BATTLE_ACTIONS = {
     const names = teamNames(b.teams.a);
     shareLink(linkFor("b", b.code, "battle"), b.size > 1 ? `⚔️ Бой питомцев ${b.size}×${b.size}! Моя команда: ${names}. Выставляй своих — или вступай ко мне в команду!` : `⚔️ Вызываю тебя на бой питомцев! Мой боец — ${names}. Выставляй своего!`);
   },
+  "battle-group": () => {
+    const b = S.battle; if (!b) return;
+    Api.call("/api/group/battle", { code: b.code }).then(() => { S.battleGrp = b.code; toast("📢 Вызов в группе — итог боя появится там же"); notify("success"); render(); }).catch((e) => toast(e.message));
+  },
   "battle-cancel": () => Api.call("/api/battle/cancel", { code: S.battle.code }).then(() => { toast("Вызов отменён"); BATTLE_ACTIONS["battle-back"](); }).catch(petErr),
   "battle-join": (side) => { S.battleJoin = side || null; S.battlePick = []; haptic(); render(); },
   "battle-pick": (id) => {
@@ -288,12 +301,11 @@ const BATTLE_ACTIONS = {
     haptic("heavy");
     Api.act("/api/battle/join", { code: S.battle.code, side: S.battleJoin, pets: S.battlePick }).then((r) => {
       S.battle = r.battle; S.battleJoin = null; S.battlePick = [];
-      if (r.battle.status === "done") replayStart(true); else toast("Ты в бою! Ждём остальных");
+      if (r.battle.status === "done") battleWatch(r.battle); else toast("Ты в бою! Ждём остальных");
       render(); window.scrollTo(0, 0);
     }).catch(petErr);
   },
   "replay-skip": () => { clearTimeout(replayTimer); replayStart(false); render(); notify(S.battle.winner === S.battle.side ? "success" : "warning"); },
-  "replay-again": () => { replayStart(true); render(); },
   "tour-open": (id) => { haptic(); tourOpen(id); window.scrollTo(0, 0); },
   "tour-back": () => { S.tourId = null; S.tour = null; render(); battleLoadList(); },
   "tour-pick": (id) => { S.tourPick = Number(id); haptic(); render(); },
@@ -307,7 +319,7 @@ setInterval(() => {
   Api.call("/api/battle/get", { code: S.battleCode }).then((r) => {
     if (!S.battle || r.battle.code !== S.battle.code || JSON.stringify(r.battle) === JSON.stringify(S.battle)) return;
     S.battle = r.battle;
-    if (r.battle.status === "done") { replayStart(true); notify("warning"); }
+    if (r.battle.status === "done") { battleWatch(r.battle); notify("warning"); }
     if (!S.battleJoin) render();
   }).catch(() => {});
 }, 3000);

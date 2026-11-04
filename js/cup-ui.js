@@ -4,7 +4,7 @@
 "use strict";
 
 const cupNow = () => Math.floor(Date.now() / 1000);
-const CUP_KIND = { revolver: { game: "revolver", ico: "🔫" }, roulette: { game: "roulette", ico: "💥" }, mafia: { game: "mafia", ico: "🕴" } };
+const CUP_KIND = { revolver: { game: "revolver", ico: "🔫" }, roulette: { game: "roulette", ico: "💥" }, bluff: { game: "bluff", ico: "🎴" }, mafia: { game: "mafia", ico: "🕴" } };
 
 // карточка на главной — только когда турнир скоро, идёт или ты в нём только что играл
 function cupCard() {
@@ -107,7 +107,77 @@ function cupRoom(room) {
   } else if (room.winner) Api.call("/api/cup/report", { id: tour.cup, table: tour.table, winner: room.winner }).then(() => toast("🏆 Итог стола отправлен в турнир")).catch(() => {});
 }
 
+/* ---------------------------------------------------------------- личный турнир с ботами: приходит в личку в случайные дни, живёт сутки.
+   Раунд — комната на твоём телефоне: сам добавляешь ботов, игра стартует сама, итог уходит на сервер */
+const MINI_STEPS = (m) => (m.rounds > 1 ? ["Стол на четверых", "Полуфинал", "Финал"] : ["Партия с ботами"]);
+const MINI_BOTS = (m) => (m.kind === "mafia" ? 7 : m.round === 0 ? 3 : 1);
+function miniTile() {
+  const m = Api.on && Api.state && Api.state.mini; if (!m || m.status !== "open") return "";
+  const left = Math.max(0, m.until - cupNow());
+  return `<button class="tile w2 cuptile hot" data-a="mini-open" data-v="${m.id}"><span class="t-dot"></span><div class="t-k">🤖 Личный турнир</div><div class="t-v">${m.ico} ${esc(MINI_STEPS(m)[m.round] || "")}</div>
+    <div class="t-s">исчезнет через ${fmtLeft2(left)}</div></button>`;
+}
+function miniLoad(id) {
+  return Api.call("/api/mini/get", { id }).then((r) => { S.mini = r.mini; if (S.screen === "mini") render(); }).catch((e) => { S.miniErr = e.message; if (S.screen === "mini") render(); });
+}
+function viewMini() {
+  const top = `<div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Личный турнир</h1><div class="muted small">только для тебя · соперники — боты</div></div></div>`;
+  const m = S.mini;
+  if (!Api.on) return `<div class="fade-in">${top}<div class="card">Личные турниры работают через сервер игры.</div></div>`;
+  if (!m) { if (!S.miniErr && S.miniWant) miniLoad(S.miniWant); return `<div class="fade-in">${top}<div class="card center">${S.miniErr ? esc(S.miniErr) : '<div class="spinner" style="margin:10px auto"></div>'}</div></div>`; }
+  const steps = MINI_STEPS(m), left = Math.max(0, m.until - cupNow());
+  const st = (i) => (m.status === "won" || i < m.round ? "done" : m.status === "open" && i === m.round ? "cur" : m.status === "lost" && i === m.round ? "lost" : "");
+  const em = (i) => ({ done: "✓ победа", cur: "сейчас", lost: "вылет" })[st(i)] || "впереди";
+  const head = m.status === "won" ? `<div class="card center mini-res won"><div class="display">🥇 Турнир выигран!</div><div class="small mt">Приз уже у тебя: ${m.prize.map(esc).join(" + ")}</div></div>`
+    : m.status === "lost" ? `<div class="card center mini-res lost"><div class="display">Вылет: ${esc(steps[m.round] || "")}</div><div class="small mt">Утешительные монеты начислены. Новый личный турнир придёт в другой день</div></div>`
+    : m.status === "gone" ? `<div class="card center mini-res">⌛ Турнир исчез — сутки прошли</div>` : "";
+  return `<div class="fade-in">${top}
+    <div class="card cup-hero mini-hero"><b>${m.ico} ${esc(m.name)}</b><div class="small muted">${m.rounds > 1 ? "Стол на четверых → полуфинал → финал. Проиграл раунд — турнир окончен" : "Одна партия за столом с ботами: победит твоя команда — турнир твой"}</div>
+      ${m.status === "open" ? `<div class="mini-left">⏳ исчезнет через <b>${fmtLeft2(left)}</b></div>` : ""}</div>
+    ${head}
+    <div class="mini-steps">${steps.map((x, i) => `<div class="mini-step ${st(i)}"><b>${i + 1}</b><span>${esc(x)}</span><em>${em(i)}</em></div>`).join("")}</div>
+    <div class="card mini-prize"><span>🎁</span><div class="grow"><b>Приз за победу</b><div class="small">${m.prize.map(esc).join(" + ")}</div></div></div>
+    ${m.status === "open" ? `<button class="btn mt" data-a="mini-play">▶️ Играть: ${esc(steps[m.round])}</button><div class="small muted mt center">Комната откроется у тебя, боты сядут сами</div>` : ""}
+  </div>${tabs()}`;
+}
+// комната личного турнира: хост сажает ботов, стартует, по концу партии отправляет итог
+function miniRoom(room) {
+  const mini = room && room.settings && room.settings.mini; if (!mini || !Net.isHost()) return;
+  const hub = Net._hub(); if (!hub) return;
+  if (room.phase === "lobby") {
+    const key = room.code + ":" + mini.round;
+    if (S.miniSeat !== key) {
+      S.miniSeat = key;
+      const need = mini.bots - (room.players.length - 1);
+      for (let i = 0; i < need; i++) setTimeout(() => Bots.add(), 250 * i);
+      setTimeout(() => { const h = Net._hub(); if (h && h.room.phase === "lobby") send({ t: "start" }); }, 600 + 250 * need);
+    }
+    return;
+  }
+  if (room.phase !== "end") return;
+  const rk = room.code + ":" + mini.id + ":" + mini.round;
+  if (S.miniReported === rk) return;
+  S.miniReported = rk;
+  const won = room.game === "mafia" || !room.game ? (room.winners || []).includes(S.me) : room.winner === S.me;
+  Api.call("/api/mini/report", { id: mini.id, round: mini.round, won }).then((r) => {
+    S.mini = r.mini; if (r.coins != null) Api.refresh().catch(() => {});
+    toast(r.mini.status === "won" ? "🥇 Личный турнир выигран — приз у тебя!" : won ? "✅ Раунд выигран — дальше!" : `Вылет${r.cons ? ` · утешительные +${r.cons} 🪙` : ""}`);
+    notify(won ? "success" : "warning");
+    setTimeout(() => { if (S.room && S.room.code === room.code && S.room.phase === "end") { send({ t: "leave" }); } S.screen = "mini"; render(); }, 5000);
+  }).catch((e) => toast(e.message));
+}
+
 const CUP_ACTIONS = {
+  "mini-open": (id) => { haptic(); S.screen = "mini"; S.mini = null; S.miniErr = null; S.miniWant = Number(id) || (Api.state && Api.state.mini ? Api.state.mini.id : null); render(); window.scrollTo(0, 0); },
+  "mini-play": () => {
+    const m = S.mini; if (!m || m.status !== "open") return;
+    haptic("medium");
+    Api.call("/api/mini/start", { id: m.id }).then((r) => {
+      S.mini = r.mini; S.screen = "connecting"; S.joining = ""; render();
+      const mini = { id: m.id, round: m.round, kind: m.kind, bots: MINI_BOTS(m) };
+      return Net.host(m.kind === "mafia" ? { theme: S.setup.theme, mini } : { game: CUP_KIND[m.kind].game, mini });
+    }).catch((e) => { toast(e.message); S.screen = "mini"; render(); });
+  },
   "cup-join": () => Api.call("/api/cup/join", { id: S.cup.id }).then((r) => { S.cup = r.cup; notify("success"); haptic("medium"); Api.refresh().catch(() => {}); render(); }).catch((e) => toast(e.message)),
   "cup-leave": () => Api.call("/api/cup/leave", { id: S.cup.id }).then((r) => { S.cup = r.cup; render(); }).catch((e) => toast(e.message)),
   "cup-open": (v) => {

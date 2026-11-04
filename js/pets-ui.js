@@ -55,7 +55,7 @@ function petList() {
     if (p.egg) return `<button class="pet-card egg" data-a="pets-sel" data-v="${p.id}">${Pets.sprite(petCode(p), 80, { egg: true })}
       <b>Яйцо</b><span class="small muted" data-until="${p.hatch}" data-egg="1">${p.left > 0 ? "через " + petTime(p.left) : "вылупляется!"}</span></button>`;
     const t = Pets.traits(p.dna);
-    return `<button class="pet-card ${p.hunger < 25 ? "hungry" : ""} ${p.lonely ? "lonely" : ""} ${st.main_pet === p.id ? "main" : ""}" data-a="pets-sel" data-v="${p.id}">${p.lonely ? '<span class="pet-lonely" title="Скучает">💔</span>' : ""}
+    return `<button class="pet-card ${p.hunger < 25 ? "hungry" : ""} ${p.lonely ? "lonely" : ""} ${st.main_pet === p.id ? "main" : ""}" data-a="pets-sel" data-v="${p.id}">${p.dep ? '<span class="pet-lonely dep" title="Депрессия">😞</span>' : p.lonely ? '<span class="pet-lonely" title="Скучает">💔</span>' : ""}
       ${st.main_pet === p.id ? '<span class="pet-star">★</span>' : ""}${p.den ? '<span class="pet-zz">🏠</span>' : ""}${t.collect ? '<span class="pet-cl">✦</span>' : p.receptive ? '<span class="pet-cl dna">🧬</span>' : ""}${petMiniHtml(p, 80)}
       <b>${esc(t.name)}</b><span class="rar r${p.rarity}">${Pets.rarityName(p.rarity, p.dna)}</span>${t.muts.length ? `<span class="mut-icons">${t.muts.map((m) => m.emoji).join("")}</span>` : ""}${bar(p.hunger, "food")}${bar(p.att, "att")}</button>`;
   };
@@ -63,7 +63,7 @@ function petList() {
   const den = st.den || { rooms: 0, used: 0 };
   const care = live.filter((p) => !p.egg).length >= 2 ? `<div class="care-bar"><button class="btn" data-a="care-open">🤲 Уход за всеми</button>
     <span class="den-pill" title="Комнаты в домике">🏠 ${den.used}/${den.rooms}</span></div>` : "";
-  return `${feederCard()}${questsCard()}${leagueCard()}${care}${toysCard()}${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
+  return `${feederCard()}${typeof nannyCard === "function" ? nannyCard() : ""}${questsCard()}${leagueCard()}${care}${toysCard()}${live.length ? `<div class="pet-grid">${live.map(card).join("")}</div>`
       : `<div class="card center"><div class="pet-empty">🥚</div><b>Питомцев пока нет</b><div class="muted small mt">Яйца выпадают из промокодов и раздач в боте, а очень редко — из ежедневного сундука.</div></div>`}
     ${live.some((p) => !p.egg && p.hunger < 25) ? `<div class="card warn mt">⚠️ Кто-то голодает. Без еды двое суток — питомец умирает навсегда.</div>` : ""}
     ${petPantry()}
@@ -99,6 +99,15 @@ function petShop() {
     ${feederShop()}`;
 }
 
+// тоска и депрессия: сколько осталось и что с питомцем
+function petDepBlock(p) {
+  const now = petNow();
+  if (p.dep) return `<div class="dep-card mt"><b>😞 Депрессия · ещё <span data-until="${p.dep.until}">${petTime(p.dep.until - now)}</span></b>
+    <div class="small">Его слишком долго не замечали. Все силы −25%, настроение не выше 50. «${esc(p.dep.name)}» — ${esc(p.dep.eff)}.</div>
+    ${p.dep.refuse || p.att < 40 ? `<div class="small warn">⚠️ Внимания меньше 40% — часто отказывается от еды, даже из кормушки. Может умереть! Погладь, поиграй или найми няню</div>` : `<div class="small good">✓ Внимания хватает — ест нормально</div>`}</div>`;
+  if (p.att < 20 && !Pets.traits(p.dna).immortal) return `<div class="dep-card sad mt"><b>💔 Тоскует</b><div class="small">Внимание почти на нуле. Если оно продержится на нуле полсуток — начнётся депрессия на неделю: отказ от еды, слабость в бою, свои срывы по характеру.</div></div>`;
+  return "";
+}
 function petDetail(p) {
   const st = Api.state;
   if (p.egg) {
@@ -118,6 +127,7 @@ function petDetail(p) {
       ${t.immortal ? `<div class="pstat"><span>♾️ Не нуждается в еде — никогда</span><b>∞</b></div>` : `<div class="pstat"><span>🍖 ${hungerText(p.hunger)}${p.den ? " · 🏠 в домике голодает вчетверо медленнее" : Pets.sleepState(p.dna, petNow()).asleep ? " · 💤 спит — голодает на 30% медленнее" : ""}</span><b>${p.hunger}%</b></div>${bar(p.hunger, "food")}`}
       <div class="pstat mt"><span>💛 ${moodText(p.mood)}</span><b>${p.mood}%</b></div>${bar(p.mood, "mood")}
       <div class="pstat mt"><span>💗 ${attText(p)}</span><b>${p.att}%</b></div>${bar(p.att, "att")}<div class="tiny muted att-hint">${esc(attHint(p))}</div>
+      ${petDepBlock(p)}
       ${t.reborn ? `<div class="small mt">🔥 Феникс не умирает: если долго не кормить, он сгорит и возродится из пепла яйцом</div>` : ""}
       ${p.hunger < 25 && !t.reborn ? `<div class="warn small mt">⚠️ Умрёт через <b data-until="${p.starve_at}">${petTime(p.dieIn)}</b>, если не покормить</div>` : ""}
     </div>

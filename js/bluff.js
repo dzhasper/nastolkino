@@ -191,7 +191,7 @@
       const g = this.guns[loser], live = g.pos === 0;
       g.pulls += 1; if (!live) g.pos -= 1;
       const wait = +(1.2 + Math.random() * 2.4).toFixed(2);              // рука дрожит у виска — заминка, одна на всех
-      if (live) { this.hp[loser] = 0; this.deaths[loser] = pick(["temple", "slump", "side"]); this.hands[loser] = []; }
+      if (live) { this.hp[loser] = 0; this.deaths[loser] = pick(["temple", "slump", "chest"]); this.hands[loser] = []; }
       this.event({ kind: "shot", who: loser, target: loser, hit: live ? loser : null, self: true, live, out: live, pulls: g.pulls, death: live ? this.deaths[loser] : null, wait,
         text: live ? `${this.name(loser)} приставляет револьвер к виску — БАХ!` : `${this.name(loser)} приставляет револьвер к виску… щёлк. Повезло` });
       this.last = null; this.phase = "reveal"; this.pending = { first: loser };

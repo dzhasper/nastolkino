@@ -272,7 +272,7 @@
       }
       const self = target === pid, out = live && !absorbed && this.hp[hit] === 0;
       // как умирает от дроби: лицом в стол, голову сносит, отбрасывает назад, разворачивает и роняет, отрывает руку
-      if (out) this.deaths[hit] = pick(["table", "head", "flyback", "spin", "limb"]);
+      if (out) this.deaths[hit] = pick(["table", "head", "flyback", "chest", "limb"]);
       const wait = +((self ? .9 + Math.random() * 1.9 : .5 + Math.random() * 1.4)).toFixed(2);   // палец на спуске: заминка, одна на всех
       const who = this.name(pid), tn = this.name(target);
       const text = !live ? (self ? `${who} стреляет в себя… щёлк. Холостой — ещё один ход` : `${who} стреляет в ${tn}… щёлк. Холостой`)

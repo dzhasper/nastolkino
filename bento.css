@@ -59,8 +59,8 @@ button.tile:active, .tile[data-a]:active { transform: scale(.97); }
 .tile .t-dot { position: absolute; right: 10px; top: 10px; width: 9px; height: 9px; border-radius: 9px; background: #ff4d5e; box-shadow: 0 0 0 3px rgba(255,77,94,.25); }
 .t-prog { height: 8px; border-radius: 9px; background: rgba(255,255,255,.08); margin-top: 8px; overflow: hidden; }
 .t-prog i { display: block; height: 100%; background: linear-gradient(90deg, #ffd23f, #ff8a3d); border-radius: 9px; }
-.tile.cup.big-cup { background: linear-gradient(140deg, #3a2a0a, var(--card) 70%); }
-.tile.cup.live { background: linear-gradient(140deg, #4a1a12, var(--card) 70%); }
+.tile.cuptile.big-cup { background: linear-gradient(140deg, #3a2a0a, var(--card) 70%); }
+.tile.cuptile.live { background: linear-gradient(140deg, #4a1a12, var(--card) 70%); }
 .tile .t-pet { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); }
 .tile .t-bar { position: absolute; left: 10px; right: 10px; bottom: 8px; height: 5px; border-radius: 9px; background: rgba(255,255,255,.1); overflow: hidden; }
 .tile .t-bar i { display: block; height: 100%; border-radius: 9px; }
@@ -160,3 +160,32 @@ body.pixel .lobby-bento .t-start { font-family: var(--font-head); font-size: 11p
 .gate-card { text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 28px 20px; max-width: 420px; }
 .gate-ava { width: 96px; height: 96px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,.5); margin-bottom: 14px; }
 .gate-card h1 { font-size: 22px; }
+/* вход по коду в половину ширины: поле и кнопка уживаются на узком экране */
+.tile.w2.join { gap: 6px; padding: 8px; }
+.tile.w2.join .input { min-width: 0; padding: 8px 4px; font-size: 17px; letter-spacing: .12em; }
+.tile.w2.join .btn { padding: 0 12px; }
+body.pixel .tile.w2.join .input { font-size: 12px; }
+
+/* няня для питомцев */
+.fdr-card.nanny { align-items: flex-start; }
+.fdr-card.nanny.on { border-color: #ff9ad088 !important; background: linear-gradient(120deg, rgba(255, 154, 208, .14), var(--card) 60%) !important; }
+.nn-ico { font-size: 38px; line-height: 1; flex: none; }
+.nn-btns { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+/* тоска и депрессия питомца */
+.dep-card { background: rgba(110, 30, 80, .28); border: 1px solid #b0508a; border-radius: 14px; padding: 10px 12px; display: grid; gap: 4px; }
+.dep-card.sad { background: rgba(70, 60, 120, .26); border-color: #7a6ab8; }
+.dep-card .warn { color: #ff8a8a; }
+.dep-card .good { color: #41d3a5; }
+.pet-lonely.dep { filter: drop-shadow(0 0 4px #ff4fa0); }
+/* личный турнир с ботами */
+.mini-hero .mini-left { margin-top: 8px; font-size: 13px; }
+.mini-steps { display: grid; gap: 8px; margin: 12px 0; }
+.mini-step { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--card); border: 1px solid var(--bd, #2a323c); }
+.mini-step b { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #2a323c; flex: none; }
+.mini-step span { flex: 1; font-weight: 700; }
+.mini-step em { font-style: normal; font-size: 12px; opacity: .75; }
+.mini-step.cur { border-color: #ffd23f; box-shadow: 0 0 0 1px #ffd23f55 inset; } .mini-step.cur b { background: #ffd23f; color: #101418; }
+.mini-step.done b { background: #41d3a5; color: #08130f; } .mini-step.done em { color: #41d3a5; opacity: 1; }
+.mini-step.lost b { background: #ff4d5e; } .mini-step.lost em { color: #ff4d5e; opacity: 1; }
+.mini-prize { display: flex; align-items: center; gap: 12px; } .mini-prize > span { font-size: 30px; }
+.mini-res.won { border-color: #ffd23f !important; } .mini-res.lost { border-color: #ff4d5e88 !important; }

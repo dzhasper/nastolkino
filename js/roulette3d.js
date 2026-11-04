@@ -478,10 +478,33 @@ const Cellar = (() => {
     });
     const m = new T.Mesh(new T.PlaneGeometry(size, size), new T.MeshLambertMaterial({ map: t, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
     m.position.copy(pos); m.rotation.copy(rot); decals.add(m);
-    while (decals.children.length > 80) { const old = decals.children[2]; decals.remove(old); old.geometry.dispose(); old.material.map.dispose(); old.material.dispose(); }
+    while (decals.children.length > 220) { const old = decals.children[2]; decals.remove(old); old.geometry.dispose(); old.material.map.dispose(); old.material.dispose(); }
     return m;
   }
-  function resetDecals() { if (!decals) return; while (decals.children.length > 2) { const old = decals.children[decals.children.length - 1]; decals.remove(old); old.geometry.dispose(); old.material.map.dispose(); old.material.dispose(); } }
+  // кровь на столе (русская рулетка и «Верю — не верю»): с каждым убитым её больше — тянется от убитого к центру и брызжет из зоны выстрела, растекается
+  function grow(m, delay, dur) { m.scale.setScalar(.04); (state.grow = state.grow || []).push({ m, at: performance.now() / 1000 + delay, dur }); return m; }
+  function tableBlood(vf, sf) {
+    const K = state.kills = (state.kills || 0) + 1, wp = vf.position, far = Math.hypot(wp.x, wp.z) * .72;
+    const inn = new T.Vector3(-wp.x, 0, -wp.z).normalize(), edge = new T.Vector3(wp.x * .72, .786, wp.z * .72);
+    const reach = Math.min(.95, .32 + K * .17) * far, n = 4 + K * 4, flat = () => new T.Euler(-Math.PI / 2, 0, rnd() * 6);
+    grow(splat(edge.clone().addScaledVector(inn, .12), flat(), .7 + K * .28, 0x4a0006, true), .15, 3.2 + K * .4);   // лужа у груди — растекается
+    for (let i = 0; i < n; i++) {                                          // дорожка к центру стола: чем больше убитых, тем дальше и гуще
+      const d = Math.pow(rnd(), .75) * reach, off = (rnd() - .5) * (.22 + d * .55);
+      const p = edge.clone().addScaledVector(inn, d); p.x += -inn.z * off; p.z += inn.x * off; p.y = .786 + rnd() * .003;
+      grow(splat(p, flat(), Math.max(.12, (.22 + rnd() * .34) * (1 + K * .16) * (1 - d / (reach * 1.7))), rnd() < .5 ? 0x6a0008 : 0x8a000c, rnd() < .35), .25 + d * 1.1 + rnd() * .5, 1.2 + rnd() * 1.4);
+    }
+    const src = sf && sf !== vf ? sf.position : null;                       // из зоны выстрела: брызги у стрелка
+    for (let i = 0; i < (src ? 2 + K : K); i++) {
+      const base = src ? new T.Vector3(src.x * (.5 + rnd() * .2), .787, src.z * (.5 + rnd() * .2)).lerp(edge, rnd() * .35) : edge.clone().addScaledVector(inn, rnd() * .3);
+      base.x += (rnd() - .5) * .35; base.z += (rnd() - .5) * .35;
+      grow(splat(base, flat(), .1 + rnd() * .2 * (1 + K * .2), 0x9a000c), rnd() * .25, .5);
+    }
+    if (K >= 3) for (let i = 0; i < K - 1; i++) {                           // старые лужи сливаются в одну по центру
+      const p = new T.Vector3((rnd() - .5) * .6, .786, (rnd() - .5) * .6);
+      grow(splat(p, flat(), .3 + rnd() * .35 * K * .3, 0x3a0004, true), 1 + rnd(), 4);
+    }
+  }
+  function resetDecals() { state.kills = 0; state.grow = []; if (!decals) return; while (decals.children.length > 2) { const old = decals.children[decals.children.length - 1]; decals.remove(old); old.geometry.dispose(); old.material.map.dispose(); old.material.dispose(); } }
 
   function crosshair() {
     const c = document.createElement("canvas"); c.width = c.height = 15;
@@ -633,6 +656,7 @@ const Cellar = (() => {
       const wp = f.position;
       if (kind === "table") { ud.pool.visible = ud.rel !== 0; ud.pool.scale.setScalar(1); }
       splat(new T.Vector3(wp.x * 1.1, .013, wp.z * 1.1), new T.Euler(-Math.PI / 2, 0, rnd() * 6), 1.4, 0x3a0005, true);
+      if (state.mode !== "shotgun") tableBlood(f, null);                // зашёл посреди партии — кровь убитых уже на столе
     }
   }
   function revive(f) {
@@ -901,6 +925,7 @@ const Cellar = (() => {
     if (!me) wallSplat(wp, pellets ? 1.2 : .7);
     splat(new T.Vector3(wp.x * 1.25 + (rnd() - .5) * .5, .012, wp.z * 1.25 + (rnd() - .5) * .5), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .9 + rnd() * .5, 0x4a0006);
     if (me) { state.hurt = 1; splat(new T.Vector3((rnd() - .5) * .6, .787, geo().R - .65), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .8, 0x8a000c, true); }
+    if (e.out && !pellets) tableBlood(hf, state.figs[e.who]);
     if (e.out) {
       if (pellets && aimHead && !me) headBurst(hf, from);              // голову и руки сносит только дробь
       if (pellets && e.death === "limb" && !me) limbBurst(hf, from);
@@ -998,8 +1023,8 @@ const Cellar = (() => {
     if (shiver) { const j = (a, b) => (Math.sin(t * a + i) + Math.sin(t * b)) * shiver * .5; L = [L[0] + j(31, 47), L[1] + j(37, 29), L[2]]; R = [R[0] + j(41, 23), R[1] + j(33, 53), R[2]]; }
     const relief = state.relief && state.relief.pid === ud.pid ? (nowP - state.relief.at) / 1000 : 9;   // щёлк — выдох, плечи опускаются
     if (relief < 1.8 && !ud.dead) lean += .32 * Math.sin(Math.min(1, relief / 1.8) * Math.PI);
-    // смерть: у каждого вида своя анимация. Дробь: лицом в стол, голову сносит, отбрасывает назад, разворачивает и роняет, отрывает руку.
-    // Пуля (револьвер): валится вбок у виска, оседает лицом в стол, сползает со стула, падает назад вместе со стулом
+    // смерть: у каждого вида своя анимация. Дробь: лицом в стол, голову сносит, отбрасывает назад, в грудь (разворачивает корпус), отрывает руку.
+    // Пуля (револьвер): у виска и в грудь — откидывается на спинку, голова назад, руки повисают; оседает лицом в стол; падает назад вместе со стулом
     let tilt = 0, tiltZ = 0, slideZ = 0, sp = null, hx = null, hyD = null, hz = 0, tw = null;
     if (ud.dead) {
       const k = t - ud.deadAt, K = ud.deathKind, side = ud.idx % 2 ? 1 : -1;
@@ -1022,27 +1047,27 @@ const Cellar = (() => {
         hx = .3 + .15 * pr(1.2, 1.7); hyD = side * .9; hz = side * .25 * pr(1.3, 1.7);
         L = [.46, .79, .74]; R = [-.25, .45 + .3 * (1 - pr(.8, 1.6)), .35];
         pool(1.7);
-      } else if (K === "temple") {                                      // у виска: голову дёргает вбок, тело заваливается на бок, рука с револьвером падает
-        hz = (k < .08 ? (k / .08) : 1) * .75 * -side; hx = .25 * pr(.1, .6);
-        tiltZ = side * .95 * Math.pow(pr(.18, 1.15), 2) - (k > 1.15 && k < 1.35 ? Math.sin(pr(1.15, 1.35) * Math.PI) * .06 * side : 0);
-        sp = .25 * pr(.1, .7);
-        L = [.3, .55, .35]; R = [-.35, .3 + .4 * (1 - pr(.1, .5)), .25];
-        if (k >= 1.15 && !ud.impact) { ud.impact = true; const wp = f.position; splat(new T.Vector3(wp.x * 1.05 + side * .5, .013, wp.z * 1.05), new T.Euler(-Math.PI / 2, 0, rnd() * 6), 1, 0x4a0006, true); state.shake = Math.max(state.shake, .15); }
-      } else if (K === "side") {                                        // сползает со стула вбок и падает на пол
-        sp = .2 * pr(0, .3); tiltZ = side * (1.5 * Math.pow(pr(.25, 1.05), 2) - (k > 1.05 && k < 1.25 ? Math.sin(pr(1.05, 1.25) * Math.PI) * .1 : 0));
-        hyD = side * .5; hz = side * .3 * pr(.4, 1);
-        L = [.55, .4, .2]; R = [-.55, .4, .2];
-        thud(1.05, 1.2);
+      } else if (K === "chest" || K === "temple" || K === "side" || K === "spin") {
+        // выстрел в грудь (и у виска): рывок назад, тело откидывается на спинку стула, голова запрокидывается, руки повисают вдоль тела.
+        // Никаких падений набок — фигура остаётся на стуле. У виска сначала голову дёргает вбок; от дроби («spin») корпус чуть разворачивает
+        const temple = K === "temple", jolt = k < .09 ? k / .09 : 1 - .3 * pr(.09, .5);
+        sp = -.44 * jolt - .12 * pr(.5, 1.4) + (k > 1.4 && k < 1.65 ? Math.sin(pr(1.4, 1.65) * Math.PI) * .04 : 0);
+        tw = K === "spin" ? side * .55 * Math.sin(pr(0, .5) * Math.PI * .5) * (1 - pr(.5, 1.3)) : null;
+        const back = Math.pow(pr(temple ? .3 : .18, temple ? 1.2 : 1.05), 1.35);
+        hx = -.28 * Math.min(1, k / .1) * (1 - back) - .95 * back;            // голова запрокидывается назад
+        hz = temple ? -side * .7 * Math.min(1, k / .07) * (1 - .75 * pr(.3, 1.1)) : side * .16 * pr(.7, 1.4);
+        hyD = side * .22 * pr(.6, 1.4);
+        const drop = Math.pow(pr(.12, .95), 1.25), sw = k > .95 && k < 1.6 ? Math.sin(pr(.95, 1.6) * Math.PI * 2) * .04 * (1 - pr(.95, 1.6)) : 0;   // руки падают и чуть качаются
+        L = [.34 + .2 * drop, .98 - .66 * drop + sw, .42 - .44 * drop]; R = [-.34 - .2 * drop, .98 - .66 * drop - sw, .42 - .44 * drop];
+        if (k >= 1.1 && !ud.impact) {                                   // кровь капает с руки на пол
+          ud.impact = true; const wp = f.position;
+          splat(new T.Vector3(wp.x * 1.12 + side * .3, .013, wp.z * 1.12), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .8, 0x4a0006, true);
+        }
       } else if (K === "flyback") {                                     // дробь отбрасывает назад вместе со стулом, руки вверх
         tilt = -1.5 * Math.pow(pr(0, .42), 1.4) + (k > .42 && k < .62 ? Math.sin(pr(.42, .62) * Math.PI) * .14 : 0);
         slideZ = -.55 * Math.pow(pr(0, .45), .7); sp = -.45;
         L = [.7, 1.55, -.35]; R = [-.7, 1.45, -.2];
         thud(.45, 1.6);
-      } else if (K === "spin") {                                        // разворачивает от удара и роняет на бок
-        tw = side * (1.1 * (1 - Math.pow(1 - pr(0, .4), 3)) - .45 * pr(.5, 1.1)); sp = .3 * pr(.2, .6);
-        tiltZ = -side * 1.45 * Math.pow(pr(.35, 1.05), 2); hz = -side * .3;
-        L = [.45, .55, .4]; R = [-.45, .6, .35];
-        thud(1.05, 1.3);
       } else {                                                          // «head» (дробь, голову снесло) и «back» (пуля, падает назад) — назад вместе со стулом
         sp = k < .25 ? -.4 * (k / .25) : -.2;
         tilt = k < .25 ? 0 : k < .95 ? -1.42 * Math.pow((k - .25) / .7, 2) : k < 1.12 ? -1.42 + Math.sin((k - .95) / .17 * Math.PI) * .12 : -1.42;
@@ -1248,6 +1273,10 @@ const Cellar = (() => {
     if (document.hidden || ms - lastDraw < 22) return;
     lastDraw = ms;
     const t = ms / 1000, dt = Math.min(.05, clock0 ? t - clock0 : .016); clock0 = t;
+    if (state.grow && state.grow.length) {                                // кровь растекается
+      const nt = performance.now() / 1000;
+      state.grow = state.grow.filter((g) => { const k = Math.min(1, Math.max(0, (nt - g.at) / g.dur)); g.m.scale.setScalar(.04 + .96 * (1 - Math.pow(1 - k, 3))); return k < 1 && !!g.m.parent; });
+    }
     const nowF = performance.now(), su = state.sus && nowF < state.sus.until ? state.sus : null;
     state.susK = su && nowF >= su.from ? Math.min(1, (nowF - su.from) / Math.max(1, su.until - su.from)) : 0;
     state.beat = (state.beat || 0) + dt * (1.1 + state.susK * 1.8);

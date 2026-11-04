@@ -165,8 +165,8 @@
         this.hp[target] = Math.max(0, this.hp[target] - 1); this.wounds[target] = (this.wounds[target] || 0) + 1;
         out = this.hp[target] === 0;
         if (out) {
-          // пуля, не дробь: голову не сносит — валится вбок у виска, оседает лицом в стол, сползает со стула или падает назад
-          this.deaths[target] = self ? pick(["temple", "slump"]) : pick(["slump", "back", "side"]);
+          // пуля, не дробь: голову не сносит — у виска или в грудь откидывается на спинку (голова назад, руки повисли), оседает лицом в стол или падает назад
+          this.deaths[target] = self ? pick(["temple", "slump"]) : pick(["slump", "back", "chest"]);
           const had = this.bounty[target] || 0; this.bounty[target] = 0;
           if (!self && this.bountyOn()) { took = had + BOUNTY; this.bounty[pid] = (this.bounty[pid] || 0) + took; }   // выбил — награда за его голову теперь над тобой
         }

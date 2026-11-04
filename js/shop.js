@@ -152,7 +152,10 @@ const Shop = (() => {
       I("title", "pt" + tag + "a", `Сезон «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Сезон «${th[0]}»`, desc: when + " · 15-й уровень" }),
       I("title", "pt" + tag + "b", `Покоритель сезона «${th[0]}»`, 0, { excl: 1, pass: tag, text: `Покоритель «${th[0]}»`, desc: when + " · 30-й уровень" }));
   }
-  const byId = (cat, id) => ITEMS.find((x) => x.cat === cat && x.id === id);
+  // сгенерированные вещи (js/loot.js): рамки, фоны, карточки, переливы имени, титулы, аватары, вещи для питомцев, наборы новых сезонных сундуков
+  if (typeof Loot !== "undefined") Loot.ALL.forEach((x) => ITEMS.push(Object.assign({}, x)));
+  const IDX = {}; ITEMS.forEach((x) => { IDX[x.cat + ":" + x.id] = x; });
+  const byId = (cat, id) => IDX[cat + ":" + id];
   const byKey = (k) => { const [c, i] = String(k).split(":"); return byId(c, i); };
 
   /* ---------------------------------------------------------------- кейсы: вещи только выбиваются. Таблицы — такие же в server/worker.js */
@@ -176,6 +179,8 @@ const Shop = (() => {
     { key: "s_neon", name: "Неоновый город", emoji: "🌃", price: 400, w: [50, 30, 15, 5], color: "#ff3ec8", desc: "Дождь, неон и помехи в сети" },
     { key: "s_dragon", name: "Золотой дракон", emoji: "🐲", price: 400, w: [50, 30, 15, 5], color: "#ffc23b", desc: "Фонари, облака и золото императора" },
   ];
+  SEASONS.forEach((x) => { x.when = "any"; });
+  if (typeof Loot !== "undefined") Loot.SETS.forEach((x) => SEASONS.push({ key: x.key, name: x.name, emoji: x.emoji, price: x.price, w: x.w, color: x.color, desc: x.desc, when: x.when, triple: !!x.triple }));
   const seasonByKey = (k) => SEASONS.find((x) => x.key === k);
   const seasonPool = (k) => ITEMS.filter((x) => x.season === k);
   const POOL = ITEMS.filter((x) => x.price > 0);
@@ -391,6 +396,7 @@ const Shop = (() => {
       const sx = 15 + f * 3; t.P(sx, 2, "#ffffff"); t.P(sx - 1, 2, "#ffffffaa"); t.P(sx + 1, 2, "#ffffffaa"); t.P(sx, 1, "#ffffffaa"); t.P(sx, 3, "#ffffffaa");
     },
   });
+  if (typeof Loot !== "undefined") ITEMS.forEach((x) => { if (x.cat === "frame" && (x.gen || x.pat)) FRAMES[x.id] = Loot.frame(x.id); });
   ITEMS.filter((x) => x.cat === "frame" && x.pass).forEach((x) => { FRAMES[x.id] = passFrame(PASS_THEMES[Number(x.pass.slice(2)) - 1], !!x.prem); });   // рамки пропуска
   const frameCache = {};
   function frameUrl(key) {
@@ -461,6 +467,9 @@ const Shop = (() => {
   }
   const ownedAvatars = () => ITEMS.filter((x) => x.cat === "ava" && owns(x)).map((x) => x.emoji);
 
+  // картинка фона: сгенерированный пейзаж или пиксельная сцена
+  const sceneUrl = (id) => (typeof Loot !== "undefined" && Loot.isBg(id) ? Loot.bg(id) : typeof Pixel !== "undefined" ? Pixel.scene(id) : "");
+
   /* ---------------------------------------------------------------- карточка профиля в выбранном виде */
   const RANKS = ["Новичок", "Свидетель", "Завсегдатай", "Детектив", "Шулер", "Консильери", "Капо", "Крёстный отец"];
   const level = (games) => Math.floor((games || 0) / 5) + 1;
@@ -470,6 +479,8 @@ const Shop = (() => {
   const nameFx = (name, fx) => {
     const n = esc(name);
     if (!fx || fx === "none") return `<span class="nmfx">${n}</span>`;
+    const gfx = typeof Loot !== "undefined" ? Loot.fx(fx) : null;
+    if (gfx) return `<span class="nmfx fx-gen" style="--a:${gfx[0]};--b:${gfx[1]};--c:${gfx[2]}">${n}</span>`;
     if (fx === "wave") return `<span class="nmfx fx-wave">${[...String(name)].map((ch, i) => `<i style="animation-delay:${i * .08}s">${esc(ch) === " " ? "&nbsp;" : esc(ch)}</i>`).join("")}</span>`;
     return `<span class="nmfx fx-${fx}" data-t="${n}">${n}</span>`;
   };
@@ -481,17 +492,20 @@ const Shop = (() => {
     const lv = level(p.games), rate = p.games ? Math.round((p.wins / p.games) * 100) : 0;
     const title = titleText(lk) || rank(lv);
     const name = nameFx(p.name, lk.fx);
-    const scene = lk.bg && lk.bg !== "none" && typeof Pixel !== "undefined" ? Pixel.scene(lk.bg) : "";
+    const scene = lk.bg && lk.bg !== "none" ? sceneUrl(lk.bg) : "";
     const bg = scene ? `<div class="pc-scene" style="background-image:url(${scene})"></div>` : `<div class="pc-scene empty"></div>`;
     const avatar = `<div class="pc-av">${p.avatarHtml}</div>`;
     const bar = (v, n = 10) => "█".repeat(Math.round(v * n)) + "░".repeat(n - Math.round(v * n));
+    // значки карточки: в пиксельном стиле — спрайты, в обычном — эмодзи (ровные, без «лесенки»)
+    const px = typeof document !== "undefined" && document.body && document.body.classList.contains("pixel");
+    const ico = (k, e) => (px && typeof Pixel !== "undefined" ? Pixel.sprite(k, 2) : `<span class="pc-e">${e}</span>`);
     const xp = ((p.games || 0) % 5) / 5;
     const T = {
       rpg: `${bg}<div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
           <div class="pc-lv">LV ${lv}</div></div></div>
-        <div class="pc-bars"><div class="bar-label">${Pixel.sprite("heart", 2)} Сила · побед ${rate}%</div><div class="bar hp"><i style="width:${Math.max(rate, 3)}%"></i></div>
-          <div class="bar-label">${Pixel.sprite("star", 2)} Опыт · до LV ${lv + 1}: ${5 - ((p.games || 0) % 5)} игр</div><div class="bar xp"><i style="width:${Math.max(xp * 100, 3)}%"></i></div></div>
-        <div class="pc-loot">${Pixel.sprite("end", 2)} ×${p.wins || 0}<span>${Pixel.sprite("star", 2)} ×${p.games || 0}</span>${Pixel.sprite("skull", 2)} ×${Math.max(0, (p.games || 0) - (p.wins || 0))}</div>`,
+        <div class="pc-bars"><div class="bar-label">${ico("heart", "❤️")} Сила · побед ${rate}%</div><div class="bar hp"><i style="width:${Math.max(rate, 3)}%"></i></div>
+          <div class="bar-label">${ico("star", "⭐")} Опыт · до LV ${lv + 1}: ${5 - ((p.games || 0) % 5)} игр</div><div class="bar xp"><i style="width:${Math.max(xp * 100, 3)}%"></i></div></div>
+        <div class="pc-loot">${ico("end", "🏆")} ×${p.wins || 0}<span>${ico("star", "⭐")} ×${p.games || 0}</span>${ico("skull", "💀")} ×${Math.max(0, (p.games || 0) - (p.wins || 0))}</div>`,
       dossier: `<div class="pc-tab">ДЕЛО № ${String(1000 + (p.games || 0) * 7).slice(-4)}</div><div class="pc-body"><div class="pc-photo">${avatar}<i class="clip"></i></div>
           <div class="pc-main"><div class="pc-field"><i>Имя</i><b class="pc-name">${name}</b></div><div class="pc-field"><i>Кличка</i><b>${esc(title)}</b></div>
           <div class="pc-field"><i>Дел раскрыто</i><b>${p.wins || 0} из ${p.games || 0}</b></div><div class="pc-field"><i>Уровень опасности</i><b>${lv}</b></div></div></div>
@@ -531,6 +545,13 @@ const Shop = (() => {
         <div class="pc-table"><div><span>LEVEL</span><b>${String(lv).padStart(2, "0")}</b></div><div><span>WINS</span><b>${String(p.wins || 0).padStart(3, "0")}</b></div>
           <div><span>GAMES</span><b>${String(p.games || 0).padStart(3, "0")}</b></div><div><span>RATE</span><b>${rate}%</b></div></div>`,
     };
+    const gs = !T[lk.style] && typeof Loot !== "undefined" ? Loot.style(lk.style) : null;
+    if (gs) {
+      const [g1, g2, g3, g4] = gs.pal;
+      return `<div class="pcard pc-gen pc-gen-${gs.kind} ${opts.mini ? "mini" : ""}" style="--g1:${g1};--g2:${g2};--g3:${g3};--g4:${g4}">${gs.kind === "foil" ? `<div class="pc-shine"></div>` : ""}${bg}
+        <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div></div></div>
+        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} побед</span><span>${p.games || 0} игр</span><span>${rate}%</span></div></div>`;
+    }
     return `<div class="pcard pc-${lk.style} ${opts.mini ? "mini" : ""}">${T[lk.style] || T.rpg}</div>`;
   }
 
@@ -545,6 +566,6 @@ const Shop = (() => {
     if (typeof saveProfile === "function") { saveProfile(); if (typeof syncProfile === "function") syncProfile(); }
   }
 
-  return { CATS, ITEMS, DEFAULT, REWARD, TIERS, CASES, DUP, POOL, poolOf, SEASONS, seasonByKey, seasonPool, tier, caseByKey, rollTier, rollItem, openCaseLocal, byKey, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl,
+  return { CATS, ITEMS, DEFAULT, REWARD, TIERS, CASES, DUP, POOL, poolOf, SEASONS, seasonByKey, seasonPool, tier, caseByKey, rollTier, rollItem, openCaseLocal, byKey, byId, attach, owns, look, buy, equip, reward, chestReady, openChest, ownedAvatars, frameImg, frameUrl, sceneUrl,
     card, nameFx, level, rank, titleText, demo, get coins() { return store ? store.coins : 0; } };
 })();

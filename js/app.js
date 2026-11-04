@@ -209,6 +209,8 @@ function boot() {
     if (S.registered && qs.get("tab") === "pass") S.screen = "pass";
     const cupQ = qs.get("cup") || (startParam && /^cup_\d+$/.test(startParam) ? startParam.slice(4) : null);
     if (S.registered && cupQ) { S.screen = "cup"; S.cupWant = Number(cupQ) || null; }
+    const miniQ = qs.get("mini") || (startParam && /^mini_\d+$/.test(startParam) ? startParam.slice(5) : null);
+    if (S.registered && miniQ) { S.screen = "mini"; S.mini = null; S.miniWant = Number(miniQ) || null; }
     Api.onState = petOnState;
     Api.start();
     let lastRefresh = Date.now();
@@ -217,7 +219,8 @@ function boot() {
     setInterval(refresh, 120000);
     const bcode = qs.get("battle") || (startParam && /^b_[0-9A-F]{8}$/i.test(startParam) ? startParam.slice(2) : null);
     const tcode = qs.get("trade") || (startParam && /^t_[0-9A-F]{8}$/i.test(startParam) ? startParam.slice(2) : null);
-    if (S.registered && qs.get("u") && Api.on) setTimeout(() => openPlayer(qs.get("u")), 300);
+    const ucode = qs.get("u") || (startParam && /^u_\d+$/.test(startParam) ? startParam.slice(2) : null);
+    if (S.registered && ucode && Api.on) setTimeout(() => openPlayer(ucode), 300);
     if (S.registered && qs.get("tour")) tourOpen(qs.get("tour"));
     else if (S.registered && bcode) battleOpen(bcode);
     else if (S.registered && tcode) tradeOpen(tcode);
@@ -255,6 +258,7 @@ function onMessage(m, queued) {
     const keep = m.room.game === "draw" && S.screen === "room" && (drawKeepScreen(m.room, prev)
       || (m.room.phase === "guess" && prev && prev.phase === "guess" && document.activeElement && document.activeElement.id === "guess-input"));
     if (prev && prev.code === m.room.code && prev.phase === "lobby" && m.room.phase !== "lobby" && (S.groupPosted || {})[m.room.code] != null) groupDone(m.room.code, "start");   // в группе — «закрыто»
+    if (prev && prev.code === m.room.code && prev.phase !== "end" && m.room.phase === "end") groupResultReport(m.room);   // комната была в группе — туда итог
     S.room = m.room;
     S.offset = m.room.now - Date.now();
     S.screen = "room";
@@ -271,6 +275,7 @@ function onMessage(m, queued) {
     render();
     renderChat();
     if (typeof cupRoom === "function") cupRoom(m.room);                 // турнирный стол: автостарт, итог партии
+    if (typeof miniRoom === "function") miniRoom(m.room);               // личный турнир: боты, автостарт, итог раунда
   } else if (m.t === "ink") {
     drawOnInk(m);
   } else if (m.t === "closed" || m.t === "left" || m.t === "kicked") S.sheet = null;
@@ -296,7 +301,7 @@ function render() {
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
-  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, league: viewLeague, pass: viewPass, cup: viewCup, mafia: viewMafia, spy: viewSpyMenu, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
+  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, league: viewLeague, pass: viewPass, cup: viewCup, mini: viewMini, mafia: viewMafia, spy: viewSpyMenu, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
   const gated = Api.on && Api.state && Api.state.gate && !Api.state.admin && !["register", "connecting", "loading"].includes(S.screen);   // админ сделал подписку на группу обязательной
   $app.innerHTML = gated ? viewGate() : (screens[S.screen] || viewLoading)();
   renderOverlay();
@@ -316,7 +321,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "spy" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || S.screen === "league" || S.screen === "pass" || S.screen === "cup" || (S.screen === "room" && !!S.room);   // во время партии «Назад» = выйти из игры (с подтверждением)
+  const back = S.screen === "mafia" || S.screen === "spy" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || S.screen === "league" || S.screen === "pass" || S.screen === "cup" || S.screen === "mini" || (S.screen === "room" && !!S.room);   // во время партии «Назад» = выйти из игры (с подтверждением)
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -355,7 +360,7 @@ function viewRegister() {
 function tabs() {
   const hungry = Api.state && Api.state.pets.some((p) => p.alive && !p.egg && petLive(p).hunger < 25);
   const b = (k, ic, label) => `<button class="${S.screen === k ? "on" : ""}" data-a="tab" data-v="${k}"><span class="ti">${ic}</span><span>${label}</span></button>`;
-  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейсы${dailyReady() || Shop.CASES.some((c) => caseFree(c.key)) || (Api.state && Api.state.season && seasonLeft() > 0) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
+  return `<div class="tabs t4">${b("home", "🎲", "Игры")}${b("pets", "🐾", `Питомцы${hungry ? '<i class="dot"></i>' : ""}`)}${b("shop", "🎁", `Кейсы${dailyReady() || Shop.CASES.some((c) => caseFree(c.key)) || (Api.state && seasonLeft() > 0) ? '<i class="dot"></i>' : ""}`)}${b("profile", "👤", "Профиль")}</div>`;
 }
 const coinPill = () => `<button class="coins" data-a="tab" data-v="shop">${PX() ? Pixel.sprite("coin", 2) : "🪙"}<b>${S.profile.coins}</b></button>`;
 
@@ -374,9 +379,9 @@ function viewHome() {
       ${g("spy", "spy", "Шпион", `🕵️ ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS}`, "w2", '<span class="t-new">NEW</span>')}
       ${passHomeTile()}
       ${g("draw", "studio", "Рисовалка", `✏️ ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS}`, "w2")}
-      ${g("solo", "solo", "Соло", "", "s1")}
-      ${g("", "petfun", "С питомцем", "", "s1", "", "pet-games")}
-      <div class="tile w4 join"><input class="input" id="join-code" maxlength="4" placeholder="КОД" value="${esc(S.joinCode)}" autocomplete="off"><button class="btn" data-a="join">Войти</button></div>
+      ${g("", "petfun", "С питомцем", "🐾 мини-игры", "w2", "", "pet-games")}
+      ${g("solo", "solo", "Соло", "🎯 против бота", "w2")}
+      <div class="tile w2 join"><input class="input" id="join-code" maxlength="4" placeholder="КОД" value="${esc(S.joinCode)}" autocomplete="off"><button class="btn" data-a="join">Войти</button></div>
     </div>
   </div>${tabs()}`;
 }
@@ -388,9 +393,10 @@ function cupTile() {
     const left = Math.max(0, c.start_at - cupNow());
     const v = c.status === "play" ? "Идёт" : c.status === "done" ? "Итоги" : fmtLeft2(left);
     const s2 = c.status === "reg" ? (c.joined ? "✓ ты записан(а)" : "запись открыта") : c.status === "plan" ? "запись за 40 мин" : c.status === "play" ? (c.joined ? (c.out ? "ты выбыл(а)" : "🔥 ты в игре") : "смотри сетку") : "забери приз";
-    return `<button class="tile w2 cup ${c.big ? "big-cup" : ""} ${c.status === "play" ? "live" : ""} ${c.status === "reg" && !c.joined ? "hot" : ""}" data-a="go" data-v="cup">
+    return `<button class="tile w2 cuptile ${c.big ? "big-cup" : ""} ${c.status === "play" ? "live" : ""} ${c.status === "reg" && !c.joined ? "hot" : ""}" data-a="go" data-v="cup">
       ${c.status === "reg" && !c.joined ? '<span class="t-dot"></span>' : ""}<div class="t-k">${c.big ? "👑 Турнир месяца" : "🏆 Турнир дня"}</div><div class="t-v">${v}</div><div class="t-s">${s2}</div></button>`;
   }
+  const mt = typeof miniTile === "function" ? miniTile() : ""; if (mt) return mt;   // личный турнир с ботами — пока он открыт
   if (Api.on) return `<button class="tile w2" data-a="go" data-v="league"><div class="t-k">🏅 Лига недели</div><div class="t-v">Топ-10</div><div class="t-s">бои питомцев · призы</div></button>`;
   return `<button class="tile w2" data-a="go" data-v="solo"><div class="t-k">🎯 Тренировка</div><div class="t-v">Против бота</div><div class="t-s">рекорды и монеты</div></button>`;
 }
@@ -471,7 +477,7 @@ function viewProfile() {
 function shopPreview(it) {
   const p = S.profile;
   if (it.cat === "frame") return `<div class="sp-av">${av(Object.assign({}, p, { look: { frame: it.id } }), "big")}</div>`;
-  if (it.cat === "bg") return it.id === "none" ? `<div class="sp-bg empty">пусто</div>` : `<div class="sp-bg" style="background-image:url(${Pixel.scene(it.id)})"></div>`;
+  if (it.cat === "bg") return it.id === "none" ? `<div class="sp-bg empty">пусто</div>` : `<div class="sp-bg" style="background-image:url(${Shop.sceneUrl(it.id)})"></div>`;
   if (it.cat === "toy") return `<div class="sp-ava sp-toy">${it.emoji}</div>`;
   if (it.cat === "mg") return `<div class="sp-ava sp-mg">${Pets.syringe(64)}</div>`;
   if (it.cat === "hat") { const st = Api.state, mp = st && st.pets.find((x) => x.id === st.main_pet && x.alive && !x.egg) || (st && st.pets.find((x) => x.alive && !x.egg));
@@ -590,6 +596,21 @@ function groupDone(code, why) {
   if (!S.groupPosted || S.groupPosted[code] == null) return;
   delete S.groupPosted[code];
   Api.call("/api/group/close", { code, why: why === "gone" ? "gone" : "start" }).catch(() => {});
+}
+// партия закончилась в комнате, которую выкладывали в группу: хост отправляет победителей (сервер покажет фото и профиль)
+function groupResultReport(r) {
+  if (!r || !isHost() || !Api.on || (S.groupEver || {})[r.code] == null) return;
+  const P = r.players || [], game = r.game || "mafia";
+  let ids = [], team = "";
+  if (game === "mafia") { ids = r.winners || []; if (r.winner && r.winner !== "solo" && r.theme) team = { town: r.theme.town_team, mafia: r.theme.mafia_team }[r.winner] || ""; }
+  else if (game === "spy") ids = r.winners || [];
+  else if (game === "draw") { const best = Math.max(0, ...P.map((p) => p.score || 0)); ids = best > 0 ? P.filter((p) => (p.score || 0) === best).map((p) => p.id) : []; }
+  else if (r.winner) ids = [r.winner];
+  const W = ids.map((id) => P.find((p) => p.id === id)).filter(Boolean);
+  if (!W.length) return;
+  const n = (S.groupEver[r.code] = (S.groupEver[r.code] || 0) + 1);
+  Api.call("/api/group/result", { code: r.code, key: String(n), game, team, names: W.map((p) => p.name), ids: W.map((p) => (/^tg\d+$/.test(p.id) ? Number(p.id.slice(2)) : 0)),
+    total: (r.seats || P).length, pot: r.pot || 0 }).catch(() => {});
 }
 // «Закинуть в группу»: хост выкладывает приглашение в общую группу бота (плитка есть, только если группа подключена на сервере)
 function groupBtn(r) {
@@ -1056,7 +1077,7 @@ const actions = {
     const M = { roulette: window.Roulette, revolver: window.Revolver, bluff: window.Bluff, blackjack: window.Blackjack, draw: window.Draw }[r.game];
     const max = (M && M.MAX_PLAYERS) || (S.catalog && S.catalog.max) || 12;
     Api.call("/api/group/room", { code: r.code, game: r.game || "mafia", title: r.theme ? r.theme.title : "", players: r.players.length, max, stake: (r.settings && r.settings.stake) || 0 })
-      .then(() => { (S.groupPosted = S.groupPosted || {})[r.code] = 1; toast("📢 Приглашение в группе"); notify("success"); render(); })
+      .then(() => { (S.groupPosted = S.groupPosted || {})[r.code] = 1; (S.groupEver = S.groupEver || {})[r.code] = (S.groupEver || {})[r.code] || 0; toast("📢 Приглашение в группе"); notify("success"); render(); })
       .catch((e) => toast(e.message));
   },
   leave: () => {

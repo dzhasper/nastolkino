@@ -127,3 +127,29 @@ body.pixel .seg button { font-family: var(--font-head); font-size: 9px; }
 .craft-res.up .cl-prize { animation: ctUp 1.2s ease-out both; }
 @keyframes ctUp { 0% { transform: scale(.3) rotate(-20deg); filter: brightness(3); } 60% { transform: scale(1.15) rotate(4deg); } 100% { transform: none; filter: none; } }
 body.pixel .ct-slot, body.pixel .key-row, body.pixel .shop-item .inv-n { border-radius: 0; }
+
+/* сезонные: когда бывают, супер-сундук, подсказка */
+.season-when { font-size: 12px; margin-top: 4px; color: var(--sc, #ffd23f); font-weight: 700; }
+.case-card.super { box-shadow: 0 0 0 2px var(--sc), 0 0 26px color-mix(in srgb, var(--sc) 55%, transparent); animation: superGlow 2.4s ease-in-out infinite; }
+@keyframes superGlow { 50% { box-shadow: 0 0 0 2px #fff, 0 0 40px color-mix(in srgb, var(--sc) 80%, transparent); } }
+.season-hint { line-height: 1.45; }
+.case-layer.c-s_cosmos { background: radial-gradient(circle at 50% 40%, rgb(60,20,110), rgb(3,2,10) 75%); }
+.case-layer.c-s_olymp { background: radial-gradient(circle at 50% 40%, rgb(110,90,30), rgb(8,6,4) 75%); }
+.case-layer.c-s_halloween { background: radial-gradient(circle at 50% 40%, rgb(90,40,8), rgb(6,3,10) 75%); }
+.case-layer.c-s_night { background: radial-gradient(circle at 50% 40%, rgb(24,24,80), rgb(3,3,12) 75%); }
+/* вспышка цвета редкости, когда лента встала */
+.case-layer.flash::after { content: ""; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--tc) 70%, transparent), transparent 60%); animation: clFlash .9s ease-out forwards; }
+@keyframes clFlash { from { opacity: 1; } to { opacity: 0; } }
+.cl-art.shake { animation: clShake .14s linear infinite, clGlow 1s ease-in-out infinite; }
+@keyframes clGlow { 50% { filter: drop-shadow(0 0 18px #ffd23b) brightness(1.2); } }
+/* три ленты */
+.cl-box.triple .reel.sm { height: 100px; margin-bottom: 8px; }
+.cl-box.triple .rcell { width: 72px; }
+.cl-box.triple .ct-ico { font-size: 26px; }
+.reel.stopped { border-color: rgba(255, 210, 59, .6); }
+.cl-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.cl-mini { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 12px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 -3px 0 var(--tc); animation: prizeIn .5s cubic-bezier(.2,1.6,.4,1) both; min-width: 0; }
+.cl-mini:nth-child(2) { animation-delay: .15s; } .cl-mini:nth-child(3) { animation-delay: .3s; }
+.cl-mini b { font-size: 12px; line-height: 1.2; text-align: center; overflow-wrap: anywhere; }
+.rcell.reveal { animation: rcReveal .55s cubic-bezier(.2,1.6,.4,1), rcWon .6s ease-out .55s 2; }
+@keyframes rcReveal { from { transform: rotateY(90deg) scale(.8); filter: brightness(2.5); } }

@@ -66,6 +66,15 @@ function feederCard() {
     <div class="small muted">${have ? `В запасе: ${have}. Включи — и она сама будет кормить питомцев, даже когда тебя нет` : "Сама кормит питомцев, пока тебя нет в игре. Есть в лавке"}</div></div>
     <span class="pill">${have ? "Включить" : "В лавку"}</span></button>`;
 }
+// няня: только внимание — играет, гладит, развлекает (и ночью), не кормит. Сутки за монеты, месяц — за звёзды
+function nannyCard() {
+  const n = Api.state && Api.state.nanny; if (!n) return "";
+  const left = n.until - Math.floor(Date.now() / 1000);
+  if (n.active) return `<div class="card fdr-card nanny on"><span class="nn-ico">👩‍🍼</span><div class="grow"><b>Няня работает</b><div class="small">ещё ${feederLeft(left)} · играет, гладит, не даёт скучать — даже ночью</div>
+    <div class="small muted">Не кормит — для еды нужна кормушка</div></div><button class="btn ghost small" data-a="nanny-buy" ${S.profile.coins < n.price ? "disabled" : ""}>+1 день</button></div>`;
+  return `<div class="card fdr-card nanny"><span class="nn-ico">👩‍🍼</span><div class="grow"><b>Няня для питомцев</b><div class="small muted">Играет, гладит и развлекает, пока тебя нет — внимание не падает, депрессии не будет. Не кормит.</div>
+    <div class="row nn-btns"><button class="btn small" data-a="nanny-buy" ${S.profile.coins < n.price ? "disabled" : ""}>Сутки · 🪙 ${n.price}</button><button class="btn small star" data-a="stars-buy" data-v="nanny_month">Месяц · ${n.stars} ⭐</button></div></div></div>`;
+}
 // окно выбора: все кормушки с количеством; включить — с подтверждением
 function feederSheet() {
   const fd = Api.state && Api.state.feeder; if (!fd) return "";
@@ -113,4 +122,9 @@ const FEEDER_ACTIONS = {
     if (tg && tg.showConfirm) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
   },
   "stars-buy": (what) => starsBuy(what),
+  "nanny-buy": () => {
+    const n = Api.state.nanny, tg = window.Telegram && window.Telegram.WebApp, q = `Нанять няню на сутки за ${n.price} 🪙?${n.active ? "\nОна уже работает — время добавится." : ""}`;
+    const go = () => Api.act("/api/nanny/buy", {}).then(() => { notify("success"); haptic("medium"); toast("👩‍🍼 Няня присмотрит за питомцами"); render(); }).catch((e) => toast(e.message));
+    if (tg && tg.showConfirm) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
+  },
 };

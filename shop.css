@@ -354,3 +354,51 @@ body[data-screen="profile"][data-pstyle="s_dragon"] { --bg: #2a0608; --card: #4a
 @keyframes fx-ghosty { 50% { opacity: .25; filter: blur(1px); } }
 
 @keyframes strip8 { from { background-position: 0 0; } to { background-position: 100% 0; } }
+
+/* =====================================================================
+   ОБЫЧНЫЙ (не пиксельный) СТИЛЬ: аватар в рамке — квадратный и ровно в окошке рамки,
+   рамка не вылезает на соседний текст; на карточках — нормальный шрифт и ровные цифры
+   ===================================================================== */
+body:not(.pixel) .avatar.framed { border-radius: 16%; background: transparent; box-shadow: none; }
+body:not(.pixel) .avatar.framed .av-in { position: absolute; inset: 10%; width: auto; height: auto; border-radius: 10%; background: var(--card2, #2a323c); }
+body:not(.pixel) .avatar.framed .frame { left: -10%; top: -10%; width: 120%; height: 120%; }
+body:not(.pixel) .player .avatar.framed { margin-top: 2px; margin-bottom: 4px; }
+body:not(.pixel) .pcard { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+body:not(.pixel) .pcard [class^="pc-"], body:not(.pixel) .pcard [class*=" pc-"], body:not(.pixel) .pcard .bar-label { font-family: inherit !important; text-shadow: none; }
+body:not(.pixel) .pcard .pc-name { font-weight: 800; font-size: 19px; line-height: 1.2; letter-spacing: -.01em; }
+body:not(.pixel) .pcard .pc-sub { font-weight: 600; font-size: 13px; }
+body:not(.pixel) .pcard .pc-lv, body:not(.pixel) .pcard .pc-loot, body:not(.pixel) .pcard .pc-num, body:not(.pixel) .pcard .pc-foot, body:not(.pixel) .pcard .pc-stats,
+body:not(.pixel) .pcard .pc-table, body:not(.pixel) .pcard .pc-rec, body:not(.pixel) .pcard .pc-reward, body:not(.pixel) .pcard .pc-dept { font-weight: 800; letter-spacing: .02em; }
+body:not(.pixel) .pcard .pc-lv { font-size: 15px; }
+body:not(.pixel) .pcard .pc-loot { font-size: 15px; gap: 10px; }
+body:not(.pixel) .pcard .pc-num { font-size: 17px; letter-spacing: .12em; }
+body:not(.pixel) .pcard .pc-foot, body:not(.pixel) .pcard .pc-stats, body:not(.pixel) .pcard .pc-rec { font-size: 12px; }
+body:not(.pixel) .pcard .pc-table { font-size: 13px; }
+body:not(.pixel) .pcard .pc-reward { font-size: 18px; }
+body:not(.pixel) .pcard .bar-label { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+body:not(.pixel) .pcard .bar { border-radius: 99px; overflow: hidden; }
+body:not(.pixel) .pcard .bar i { border-radius: 99px; }
+body:not(.pixel) .pcard .pc-e { font-size: 16px; line-height: 1; }
+body:not(.pixel) .pc-terminal, body:not(.pixel) .pc-terminal [class^="pc-"], body:not(.pixel) .pc-terminal pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Roboto Mono", monospace !important; font-size: 14px; }
+body:not(.pixel) .pc-terminal .pc-head { font-size: 12px; }
+body:not(.pixel) .pc-wanted .pc-w1 { font-family: Georgia, "Times New Roman", serif !important; font-weight: 900; font-size: 24px; text-transform: uppercase; letter-spacing: .04em; }
+body:not(.pixel) .pc-tarot .pc-name, body:not(.pixel) .pc-tarot .pc-num { font-family: Georgia, "Times New Roman", serif !important; }
+
+/* карточки-«генераторы» (js/loot.js): стекло и голограмма в цветах материала */
+.pc-gen { background: linear-gradient(150deg, var(--g2), var(--g3) 75%); color: #fff; padding: 14px 14px 12px; overflow: hidden;
+  box-shadow: inset 0 0 0 2px var(--g1), inset 0 0 0 5px var(--g3), inset 0 0 0 6px var(--g4); }
+.pc-gen > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .38; z-index: 0; }
+.pc-gen > *:not(.pc-scene) { position: relative; z-index: 1; }
+.pc-gen .pc-body { padding: 0; gap: 14px; }
+.pc-gen .pc-name { text-shadow: 0 2px 0 rgba(0, 0, 0, .45); }
+.pc-gen .pc-sub { color: var(--g1); text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
+.pc-gen .pc-foot { display: flex; justify-content: space-between; gap: 6px; margin-top: 12px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, .25); font-size: 12px; color: var(--g1); text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
+.pc-gen-glass::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(255, 255, 255, .3), transparent 42%); pointer-events: none; z-index: 1; }
+.pc-gen-foil { background: linear-gradient(120deg, var(--g3), var(--g2), var(--g4), var(--g2), var(--g3)); background-size: 300% 100%; animation: gen-foil 7s linear infinite; }
+.pc-gen-foil .pc-shine { position: absolute; top: -40%; left: -60%; width: 40%; height: 180%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35), transparent); transform: rotate(20deg); animation: vip-shine 3.2s linear infinite; z-index: 2; pointer-events: none; }
+@keyframes gen-foil { to { background-position: 300% 0; } }
+.pcard.mini.pc-gen .pc-foot { font-size: 10px; margin-top: 8px; }
+/* переливы имени */
+.fx-gen { background: linear-gradient(90deg, var(--a), var(--b), var(--c), var(--a)); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text;
+  color: transparent !important; -webkit-text-fill-color: transparent; text-shadow: none !important; animation: gen-foil 3s linear infinite;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .75)) drop-shadow(0 0 2px rgba(0, 0, 0, .4)); }

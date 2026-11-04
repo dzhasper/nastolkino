@@ -18,6 +18,13 @@ function caseArt(key) {
     s_neon: { wood: "#160a2a", dark: "#0a0418", light: "#2a1650", metal: "#00e5ff", mlight: "#ff2bd6", lock: "#ffe14d", glow: "#00e5ff" },
     s_dragon: { wood: "#c8101e", dark: "#7a0810", light: "#ff4a3a", metal: "#ffd23f", mlight: "#fff4b0", lock: "#ffd23f", glow: "#ffd23f" },
     zoo: { wood: "#4fa83a", dark: "#2a6a22", light: "#8ad86a", metal: "#c89a50", mlight: "#f0d090", lock: "#ff8fb0", glow: "#ffe14d" },
+    s_dawn: { wood: "#ff9a6a", dark: "#b8504a", light: "#ffd0a0", metal: "#fff4d0", mlight: "#ffffff", lock: "#ff6a8a", glow: "#ffe066" },
+    s_noon: { wood: "#ffc21a", dark: "#c8800a", light: "#fff0a0", metal: "#3ac0ff", mlight: "#bfefff", lock: "#ffffff", glow: "#ffffff" },
+    s_dusk: { wood: "#c84a6a", dark: "#6a1a4a", light: "#ff8a5a", metal: "#ffd23f", mlight: "#fff0a0", lock: "#ffd23f", glow: "#ff9ad0" },
+    s_night: { wood: "#2a2a7a", dark: "#10103a", light: "#4a4ad0", metal: "#c8d0ff", mlight: "#ffffff", lock: "#ffe066", glow: "#c8d0ff" },
+    s_halloween: { wood: "#ff7a18", dark: "#a83a08", light: "#ffb060", metal: "#2a1a3a", mlight: "#5a3a7a", lock: "#7aff6a", glow: "#7aff6a" },
+    s_cosmos: { wood: "#3a1a7a", dark: "#14062a", light: "#6a3ad0", metal: "#7ae0ff", mlight: "#ffffff", lock: "#ff7ae0", glow: "#7ae0ff" },
+    s_olymp: { wood: "#fff4d0", dark: "#c8a050", light: "#ffffff", metal: "#ffc21a", mlight: "#fff8c0", lock: "#3ac0ff", glow: "#ffe066" },
   }[key] || { wood: "#8a5a2b", dark: "#5e3a17", light: "#b77d40", metal: "#6b6f78", mlight: "#b5b9c2", lock: "#c9a227", glow: null };
   const g = Array.from({ length: H }, () => Array(W).fill(null));
   for (let y = 3; y <= 24; y++) for (let xx = 2; xx <= 29; xx++) {
@@ -28,7 +35,7 @@ function caseArt(key) {
     if ((xx === 6 || xx === 7 || xx === 24 || xx === 25)) col = xx % 2 ? pal.metal : pal.mlight;
     if (xx >= 13 && xx <= 18 && y >= 8 && y <= 15) col = (xx === 13 || xx === 18 || y === 8 || y === 15) ? pal.metal : pal.mlight;
     if (xx >= 15 && xx <= 16 && y >= 11 && y <= 12) col = pal.lock;
-    if ((key === "dark" || key === "s_neon" || key === "s_moon") && y >= 16 && y <= 20 && (xx === 10 || xx === 20) ) col = pal.glow;
+    if ((key === "dark" || key === "s_neon" || key === "s_moon" || key === "s_night" || key === "s_halloween" || key === "s_cosmos") && y >= 16 && y <= 20 && (xx === 10 || xx === 20) ) col = pal.glow;
     if (key === "dark" && y === 18 && (xx === 11 || xx === 19)) col = pal.glow;
     g[y][xx] = col;
   }
@@ -50,7 +57,10 @@ const caseImg = (key, w = 96) => `<img class="case-img" src="${caseArt(key)}" st
 
 /* ---------------------------------------------------------------- экран: кейсы | инвентарь */
 const anyCase = (k) => Shop.caseByKey(k) || (Shop.seasonByKey(k) ? Object.assign({ season: true, food: 0, egg: 0 }, Shop.seasonByKey(k), { name: "Кейс «" + Shop.seasonByKey(k).name + "»" }) : null);
-const seasonLeft = () => { const se = Api.on && Api.state && Api.state.season; return se ? se.until - (Date.now() + (Api.state.skew || 0)) / 1000 : 0; };
+const seasonsLive = () => (Api.on && Api.state ? Api.state.seasons || (Api.state.season ? [Api.state.season] : []) : []);
+const seasonLeft = (k) => { const se = seasonsLive().find((x) => !k || x.key === k); return se ? se.until - (Date.now() + (Api.state.skew || 0)) / 1000 : 0; };
+const seasonOnShelf = (k) => seasonLeft(k) > 0;
+const WHEN_RU = { dawn: "🌅 бывает только утром", noon: "☀️ бывает только днём", dusk: "🌇 бывает только вечером", night: "🌙 бывает только ночью", any: "🎲 появляется в случайное время", super: "🌌 СУПЕР-РЕДКИЙ · три вещи сразу" };
 const fmtLeft = (sec) => `${Math.floor(Math.max(0, sec) / 60)}:${String(Math.floor(Math.max(0, sec) % 60)).padStart(2, "0")}`;
 const caseFree = (key) => (Api.on && Api.state && Api.state.cases && Api.state.cases[key]) || 0;
 const invCount = () => Shop.ITEMS.filter((it) => (it.price || it.excl || it.season || it.petcase || it.mg) && Shop.owns(it)).length;
@@ -73,17 +83,19 @@ function viewShop() {
 }
 
 function seasonCards() {
-  const st = Api.on && Api.state, active = st && st.season && seasonLeft() > 0 ? st.season.key : null, coins = S.profile.coins;
-  const keys = Shop.SEASONS.map((x) => x.key).filter((k) => k === active || caseFree(k));
-  return keys.map((k) => {
-    const c = anyCase(k), free = caseFree(k), live = k === active, can = free || (live && coins >= c.price);
-    return `<div class="case-card season c-${k}" style="--sc:${c.color}"><div class="season-tag">${live ? `⏳ исчезнет через <b data-season-until="${st.season.until}">${fmtLeft(seasonLeft())}</b>` : "🎟 твой сезонный кейс"}</div>
+  const coins = S.profile.coins, live = seasonsLive().filter((x) => seasonOnShelf(x.key)).map((x) => x.key);
+  const keys = [...new Set([...live, ...Shop.SEASONS.map((x) => x.key).filter((k) => caseFree(k))])];
+  const cards = keys.map((k) => {
+    const c = anyCase(k), free = caseFree(k), on = live.includes(k), can = free || (on && coins >= c.price);
+    return `<div class="case-card season c-${k} ${c.triple ? "super" : ""}" style="--sc:${c.color}"><div class="season-tag">${on ? `⏳ исчезнет через <b data-season-until="${k}">${fmtLeft(seasonLeft(k))}</b>` : "🎟 твой сезонный сундук"}</div>
       <div class="case-art">${caseImg(k, 92)}${free ? `<span class="case-free">×${free}</span>` : ""}</div>
       <div class="grow"><b class="case-name">${c.emoji} ${esc(c.name)}</b><div class="small muted">${esc(c.desc)}. Вещи из него не выпадают больше нигде.</div>
-        <div class="case-tiers">${c.w.map((w, i) => `<i style="background:${Shop.TIERS[i].color};flex:${w}"></i>`).join("")}</div>
+        <div class="season-when">${WHEN_RU[c.when] || ""}</div>
+        <div class="case-tiers">${c.w.map((w, i) => (w ? `<i style="background:${Shop.TIERS[i].color};flex:${w}"></i>` : "")).join("")}</div>
         <div class="row case-btns"><button class="btn small" data-a="case-open" data-v="${k}" ${can ? "" : "disabled"}>${free ? "Открыть бесплатно" : can ? `Открыть · 🪙 ${c.price}` : `Не хватает ${c.price - coins}`}</button>
           <button class="btn ghost small" data-a="case-odds" data-v="${k}">Шансы</button></div></div></div>`;
   }).join("");
+  return cards + (Api.on && !live.length ? `<div class="card small season-hint">🌗 <b>Сезонные сундуки</b> появляются на час: свои — утром, днём, вечером и ночью, тематические — в случайное время, а изредка — супер-сундук на три вещи сразу. Появление — пост в группе.</div>` : "");
 }
 
 function viewCaseList() {
@@ -117,8 +129,9 @@ function caseOddsSheet(key) {
     <div class="odds">${c.w.map((w, i) => (w ? `<div class="odd"><span>${tierTag(i)}</span><b>${pct(itemShare * w / sum)}</b></div>` : "")).join("")}
       ${c.food ? `<div class="odd"><span>🍖 Еда для питомцев ×2–4</span><b>${pct((1 - c.egg) * c.food)}</b></div>` : ""}
       ${c.egg ? `<div class="odd"><span>🥚 Яйцо питомца</span><b>${pct(c.egg)}</b></div>` : ""}</div>
-    ${c.w.map((w, i) => (w ? `<div class="section-title">${tierTag(i)}</div><div class="odds-items">${Shop.POOL.filter((it) => Shop.tier(it) === i)
-      .map((it) => `<span class="${Shop.owns(it) ? "have" : ""}">${Shop.owns(it) ? "✓ " : ""}${esc(it.name)}</span>`).join("")}</div>` : "")).join("")}`;
+    ${c.w.map((w, i) => { if (!w) return ""; const L = Shop.poolOf(c).filter((it) => Shop.tier(it) === i), mine = L.filter((it) => Shop.owns(it)).length;
+      return `<div class="section-title">${tierTag(i)} · ${L.length} вещей, у тебя ${mine}</div><div class="odds-items">${L.slice(0, 36)
+      .map((it) => `<span class="${Shop.owns(it) ? "have" : ""}">${Shop.owns(it) ? "✓ " : ""}${esc(it.name)}</span>`).join("")}${L.length > 36 ? `<span class="muted">…и ещё ${L.length - 36}</span>` : ""}</div>`; }).join("")}`;
 }
 
 // игрушка в инвентаре: сколько копий, чья любимая, хватает ли на всех
@@ -236,7 +249,7 @@ function caseThumb(d) {
   const it = Shop.byKey(d.item);
   if (!it) return "";
   if (it.cat === "frame") return `<div class="ct-av">${av(Object.assign({}, S.profile, { look: { frame: it.id } }), "")}</div>`;
-  if (it.cat === "bg") return `<div class="ct-bg" style="background-image:url(${Pixel.scene(it.id)})"></div>`;
+  if (it.cat === "bg") return `<div class="ct-bg" style="background-image:url(${Shop.sceneUrl(it.id)})"></div>`;
   if (it.cat === "style") return `<div class="ct-ico">🪪</div>`;
   if (it.cat === "toy") return `<div class="ct-ico">${it.emoji}</div>`;
   if (it.cat === "hat") return `<div class="ct-ico">${Pets.sprite("2" + "8c3a9c51e2b84d06a1c3f5e7092b4d6e-" + it.id, 44)}</div>`;
@@ -259,37 +272,92 @@ function caseLayerOpen(c) {
 }
 function caseLayerClose() { const el = caseLayer(); if (el) el.remove(); caseBusy = false; }
 
-function caseSpin(c, drop) {
-  const el = caseLayer();
-  if (!el) return;
-  const N = 46, WIN = 38, cells = [];
+// лента с «живым» торможением: разгон, затем случайные притормаживания и последний ползок рывками — до конца не ясно, где встанет
+function reelPlan(dist, dur) {
+  const N = Math.max(30, Math.round(dur * 60)), v = [];
+  const brakes = Array.from({ length: 2 + Math.floor(Math.random() * 3) }, () => ({ at: .35 + Math.random() * .5, w: .025 + Math.random() * .05, k: .5 + Math.random() * .42 }));
   for (let i = 0; i < N; i++) {
-    if (i === WIN) { cells.push(drop); continue; }
+    const t = i / N;
+    let sp = Math.pow(1 - t, 2.3) + .01;
+    for (const b of brakes) { const d = (t - b.at) / b.w; sp *= 1 - b.k * Math.exp(-d * d); }
+    if (t > .84) sp *= .5 + .5 * Math.abs(Math.sin(t * 48));
+    v.push(Math.max(sp, .0004));
+  }
+  const sum = v.reduce((a, b) => a + b, 0); let acc = 0;
+  return v.map((x) => (acc += x / sum * dist));
+}
+function reelRun(strip, reel, target, dur, cw, onDone) {
+  const plan = reelPlan(target, dur), t0 = performance.now();
+  let last = -1;
+  const step = (now) => {
+    if (!strip.isConnected) return;
+    const i = Math.min(plan.length - 1, Math.floor((now - t0) / 1000 * 60)), x = plan[i];
+    strip.style.transform = `translateX(${-x}px)`;
+    const idx = Math.floor((x + reel.clientWidth / 2) / cw);
+    if (idx !== last) { last = idx; try { tg && tg.HapticFeedback.selectionChanged(); } catch (e) { /* нет */ } }
+    if (i >= plan.length - 1) { onDone(); return; }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+// клетки ленты: случайные вещи, на нужном месте — выпавшая, рядом иногда — дразнящая редкость
+function reelCells(c, drop, N, WIN) {
+  const cells = [];
+  for (let i = 0; i < N; i++) {
+    if (i === WIN) { cells.push(c.season ? { type: "mystery", tier: dropTier(drop) } : drop); continue; }   // сезонный — секрет до остановки
     if (c.food && Math.random() < c.food * .6) { cells.push({ type: "food", item: Pets.FOOD_KEYS[Math.floor(Math.random() * Pets.FOOD_KEYS.length)], qty: 2 }); continue; }
-    if (c.season) { cells.push({ type: "mystery", tier: Shop.rollTier(c.w) }); continue; }     // сезонные вещи держим в секрете
-    const it = Shop.rollItem(Shop.rollTier(c.w), c);
+    const tease = (i === WIN + 1 || i === WIN - 1) && Math.random() < .55;
+    const t = tease ? 3 : Shop.rollTier(c.w);
+    if (c.season) { cells.push({ type: "mystery", tier: t }); continue; }     // сезонные вещи держим в секрете
+    const it = Shop.rollItem(t, c) || Shop.rollItem(Shop.rollTier(c.w), c);
     cells.push({ type: "item", item: it.cat + ":" + it.id });
   }
+  return cells;
+}
+function caseSpin(c, drop, drops) {
+  if (drops && drops.length > 1) return caseSpinMany(c, drops);
+  const el = caseLayer();
+  if (!el) return;
+  const N = 52, WIN = 42, cells = reelCells(c, drop, N, WIN);
   el.innerHTML = `<div class="cl-box"><div class="cl-title">${esc(c.name)}</div>
     <div class="reel"><div class="reel-strip" id="reel-strip">${cells.map(caseCell).join("")}</div><i class="reel-mark"></i></div>
     <div class="cl-res" id="cl-res"><div class="muted small">Крутим…</div></div></div>`;
   if (PX()) Pixel.apply(el);
   const strip = el.querySelector("#reel-strip"), reel = el.querySelector(".reel"), CW = 92;
-  const target = WIN * CW + CW / 2 - reel.clientWidth / 2 + (Math.random() - .5) * 60;
-  strip.getBoundingClientRect();
-  strip.style.transition = "transform 5.4s cubic-bezier(.06,.62,.12,1)";
-  strip.style.transform = `translateX(${-target}px)`;
-  let last = -1, done = false;
-  const tick = () => {
-    if (done || !strip.isConnected) return;
-    const m = new DOMMatrixReadOnly(getComputedStyle(strip).transform), idx = Math.floor((-m.m41 + reel.clientWidth / 2) / CW);
-    if (idx !== last) { last = idx; try { tg && tg.HapticFeedback.selectionChanged(); } catch (e) { /* нет */ } }
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-  const finish = () => { if (done) return; done = true; caseResult(c, drop); };
-  strip.addEventListener("transitionend", finish, { once: true });
-  setTimeout(finish, 6000);
+  const target = WIN * CW + CW / 2 - reel.clientWidth / 2 + (Math.random() - .5) * 64;
+  reelRun(strip, reel, target, 6.2 + Math.random() * 1.6, CW, () => caseResult(c, drop));
+}
+// супер-сундук: три ленты друг под другом, останавливаются по очереди
+function caseSpinMany(c, drops) {
+  const el = caseLayer();
+  if (!el) return;
+  const N = 46, WIN = 36, CW = 80;
+  el.innerHTML = `<div class="cl-box triple"><div class="cl-title">${esc(c.name)} · три вещи</div>
+    ${drops.map((d, k) => `<div class="reel sm" id="reel${k}"><div class="reel-strip">${reelCells(c, d, N, WIN).map(caseCell).join("")}</div><i class="reel-mark"></i></div>`).join("")}
+    <div class="cl-res" id="cl-res"><div class="muted small">Крутим три ленты…</div></div></div>`;
+  if (PX()) Pixel.apply(el);
+  let left = drops.length;
+  drops.forEach((d, k) => {
+    const reel = el.querySelector("#reel" + k), strip = reel.querySelector(".reel-strip");
+    const target = WIN * CW + CW / 2 - reel.clientWidth / 2 + (Math.random() - .5) * 50;
+    reelRun(strip, reel, target, 4.6 + k * 1.9 + Math.random() * .8, CW, () => {
+      reel.classList.add("stopped"); const w = strip.children[WIN];
+      if (w) { w.outerHTML = caseCell(d); const w2 = strip.children[WIN]; w2.classList.add("won", "reveal"); if (PX()) Pixel.apply(w2); }
+      notify(dropTier(d) >= 2 ? "success" : "warning");
+      if (--left === 0) caseResultMany(c, drops);
+    });
+  });
+}
+function caseResultMany(c, drops) {
+  caseBusy = false;
+  const box = document.getElementById("cl-res"); if (!box) return;
+  const best = Math.max(...drops.map(dropTier)), free = caseFree(c.key), can = free || (S.profile.coins >= c.price && seasonOnShelf(c.key));
+  box.innerHTML = `<div class="cl-three">${drops.map((d) => { const it = Shop.byKey(d.item), t = dropTier(d);
+    return `<div class="cl-mini" style="--tc:${Shop.TIERS[t].color}">${it ? caseThumb(d) : ""}<b style="color:${Shop.TIERS[t].color}">${esc(dropName(d))}</b>${tierTag(t)}${d.copy ? `<span class="small">копия ×${d.copy}</span>` : d.dup ? `<span class="small">+${d.shards} ✨</span>` : ""}</div>`; }).join("")}</div>
+    <div class="cl-btns"><button class="btn" data-a="case-close">Забрать</button><button class="btn ghost" data-a="case-again" data-v="${c.key}" ${can ? "" : "disabled"}>${free ? `Ещё (бесплатно ×${free})` : `Ещё · 🪙 ${c.price}`}</button></div>`;
+  if (PX()) Pixel.apply(box);
+  notify("success");
+  if (best >= 3) coinRain();
 }
 
 function caseResult(c, drop) {
@@ -297,8 +365,10 @@ function caseResult(c, drop) {
   const box = document.getElementById("cl-res");
   if (!box) return;
   const t = dropTier(drop), it = drop.type === "item" ? Shop.byKey(drop.item) : null;
-  const win = document.querySelectorAll("#reel-strip .rcell")[38];
+  let win = document.querySelectorAll("#reel-strip .rcell")[42];
+  if (win && c.season) { win.outerHTML = caseCell(drop); win = document.querySelectorAll("#reel-strip .rcell")[42]; win.classList.add("reveal"); if (PX()) Pixel.apply(win); }
   if (win) win.classList.add("won");
+  const lay = caseLayer(); if (lay) { lay.style.setProperty("--tc", Shop.TIERS[t].color); lay.classList.remove("flash"); void lay.offsetWidth; lay.classList.add("flash"); }
   let prize = "", info = "", main = "";
   if (it) {
     prize = `<div class="cl-prize">${shopPreview(it)}</div>`;
@@ -318,7 +388,7 @@ function caseResult(c, drop) {
     info = `<div class="small">Яйцо питомца! Вылупится через сутки</div>`;
     main = `<button class="btn" data-a="case-pets">🐾 К питомцам</button>`;
   }
-  const free = caseFree(c.key), can = free || (S.profile.coins >= c.price && (!c.season || (Api.state.season && Api.state.season.key === c.key && seasonLeft() > 0)));
+  const free = caseFree(c.key), can = free || (S.profile.coins >= c.price && (!c.season || seasonOnShelf(c.key)));
   box.innerHTML = `${prize}<div class="cl-name" style="color:${Shop.TIERS[t].color}">${esc(dropName(drop))}</div>${drop.type === "item" ? tierTag(t) : ""}${info}
     <div class="cl-btns">${main}<button class="btn ghost" data-a="case-again" data-v="${c.key}" ${can ? "" : "disabled"}>${free ? `Ещё (бесплатно ×${free})` : `Ещё · 🪙 ${c.price}`}</button>
     <button class="btn ghost" data-a="case-close">Закрыть</button></div>`;
@@ -338,7 +408,7 @@ function caseOpen(key) {
   caseBusy = true; haptic("heavy");
   caseLayerOpen(c);
   if (Api.on) {
-    Api.act("/api/case/open", { kind: key }).then((st) => setTimeout(() => caseSpin(c, st.drop), 450))
+    Api.act("/api/case/open", { kind: key }).then((st) => setTimeout(() => caseSpin(c, st.drop, st.drops), 650))
       .catch((e) => { caseLayerClose(); notify("error"); toast(e.message); });
   } else {
     const r = Shop.openCaseLocal(key);
@@ -379,12 +449,10 @@ const CASE_ACTIONS = {
   },
 };
 
-// обратный отсчёт сезонного кейса; исчез — перерисовать витрину
+// обратный отсчёт сезонных сундуков; исчез — перерисовать витрину
 setInterval(() => {
   if (S.screen !== "shop") return;
-  const el = document.querySelector("[data-season-until]");
-  if (!el) return;
-  const left = seasonLeft();
-  el.textContent = fmtLeft(left);
-  if (left <= 0 && !caseBusy) { Api.state.season = null; render(); }
+  let gone = false;
+  document.querySelectorAll("[data-season-until]").forEach((el) => { const left = seasonLeft(el.getAttribute("data-season-until")); el.textContent = fmtLeft(left); if (left <= 0) gone = true; });
+  if (gone && !caseBusy) render();
 }, 1000);

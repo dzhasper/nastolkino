@@ -937,7 +937,7 @@
       ["   w w   ", "p  pPp  p", "pp ppp pp", "ppppppppp", "pYppBppYp", "YYYYYYYYY"]],
   };
   function hatInto(fr, hat, f) {
-    const art = HAT_ART[hat], at = fr.hatAt;
+    const art = HAT_ART[hat] || (typeof Loot !== "undefined" && Loot.HAT_ART[hat]), at = fr.hatAt;
     if (!art || !at || at[1] >= W) return;
     const rows = art[2] && f % 2 ? art[2] : art[0], pal = art[1], w = rows[0].length;
     const x0 = Math.round(at[0] - (w - 1) / 2), y0 = at[1] + 1 - rows.length;
