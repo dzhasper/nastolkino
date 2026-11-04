@@ -86,12 +86,22 @@ function passMount() {
 }
 const PASS_ACTIONS = {
   "pass-sel": (v) => { const tr = document.getElementById("pass-track"); if (tr) S.passX = tr.scrollLeft; S.passSel = Number(v); haptic(); render(); },
-  "pass-claim": (v) => Api.act("/api/pass/claim", v === "all" ? { level: "all", track: "all" } : /^p\d+$/.test(String(v)) ? { level: Number(String(v).slice(1)), track: "prem" } : { level: Number(v), track: "free" }).then((st) => {
-    notify("success"); haptic("heavy"); coinRain();
-    S.sheet = { type: "pass-got", list: st.passGot || [] }; renderOverlay(); render();
-  }).catch((e) => { notify("error"); toast(e.message); }),
+  "pass-claim": (v) => Api.act("/api/pass/claim", v === "all" ? { level: "all", track: "all" } : /^p\d+$/.test(String(v)) ? { level: Number(String(v).slice(1)), track: "prem" } : { level: Number(v), track: "free" }).then(passAfterClaim)
+    .catch((e) => { notify("error"); toast(e.message); }),
+  // яйце чи кейси: гравець сам вирішує, чи потрібен ще один улюбленець
+  "pass-egg": (v) => { const c = S.sheet && S.sheet.egg; if (!c) return; Api.act("/api/pass/claim", { level: c.level, track: c.track, egg: v }).then(passAfterClaim).catch((e) => { notify("error"); toast(e.message); }); },
 };
+function passAfterClaim(st) {
+  const choose = st.passChoose || [], got = st.passGot || [];
+  if (got.length) { notify("success"); haptic("heavy"); coinRain(); }
+  S.sheet = choose.length ? { type: "pass-got", list: got, egg: Object.assign({ alt: st.eggAlt || 5 }, choose[0]), more: choose.length - 1 } : { type: "pass-got", list: got };
+  renderOverlay(); render();
+}
 function passGotSheet() {
-  const list = (S.sheet && S.sheet.list) || [];
-  return `<div class="gift-pop"><div class="gp-box">🎫</div><h2>Нагороди перепустки</h2><div class="gp-list">${list.map((t) => `<div class="gp-row"><span class="gp-i">🎁</span><div class="grow"><b>${esc(t)}</b></div></div>`).join("")}</div></div>`;
+  const list = (S.sheet && S.sheet.list) || [], egg = S.sheet && S.sheet.egg;
+  const choice = egg ? `<div class="pass-egg mt"><div class="small muted">${egg.track === "prem" ? "👑 Преміум" : "🎫 Перепустка"} · рівень ${egg.level}: що забираєш?</div>
+      <div class="pe-opts"><button class="pe-opt" data-a="pass-egg" data-v="egg"><span class="pe-ico">🥚</span><b>Яйце улюбленця</b><i>ще один улюбленець у родину</i></button>
+        <button class="pe-opt" data-a="pass-egg" data-v="cases"><span class="pe-ico">🎁</span><b>${egg.alt} випадкових кейсів</b><i>${egg.alt === 10 ? "з преміумом — удвічі більше" : "підвальні, «Розплідник», темні, інколи легендарні"}</i></button></div>
+      ${S.sheet.more ? `<div class="small muted mt">Ще ${S.sheet.more} яйце(я) на вибір — після цього.</div>` : ""}</div>` : "";
+  return `<div class="gift-pop"><div class="gp-box">${egg && !list.length ? "🥚" : "🎫"}</div><h2>${egg && !list.length ? "Яйце чи кейси?" : "Нагороди перепустки"}</h2>${list.length ? `<div class="gp-list">${list.map((t) => `<div class="gp-row"><span class="gp-i">🎁</span><div class="grow"><b>${esc(t)}</b></div></div>`).join("")}</div>` : ""}${choice}</div>`;
 }

@@ -169,6 +169,28 @@ function petHatchSheet(id) {
     <div class="small mt">Не забувай годувати щодня — інакше він помре назавжди.</div></div>`;
 }
 
+// набір власника колекційного: міні-картка з усім набором (аватарка, рамка, фон, ID-картка, сяйво імені, значок) і кнопка «вдягнути все»
+function collKitHtml(key) {
+  const pic = Shop.byId("pic", "c_" + key); if (!pic) return "";
+  const own = Api.state && (Api.state.inv || []).includes("pic:c_" + key);
+  const ava = Shop.byId("ava", "c_" + key), badge = ava ? ava.emoji : "";
+  const lk = Object.assign({}, Shop.DEFAULT, { frame: "c_" + key, bg: "c_" + key, style: "c_" + key, fx: "c_" + key, title: (S.profile.look || {}).title || "none" });
+  const pl = Object.assign({}, S.profile, { look: lk, photo: new URL(Loot.picUrl("c_" + key), location.href).href });
+  const worn = ["frame", "bg", "style", "fx", "pic"].every((k) => (store.look || {})[k] === "c_" + key) && store.badge === badge;
+  return `<div class="coll-kit mt"><div class="small"><b>🎁 Набір «${esc(pic.name)}»</b> — аватарка, рамка, фон, ID-картка, сяйво імені й знак ${esc(badge)}</div>
+    <div class="ck-card">${Shop.card({ name: Shop.cleanName(S.profile.name) + (badge ? " " + badge : ""), games: S.profile.games, wins: S.profile.wins, avatarHtml: av(pl, "sm") }, lk, { mini: true })}</div>
+    ${own ? `<button class="btn ${worn ? "ghost" : ""} small mt" data-a="coll-wear" data-v="${key}" ${worn ? "disabled" : ""}>${worn ? "✓ Набір уже на тобі" : "✨ Вдягнути весь набір"}</button>` : ""}</div>`;
+}
+function collWear(key, quiet) {
+  const inv = (Api.state && Api.state.inv) || [];
+  store.look = store.look || {};
+  ["pic", "frame", "bg", "style", "fx"].forEach((cat) => { if (inv.includes(cat + ":c_" + key)) store.look[cat] = "c_" + key; });
+  const ava = Shop.byId("ava", "c_" + key); if (ava && inv.includes("ava:c_" + key)) store.badge = ava.emoji;
+  saveProfile(); syncProfile();
+  const it = Shop.byId("pic", "c_" + key); if (!quiet) { toast("🐉 Набір «" + (it ? it.name : key) + "» вдягнуто"); haptic("medium"); }
+  return it;
+}
+
 // коллекционный: единственный в мире
 function petCollectBlock(p, t) {
   if (!t.collect) return "";
@@ -177,7 +199,8 @@ function petCollectBlock(p, t) {
   return `<div class="card collect-box"><div class="cl-head">✦ Колекційний · ${set.emoji} ${esc(set.name)} <span class="muted">${mine}/${total}</span></div>
     <div class="small">${esc(c.desc)}</div>
     <div class="small muted mt">Складність отримання: ${"★".repeat(c.hard)}${"☆".repeat(5 - c.hard)} · ${p.from === "tour" ? "приз турніру" : "подарунок адміністратора"}</div>
-    <div class="small muted">Єдиний у світі. Не голодує, не помирає, його не можна віддати в обмін.</div>
+    <div class="small muted">Єдиний у світі. Не голодує, не помирає. Можна віддати в обміні — разом із ним піде й його набір.</div>
+    ${collKitHtml(c.key)}${(() => { const set = Pets.COLLECT.filter((x) => x.set === c.set).every((x) => (Api.state.pets || []).some((q) => q.alive && q.collect === x.key)); return set ? collKitHtml("set_" + c.set) : ""; })()}
     <div class="small mt">🎖 ${esc(set.bonus)}</div></div>`;
 }
 // рост
@@ -274,6 +297,21 @@ function petOnState() {
     ["frame:bwfire", "bg:throne", "style:creator", "title:creator", "fx:bwflame", "ava:key"].forEach((k) => { const it = Shop.byKey(k); if (it) Shop.equip(it); });
     saveProfile(); syncProfile(); toast("👑 Набір Творця вдягнуто");
   }
+  if (st && Array.isArray(st.inv) && st.inv.includes("pic:creator") && !store.creatorPic) {   // аватарка Творца — сразу на админе
+    store.creatorPic = true; store.look = store.look || {}; store.look.pic = "creator"; saveProfile(); syncProfile();
+  }
+  if (st && Array.isArray(st.inv) && store.look) {                // вещи коллекционера ушли вместе с питомцем — снимаем
+    let ch = false;
+    for (const [cat, id] of Object.entries(store.look)) { const it = Shop.byId(cat, id); if (it && it.coll && !st.inv.includes(cat + ":" + id)) { store.look[cat] = Shop.DEFAULT[cat]; ch = true; } }
+    const bAva = store.badge && Shop.ITEMS.find((x) => x.cat === "ava" && x.coll && x.emoji === store.badge);
+    if (bAva && !st.inv.includes("ava:" + bAva.id)) { store.badge = ""; ch = true; }
+    // новий колекційний (чи вся колекція) — його набір одразу вдягаємо, один раз на кожен набір
+    const kits = st.inv.filter((k) => /^pic:c_/.test(k)).map((k) => k.slice(6));
+    const seen = (Array.isArray(store.collKits) ? store.collKits : []).filter((k) => kits.includes(k)), fresh = kits.filter((k) => !seen.includes(k));
+    store.collKits = seen.concat(fresh);
+    if (fresh.length) { const pick = fresh.find((k) => k.startsWith("set_")) || fresh[fresh.length - 1]; const it = collWear(pick, true); ch = false; toast("🐉 Тобі дістався набір «" + (it ? it.name : pick) + "» — уже вдягнуто"); }
+    if (ch) { saveProfile(); syncProfile(); }
+  }
   if (st && Array.isArray(st.gifts) && st.gifts.length && !S.room && !S.sheet) {   // тебе что-то подарили — показываем сразу
     S.sheet = { type: "gifts", list: st.gifts.slice() }; st.gifts = [];
     notify("success"); haptic("heavy"); renderOverlay();
@@ -348,6 +386,7 @@ const PET_ACTIONS = {
   "food-cat": (v) => { S.shopFood = v; haptic(); render(); },
   "food-buy5": (item) => Api.act("/api/food/buy", { item, qty: 5 }).then(() => { haptic("medium"); toast(`Куплено: ${petFood(item).name} ×5`); }).catch(petErr),
   "pets-back": () => { S.petSel = null; render(); },
+  "coll-wear": (v) => { collWear(String(v)); render(); },
   "pets-grave": () => { S.petGrave = !S.petGrave; render(); },
   "pet-pet": () => {
     haptic();

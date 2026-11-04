@@ -10,6 +10,7 @@ const Shop = (() => {
     { key: "style", name: "Картки", icon: "🪪" },
     { key: "title", name: "Титули", icon: "🏷️" },
     { key: "fx", name: "Ефекти", icon: "✨" },
+    { key: "pic", name: "Аватарки", icon: "👾" },
     { key: "ava", name: "Значки", icon: "🐉" },
     { key: "toy", name: "Іграшки", icon: "🧸" },
     { key: "hat", name: "Приколи", icon: "🎩" },
@@ -189,7 +190,7 @@ const Shop = (() => {
   function rollTier(w) { let r = rnd() * w.reduce((a, b) => a + b, 0); for (let i = 0; i < w.length; i++) { r -= w[i]; if (r < 0) return i; } return w.length - 1; }
   const poolOf = (c) => (c && c.pool === "pet" ? ITEMS.filter((x) => x.petcase) : POOL);
   const rollItem = (t, c) => { const list = poolOf(c).filter((x) => tier(x) === t); return list[Math.floor(rnd() * list.length)]; };
-  const DEFAULT = { frame: "none", bg: "none", style: "rpg", title: "none", fx: "none" };
+  const DEFAULT = { frame: "none", bg: "none", style: "rpg", title: "none", fx: "none", pic: "none" };
   const REWARD = { game: 20, win: 30, alive: 10 };
 
   /* ---------------------------------------------------------------- рамки: пиксельный рисунок 48×48, аватар в центре 8..40 */
@@ -397,6 +398,82 @@ const Shop = (() => {
     },
   });
   if (typeof Loot !== "undefined") ITEMS.forEach((x) => { if (x.cat === "frame" && (x.gen || x.pat)) FRAMES[x.id] = Loot.frame(x.id); });
+  /* ---------------------------------------------------------------- рамки коллекционеров: чешуя в цветах набора + герб + своя стихия */
+  const COLL_KIND = { dragon_gold: "gold", dragon_black: "shadow", dragon_white: "pearl", dragon_emerald: "leaf", dragon_ice: "frost", dragon_fire: "flame",
+    spirit_fire: "flame", spirit_water: "wave", spirit_earth: "stone", spirit_wind: "wind", set_dragons: "royal", set_spirits: "cosmic" };
+  const hx = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const mixC = (a, b, k) => "#" + hx(a).map((v, i) => Math.round(v + (hx(b)[i] - v) * k).toString(16).padStart(2, "0")).join("");
+  // рамка Володаря драконів: обсидіан у золоті з лавовими тріщинами, шість драконів кружляють, велика корона, полум’я знизу
+  function lordFrame(t, R, f, n) {
+    const SIX = ["#ffc21a", "#7a5aba", "#f2f6ff", "#1aa85a", "#5ac8ff", "#e8301a"];
+    t.ring(7, (x, y, d) => { if (d === 0 || d === 6) return "#000000"; if (d === 1) return "#fff0a0"; if (d === 2) return "#ffc21a"; if (d === 5) return "#a86a08";
+      return ((x * 7 + y * 13 + f * 5) % 19 === 0) ? "#ff7a1a" : ((x * 3 + y * 5) % 11 === 0) ? "#ffd23f" : d === 3 ? "#1a0a10" : "#2a0e14"; });
+    const flame = (x, y, u) => { const h = 1 + Math.floor(1.8 * (1 + Math.sin(u * 51 + f * 2.3 + Math.cos(u * 17 - f) * 2))); for (let k = 0; k < h; k++) t.P(x, y + k, ["#ff2a1a", "#ff8a1a", "#ffd23f", "#fff6c8"][Math.min(3, Math.floor((k / h) * 4))]); };
+    for (let x = A - 7; x < B + 7; x++) flame(x, B + 7, x / 48);
+    SIX.forEach((c, i) => {                                                  // драконяча варта: шість драконів облітають рамку
+      const [x, y] = PER(i / 6 + f / n / 6, 4), up = (f + i) % 2;
+      t.Rr(x - 2, y - 1, 5, 4, "#000000"); t.Rr(x - 1, y, 3, 2, c); t.P(x + 1, y - 1, c); t.P(x + 2, y - 1, c); t.P(x + 1, y, "#ffffff");
+      t.P(x - 2, y - 1 - up, c); t.P(x - 3, y - 2 - up, c); t.P(x - 2, y + 2, c);
+    });
+    t.Rr(14, 0, 20, 8, "#000000"); t.Rr(15, 1, 18, 6, "#ffc21a"); t.Rr(15, 6, 18, 1, "#a86a08");                // корона
+    [[15, 3], [19, 2], [24, 4], [29, 2], [32, 3]].forEach(([x, h]) => { t.Rr(x, 1 - h + 3, 1, h, "#ffc21a"); });
+    t.Rr(15, 1, 18, 1, "#fff0a0"); SIX.forEach((c, i) => { t.P(17 + i * 3, 4, (i + f) % 6 === 0 ? "#ffffff" : c); t.P(17 + i * 3, 3, "#fff6c8"); });
+    t.corners((x, y, i) => { t.Rr(x - 3, y - 3, 7, 7, "#000000"); t.Rr(x - 2, y - 2, 5, 5, "#ffc21a"); t.Rr(x - 1, y - 1, 3, 3, "#c80a1a"); t.P(x, y, (i + f) % 2 ? "#ffffff" : "#ff6a6a");
+      const dx = i % 2 ? 1 : -1, dy = i < 2 ? -1 : 1; t.P(x + dx * 3, y, "#fff0a0"); t.P(x, y + dy * 3, "#fff0a0"); });
+  }
+  function collFrame(key, pal) {
+    if (key === "set_dragons") return lordFrame;
+    const [L, M, D, AC] = pal, kind = COLL_KIND[key] || "gold", dragon = key.startsWith("dragon") || key === "set_dragons";
+    const SIX = ["#ffc21a", "#5a3a8a", "#ffffff", "#1aa85a", "#5ac8ff", "#e8301a"], FOUR = ["#ff8a1f", "#3a9aff", "#8a6a3a", "#e0fffa"];
+    return (t, R, f, n) => {
+      // кольцо: чешуя, бегущий блик, тёмная кромка
+      t.ring(6, (x, y, d, u) => {
+        if (d === 0) return "#000000dd"; if (d === 5) return mixC(D, "#000000", .3);
+        if (d === 4) return AC;
+        if (key === "set_dragons") { const seg = Math.floor(u * 12) % 6; const c = SIX[seg]; return ((x >> 1) + (y >> 1)) % 2 ? c : mixC(c, "#000000", .35); }
+        if (key === "set_spirits") { const c = FOUR[Math.floor(u * 4 + f / n) % 4]; return ((x + y) % 3) ? c : mixC(c, "#ffffff", .4); }
+        const hl = Math.abs(((u * 3 - f / n) % 1 + 1) % 1 - .5) < .05;
+        if (hl) return L;
+        const sc = ((x >> 1) + (y >> 1)) % 2;
+        return sc ? (d === 1 ? mixC(M, L, .35) : M) : mixC(M, D, d === 3 ? .55 : .3);
+      });
+      // герб наверху по центру
+      if (dragon) {                                                         // голова дракона: рога, глаза мигают цветом набора
+        const H = key === "set_dragons" ? "#ffd23f" : M, eye = f % 3 === 0 ? "#ffffff" : AC;
+        t.Rr(19, 0, 10, 6, "#000000dd"); t.Rr(20, 1, 8, 5, H); t.Rr(21, 5, 6, 2, H); t.Rr(18, 0, 2, 2, L); t.Rr(28, 0, 2, 2, L);
+        t.P(17, 0, L); t.P(30, 0, L); t.Rr(21, 2, 2, 1, eye); t.Rr(25, 2, 2, 1, eye); t.Rr(22, 6, 1, 1, "#000"); t.Rr(25, 6, 1, 1, "#000");
+        if (key === "set_dragons") { t.Rr(20, -1, 8, 1, "#ffd23f"); [20, 23, 26].forEach((x) => t.P(x + 1, 0, "#ffffff")); }
+      } else if (key === "set_spirits") {
+        FOUR.forEach((c, i) => { const a = (f / n + i / 4) * Math.PI * 2, x = 24 + Math.cos(a) * 4, y = 3 + Math.sin(a) * 2; t.Rr(x - 1, y - 1, 3, 3, c); t.P(x, y - 1, "#ffffff"); });
+      } else {
+        t.Rr(20, 0, 8, 7, "#000000dd"); t.Rr(21, 1, 6, 5, M); t.Rr(22, 2, 4, 3, L); t.Rr(23, 3, 2, 1, f % 2 ? "#ffffff" : AC);
+      }
+      // кути: пазурі (дракони) або самоцвіти
+      t.corners((x, y, i) => {
+        if (dragon) { t.Rr(x - 2, y - 2, 5, 5, "#000000dd"); t.Rr(x - 1, y - 1, 3, 3, M); const dx = i % 2 ? 1 : -1, dy = i < 2 ? -1 : 1; t.P(x + dx * 2, y + dy, L); t.P(x + dx, y + dy * 2, L); t.P(x + dx * 2, y + dy * 2, "#ffffff"); }
+        else { t.Rr(x - 2, y - 2, 5, 5, "#000000dd"); t.Rr(x - 1, y - 1, 3, 3, (i + f) % 2 ? AC : L); t.P(x, y, "#ffffff"); }
+      });
+      // своя стихія
+      const per = (u, o) => PER(u, o);
+      if (kind === "gold") for (let i = 0; i < 8; i++) { const [x, y] = per(i / 8 + f / n / 8, 7); t.Rr(x - 1, y - 1, 3, 3, "#8a5a00"); t.Rr(x - 1, y - 1, 2, 2, "#ffd23f"); if ((i + f) % 4 === 0) { t.P(x, y - 2, "#ffffff"); t.P(x - 2, y, "#ffffff"); t.P(x + 2, y, "#ffffff"); t.P(x, y + 2, "#ffffff"); } }
+      if (kind === "shadow") { for (let i = 0; i < 10; i++) { const [x, y] = per(i / 10 - f / n / 10, 7 + (i + f) % 2); t.P(x, y, i % 2 ? "#b05cff" : "#3a1a6a"); }
+        const spots = [[A - 7, 12], [B + 5, 28], [28, A - 7], [14, B + 5], [B + 5, 14], [A - 7, 30]]; const [sx, sy] = spots[f % spots.length]; let x = sx, y = sy; for (let i = 0; i < 6; i++) { t.P(x, y, i % 2 ? "#ffffff" : "#d8b0ff"); x += i % 2 ? 1 : -1; y += 1; } }
+      if (kind === "pearl") { for (let i = 0; i < 6; i++) { const [x, y] = per(i / 6 + f / n / 6, 7); t.P(x, y, "#ffffff"); t.P(x + 1, y + 1, "#d8e4f0"); t.P(x + 2, y + 2, "#ffffff88"); }
+        for (let i = 0; i < 3; i++) { const [x, y] = per(i / 3 + .08 + f / n / 3, 6); if ((i + f) % 2) { t.P(x, y - 1, AC); t.P(x - 1, y, AC); t.P(x + 1, y, AC); t.P(x, y + 1, AC); t.P(x, y, "#ffffff"); } } }
+      if (kind === "leaf") for (let i = 0; i < 9; i++) { const [x, y] = per(i / 9 + f / n / 9, 7); t.P(x, y, "#5ae86a"); t.P(x + 1, y, "#2ab84a"); t.P(x + 1, y - 1, i % 3 ? "#5ae86a" : AC); }
+      if (kind === "frost") { t.corners((x, y, i) => { if ((i + f) % 2) t.star(x, y, "#e8fbff", "#ffffff"); });
+        for (let x = A - 4; x < B + 4; x += 3) { const h = 1 + ((x + f) % 3); t.Rr(x, B + 6, 1, h, "#bfefff"); } for (let i = 0; i < 5; i++) { const [x, y] = per(i / 5 + f / n / 5, 7); t.P(x, y, "#ffffff"); } }
+      if (kind === "flame") { const C = [mixC(D, "#000000", .2), M, mixC(M, L, .5), L];
+        const flame = (x, y, dx, dy, u) => { const h = 1 + Math.floor(1.6 * (1 + Math.sin(u * 47 + f * 2.2 + Math.cos(u * 13 - f * 1.3) * 2))); for (let k = 0; k < h; k++) t.P(x + dx * k, y + dy * k, C[Math.min(3, Math.floor((k / h) * 4 + (h > 3 ? 1 : 0)))]); };
+        const Lx = A - 7, Mx = B + 6; for (let x = Lx + 1; x < Mx; x++) { if (x < 18 || x > 30) flame(x, Lx, 0, -1, x / 48); flame(x, Mx, 0, 1, x / 48 + .5); } for (let y = Lx + 1; y < Mx; y++) { flame(Lx, y, -1, 0, y / 48 + .25); flame(Mx, y, 1, 0, y / 48 + .75); } }
+      if (kind === "wave") for (let i = 0; i < 24; i++) { const [x, y] = per(i / 24 + f / n / 12, 7 + Math.round(Math.sin(i * 1.3 + f) * .6)); t.P(x, y, i % 3 ? "#7af0ff" : "#ffffff"); if (i % 6 === f % 6) t.P(x, y - 1, "#bfefff"); }
+      if (kind === "stone") for (let i = 0; i < 6; i++) { const [x, y] = per(i / 6 + .04, 7); const c = (i + f) % 3 === 0 ? "#ffffff" : i % 2 ? "#7ad84a" : "#c8a0ff"; t.P(x, y - 1, c); t.Rr(x - 1, y, 3, 1, c); t.P(x, y + 1, mixC(c, "#000000", .3)); }
+      if (kind === "wind") for (let i = 0; i < 6; i++) { const u0 = i / 6 + f / n / 3; for (let k = 0; k < 4; k++) { const [x, y] = per(u0 + k * .012, 7 + (i % 2)); t.P(x, y, k === 3 ? "#ffffff" : "#c8fff4" + (k < 2 ? "88" : "")); } }
+      if (kind === "royal") for (let i = 0; i < 6; i++) { const [x, y] = per(i / 6 + f / n / 6, 7); t.Rr(x - 1, y - 1, 3, 3, "#000000aa"); t.P(x, y, SIX[i]); t.P(x - 1, y, SIX[i]); t.P(x, y - 1, "#ffffff"); }
+      if (kind === "cosmic") for (let i = 0; i < 12; i++) { const [x, y] = per(i / 12 - f / n / 12, 7); if ((i + f) % 3) t.P(x, y, i % 2 ? "#ffffff" : "#c8a8ff"); }
+    };
+  }
+  if (typeof Loot !== "undefined" && Loot.COLL) Loot.COLL.forEach(([key, , pal]) => { FRAMES["c_" + key] = collFrame(key, pal); });
   ITEMS.filter((x) => x.cat === "frame" && x.pass).forEach((x) => { FRAMES[x.id] = passFrame(PASS_THEMES[Number(x.pass.slice(2)) - 1], !!x.prem); });   // рамки пропуска
   const frameCache = {};
   function frameUrl(key) {
@@ -489,6 +566,8 @@ const Shop = (() => {
   const nameFx0 = (name, fx) => {
     const n = esc(name);
     if (!fx || fx === "none") return `<span class="nmfx">${n}</span>`;
+    const cfx = byId("fx", fx);
+    if (cfx && cfx.cx) { const [a, b, c, d] = cfx.pal; return `<span class="nmfx fx-coll fxc-${COLL_KIND[fx.slice(2)] || "gold"}" data-t="${n}" style="--a:${a};--b:${b};--c:${c};--d:${d}">${n}</span>`; }
     const gfx = typeof Loot !== "undefined" ? Loot.fx(fx) : null;
     if (gfx) return `<span class="nmfx fx-gen" style="--a:${gfx[0]};--b:${gfx[1]};--c:${gfx[2]}">${n}</span>`;
     if (fx === "wave") return `<span class="nmfx fx-wave">${[...String(name)].map((ch, i) => `<i style="animation-delay:${i * .08}s">${esc(ch) === " " ? "&nbsp;" : esc(ch)}</i>`).join("")}</span>`;
@@ -555,6 +634,24 @@ const Shop = (() => {
         <div class="pc-table"><div><span>LEVEL</span><b>${String(lv).padStart(2, "0")}</b></div><div><span>WINS</span><b>${String(p.wins || 0).padStart(3, "0")}</b></div>
           <div><span>GAMES</span><b>${String(p.games || 0).padStart(3, "0")}</b></div><div><span>RATE</span><b>${rate}%</b></div></div>`,
     };
+    const cit = byId("style", lk.style);
+    if (cit && cit.cc) {                                                   // ID-картка колекціонера: чешуя, печатка, водяний знак із його аватаркою
+      const key = lk.style.slice(2), [c1, c2, c3, c4] = cit.pal, kind = COLL_KIND[key] || "gold", nm = cit.name.replace(/^ID-картка «/, "").replace(/»$/, "");
+      const pic = typeof Loot !== "undefined" && Loot.picUrl ? Loot.picUrl(lk.style) : "";
+      if (key === "set_dragons") {                                         // ID-картка Володаря драконів — найкраща в грі
+        const six = ["dragon_gold", "dragon_black", "dragon_white", "dragon_emerald", "dragon_ice", "dragon_fire"].map((k, i) => `<img style="--i:${i}" src="${Loot.picUrl("c_" + k)}" alt="">`).join("");
+        return `<div class="pcard pc-coll pc-lord ${opts.mini ? "mini" : ""}" style="--c1:${c1};--c2:${c2};--c3:${c3};--c4:${c4}"><div class="pcl-edge"></div>${bg}<div class="pcl-fire"><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="pcl-head"><b>👑 ВОЛОДАР ДРАКОНІВ 👑</b><span>усі шість драконів · 1 з 1 у світі</span></div><div class="pcl-six">${six}</div>
+          <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div><div class="pcc-own">Влада над усіма драконами</div></div></div>
+          ${pic ? `<img class="pcc-mark" src="${pic}" alt="">` : ""}
+          <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} перемог</span><span>${p.games || 0} ігор</span><span>${rate}%</span></div></div>`;
+      }
+      return `<div class="pcard pc-coll pcc-${kind} ${opts.mini ? "mini" : ""}" style="--c1:${c1};--c2:${c2};--c3:${c3};--c4:${c4}"><div class="pcc-scales"></div><div class="pcc-shine"></div>${bg}
+        <div class="pcc-top"><b>✦ ${esc(nm)} ✦</b><span>№ 001 · єдиний у світі</span></div>
+        <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div><div class="pcc-own">${key.startsWith("set_") ? "Повна колекція" : "Власник колекційного"}</div></div></div>
+        ${pic ? `<img class="pcc-mark" src="${pic}" alt="">` : ""}
+        <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} перемог</span><span>${p.games || 0} ігор</span><span>${rate}%</span></div></div>`;
+    }
     const gs = !T[lk.style] && typeof Loot !== "undefined" ? Loot.style(lk.style) : null;
     if (gs) {
       const [g1, g2, g3, g4] = gs.pal;

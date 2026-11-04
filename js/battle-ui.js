@@ -74,8 +74,11 @@ function battleSetupSheet() {
     <button class="btn mt2" data-a="bsetup-go" ${st.pets.length ? "" : "disabled"}>Створити виклик</button>`;
 }
 
+// до бою сили видно лише у своїх бійців; у чужих — замок (щоб не підбирали сильнішого під суперника)
+const hiddenStats = `<div class="bstats small st-hidden"><span>❤️ ?</span><span>⚔️ ?</span><span>🛡 ?</span><span>💨 ?</span></div><div class="tiny muted">🔒 Сили приховані до початку бою</div>`;
 function slotCard(f) {
-  return `<div class="slot r${f.rarity}">${Pets.sprite(fightCode(f), 52)}<div class="grow"><b>${esc(f.name)}</b><div class="small muted">${esc(f.owner || "")}</div>${statLine(f.stats || Pets.stats(f.dna, f.rarity))}</div></div>`;
+  const own = f.stats && !f.hidden;
+  return `<div class="slot r${f.rarity}">${Pets.sprite(fightCode(f), 52)}<div class="grow"><b>${esc(f.name)}</b><div class="small muted">${esc(f.owner || "")}</div>${own ? statLine(f.stats) : hiddenStats}</div></div>`;
 }
 function battleScreen() {
   const b = S.battle, back = `<button class="btn ghost small" data-a="battle-back">← Усі бої</button>`;
@@ -97,7 +100,7 @@ function battleScreen() {
       ${free.a ? `<button class="btn ghost mt" data-a="battle-join" data-v="a">🤝 Вступити в команду ${esc(b.teams.a[0] ? b.teams.a[0].owner : "")}</button>` : ""}`;
   }
   const pick = S.battleJoin ? battleJoinPicker(b, free[S.battleJoin]) : "";
-  return `${back}<div class="card center mt"><b>Бій ${b.size}×${b.size}</b><div class="small muted">Коли обидві команди зберуться — бій почнеться сам. Виклик живе добу.</div></div>
+  return `${back}<div class="card center mt"><b>Бій ${b.size}×${b.size}</b><div class="small muted">Коли обидві команди зберуться — бій почнеться сам. Виклик живе добу.</div><div class="small muted">🔒 Сили чужих бійців приховані: видно, кого виставили, а шкоду, захист, швидкість і здоров’я — лише в самому бою.</div></div>
     ${team("a", b.size > 1 ? "Команда 1" : "Викликає")}${team("b", b.size > 1 ? "Команда 2" : "Суперник")}${pick || act}`;
 }
 function battleJoinPicker(b, free) {
@@ -151,6 +154,32 @@ function battleFx(e, me, foe, att, side) {
   if (e.t === "shield" || e.t === "box") bfx(hostMe, "shield", "", 900);
   if (e.t === "revive" || e.t === "rebirth") bfx(hostMe, "pillar", "", 1200);
   if (e.t === "out") { bfx(hostMe, "ko-stars", "💫", 1200); bfx(document.getElementById("arena"), "ko-word", "НОКАУТ!", 1100); arenaShake(true); }
+  if (e.t === "hat") hatFx(e, me, foe, side);
+}
+// фішка приколу на голові: підпис над власником і свій ефект (лазер з очей, блискавка, щит, лікування…)
+const HAT_HIT = { laser: ["#ff2a3a", "#ffb0b0"], zap: ["#fff27a", "#7af0ff"], bonk: ["#ffffff", "#ffd23b"], peck: ["#ffd23f", "#ff8a1a"], magic: ["#c86aff", "#7af0ff"] };
+const hatName = (k) => { const it = Shop.byId("hat", k); return it ? it.name : "Прикол"; };
+function hatFx(e, me, foe, side) {
+  const hostFoe = foe && foe.querySelector(".fspr"), hostMe = me && me.querySelector(".fspr"), arena = document.getElementById("arena"), x = e.x;
+  bfx(hostMe, "hat-tag", "🎩 " + esc(hatName(e.k)), 1100);
+  if (HAT_HIT[x]) {
+    if (x === "laser") bfx(arena, "laser-beam " + (side ? "r2l" : "l2r"), "", 520);
+    if (x === "zap") { bfx(hostFoe, "zap", "⚡", 650); bfx(hostFoe, "flash", "", 300); }
+    if (x === "bonk") { bfx(hostFoe, "word", "БУМ!", 800); arenaShake(true); }
+    if (x === "peck") bfx(hostFoe, "word", "клю!", 700);
+    if (x === "magic") bfx(hostFoe, "dizzy", "✨ ✦ ✨", 800);
+    sparks(hostFoe, HAT_HIT[x], 10); arenaShake(false);
+    if (foe) { foe.classList.remove("hurt"); void foe.offsetWidth; foe.classList.add("hurt"); if (e.d) floatNum(foe, "−" + e.d, "hit"); }
+  }
+  if (x === "heal" || x === "drain") { bfx(hostMe, "heal", "✚ ✚ ✚", 1000); if (me && e.d) floatNum(me, "+" + e.d, "heal"); }
+  if (x === "block") { bfx(hostMe, "shield", "", 900); if (me && e.d) floatNum(me, "🛡" + e.d, "shield"); }
+  if (x === "thorns") { sparks(hostFoe, ["#7aff6a", "#2a8a1a"], 8); if (foe && e.d) floatNum(foe, "−" + e.d, "hit"); }
+  if (x === "first") bfx(arena, "crit-word", "ПЕРШИЙ ПОСТРІЛ!", 800);
+  if (x === "charm") bfx(hostFoe, "dizzy", "💕 💕", 1000);
+  if (x === "scare") bfx(hostFoe, "dizzy", "😱", 1000);
+  if (x === "burn") bfx(hostFoe, "flames", "🔥🔥🔥", 900);
+  if (x === "freeze") bfx(hostFoe, "ice", "", 1000);
+  if (x === "stun") bfx(hostFoe, "dizzy", "💫", 1000);
 }
 const LOG_TEXT = {
   hit: (A, D, d) => `${A} б’є ${D}: −${d}`, crit: (A, D, d) => `💥 Крит! ${A} завдає ${d}`, miss: (A, D) => `${D} ухиляється`,
@@ -161,6 +190,11 @@ const LOG_TEXT = {
   out: (A) => `💤 ${A} вибуває`, in: (A) => `➡️ На арену виходить ${A}!`,
   sleep: (A) => `💤 ${A} заснув посеред бою!`, sing: (A, D) => `🎵 ${A} заспівав — ${D} заслухався`, charmed: (A) => `🎶 ${A} усе ще слухає пісню й пропускає хід`,
   box: (A) => `📦 ${A} сховався в коробку — удар повз!`, boo: (A, D) => `👻 ${A} крикнув «БУ!» — ${D} злякався`,
+  hat: (A, D, d, e) => { const h = hatName(e.k); return ({ passive: `🎩 ${A} у «${h}»: ${Pets.hatFxText(e.k)}`, scare: `🎃 «${h}» лякає ${D} — атака слабша`, heal: `💚 «${h}»: ${A} +${d} здоров’я`,
+    charm: `😍 ${D} замилувався «${h}» — і промахнувся`, first: `🤠 «${h}»: перший удар сильніший на ${d}`, block: `🛡 «${h}» гасить ${d} шкоди`, drain: `🧛 «${h}»: ${A} +${d} здоров’я`,
+    thorns: `🌵 ${D} вколовся об «${h}»: −${d}`, fireproof: `🧯 «${h}»: ${A} не горить`, warm: `🧣 «${h}»: ${A} не мерзне`, burn: `🔥 «${h}» підпалює ${D}`, freeze: `❄️ «${h}» заморожує ${D}`,
+    stun: `💫 «${h}» оглушує ${D}`, laser: `🔴 ${A}: лазер з очей! −${d}`, zap: `⚡ «${h}» б’є блискавкою: −${d}`, bonk: `💥 ${A} б’є головою в «${h}»: −${d}`, peck: `🐤 Курча клює ${D}: −${d}`,
+    magic: `✨ «${h}» чаклує: −${d}` })[e.x] || `🎩 «${h}»`; },
 };
 function replayStep() {
   const b = S.battle, r = S.replay;
@@ -170,7 +204,7 @@ function replayStep() {
   const prevAct = r.act.slice();
   r.i++; replayApply(r, e);
   const T = [b.teams.a, b.teams.b], nameOf = (s) => (T[s][r.act[s]] || T[s][T[s].length - 1]).name;
-  r.text = (LOG_TEXT[e.t] || (() => ""))(nameOf(e.a), nameOf(1 - e.a), e.d);
+  r.text = (LOG_TEXT[e.t] || (() => ""))(nameOf(e.a), nameOf(1 - e.a), e.d, e);
   if (e.t === "in" || prevAct[0] !== r.act[0] || prevAct[1] !== r.act[1]) { render(); replayTimer = setTimeout(replayStep, 900); return; }   // новый боец — перерисовать арену
   const fa = document.getElementById("f0"), fb = document.getElementById("f1"), me = e.a === 0 ? fa : fb, foe = e.a === 0 ? fb : fa;
   const hit = ["hit", "crit"].includes(e.t), att = T[e.a][r.act[e.a]] || T[e.a][0];
@@ -182,7 +216,7 @@ function replayStep() {
     const target = ["burn", "heal", "drain", "frozen", "revive", "rebirth", "revenge", "shield", "out", "sleep", "charmed", "box", "sing", "boo"].includes(e.t) ? me : foe;
     if (hit || e.t === "burn") { target.classList.remove("hurt"); void target.offsetWidth; target.classList.add("hurt"); }
     if (e.t === "out") target.classList.add("faint");
-    if (e.d) floatNum(target, (["heal", "drain", "rebirth"].includes(e.t) ? "+" : "−") + e.d, e.t);
+    if (e.d && e.t !== "hat") floatNum(target, (["heal", "drain", "rebirth"].includes(e.t) ? "+" : "−") + e.d, e.t);
   }
   arenaBars();
   const log = document.getElementById("blog"); if (log) log.textContent = r.text;

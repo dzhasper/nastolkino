@@ -740,6 +740,143 @@ const Pixel = (() => {
     for (let i = 0; i < 9; i++) { const x = 70 + i * 22; t.rect(x, 150, 4, 1, "#ffffff88"); t.rect(x + 1, 149, 2, 3, "#ffffff55"); }   // светящиеся знаки на полу
     t.dither(0, 0, W, H, "#00000055", .12);
   };
+  // ---- фони колекціонерів: свій світ у кожного дракона й духа, силует дракона, стихія
+  const poly = (t, pts, c) => { const ys = pts.map((q) => q[1]); for (let y = Math.floor(Math.min(...ys)); y <= Math.ceil(Math.max(...ys)); y++) { const xs = [];
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [x1, y1] = pts[i], [x2, y2] = pts[j]; if ((y1 <= y) !== (y2 <= y)) xs.push(x1 + ((y - y1) * (x2 - x1)) / (y2 - y1)); }
+    xs.sort((a, b) => a - b); for (let k = 0; k + 1 < xs.length; k += 2) t.rect(xs[k], y, xs[k + 1] - xs[k] + 1, 1, c); } };
+  const oval = (t, cx, cy, rx, ry, c) => { for (let y = -Math.ceil(ry); y <= Math.ceil(ry); y++) { const w = rx * Math.sqrt(Math.max(0, 1 - (y * y) / (ry * ry))); if (w > 0) t.rect(cx - w, cy + y, w * 2 + 1, 1, c); } };
+  function dragonSil(t, cx, cy, s, col, eye, dir = 1) {                  // летючий дракон: крила, шия, голова з рогом, хвіст
+    const X = (x) => cx + x * s * dir, Y = (y) => cy + y * s;
+    poly(t, [[X(-4), Y(-2)], [X(-30), Y(-26)], [X(-26), Y(-15)], [X(-35), Y(-13)], [X(-25), Y(-5)], [X(-31), Y(0)], [X(-12), Y(2)]], col);
+    oval(t, X(0), Y(2), 14 * s, 6 * s, col);
+    for (let i = 0; i < 16; i++) { const u = i / 15; oval(t, X(-13 - u * 22), Y(4 + Math.sin(u * 3) * 6), Math.max(.6, (4.5 - u * 3.6) * s), Math.max(.6, (3.5 - u * 2.6) * s), col); }
+    poly(t, [[X(-35), Y(6)], [X(-44), Y(2)], [X(-41), Y(11)]], col);
+    for (let i = 0; i < 10; i++) { const u = i / 9; oval(t, X(12 + u * 12), Y(-u * 10), (4.2 - u * 1.4) * s, (4.2 - u * 1.4) * s, col); }
+    oval(t, X(27), Y(-12), 5 * s, 3.6 * s, col); poly(t, [[X(29), Y(-15)], [X(39), Y(-11.5)], [X(29), Y(-8.5)]], col); poly(t, [[X(24), Y(-14)], [X(19), Y(-22)], [X(27), Y(-15)]], col);
+    poly(t, [[X(2), Y(-4)], [X(17), Y(-35)], [X(20), Y(-21)], [X(30), Y(-26)], [X(25), Y(-11)], [X(33), Y(-9)], [X(10), Y(0)]], col);
+    t.rect(X(dir > 0 ? -7 : 4), Y(6), 3 * s, 6 * s, col); t.rect(X(dir > 0 ? 5 : -8), Y(6), 3 * s, 6 * s, col);
+    if (eye) { t.rect(X(28) - 1, Y(-13), 3, 1, eye); t.px(X(28), Y(-14), eye); }
+  }
+  const coins = (t, R, x0, x1, top, base) => {                         // гора монет
+    for (let x = x0; x < x1; x++) { const k = (x - x0) / (x1 - x0), h = Math.round((top - base) * Math.sin(k * Math.PI) + (R() - .5) * 3); t.rect(x, base + h, 1, H - (base + h), x % 3 ? "#c8900a" : "#a87008"); }
+    for (let i = 0; i < 160; i++) { const x = x0 + R() * (x1 - x0), k = (x - x0) / (x1 - x0), y = base + (top - base) * Math.sin(k * Math.PI) + 2 + R() * 30; if (y < H) { t.rect(x, y, 3, 2, R() < .5 ? "#ffd23f" : "#ffe97a"); t.px(x, y, "#fff6c8"); } }
+  };
+  SCENES.c_dragon_gold = (ctx, R, t) => {                                 // СКАРБНИЦЯ: печера, гори золота, скрині, дракон над скарбом
+    t.grad(0, H, ["#1a0c02", "#3a1e04", "#5a3006", "#7a4a0a", "#3a1e04"]);
+    t.glow(160, 70, 90, "#ffd23f33"); t.glow(160, 70, 50, "#ffe97a44");
+    for (let i = 0; i < 9; i++) { const x = i * 40 + R() * 10; poly(t, [[x - 14, 0], [x + 14, 0], [x + R() * 4, 18 + R() * 20]], "#120801"); }    // сталактити
+    dragonSil(t, 160, 70, 2, "#7a4a08", "#fff6c8", 1); dragonSil(t, 160, 69, 2, "#c8900a", null, 1); dragonSil(t, 161, 70, 1.92, "#ffc21a", "#ffffff", 1);
+    coins(t, R, -30, 140, 112, 150); coins(t, R, 120, 350, 104, 152);
+    [[60, 128], [250, 124]].forEach(([x, y]) => { t.rect(x, y, 26, 16, "#6a3a10"); t.rect(x, y, 26, 4, "#8a5a1a"); t.rect(x, y + 6, 26, 2, "#ffd23f"); t.rect(x + 11, y + 4, 4, 6, "#ffd23f"); t.rect(x + 2, y - 6, 22, 6, "#ffe97a"); });
+    [[110, 138], [210, 136]].forEach(([x, y]) => { t.rect(x, y, 8, 6, "#ffd23f"); t.rect(x + 2, y + 6, 4, 6, "#c8900a"); t.rect(x - 1, y + 11, 10, 2, "#ffd23f"); t.px(x + 3, y + 2, "#e8202a"); });
+    for (let i = 0; i < 30; i++) { const x = R() * W, y = 90 + R() * 70; t.px(x, y, "#ffffff"); if (R() < .4) { t.px(x - 1, y, "#fff6c899"); t.px(x + 1, y, "#fff6c899"); t.px(x, y - 1, "#fff6c899"); t.px(x, y + 1, "#fff6c899"); } }
+  };
+  SCENES.c_dragon_black = (ctx, R, t) => {                                // ЧОРНА ЦИТАДЕЛЬ: фіолетова ніч, місяць, руїни, блискавка, дракон на тлі місяця
+    t.grad(0, H, ["#05020c", "#100626", "#1e0c3e", "#2a1050", "#14082a"]); t.stars(90, 100);
+    t.glow(200, 52, 60, "#b05cff33"); t.disc(200, 52, 34, "#d8c8ff"); t.disc(208, 46, 30, "#c8b0ff"); t.dither(170, 20, 60, 64, "#a890e8", .25);
+    const hs = t.ridge(132, 14, .03, "#0a0414", "#3a1a6a", 2);
+    [[40, 40], [92, 56], [262, 46]].forEach(([x, h]) => { const b = hs[x] || 130; t.rect(x - 9, b - h, 18, h, "#0a0414"); for (let i = 0; i < 4; i++) t.rect(x - 9 + i * 5, b - h - 4, 3, 4, "#0a0414"); t.rect(x - 2, b - h + 10, 3, 5, "#b05cff"); });
+    let x = 70, y = 0; for (let i = 0; i < 16; i++) { const nx = x + (R() - .5) * 14, ny = y + 6; t.line(x, y, nx, ny, "#e8d8ff"); t.line(x + 1, y, nx + 1, ny, "#b05cff"); x = nx; y = ny; }
+    dragonSil(t, 196, 66, 1.9, "#020104", "#b05cff", -1);
+    for (let i = 0; i < 40; i++) t.px(R() * W, 120 + R() * 40, R() < .5 ? "#3a1a6a" : "#5a2a9a");
+  };
+  SCENES.c_dragon_white = (ctx, R, t) => {                                // НЕБЕСНИЙ ХРАМ: світанок у хмарах, колонади, золоте сяйво
+    t.grad(0, H, ["#a8c8f0", "#c8dcf8", "#e8f0ff", "#fff4e0", "#ffe8c8"]);
+    for (let i = 0; i < 12; i++) { const a = -Math.PI + (i / 11) * Math.PI; t.line(160, 60, 160 + Math.cos(a) * 300, 60 + Math.sin(a) * 300, "#fff4c844"); }
+    t.glow(160, 60, 60, "#fff6c855"); t.disc(160, 60, 16, "#fff6d8");
+    dragonSil(t, 150, 66, 1.8, "#c8d4e8", "#ffd23f", 1); dragonSil(t, 151, 67, 1.75, "#f2f6ff", null, 1); t.rect(151 + 28 * 1.75 - 1, 67 - 13 * 1.75, 3, 1, "#ffd23f");
+    const cloud = (cx, cy, w, c) => { for (let i = 0; i < w / 10; i++) t.disc(cx - w / 2 + i * 10 + R() * 4, cy + R() * 4, 8 + R() * 6, c); };
+    cloud(60, 120, 140, "#ffffff"); cloud(260, 116, 160, "#ffffff"); cloud(160, 138, 360, "#f2f6ff"); t.rect(0, 140, W, 20, "#f2f6ff");
+    [[30, 92], [62, 92], [250, 88], [282, 88]].forEach(([x, y]) => { t.rect(x, y, 10, 40, "#ffffff"); t.rect(x + 7, y, 3, 40, "#d8e4f0"); t.rect(x - 3, y - 4, 16, 4, "#e8e0c8"); t.rect(x - 3, y + 38, 16, 3, "#e8e0c8"); });
+    t.rect(24, 84, 54, 6, "#e8e0c8"); poly(t, [[22, 84], [80, 84], [51, 72]], "#f2ead8"); t.rect(244, 80, 54, 6, "#e8e0c8"); poly(t, [[242, 80], [300, 80], [271, 68]], "#f2ead8");
+    for (let i = 0; i < 20; i++) t.px(R() * W, R() * 90, "#ffffff");
+  };
+  SCENES.c_dragon_emerald = (ctx, R, t) => {                              // СМАРАГДОВИЙ ЛІС: сутінки, ялини шарами, світлячки, дракон на тлі місяця
+    t.grad(0, H, ["#021a0e", "#06301a", "#0a4a26", "#147a3a", "#0a3a1c"]); t.stars(40, 60);
+    t.glow(90, 46, 40, "#c8ff9a33"); t.disc(90, 46, 20, "#e8ffb8");
+    dragonSil(t, 110, 62, 1.6, "#03140a", "#ffe066", 1);
+    const pines = (base, hmin, hmax, col, step) => { for (let x = -10; x < W + 10; x += step + R() * step) { const h = hmin + R() * (hmax - hmin); poly(t, [[x - h * .28, base], [x + h * .28, base], [x, base - h]], col); } };
+    pines(132, 30, 60, "#0a3a1c", 14); t.rect(0, 130, W, 30, "#0a3a1c"); pines(150, 30, 56, "#062a12", 12); t.rect(0, 148, W, 12, "#041a0a"); pines(165, 20, 40, "#020e06", 18);
+    for (let i = 0; i < 36; i++) { const x = R() * W, y = 70 + R() * 80; t.px(x, y, "#e8ff6a"); if (R() < .5) t.glow(Math.round(x), Math.round(y), 3, "#e8ff6a55"); }
+  };
+  SCENES.c_dragon_ice = (ctx, R, t) => {                                  // КРИЖАНІ ПІКИ: полярне сяйво, льодовики, бурульки, сніг
+    t.grad(0, H, ["#020814", "#06183a", "#0a2a5a", "#1a4a80", "#2a6aa8"]); t.stars(70, 70);
+    for (let b = 0; b < 3; b++) for (let x = 0; x < W; x++) { const y = 30 + b * 10 + Math.sin(x / 26 + b) * 10 + Math.sin(x / 9) * 2; t.rect(x, y, 1, 8, ["#5affc844", "#7af0ff33", "#a0b8ff33"][b]); }
+    dragonSil(t, 168, 58, 1.7, "#0a1e3a", "#ffffff", -1); dragonSil(t, 168, 58, 1.66, "#5ac8ff", null, -1); t.rect(168 - 28 * 1.66 - 2, 58 - 13 * 1.66, 3, 1, "#ffffff");
+    const peaks = (base, col, rim) => { let x = -20; while (x < W) { const w = 40 + R() * 40, h = 40 + R() * 40; poly(t, [[x, base], [x + w / 2, base - h], [x + w, base]], col); poly(t, [[x + w / 2, base - h], [x + w / 2 - 8, base - h + 16], [x + w / 2 + 6, base - h + 12]], rim); x += w * .7; } };
+    peaks(160, "#5a8ac8", "#ffffff"); peaks(166, "#8ab8e8", "#e8fbff"); t.rect(0, 146, W, 14, "#e8fbff"); t.dither(0, 146, W, 14, "#bfe0f8", .3);
+    for (let x = 0; x < W; x += 6) t.rect(x, 0, 2, 3 + Math.round(R() * 7), "#bfefff");
+    for (let i = 0; i < 70; i++) t.px(R() * W, R() * H, "#ffffff");
+  };
+  SCENES.c_dragon_fire = (ctx, R, t) => {                                 // ВУЛКАН: багряне небо, виверження, лавові ріки, іскри
+    t.grad(0, H, ["#1a0200", "#4a0800", "#8a1a00", "#c83a08", "#ff7a1a"]);
+    poly(t, [[60, 160], [140, 62], [180, 62], [260, 160]], "#2a0802"); poly(t, [[140, 62], [150, 70], [172, 70], [180, 62]], "#ff8a1a");
+    for (let i = 0; i < 40; i++) { const x = 150 + R() * 22, h = 10 + R() * 40; t.rect(x, 62 - h, 2, h, R() < .5 ? "#ffd23f" : "#ff5a1a"); }
+    for (let i = 0; i < 6; i++) { let x = 155 + R() * 10, y = 70; for (let k = 0; k < 40; k++) { x += (R() - .5) * 4 + (i < 3 ? -1.4 : 1.4); y += 2.2; t.rect(x, y, 3, 2, k % 3 ? "#ff7a10" : "#ffd23f"); } }
+    for (let i = 0; i < 6; i++) t.disc(140 + i * 9 + R() * 8, 30 - i * 4, 10 + i * 2, "#1a0402aa");
+    dragonSil(t, 80, 50, 1.4, "#0a0000", "#ffd23f", 1); dragonSil(t, 262, 70, 1.1, "#140200", "#ffd23f", -1);
+    t.ridge(150, 6, .05, "#120200", "#ff4a1a", 2);
+    for (let i = 0; i < 60; i++) t.px(R() * W, R() * 140, R() < .5 ? "#ffd23f" : "#ff8a1a");
+  };
+  SCENES.c_spirit_fire = (ctx, R, t) => {                                 // ВОГНЯНЕ КОЛО: поле полум’я, кулі вогню, дух у центрі
+    t.grad(0, H, ["#0a0000", "#2a0400", "#5a0a00", "#8a1a00", "#3a0400"]);
+    t.glow(160, 86, 70, "#ff8a1f44"); t.ball(160, 86, 18, "#fff3a0", "#ffb03a", "#ff6a1a"); t.rect(154, 82, 3, 4, "#3a0400"); t.rect(164, 82, 3, 4, "#3a0400"); t.rect(158, 92, 5, 2, "#3a0400");
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, x = 160 + Math.cos(a) * 60, y = 86 + Math.sin(a) * 30; t.glow(Math.round(x), Math.round(y), 10, "#ff8a1f55"); t.ball(Math.round(x), Math.round(y), 5, "#fff3a0", "#ff8a1f", "#c83a08"); }
+    for (let x = 0; x < W; x += 2) { const h = 14 + R() * 26 + Math.sin(x / 14) * 8; for (let k = 0; k < h; k++) t.px(x, H - k, k > h * .7 ? "#ffd23f" : k > h * .35 ? "#ff8a1a" : "#c82a08"); }
+    for (let i = 0; i < 50; i++) t.px(R() * W, R() * 120, R() < .5 ? "#ffd23f" : "#ff6a1a");
+  };
+  SCENES.c_spirit_water = (ctx, R, t) => {                                // ГЛИБИНИ: промені з поверхні, бульбашки, водорості, корали, сяйлива крапля
+    t.grad(0, H, ["#3ab0ff", "#1a7ad8", "#0a4aa0", "#062a6a", "#021438"]);
+    for (let i = 0; i < 7; i++) { const x = 20 + i * 48; poly(t, [[x, 0], [x + 14, 0], [x + 40, H], [x + 10, H]], "#ffffff14"); }
+    for (let x = 0; x < W; x++) t.px(x, 4 + Math.round(Math.sin(x / 8) * 2), "#bfefff");
+    t.glow(160, 80, 40, "#7af0ff44"); poly(t, [[160, 52], [146, 82], [174, 82]], "#5ac8ff"); t.disc(160, 86, 14, "#5ac8ff"); t.disc(156, 82, 4, "#e0f6ff");
+    for (let x = 6; x < W; x += 14) { let y = H, xx = x; for (let k = 0; k < 30 + R() * 20; k++) { xx += Math.sin(k / 3 + x) * .8; t.rect(xx, y - k, 3, 1, k % 4 ? "#1a8a5a" : "#2ab86a"); } }
+    [[40, 150, "#ff6a8a"], [110, 152, "#ffa03a"], [230, 150, "#ff6aaa"], [290, 152, "#ffd23f"]].forEach(([x, y, c]) => { for (let i = 0; i < 5; i++) t.rect(x - 8 + i * 4, y - 8 - (i % 2) * 6, 3, 14, c); });
+    for (let i = 0; i < 40; i++) { const x = R() * W, y = R() * 140, r = R() < .2 ? 2 : 1; t.disc(Math.round(x), Math.round(y), r, "#bfefff88"); t.px(x - 1, y - 1, "#ffffff"); }
+  };
+  SCENES.c_spirit_earth = (ctx, R, t) => {                                // КРИШТАЛЕВА ПЕЧЕРА: сталактити, сяйливі кристали, мох
+    t.grad(0, H, ["#0a0604", "#1a1008", "#2a1a0c", "#3a2410", "#1a1008"]);
+    for (let i = 0; i < 14; i++) { const x = i * 24 + R() * 8, h = 14 + R() * 30; poly(t, [[x - 8, 0], [x + 8, 0], [x, h]], "#2a1a0c"); poly(t, [[x - 8, H], [x + 8, H], [x, H - h * .8]], "#2a1a0c"); }
+    const crystal = (x, y, h, c, l) => { t.glow(x, y - h / 2, h, c + "33"); poly(t, [[x - 5, y], [x - 4, y - h], [x, y - h - 6], [x + 4, y - h], [x + 5, y]], c); poly(t, [[x - 4, y - h], [x, y - h - 6], [x, y]], l); };
+    [[60, 150, 40, "#7ad84a", "#c8ff9a"], [80, 152, 26, "#a05bff", "#d8b0ff"], [160, 140, 56, "#5af0c8", "#c8fff0"], [176, 150, 30, "#7ad84a", "#c8ff9a"], [250, 150, 44, "#a05bff", "#d8b0ff"], [270, 152, 24, "#5af0c8", "#c8fff0"]].forEach((a) => crystal(...a));
+    for (let x = 0; x < W; x++) if (R() < .4) t.rect(x, 150 + R() * 4, 1, 10, R() < .5 ? "#3a6a1a" : "#5a8a2a");
+    for (let i = 0; i < 30; i++) t.px(R() * W, 20 + R() * 120, R() < .5 ? "#c8ff9a" : "#d8b0ff");
+  };
+  SCENES.c_spirit_wind = (ctx, R, t) => {                                 // НЕБЕСНІ ОСТРОВИ: бірюзове небо, острови з травою, вихори, птахи
+    t.grad(0, H, ["#5ac8d8", "#8ae0e8", "#c8f4f0", "#e8fff8", "#c8f0e8"]);
+    for (let s2 = 0; s2 < 4; s2++) { const cx = 40 + s2 * 80 + R() * 20, cy = 30 + R() * 50; for (let a = 0; a < 60; a++) { const u = a / 60 * Math.PI * 3, r = 4 + a * .35; t.px(cx + Math.cos(u) * r, cy + Math.sin(u) * r * .5, "#ffffff"); } }
+    const isle = (x, y, w) => { poly(t, [[x - w / 2, y], [x + w / 2, y], [x + w * .1, y + w * .6], [x - w * .15, y + w * .5]], "#6a5a4a"); t.rect(x - w / 2, y - 3, w, 4, "#5ac83a"); t.rect(x - w / 2, y + 1, w, 2, "#3a8a2a");
+      for (let i = 0; i < 3; i++) { const tx = x - w / 3 + i * (w / 3); t.rect(tx, y - 12, 2, 10, "#6a4a2a"); t.disc(tx + 1, y - 14, 5, "#3aa84a"); } };
+    isle(70, 100, 70); isle(240, 80, 90); isle(160, 130, 50);
+    for (let i = 0; i < 6; i++) { const x = 30 + R() * 260, y = 20 + R() * 50; t.px(x, y, "#2a4a4a"); t.px(x - 1, y - 1, "#2a4a4a"); t.px(x + 1, y - 1, "#2a4a4a"); }
+    for (let i = 0; i < 4; i++) { const cy = 40 + i * 30; for (let x = 0; x < W; x++) if ((x + i * 30) % 60 < 30) t.px(x, cy + Math.sin(x / 12 + i) * 4, "#ffffff99"); }
+  };
+  SCENES.c_set_dragons = (ctx, R, t) => {                                 // ТРОН ДРАКОНІВ: затемнення з вогняною короною, трон на вершині, шість драконів у своїх кольорах, лава й золото
+    t.grad(0, H, ["#020001", "#14020a", "#3a0410", "#6a0a10", "#a8200a", "#ff6a1a"]);
+    t.stars(50, 70);
+    t.glow(160, 44, 70, "#ff8a1a55"); t.glow(160, 44, 46, "#ffd23f66");
+    for (let i = 0; i < 48; i++) { const a = (i / 48) * Math.PI * 2, r = 30 + (i % 3) * 3 + R() * 5; t.line(160 + Math.cos(a) * 26, 44 + Math.sin(a) * 26, 160 + Math.cos(a) * r, 44 + Math.sin(a) * r, i % 2 ? "#ffd23f" : "#ff8a1a"); }
+    t.disc(160, 44, 25, "#fff0a0"); t.disc(160, 44, 23, "#000000");                  // затемнення
+    t.ridge(118, 18, .02, "#14030a", "#4a0a14", 2);
+    poly(t, [[96, 160], [160, 74], [224, 160]], "#0e0206"); poly(t, [[160, 74], [148, 96], [172, 96]], "#2a0a10");
+    t.rect(146, 66, 28, 30, "#1a0a0e"); t.rect(146, 66, 28, 2, "#ffd23f"); t.rect(146, 66, 2, 30, "#ffd23f"); t.rect(172, 66, 2, 30, "#ffd23f");   // трон
+    [[146, 60], [153, 56], [160, 52], [167, 56], [174, 60]].forEach(([x, y]) => poly(t, [[x - 2, 66], [x + 2, 66], [x, y]], "#ffd23f")); t.px(160, 60, "#ff2a3a");
+    t.rect(150, 72, 20, 18, "#0a0204"); t.glow(160, 80, 10, "#ff6a1a55");
+    for (const [x0, d] of [[156, -1], [164, 1]]) { let x = x0, y = 98; for (let k = 0; k < 60; k++) { x += d * (.6 + R() * .5); y += 1; t.rect(x, y, 2, 1, k % 4 ? "#ff6a10" : "#ffd23f"); } }   // лава
+    for (const x of [112, 208]) { t.rect(x, 70, 2, 70, "#3a2410"); t.rect(x + 2, 72, 18, 26, "#8a0a14"); t.rect(x + 2, 72, 18, 2, "#ffd23f"); poly(t, [[x + 2, 98], [x + 20, 98], [x + 11, 106]], "#8a0a14"); t.rect(x + 8, 80, 6, 6, "#ffd23f"); t.px(x + 10, 82, "#000"); }   // стяги
+    for (let x = 0; x < W; x++) { const h = 8 + Math.sin(x / 9) * 3 + R() * 3; t.rect(x, H - h, 1, h, x % 3 ? "#c8900a" : "#a87008"); }
+    for (let i = 0; i < 60; i++) { const x = R() * W, y = H - 2 - R() * 10; t.rect(x, y, 2, 1, R() < .5 ? "#ffd23f" : "#fff0a0"); }
+    const SIX = [["#ffc21a", "#7a4a00"], ["#7a5aba", "#1a0a2a"], ["#f2f6ff", "#6a7a9a"], ["#1aa85a", "#03240e"], ["#5ac8ff", "#0a2a5a"], ["#e8301a", "#3a0400"]];
+    const POS = [[62, 40, 1, .95], [258, 40, -1, .95], [36, 92, 1, .8], [284, 92, -1, .8], [100, 18, 1, .7], [220, 18, -1, .7]];
+    SIX.forEach(([c, o], i) => { const [x, y, dir, sc] = POS[i]; t.glow(x, y, 26, c + "33"); dragonSil(t, x + 1, y + 1, sc, o, null, dir); dragonSil(t, x, y, sc, c, "#ffffff", dir); });
+    for (let i = 0; i < 70; i++) t.px(R() * W, 60 + R() * 90, R() < .5 ? "#ffd23f" : "#ff6a1a");
+  };
+  SCENES.c_set_spirits = (ctx, R, t) => {                                 // СЕРЦЕ СТИХІЙ: космос, портал, чотири стихії навколо
+    t.grad(0, H, ["#05020f", "#0f0620", "#1e0c3e", "#2a1050", "#0f0620"]); t.stars(120, H);
+    for (let r = 44; r > 10; r -= 3) { const c = ["#b05cff", "#7af0ff", "#ff8a1f", "#7ad84a"][(r / 3) % 4 | 0]; for (let a = 0; a < 120; a++) { const u = (a / 120) * Math.PI * 2; t.px(160 + Math.cos(u) * r, 80 + Math.sin(u) * r * .7, c + "88"); } }
+    t.glow(160, 80, 26, "#ffffff55"); t.disc(160, 80, 8, "#ffffff");
+    [[60, 80, "#fff3a0", "#ff8a1f", "#c83a08"], [260, 80, "#e0f6ff", "#3a9aff", "#0a4aa0"], [160, 26, "#e8fff8", "#9ae0d8", "#3a8a8a"], [160, 136, "#c8a46a", "#8a6a3a", "#4a3418"]].forEach(([x, y, l, m, d]) => { t.glow(x, y, 22, m + "55"); t.ball(x, y, 11, l, m, d); });
+  };
   // ---- сезонные фоны
   SCENES.s_ice = (ctx, R, t) => {                                 // СЕВЕРНОЕ СИЯНИЕ: ночь, ленты сияния, снежные холмы, ели
     t.grad(0, 110, ["#020814", "#06142a", "#0a2240", "#123458", "#1c4a70"]);

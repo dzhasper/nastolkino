@@ -392,3 +392,12 @@ body.pixel .cup-card, body.pixel .cb-t, body.pixel .cup-seats span { border-radi
 .avatars .nb-none { font-size: 16px; color: var(--muted); }
 .sp-nick { flex-direction: column; gap: 6px; text-align: center; }
 .sp-nick .nick-prev { font-size: 26px; }
+
+/* перепустка: яйце чи кейси */
+.pass-egg .pe-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.pass-egg .pe-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px; border-radius: 16px; border: 2px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .05); color: inherit; font: inherit; text-align: center; cursor: pointer; }
+.pass-egg .pe-opt:active { transform: scale(.97); }
+.pass-egg .pe-opt .pe-ico { font-size: 38px; line-height: 1; }
+.pass-egg .pe-opt b { font-size: 14px; }
+.pass-egg .pe-opt i { font-style: normal; font-size: 11px; opacity: .7; }
+.pass-egg .pe-opt[data-v="cases"] { border-color: #ffd23f88; box-shadow: 0 0 14px -6px #ffd23f; }

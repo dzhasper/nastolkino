@@ -307,3 +307,15 @@ body.cfs-on .toast { bottom: 22px; }
 .rou-reveal.pot .rr-big { color: #ffd23f; font-size: 30px; }
 .rou-reveal.pot .rr-card { box-shadow: 0 0 0 3px #000, 0 0 0 5px #ffd23f, 0 0 40px rgba(255, 210, 63, .35); }
 body.cfs-on .rou-reveal { top: 5%; }
+
+/* «Останній заряд»: речі суперників під твоїми життями */
+.cfs-side { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: 52%; }
+.cfs-side .cfs-hp { margin-left: 0; }
+.cfs-foes { background: rgba(0, 0, 0, .55); padding: 5px 7px; font-size: 11px; line-height: 1.25; color: #e8e2d8; min-width: 120px; }
+.cfs-foes .cff-h { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: #c8b89a; margin-bottom: 3px; }
+.cfs-foes .cff-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 2px 0; border-top: 1px solid rgba(255, 255, 255, .08); }
+.cfs-foes .cff-row:first-of-type { border-top: 0; }
+.cfs-foes .cff-row b { max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.cfs-foes .cff-it { display: flex; flex-wrap: wrap; gap: 2px; justify-content: flex-end; }
+.cfs-foes .cff-it i { display: inline-flex; font-style: normal; }
+.cfs-foes .cff-it em { font-style: normal; opacity: .55; }

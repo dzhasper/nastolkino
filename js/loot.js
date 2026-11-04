@@ -29,6 +29,33 @@ const Loot = (() => {
     ["flame", "полум’я", "n", 3, 4, .6], ["vortex", "вихор", "m", 3, 6, 1], ["aura", "аура", "f", 3, 6, 1.4]];
   // пейзажи для фонов: код, имя, род, редкость
   const SCENES = [["hills", "пагорби", "p", 0], ["sea", "море", "n", 0], ["peaks", "гори", "p", 1], ["city", "мегаполіс", "m", 1], ["sky", "небо", "n", 2]];
+  // пиксельные аватарки (картинка вместо фото Telegram): стиль, имя, редкость. Картинки — docs/img/pics/p<номер>.png. Порядок не менять: новое — в конец
+  const PICS = [
+    ["hero", "Хлопець у кепці", 0], ["hero", "Кучерява", 0], ["hero", "Панк", 0], ["hero", "Блондинка", 0], ["hero", "Бородань", 0], ["hero", "Ботанік", 0],
+    ["hero", "Спортсменка", 0], ["hero", "Рудий", 0], ["hero", "Козак", 1], ["hero", "Козачка", 1], ["hero", "Хіпі", 0], ["hero", "Скейтер", 0],
+    ["cat", "Рудий кіт", 0], ["cat", "Сірий кіт", 0], ["cat", "Чорний кіт", 0], ["cat", "Білий кіт", 0], ["cat", "Трикольорова кицька", 0],
+    ["cat", "Смугастий кіт", 0], ["cat", "Сіамський кіт", 1], ["cat", "Кіт у шапці", 1],
+    ["robot", "Робот-сталь", 1], ["robot", "Робот-мідь", 1], ["robot", "Робот-неон", 1, { anim: 1 }], ["robot", "Робот-візор", 1], ["robot", "Робот-антена", 1],
+    ["robot", "Іржавий робот", 1], ["robot", "Робот-циклоп", 1], ["robot", "Золотий робот", 2],
+    ["monster", "Зелений слиз", 1], ["monster", "Фіолетовий слиз", 1], ["monster", "Привид", 1], ["monster", "Циклоп", 1], ["monster", "Прибулець", 1],
+    ["monster", "Грибочок", 1], ["monster", "Зубань", 1], ["monster", "Вогняний дух", 2, { anim: 1 }],
+    ["skull", "Череп", 2], ["skull", "Неоновий череп", 2, { anim: 1 }], ["skull", "Череп у вогні", 2, { anim: 1 }], ["skull", "Пірат", 2], ["skull", "Цукровий череп", 2], ["skull", "Кришталевий череп", 3, { anim: 1 }],
+    ["mask", "Ніндзя", 2], ["mask", "Лицар", 2], ["mask", "Протигаз", 2], ["mask", "Лучадор", 2], ["mask", "Хокейна маска", 2], ["mask", "Самурай", 2], ["mask", "Чумний лікар", 2],
+    ["astro", "Космонавт", 2], ["astro", "Космонавтка", 2], ["astro", "Марсіанин у шоломі", 2], ["astro", "Зоряний пілот", 2], ["astro", "Кіт-космонавт", 3, { anim: 1 }],
+    ["legend", "Гетьман", 3], ["legend", "Король", 3], ["legend", "Дракон", 3, { anim: 1 }], ["legend", "Демон", 3, { anim: 1 }], ["legend", "Золота маска", 3], ["legend", "Чарівник", 3, { anim: 1 }], ["legend", "Фенікс", 3, { anim: 1 }],
+    // приколы: смайлики, еда, звери, вещи
+    ["smiley", "Крутий смайлик", 0], ["smiley", "Ботан", 0], ["smiley", "Сміхота", 0], ["smiley", "Закоханий", 0], ["smiley", "Сонько", 0], ["smiley", "Грошовий", 1],
+    ["smiley", "Ковбой", 1], ["smiley", "Тусовщик", 2, { anim: 1 }], ["smiley", "Чортик", 1], ["smiley", "Янголятко", 1], ["smiley", "Зомбі-смайлик", 1], ["smiley", "Клоун-смайлик", 1],
+    ["food", "Піца", 0], ["food", "Бургер", 0], ["food", "Пончик", 0], ["food", "Кавусик", 0], ["food", "Ріжок морозива", 0], ["food", "Кавунчик", 0], ["food", "Авокадо", 0],
+    ["food", "Вареник", 1], ["food", "Борщ", 1], ["food", "Сало", 1], ["food", "Суші", 1], ["food", "Банан-утікач", 1],
+    ["animal", "Песик", 0], ["animal", "Ведмедик", 0], ["animal", "Панда", 0], ["animal", "Лисичка", 0], ["animal", "Зайчик", 0], ["animal", "Жабка", 0], ["animal", "Пінгвін", 0],
+    ["animal", "Хом’ячок", 0], ["animal", "Єнот", 1], ["animal", "Корівка", 1], ["animal", "Свинка", 1], ["animal", "Коала", 1], ["animal", "Пес у касці", 2],
+    ["object", "Кубик", 0], ["object", "Джойстик", 0], ["object", "Касета", 0], ["object", "Гумова качка", 0], ["object", "Кактус у горщику", 0], ["object", "Ретро-телевізор", 1],
+    ["object", "Магнітофон", 1], ["object", "Ракета", 1], ["object", "Лампа джина", 2], ["object", "Дискокуля", 2, { anim: 1 }],
+    ["legend", "Кіберсамурай", 3, { anim: 1 }], ["legend", "Райдужний єдиноріг", 3, { anim: 1 }], ["legend", "Неоновий кіт", 3, { anim: 1 }],
+  ];
+  // аватарки «Питомника» (только из него): стиль zoo
+  const ZOO_PICS = [["z_p1", "Цуценя з м’ячиком", 0], ["z_p2", "Кошеня в коробці", 1], ["z_p3", "Папуга", 1], ["z_p4", "Хом’як у колесі", 2, { anim: 1 }]];
   const PRICE = [80, 200, 450, 900];                       // «цена» — только чтобы вещь считалась выбиваемой (в лавке не продаётся)
 
   // титулы: текст и редкость (0 обычный … 3 легендарный). Код — "t" + номер
@@ -64,7 +91,12 @@ const Loot = (() => {
 
   // приколы на голову и игрушки «Питомника» (сверх старых — те в js/pets.js). Рисунки шапок — ниже, HAT_ART
   const ZOO_HATS = [["wreath", "Вінок", 0], ["beanie", "Шапка-біні", 0], ["frog", "Шапка-жабка", 0], ["cowboy", "Ковбойський капелюх", 1], ["headphones", "Навушники", 1],
-    ["santa", "Ковпак Святого Миколая", 1], ["pirate", "Трикутка", 2], ["wizard", "Капелюх чарівника", 2], ["antlers", "Оленячі роги", 2], ["unicorn", "Ріг єдинорога", 3]];
+    ["santa", "Ковпак Святого Миколая", 1], ["pirate", "Трикутка", 2], ["wizard", "Капелюх чарівника", 2], ["antlers", "Оленячі роги", 2], ["unicorn", "Ріг єдинорога", 3],
+    // приколи 2.0: кожна шапка дає в бою маленький бонус (див. HAT_FX у js/pets.js)
+    ["catears", "Котячі вушка", 0], ["bunnyears", "Заячі вушка", 0], ["chick", "Курча на голові", 0], ["mushroomcap", "Грибна шапочка", 0],
+    ["ninja", "Пов’язка ніндзя", 1], ["jester", "Ковпак блазня", 1], ["graduate", "Шапочка випускника", 1], ["sombrero", "Сомбреро", 1], ["firehelm", "Каска пожежника", 1], ["pilot", "Шолом пілота", 1],
+    ["cyberglasses", "Кібер-окуляри", 2], ["knight", "Лицарський шолом", 2], ["tiara", "Діадема", 2],
+    ["samurai", "Шолом самурая", 3], ["thundercloud", "Грозова хмаринка", 3], ["flamecrown", "Вогняна корона", 3], ["icecrown", "Крижана корона", 3], ["octopus", "Восьминіг на голові", 3]];
   const ZOO_TOYS = [["carrot", "Морквинка", "🥕", 0], ["donut", "Пончик-пищалка", "🍩", 0], ["balloon", "Кулька", "🎈", 0], ["drum", "Барабан", "🥁", 1], ["dice", "Кубик", "🎲", 1],
     ["puzzle", "Пазл", "🧩", 1], ["robot", "Робот", "🤖", 2], ["guitar", "Гітарка", "🎸", 2], ["saucer", "Літаюча тарілка", "🛸", 3]];
 
@@ -200,6 +232,39 @@ const Loot = (() => {
       ["hat", "visor", "Кібер-візор", 2], ["toy", "chip", "Мікросхема", 1, { emoji: "💾" }], ["toy", "drone", "Мінідрон", 2, { emoji: "🛸" }]],
   };
 
+  // аватарки в каждом сезонном сундуке (выпадают только из своего): стиль season, вариант — ключ рисунка
+  const SEASON_PICS = {
+    s_dawn: [["pic", "x_dawn_p1", "Сонний півник", 0, { art: ["season", "rooster"] }], ["pic", "x_dawn_p2", "Ранкова кава", 1, { art: ["season", "coffee"] }], ["pic", "x_dawn_p3", "Світанкове сонечко", 2, { art: ["season", "sunrise"], anim: 1 }]],
+    s_noon: [["pic", "x_noon_p1", "Сонце в окулярах", 0, { art: ["season", "coolsun"] }], ["pic", "x_noon_p2", "Пляжник", 1, { art: ["season", "beach"] }], ["pic", "x_noon_p3", "Кокос", 2, { art: ["season", "coconut"] }]],
+    s_dusk: [["pic", "x_dusk_p1", "Фламінго", 0, { art: ["season", "flamingo"] }], ["pic", "x_dusk_p2", "Захід над містом", 1, { art: ["season", "citysun"] }], ["pic", "x_dusk_p3", "Саксофоніст", 2, { art: ["season", "sax"] }]],
+    s_night: [["pic", "x_night_p1", "Сова", 0, { art: ["season", "owl"] }], ["pic", "x_night_p2", "Сонний місяць", 1, { art: ["season", "moonface"] }], ["pic", "x_night_p3", "Нічний кажан", 2, { art: ["season", "bat"], anim: 1 }]],
+    s_halloween: [["pic", "x_hw_p1", "Гарбузоголовий", 1, { art: ["season", "pumpkin"] }], ["pic", "x_hw_p2", "Відьмочка", 1, { art: ["season", "witch"] }], ["pic", "x_hw_p3", "Мумія", 2, { art: ["season", "mummy"] }],
+      ["pic", "x_hw_p4", "Кістяк у циліндрі", 3, { art: ["season", "baron"], anim: 1 }]],
+    s_cosmos: [["pic", "x_cos_p1", "НЛО", 2, { art: ["season", "ufo"] }], ["pic", "x_cos_p2", "Зоряний кіт", 3, { art: ["season", "starcat"], anim: 1 }], ["pic", "x_cos_p3", "Чорна діра", 3, { art: ["season", "blackhole"], anim: 1 }]],
+    s_olymp: [["pic", "x_ol_p1", "Афіна", 2, { art: ["season", "athena"] }], ["pic", "x_ol_p2", "Зевс", 3, { art: ["season", "zeus"], anim: 1 }], ["pic", "x_ol_p3", "Медуза Горгона", 3, { art: ["season", "medusa"], anim: 1 }]],
+    s_dragon: [["pic", "x_dr_p1", "Ліхтарик", 1, { art: ["season", "lantern"] }], ["pic", "x_dr_p2", "Червоний дракон", 2, { art: ["season", "lunardragon"], anim: 1 }]],
+    s_ice: [["pic", "x_ice_p1", "Сніговик", 0, { art: ["season", "snowman"] }], ["pic", "x_ice_p2", "Пінгвін у шарфі", 1, { art: ["season", "penguin"] }], ["pic", "x_ice_p3", "Крижаний велетень", 2, { art: ["season", "icegiant"], anim: 1 }]],
+    s_moon: [["pic", "x_moon_p1", "Перевертень", 1, { art: ["season", "werewolf"] }], ["pic", "x_moon_p2", "Вампір", 2, { art: ["season", "vampire"], anim: 1 }]],
+    s_neon: [["pic", "x_neon_p1", "Кіберпанк", 1, { art: ["season", "cyberpunk"] }], ["pic", "x_neon_p2", "Хакер у капюшоні", 2, { art: ["season", "hacker"], anim: 1 }]],
+  };
+  for (const [k, list] of Object.entries(SEASON_PICS)) { const set = SETS.find((x) => x.key === k); if (set) set.items.push(...list); else (EXTRA[k] = EXTRA[k] || []).push(...list); }
+  // наборы коллекционеров: ключ, имя, палитра, узор рамки, значок на рамке, пейзаж фона, смайлик-значок, имя питомца/коллекции
+  const COLL = [
+    ["dragon_gold", "Золотий дракон", P("#fff3b0", "#ffc21a", "#5a3400", "#ffffff"), "aura", "dragon", "peaks", "🐲🪙", "Золотий дракон"],
+    ["dragon_black", "Чорний дракон", P("#b8a0ff", "#3a2a5a", "#08040e", "#b05cff"), "vortex", "dragon", "peaks", "🐲🌑", "Чорний дракон"],
+    ["dragon_white", "Білий дракон", P("#ffffff", "#d8e4f0", "#5a6a8a", "#ffe9a0"), "gem", "dragon", "sky", "🐲🤍", "Білий дракон"],
+    ["dragon_emerald", "Смарагдовий дракон", P("#c8ffd8", "#1aa85a", "#03240e", "#ffe066"), "wave", "dragon", "hills", "🐲🍀", "Смарагдовий дракон"],
+    ["dragon_ice", "Крижаний дракон", P("#e8fbff", "#5ac8ff", "#0a2a5a", "#ffffff"), "pulse", "dragon", "peaks", "🐲❄️", "Крижаний дракон"],
+    ["dragon_fire", "Вогняний дракон", P("#fff0a0", "#ff4a1a", "#3a0400", "#ffd23f"), "flame", "dragon", "peaks", "🐲🔥", "Вогняний дракон"],
+    ["spirit_fire", "Дух вогню", P("#fff3a0", "#ff8a1f", "#4a0a00", "#ff4a1f"), "flame", "sun", "peaks", "☄️🔥", "Дух вогню"],
+    ["spirit_water", "Дух води", P("#e0f6ff", "#2a8ae8", "#041a3a", "#7af0ff"), "wave", "drop", "sea", "🌊💧", "Дух води"],
+    ["spirit_earth", "Дух землі", P("#f0e0b8", "#8a6a3a", "#2a1a08", "#7ad84a"), "gem", "planet", "hills", "🪨🌱", "Дух землі"],
+    ["spirit_wind", "Дух вітру", P("#ffffff", "#9ae0d8", "#1a4a4a", "#e8fff8"), "vortex", "cloud", "sky", "🌪️🍃", "Дух вітру"],
+    ["set_dragons", "Володар драконів", P("#fff3b0", "#e8202a", "#1a0204", "#ffd23f"), "aura", "crown", "peaks", "👑🐉", "Дракони"],
+    ["set_spirits", "Хранитель стихій", P("#ffffff", "#7a5aff", "#0a0420", "#7af0ff"), "aura", "star", "sky", "🔮✨", "Стихійні духи"],
+  ];
+  const BOUND = Object.fromEntries(COLL.map(([key]) => [key, ["pic", "frame", "bg", "style", "fx", "ava"].map((c) => c + ":c_" + key)]));
+
   /* ---------------------------------------------------------------- список вещей */
   const I = (cat, id, name, tier, extra) => Object.assign({ cat, id, name, tier, price: PRICE[tier] }, extra || {});
   function items() {
@@ -212,6 +277,20 @@ const Loot = (() => {
     for (const [mk, , mn] of MATS) out.push(I("fx", "n_" + mk, `Переливи «${mn}»`, 1, { gen: 1 }));
     TITLES.forEach(([text, t], i) => out.push(I("title", "t" + i, text, t, { text, gen: 1 })));
     AVAS.forEach(([emoji, t], i) => out.push(I("ava", "e" + i, AVA_NAMES[emoji] || "Аватар", t, { emoji, gen: 1 })));
+    const vn = {}; PICS.forEach(([style, name, t, ex], i) => out.push(I("pic", "p" + i, name, t, Object.assign({ style, art: [style, (vn[style] = (vn[style] || 0) + 1) - 1], gen: 1 }, ex || {}))));
+    out.push(I("pic", "creator", "Творець", 4, { excl: 1, price: 0, anim: 1, art: ["admin", 0], desc: "Аватарка адміністратора — лише в Творця" }));
+    ZOO_PICS.forEach(([id, name, t, ex], i) => out.push(I("pic", id, name, t, Object.assign({ petcase: 1, price: 0, art: ["zoo", i] }, ex || {}))));
+    // наборы коллекционеров: вещи привязаны к колекционному питомцу (переходят вместе с ним, отдельно не передаются)
+    for (const [key, name, pal, pat, emb, scene, emoji, nm] of COLL) {
+      const strip = (PATS.find((p) => p[0] === pat) || [])[4], speed = (PATS.find((p) => p[0] === pat) || [])[5], bound = { excl: 1, coll: key, price: 0, desc: key.startsWith("set_") ? `За повну колекцію «${nm}» — окремо не передається` : `Разом із колекційним «${nm}» — окремо не передається` };
+      out.push(I("pic", "c_" + key, name, 4, Object.assign({ art: ["coll", key], anim: 1 }, bound)));
+      // рамка, фон і картка — власні малюнки (js/shop.js FRAMES, js/pixel.js SCENES «c_…», картка «coll»), не з генератора
+      out.push(I("frame", "c_" + key, `Рамка «${name}»`, 4, Object.assign({ pal, cf: 1, strip: 6, speed: 1.1 }, bound)));
+      out.push(I("bg", "c_" + key, `Фон «${name}»`, 4, Object.assign({ pal, cs: 1 }, bound)));
+      out.push(I("style", "c_" + key, `ID-картка «${name}»`, 4, Object.assign({ pal, cc: 1 }, bound, { desc: (bound.desc || "") + " · картка власника з печаткою колекції" })));
+      out.push(I("fx", "c_" + key, `Сяйво «${name}»`, 4, Object.assign({ pal, cx: 1 }, bound)));
+      out.push(I("ava", "c_" + key, `Знак «${name}»`, 4, Object.assign({ emoji }, bound)));
+    }
     ZOO_HATS.forEach(([id, name, t]) => out.push(I("hat", id, name, t, { petcase: 1, price: 0 })));
     ZOO_TOYS.forEach(([id, name, emoji, t]) => out.push(I("toy", id, name, t, { petcase: 1, emoji, price: 0 })));
     const season = (key, list) => list.forEach(([cat, id, name, t, extra]) => out.push(I(cat, id, name, t, Object.assign({ season: key, price: 0 }, extra || {},
@@ -332,48 +411,12 @@ const Loot = (() => {
   function style(id) { const it = meta["style:" + id]; if (!it) return null; if (it.gen) return { kind: id[0] === "f" ? "foil" : "glass", pal: matOf(id.slice(2)) }; return it.pal ? { kind: it.kind, pal: it.pal } : null; }
   function fx(id) { const it = meta["fx:" + id]; if (!it) return null; return it.gen ? matOf(id.slice(2)) : it.pal || null; }
 
-  /* ---------------------------------------------------------------- рисунки новых приколов на голову (формат как HAT_ART в js/pets.js) */
-  const HAT_ART = {
-    wreath: [[" g f g p ", "gfgggpgg", "g      g"], { g: "#3aa84a", f: "#ffe066", p: "#ff7ab0" }],
-    beanie: [["   rr   ", " BBBBBB ", "BBBBBBBB", "wBwBwBwB"], { r: "#ff3b4a", B: "#2a7ae8", w: "#c8dcff" }],
-    frog: [[" GG  GG ", "GwkGGwkG", "GGGGGGGG", "GGGGGGGG", "gggggggg"], { G: "#5ac83a", g: "#3a8a2a", w: "#ffffff", k: "#101010" }],
-    cowboy: [["  bbbbb  ", "  bBBBb  ", "  rrrrr  ", "bbbbbbbbb", " b     b "], { b: "#8a5a2a", B: "#a8743a", r: "#3a1a0a" }],
-    headphones: [["  kkkkk  ", " k     k ", "k       k", "rr     rr", "rr     rr"], { k: "#1a1a22", r: "#ff3b4a" }],
-    santa: [["      ww", "   rrr w", "  rrrrr ", " rrrrrrr", "wwwwwwwww"], { r: "#e8202a", w: "#ffffff" }],
-    pirate: [["   kkk   ", " kkkkkkk ", "kkkwkwkkk", "kkkkwkkkk", " kkkkkkk "], { k: "#1a1a22", w: "#ffffff" }],
-    wizard: [["    b    ", "   bbb   ", "   bYb   ", "  bbbbb  ", "  bbbYb  ", "bbbbbbbbb"], { b: "#3a2aa0", Y: "#ffe066" }],
-    antlers: [["b b   b b", " bb   bb ", "  b   b  ", "  bb bb  "], { b: "#8a5a2a" }],
-    unicorn: [["   w   ", "  wy   ", "  ywy  ", "  wyw  ", " pywyp "], { w: "#ffffff", y: "#ffd0f0", p: "#ff9ad0" }],
-    sunhat: [["  wwwww  ", " wWWWWWw ", "  ooooo  ", "wwwwwwwww"], { w: "#f0e0b0", W: "#fff4d8", o: "#ff9a3a" }],
-    sunflower: [[" y y y ", "yybbbyy", " ybbby ", "yybbbyy", " y y y ", "   g   "], { y: "#ffd23f", b: "#6a3a10", g: "#3aa84a" }],
-    cap: [["  rrrrr  ", " rrwrrrr ", "rrrrrrrrrrr"], { r: "#e8202a", w: "#ffffff" }],
-    shades: [["kkkkkkkkk", "kbbkkkbbk", " kk   kk "], { k: "#101014", b: "#3ac0ff" }],
-    beret: [["    k    ", " rrrrrrr ", "rrrrrrrrr", " rrrrrrr "], { r: "#c8101e", k: "#3a0206" }],
-    fedora: [["  bbbbb  ", " bbBbBbb ", " kkkkkkk ", "bbbbbbbbb"], { b: "#4a3a2a", B: "#2a2018", k: "#1a1008" }],
-    nightcap: [["       y", "   bbb b", "  bbbbb ", " bBbBbbb", "wwwwwwwww"], { b: "#3a3aa0", B: "#ffe066", w: "#ffffff", y: "#ffe066" }],
-    moonhat: [["  yy   ", " yy    ", "yy     ", "yy    y", " yy  yy", "  yyyy "], { y: "#ffe066" }],
-    batbow: [["k k   k k", "kkkk kkkk", "kkkkrkkkk", " kk   kk "], { k: "#1a0a20", r: "#ff3b4a" }],
-    witch: [["      k  ", "     kk  ", "    kkk  ", "   kkkk  ", "   ppppp ", "kkkkkkkkkk"], { k: "#1a0a20", p: "#a05bff" }],
-    horns: [["r       r", "rr     rr", " rr   rr "], { r: "#e8202a" }],
-    pumpkinhead: [["    g    ", "  oOoOo  ", " oOoOoOo ", "oyoOoOoyo", "oOoyyyoOo", " ooooooo "], { o: "#ff7a18", O: "#e05a08", y: "#ffe066", g: "#3aa84a" }],
-    reaper: [["   kkk   ", "  kkkkk  ", " kk   kk ", " k     k ", "kk     kk"], { k: "#14101c" }],
-    antennae: [["g     g", " g   g ", "  g g  ", "  ggg  "], { g: "#7aff6a" }],
-    ufohat: [["   cc   ", "  cccc  ", "mmmmmmmm", " ymymym "], { c: "#7ae0ff", m: "#a8b4c4", y: "#ffe066" }],
-    astro: [["  wwwww  ", " wbbbbbw ", "wbbcbbbbw", "wbbbbbbbw", "wwwwwwwww"], { w: "#ffffff", b: "#3a5aa0", c: "#bfefff" }],
-    laurel: [["g g   g g", "gg g g gg", " gg   gg "], { g: "#7ab83a" }],
-    helmet: [["   rrr   ", "  yyyyy  ", " yYyyyYy ", "yyy   yyy", "yy     yy"], { y: "#ffc21a", Y: "#fff4b0", r: "#e8202a" }],
-    glory: [[" y  w  y ", "  y w y  ", "yywwwwwyy", "  y w y  "], { y: "#ffe066", w: "#ffffff" }, [" w  y  w ", "  w y w  ", "wwyyyyyww", "  w y w  "]],
-    douli: [["    y    ", "   yYy   ", "  yYyYy  ", " yYyYyYy ", "yyyyyyyyy"], { y: "#e8c890", Y: "#c8a060" }],
-    dlantern: [["   k   ", "  rrr  ", " ryryr ", " ryryr ", "  rrr  ", "   y   "], { r: "#e8202a", y: "#ffd23f", k: "#3a1a0a" }],
-    dhorns: [["g       g", "gg     gg", " gy   yg ", "  yy yy  "], { g: "#2ab86a", y: "#ffd23f" }],
-    dcrown: [["y   r   y", "yy yyy yy", "yyyyyyyyy", "ygyyryygy", "rrrrrrrrr"], { y: "#ffd23f", r: "#e8202a", g: "#2ab86a" }],
-    snowcap: [["   ww   ", " bbbbbb ", "bbwbbwbb", "wwwwwwww"], { b: "#8ad8ff", w: "#ffffff" }],
-    fangs: [["kkkkkkk", "kwkkkwk", " w   w "], { k: "#1a0206", w: "#ffffff" }],
-    visor: [["kkkkkkkkk", "kccmmmcck", " kkkkkkk "], { k: "#14001e", c: "#00e5ff", m: "#ff2bd6" }],
-  };
+  const HAT_ART = {};   // малюнки всіх приколів на голову — у js/pets.js (HAT_ART 2.0: контур, шапка на кожну голову)
+
 
   // супер-сундук и обычные сезонные — для js/shop.js
-  const api = { MATS, PATS, SCENES, TITLES, AVAS, SETS, EXTRA, ZOO_HATS, ZOO_TOYS, ALL, meta, frame, bg, isBg, style, fx, HAT_ART, PRICE };
+  const picUrl = (id, still) => { const it = meta["pic:" + id]; return "img/pics/" + String(id).replace(/[^a-z0-9_]/g, "") + (it && it.anim && !still ? ".gif" : ".png"); };
+  const api = { PICS, ZOO_PICS, SEASON_PICS, COLL, BOUND, picUrl, MATS, PATS, SCENES, TITLES, AVAS, SETS, EXTRA, ZOO_HATS, ZOO_TOYS, ALL, meta, frame, bg, isBg, style, fx, HAT_ART, PRICE };
   return api;
 })();
 if (typeof module !== "undefined") module.exports = Loot;

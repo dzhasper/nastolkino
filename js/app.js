@@ -70,9 +70,10 @@ function av(p, cls = "") {
   if (!p) return `<div class="avatar ${cls}"></div>`;
   const big = /\b(big|huge)\b/.test(cls);
   const frame = cls.includes("mini") ? "" : Shop.frameImg(p.look && p.look.frame);
-  const inner = PX() ? (p.photo ? Pixel.photo(p.photo, big ? 64 : 32) : Pixel.emoji(p.avatar, big ? 40 : 24))
+  const pix = p.photo && /img\/pics\//.test(p.photo);              // пиксельная аватарка — как есть (и анимированная) даже в пиксельном стиле
+  const inner = pix ? `<img class="pixpic" src="${esc(p.photo)}" alt="" loading="lazy">` : PX() ? (p.photo ? Pixel.photo(p.photo, big ? 64 : 32) : Pixel.emoji(p.avatar, big ? 40 : 24))
     : p.photo ? `<img src="${esc(p.photo)}" alt="" referrerpolicy="no-referrer" loading="lazy">` : esc(p.avatar);
-  const kind = PX() ? "pxav" : p.photo ? "photo" : "";
+  const kind = PX() && !pix ? "pxav" : p.photo ? "photo" : "";
   return `<div class="avatar ${kind} ${cls} ${frame ? "framed" : ""}">${frame ? `<div class="av-in">${inner}</div>${frame}` : inner}</div>`;
 }
 const nm = (p) => Shop.nameFx(p.name, p.look && p.look.fx);
@@ -120,7 +121,9 @@ function profileView() {
   const owned = Shop.ownedAvatars();
   if (store.badge === undefined && store.avatar && owned.includes(store.avatar)) store.badge = store.avatar;   // раньше смайлик из кейса стоял аватаркой — теперь он значок у ника
   const badge = store.badge && owned.includes(store.badge) ? store.badge : "";
-  return { name: Shop.withBadge(store.name, badge), base: store.name, badge, avatar: "👤", photo: store.tg_photo || null, tg: !!store.tg_name, games: store.games || 0, wins: store.wins || 0,
+  const lk0 = store.look || {}, picIt = lk0.pic && lk0.pic !== "none" ? Shop.byId("pic", lk0.pic) : null, pic = picIt && Shop.owns(picIt) ? lk0.pic : null;
+  return { name: Shop.withBadge(store.name, badge), base: store.name, badge, avatar: "👤", pic, tgPhoto: store.tg_photo || null,
+    photo: pic ? new URL(Loot.picUrl(pic), location.href).href : store.tg_photo || null, tg: !!store.tg_name, games: store.games || 0, wins: store.wins || 0,
     favorite_role: fav ? fav[0] : null, coins: store.coins || 0,
     look: Object.assign(Shop.look(), { lv: String(Shop.level(store.games)), g: String(store.games || 0), w: String(store.wins || 0), c: String(Math.max(0, store.coins || 0)) }, store.pet ? { pet: store.pet } : {}) };
 }
@@ -339,6 +342,13 @@ function viewLoading() {
     <div class="muted">Завантажую…</div></div></div>`;
 }
 
+// аватарка: фото из Telegram или пиксельная картинка из кейса — тогда она везде вместо фото (профиль, комнаты, пост победителя в группе)
+function picCard() {
+  const p = S.profile, list = Shop.ITEMS.filter((x) => x.cat === "pic" && Shop.owns(x));
+  const tgBtn = `<button data-a="pic-set" data-v="none" class="pic-opt tgph ${p.pic ? "" : "sel"}">${p.tgPhoto ? `<img src="${esc(p.tgPhoto)}" alt="" referrerpolicy="no-referrer">` : "👤"}<span>Telegram</span></button>`;
+  return `<div class="card pic-card"><div class="pic-grid">${tgBtn}${list.map((it) => `<button data-a="pic-set" data-v="${it.id}" class="pic-opt ${p.pic === it.id ? "sel" : ""}" style="--tc:${Shop.TIERS[Shop.tier(it)].color}"><img src="${Loot.picUrl(it.id)}" alt="" loading="lazy"></button>`).join("")}</div>
+    <div class="small muted mt">${list.length ? "Обрана аватарка показується всюди замість фото з Telegram: у профілі, кімнатах і в пості переможця в групі." : "Піксельні аватарки випадають із кейсів — тоді можна сховати своє фото з Telegram."}</div></div>`;
+}
 // значок у ника: один смайлик из выбитых в кейсах (или ключ Творца у админа). Без значка — просто имя
 function badgeCard() {
   const p = S.profile, list = [...new Set(Shop.ownedAvatars())];
@@ -435,8 +445,8 @@ function viewGate() {
 
 function myCard(lookOverride) {
   const p = S.profile;
-  return Shop.card({ name: p.name, games: p.games, wins: p.wins, avatarHtml: av(Object.assign({}, p, { look: lookOverride || p.look }), "huge") },
-    lookOverride || p.look);
+  const lk = lookOverride || p.look, tryPic = lookOverride && lookOverride.pic && lookOverride.pic !== "none" && lookOverride.pic !== p.pic ? lookOverride.pic : null;
+  return Shop.card({ name: p.name, games: p.games, wins: p.wins, avatarHtml: av(Object.assign({}, p, { look: lk }, tryPic ? { photo: Loot.picUrl(tryPic) } : {}), "huge") }, lk);
 }
 
 // ежедневный бонус: с сервером — колесо фортуны (сундук стал одним из его секторов), без сервера — старый сундук на телефоне
@@ -467,6 +477,8 @@ function viewProfile() {
     ${dailyCard("mt")}
     ${refCard()}
     ${p.favorite_role ? `<div class="card mt"><span class="muted small">Найчастіше граєш</span><br><b>${esc(p.favorite_role)}</b></div>` : ""}
+    <div class="section-title">Аватарка</div>
+    ${picCard()}
     <div class="section-title">Значок біля ніка</div>
     ${badgeCard()}
     ${p.tg ? `<div class="small muted mt">Ім’я та фото беруться з акаунта Telegram (смайлики з імені не переносяться).</div>`
@@ -481,6 +493,7 @@ function shopPreview(it) {
   if (it.cat === "frame") return `<div class="sp-av">${av(Object.assign({}, p, { look: { frame: it.id } }), "big")}</div>`;
   if (it.cat === "bg") return it.id === "none" ? `<div class="sp-bg empty">порожньо</div>` : `<div class="sp-bg" style="background-image:url(${Shop.sceneUrl(it.id)})"></div>`;
   if (it.cat === "toy") return `<div class="sp-ava sp-toy">${it.emoji}</div>`;
+  if (it.cat === "pic") return `<div class="sp-pic"><img src="${Loot.picUrl(it.id)}" alt="" loading="lazy"></div>`;
   if (it.cat === "mg") return `<div class="sp-ava sp-mg">${Pets.syringe(64)}</div>`;
   if (it.cat === "hat") { const st = Api.state, mp = st && st.pets.find((x) => x.id === st.main_pet && x.alive && !x.egg) || (st && st.pets.find((x) => x.alive && !x.egg));
     return `<div class="sp-ava">${Pets.sprite((mp ? mp.rarity + mp.dna : "27f3a9c51e2b84d06a1c3f5e7092b4d6e") + "-" + it.id, 64)}</div>`; }
@@ -1020,6 +1033,7 @@ function renderChat() {
 
 /* ---------------------------------------------------------------- действия */
 const actions = {
+  "pic-set": (v) => { store.look = store.look || {}; store.look.pic = v === "none" ? "none" : v; haptic(); saveProfile(); syncProfile(); render(); },
   badge: (v) => { store.badge = v === "none" ? "" : v; haptic(); saveProfile(); syncProfile(); render(); },
   "pixel-toggle": () => { store.pixel = !S.pixel; S.pixel = store.pixel; saveProfile(); render(); },
   register: () => {

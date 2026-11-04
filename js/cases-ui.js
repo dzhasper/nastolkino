@@ -161,13 +161,14 @@ function viewInv() {
   const ranked = (it) => it.price || it.excl || it.season || it.petcase || it.mg;
   let bar = "";
   if (tryIt && Shop.owns(tryIt)) {
-    const t = Shop.tier(tryIt), src = tryIt.excl ? (tryIt.cat === "title" && tryIt.desc ? "🐉 " + tryIt.desc : "👑 набір Творця") : tryIt.season ? "🌙 " + (Shop.seasonByKey(tryIt.season) || {}).name : "";
+    const t = Shop.tier(tryIt), src = tryIt.coll ? "🐉 " + tryIt.desc : tryIt.excl ? (tryIt.cat === "title" && tryIt.desc ? "🐉 " + tryIt.desc : "👑 набір Творця") : tryIt.season ? "🌙 " + (Shop.seasonByKey(tryIt.season) || {}).name : "";
     const m = tryIt.mg ? Pets.MUTATIONS.find((x) => x.key === tryIt.mg) : null;
     const act = tryIt.cat === "toy" ? `<button class="btn small" data-a="case-pets">🐾 До улюбленців</button>` : tryIt.cat === "hat" || tryIt.cat === "mg" ? `<button class="btn small" data-a="case-pets">🐾 До улюбленців</button>`
+      : tryIt.cat === "pic" ? (worn(tryIt) ? `<button class="btn small ghost" data-a="pic-set" data-v="none">Повернути фото Telegram</button>` : `<button class="btn small" data-a="shop-equip">Поставити аватаркою</button>`)
       : tryIt.cat === "ava" ? (worn(tryIt) ? `<button class="btn small ghost" data-a="badge" data-v="none">Зняти з ніка</button>` : `<button class="btn small" data-a="shop-equip">Поставити біля ніка</button>`)
       : worn(tryIt) ? `<button class="btn small" disabled>Вдягнуто ✓</button>` : `<button class="btn small" data-a="shop-equip">Вдягнути</button>`;
     if (tryIt.cat === "toy" && typeof toyInfo === "function") bar = toyBar(tryIt);
-    else bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${ranked(tryIt) ? tierTag(t) : ""} ${m ? `${m.emoji} ${esc(m.name)} — уколи улюбленцю зі значком 🧬` : tryIt.cat === "hat" ? "Вдягається улюбленцю в його картці, знімається там само" : src ? esc(src) : worn(tryIt) ? "Вдягнуто" : "Є в тебе"}</div></div>
+    else bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${ranked(tryIt) ? tierTag(t) : ""} ${m ? `${m.emoji} ${esc(m.name)} — уколи улюбленцю зі значком 🧬` : tryIt.cat === "hat" ? "У бою: " + Pets.hatFxText(tryIt.id) + ". Вдягається улюбленцю в його картці" : src ? esc(src) : worn(tryIt) ? "Вдягнуто" : "Є в тебе"}</div></div>
       ${act}</div>`;
   }
   if (S.craft && Api.on) return viewCraftBench();
@@ -201,7 +202,7 @@ function viewCraft() {
 
 /* ---------------------------------------------------------------- крафт из инвентаря: 5 вещей одной категории и редкости → одна той же категории, такой же редкости или лучше */
 const CRAFT_ODDS = [[55, 40, 5], [70, 30], [80, 20]];                 // та же / +1 / +2 — как на сервере
-const CRAFT_CATS = ["frame", "bg", "style", "fx", "title", "ava", "toy", "hat"];
+const CRAFT_CATS = ["frame", "bg", "style", "fx", "title", "ava", "pic", "toy", "hat"];
 // крафтится то, что выпадает из кейсов, «Питомника» и сезонных сундуков; не крафтятся легендарки, вещи админа и награды пропуска
 const craftOk = (it) => !!it && CRAFT_CATS.includes(it.cat) && !it.excl && !it.mg && !it.pass && (it.price > 0 || it.petcase || it.season) && Shop.tier(it) < 3;
 function viewCraftBench() {
@@ -266,6 +267,7 @@ function caseThumb(d) {
   if (it.cat === "bg") return `<div class="ct-bg" style="background-image:url(${Shop.sceneUrl(it.id)})"></div>`;
   if (it.cat === "style") return `<div class="ct-ico">🪪</div>`;
   if (it.cat === "toy") return `<div class="ct-ico">${it.emoji}</div>`;
+  if (it.cat === "pic") return `<div class="ct-ico ct-pic"><img src="${Loot.picUrl(it.id)}" alt=""></div>`;
   if (it.cat === "hat") return `<div class="ct-ico">${Pets.sprite("2" + "8c3a9c51e2b84d06a1c3f5e7092b4d6e-" + it.id, 44)}</div>`;
   if (it.cat === "mg") return `<div class="ct-ico">${Pets.syringe(40)}</div>`;
   if (it.cat === "title") return `<div class="ct-title">«${esc(it.text)}»</div>`;

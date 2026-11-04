@@ -305,3 +305,10 @@ body.pixel .lg-row, body.pixel .league-card { border-radius: 0; }
 @keyframes sulkSway { 0%, 100% { transform: rotate(-3deg) translateY(2px); } 50% { transform: rotate(3deg) translateY(0); } }
 @keyframes cloudFloat { 50% { transform: translateX(-50%) translateY(-4px); } }
 @keyframes rainDrop { from { transform: translateY(0); opacity: 1; } to { transform: translateY(26px); opacity: 0; } }
+.coll-kit { display: block; padding: 10px; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .08); }
+.coll-kit .ck-card { margin-top: 8px; }
+.coll-kit .btn { width: 100%; }
+.coll-kit .ck-i { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: var(--card2); font-size: 16px; overflow: hidden; }
+.coll-kit .ck-i img { width: 100%; height: 100%; image-rendering: pixelated; }
+
+.hat-pick .pick .hat-fx { display: block; font-style: normal; font-size: 10px; line-height: 1.25; color: #ffe066; margin-top: 3px; }

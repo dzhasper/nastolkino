@@ -64,8 +64,8 @@ function tradeScreen() {
 function tradePickSheet() {
   const st = Api.state, pk = S.pick;
   if (!st || !pk) return "";
-  const pets = st.pets.filter((p) => p.alive && !p.collect), food = st.food || {}, cases = st.cases || {};
-  const items = (st.inv || []).map((k) => Shop.byKey(k)).filter(Boolean).sort((a, b) => Shop.tier(b) - Shop.tier(a));
+  const pets = st.pets.filter((p) => p.alive), food = st.food || {}, cases = st.cases || {};   // колекционного можно отдать — его набор уходит вместе с ним
+  const items = (st.inv || []).map((k) => Shop.byKey(k)).filter((it) => it && !it.coll).sort((a, b) => Shop.tier(b) - Shop.tier(a));
   const step = (kind, k, n, max) => `<span class="stepper"><button data-a="pick-step" data-v="${kind}|${k}|-1" ${n ? "" : "disabled"}>−</button><b>${n}</b><button data-a="pick-step" data-v="${kind}|${k}|1" ${n < max ? "" : "disabled"}>+</button></span>`;
   return `<h2>Що віддаєш</h2>
     <div class="section-title">Улюбленці та яйця</div>

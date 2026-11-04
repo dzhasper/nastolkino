@@ -9,6 +9,7 @@ body.pixel .seg.seg4 button { font-size: 8px; }
 
 .bstats { display: flex; justify-content: space-between; gap: 6px; font-size: 14px; }
 .bstats.small { font-size: 12px; margin-top: 4px; }
+.bstats.st-hidden { opacity: .55; letter-spacing: .5px; }
 
 .blist { display: flex; flex-direction: column; gap: 8px; }
 .brow { display: flex !important; align-items: center; gap: 10px; width: 100%; text-align: left; }
@@ -286,3 +287,11 @@ body.pixel .wheel-lbl { font-size: 9px; }
 .b-win.lost i { background: hsl(calc(var(--i) * 10 + 200), 20%, 55%); }
 @keyframes bwin { 0% { transform: rotate(var(--a)) translateY(0); opacity: 1; } 100% { transform: rotate(var(--a)) translateY(-130px) rotate(200deg); opacity: 0; } }
 body.pixel .bfx.cutin, body.pixel .b-intro .bi-half { border-radius: 0; }
+
+/* фішки приколів у бою */
+.bfx.hat-tag { left: 50%; top: -22%; transform: translateX(-50%); white-space: nowrap; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 9px; background: rgba(20, 14, 30, .85); color: #ffe066; border: 1px solid #ffe06688; animation: fnum 1.1s ease-out forwards; z-index: 6; }
+.bfx.laser-beam { top: 46%; height: 4px; border-radius: 3px; background: linear-gradient(90deg, #ffb0b0, #ff2a3a, #ffffff, #ff2a3a); box-shadow: 0 0 10px #ff2a3a, 0 0 22px #ff2a3a; z-index: 5; animation: laserBeam .52s ease-out forwards; }
+.bfx.laser-beam.l2r { left: 22%; transform-origin: left center; }
+.bfx.laser-beam.r2l { right: 22%; transform-origin: right center; }
+@keyframes laserBeam { 0% { width: 0; opacity: 1; } 55% { width: 56%; opacity: 1; } 100% { width: 56%; opacity: 0; } }
+.bfx.zap { left: 50%; top: -10%; transform: translateX(-50%); font-size: 40px; filter: drop-shadow(0 0 8px #fff27a); animation: fnum .65s ease-out forwards; }

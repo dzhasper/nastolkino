@@ -149,7 +149,7 @@ function petLifeBlock(p, t) {
           <div class="row case-btns"><button class="btn ghost small" data-a="toy-give-open">🤝 Віддати іншому</button><button class="btn ghost small" data-a="toy-give" data-v="0">📥 Забрати на полицю</button></div>`; })() : ""}
       ${toyNews(3, p.id)}
       <div class="row mt case-btns"><button class="btn small" data-a="pet-play" ${toys.length ? "" : "disabled"}>🎾 Пограти</button>
-        <button class="btn ghost small" data-a="pet-hat-open">🎩 ${p.hat ? "Прикол: " + esc((Pets.HATS.find((h) => h[0] === p.hat) || [])[1] || "") : hats.length ? "Вдягнути прикол" : "Приколів немає"}</button>
+        <button class="btn ghost small" data-a="pet-hat-open">🎩 ${p.hat ? "Прикол: " + esc((Shop.byId("hat", p.hat) || {}).name || "") : hats.length ? "Вдягнути прикол" : "Приколів немає"}</button>
         ${p.gift ? `<button class="btn small" data-a="pet-gift">🎁 Що він приніс?</button>` : ""}</div>
       <div class="small muted mt">Улюбленець сам обирає, у що гратися, і тримає іграшку в себе. Нелюбу може закинути під диван, забіяка — відібрати чуже, жадібний — не віддати. Добрі діляться по черзі.</div></div>`;
 }
@@ -167,10 +167,10 @@ function petHatSheet() {
   const p = Api.state && Api.state.pets.find((x) => x.id === S.petSel);
   if (!p) return "";
   const hats = (Api.state.inv || []).filter((x) => x.startsWith("hat:")).map((x) => x.slice(4));
-  const base = p.rarity + p.dna;
-  return `<h2>🎩 Приколи на голову</h2><p class="muted small">Вибиваються з кейса «Розплідник». Один прикол — на одному улюбленці.</p>
-    ${hats.length ? `<div class="pick-grid">${hats.map((h) => `<button class="pick ${p.hat === h ? "on" : ""}" data-a="pet-hat-set" data-v="${h}">${Pets.sprite(base + "-" + h, 64)}
-      <span>${esc((Pets.HATS.find((x) => x[0] === h) || [])[1] || h)}</span></button>`).join("")}</div>` : `<div class="card muted small">Приколів поки немає</div>`}
+  const base = petCode(Object.assign({}, p, { hat: null }));
+  return `<h2>🎩 Приколи на голову</h2><p class="muted small">Вибиваються з кейса «Розплідник» і сезонних скринь. Один прикол — на одному улюбленці, у багатоголових — на кожній голові. У бою кожен прикол дає маленьку фішку.</p>
+    ${hats.length ? `<div class="pick-grid hat-pick">${hats.map((h) => `<button class="pick ${p.hat === h ? "on" : ""}" data-a="pet-hat-set" data-v="${h}">${Pets.sprite(base + "-" + h, 64)}
+      <span>${esc((Shop.byId("hat", h) || {}).name || h)}</span><i class="hat-fx">${esc(Pets.hatFxText(h))}</i></button>`).join("")}</div>` : `<div class="card muted small">Приколів поки немає</div>`}
     ${p.hat ? `<button class="btn ghost mt" data-a="pet-hat-set" data-v="">Зняти прикол</button>` : ""}`;
 }
 

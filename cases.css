@@ -161,3 +161,5 @@ body.pixel .ct-slot, body.pixel .key-row, body.pixel .shop-item .inv-n { border-
 .craft-odds b { color: var(--tc); }
 .shop-bar .craft-btn { margin-left: 6px; }
 body.pixel .craft-odds span { border-radius: 0; }
+.ct-pic img { width: 46px; height: 46px; image-rendering: pixelated; border-radius: 8px; }
+body.pixel .ct-pic img { border-radius: 0; }

@@ -637,7 +637,7 @@ const Bots = (() => {
     else if (mine > need && mine >= 17) move = "stand";
     else if (mine < need) move = soft || bustP < .75 ? "hit" : "stand";       // проигрываю — рискую
     else move = soft || bustP < .4 ? "hit" : "stand";
-    if (chance(.15)) say(h, room, id, move === "hit" ? pick(["Ще!", "Давай ще одну", "Ризикну"]) : move === "double" ? "Подвоюю!" : pick(["Досить", "Мені досить", "Стою"]));
+    if (chance(.15)) say(h, room, id, move === "hit" ? pick(["Ще!", "Давай ще одну", "Ризикну"]) : move === "double" ? "Подвоюю!" : pick(["Пас", "Досить", "Мені досить", "Стою"]));
     act(h, id, { slot: move }, 1000, 2500);
   }
 

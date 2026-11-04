@@ -402,3 +402,90 @@ body:not(.pixel) .pc-tarot .pc-name, body:not(.pixel) .pc-tarot .pc-num { font-f
 .fx-gen { background: linear-gradient(90deg, var(--a), var(--b), var(--c), var(--a)); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text;
   color: transparent !important; -webkit-text-fill-color: transparent; text-shadow: none !important; animation: gen-foil 3s linear infinite;
   filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .75)) drop-shadow(0 0 2px rgba(0, 0, 0, .4)); }
+
+/* пиксельные аватарки (картинка вместо фото Telegram) */
+.sp-pic { display: grid; place-items: center; }
+.sp-pic img { width: 64px; height: 64px; image-rendering: pixelated; border-radius: 12px; box-shadow: 0 0 0 2px rgba(255, 255, 255, .12); }
+.ct-slot .sp-pic img { width: 100%; height: auto; }
+.pic-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.pic-opt { aspect-ratio: 1; border-radius: 12px; padding: 0; overflow: hidden; background: var(--card2); border: 2px solid transparent; position: relative; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tc, #888) 55%, transparent); }
+.pic-opt img { width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; display: block; }
+.pic-opt.tgph img { image-rendering: auto; }
+.pic-opt.tgph span { position: absolute; left: 0; right: 0; bottom: 0; font-size: 9px; font-weight: 700; background: rgba(0, 0, 0, .6); color: #fff; padding: 1px 0; text-align: center; }
+.pic-opt.sel { border-color: var(--accent); transform: scale(1.05); }
+.avatar.photo img[src*="img/pics/"], .avatar img[src*="img/pics/"] { image-rendering: pixelated; }
+body.pixel .pic-opt, body.pixel .sp-pic img { border-radius: 0; }
+.avatar img.pixpic { image-rendering: pixelated; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---- набори колекціонерів: ID-картка (чешуя, печатка, водяний знак) і сяйво імені */
+.pc-coll { background: radial-gradient(120% 90% at 20% 0%, color-mix(in srgb, var(--c2) 45%, #000) 0%, color-mix(in srgb, var(--c3) 85%, #000) 70%); color: #fff; padding: 12px 14px 12px; overflow: hidden;
+  box-shadow: inset 0 0 0 2px var(--c4), inset 0 0 0 5px var(--c3), inset 0 0 0 6px var(--c1), 0 0 18px -4px var(--c2); }
+.pc-coll > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .6; z-index: 0; filter: brightness(.78); }
+.pc-coll > *:not(.pc-scene):not(.pcc-scales):not(.pcc-shine):not(.pcc-mark):not(.pcl-edge):not(.pcl-fire) { position: relative; z-index: 3; }
+.pc-coll .pcc-scales { position: absolute; inset: 0; z-index: 1; opacity: .09; pointer-events: none;
+  background: radial-gradient(circle at 50% 0, transparent 7px, var(--c1) 8px, transparent 9px) 0 0 / 16px 10px, radial-gradient(circle at 50% 0, transparent 7px, var(--c1) 8px, transparent 9px) 8px 5px / 16px 10px; }
+.pc-coll .pcc-shine { position: absolute; top: -40%; left: -60%; width: 35%; height: 180%; z-index: 2; pointer-events: none; transform: rotate(20deg);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c1) 55%, transparent), transparent); animation: vip-shine 3.6s linear infinite; }
+.pc-coll .pcc-mark { position: absolute; right: -10px; bottom: 26px; width: 120px; height: 120px; image-rendering: pixelated; opacity: .2; z-index: 1; pointer-events: none; filter: saturate(1.3); }
+.pc-coll .pcc-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 10px; padding: 5px 8px; border: 1px solid var(--c4);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c3) 80%, transparent), color-mix(in srgb, var(--c2) 45%, transparent)); }
+.pc-coll .pcc-top b { font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 9px; letter-spacing: .06em; color: var(--c1); text-shadow: 0 0 6px var(--c4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-coll .pcc-top span { font-size: 10px; color: var(--c1); opacity: .85; white-space: nowrap; }
+.pc-coll .pc-body { padding: 0; gap: 14px; }
+.pc-coll .pc-name { filter: drop-shadow(0 1px 0 #000) drop-shadow(0 0 3px rgba(0, 0, 0, .85)); }
+.pc-coll .pc-sub, .pc-coll .pc-foot { text-shadow: 0 1px 0 #000, 0 0 3px #000; }
+.pc-coll .pc-sub { color: var(--c1); text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
+.pc-coll .pcc-own { display: inline-block; margin-top: 6px; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 7px; padding: 4px 6px; background: var(--c4); color: var(--c3); box-shadow: 0 0 8px var(--c4); }
+.pc-coll .pc-foot { display: flex; justify-content: space-between; gap: 6px; margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--c4); font-size: 12px; color: var(--c1); text-shadow: 0 1px 0 rgba(0, 0, 0, .5); }
+.pcard.mini.pc-coll .pc-foot { font-size: 10px; margin-top: 8px; }
+.pcard.mini.pc-coll .pcc-mark { width: 80px; height: 80px; }
+.pcc-flame::after, .pcc-shadow::after, .pcc-frost::after, .pcc-cosmic::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.pcc-flame::after { background: radial-gradient(ellipse 30% 60% at 15% 110%, color-mix(in srgb, var(--c2) 60%, transparent), transparent 70%), radial-gradient(ellipse 30% 60% at 85% 110%, color-mix(in srgb, var(--c2) 60%, transparent), transparent 70%); animation: pcc-flick 1.1s ease-in-out infinite alternate; }
+.pcc-shadow::after { background: radial-gradient(circle at 80% 20%, rgba(176, 92, 255, .35), transparent 45%); animation: pcc-flick 2.4s ease-in-out infinite alternate; }
+.pcc-frost::after { background: linear-gradient(180deg, rgba(255, 255, 255, .25), transparent 20%), repeating-linear-gradient(90deg, transparent 0 18px, rgba(232, 251, 255, .12) 18px 19px); }
+.pcc-cosmic::after { background: conic-gradient(from 0deg at 85% 15%, #ff8a1f55, #3a9aff55, #8a6a3a55, #e0fffa55, #ff8a1f55); mix-blend-mode: screen; opacity: .6; animation: pcc-spin 8s linear infinite; }
+@keyframes pcc-flick { from { opacity: .55; } to { opacity: 1; } }
+@keyframes pcc-spin { from { filter: hue-rotate(0); } to { filter: hue-rotate(360deg); } }
+/* сяйво імені колекціонера: у кожного своя стихія */
+.fx-coll { background: linear-gradient(110deg, var(--c) 0%, var(--b) 25%, var(--a) 45%, #ffffff 50%, var(--a) 55%, var(--b) 75%, var(--c) 100%); background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: fxc-sweep 2.6s linear infinite; filter: drop-shadow(0 0 3px var(--d)) drop-shadow(0 1px 0 rgba(0, 0, 0, .6)); }
+@keyframes fxc-sweep { from { background-position: 125% 0; } to { background-position: -125% 0; } }
+.fxc-shadow { animation: fxc-sweep 3.4s linear infinite, fxc-pulse 1.6s ease-in-out infinite alternate; }
+@keyframes fxc-pulse { from { filter: drop-shadow(0 0 1px var(--d)) drop-shadow(0 1px 0 #000); } to { filter: drop-shadow(0 0 6px var(--d)) drop-shadow(0 1px 0 #000); } }
+.fxc-flame { background: linear-gradient(0deg, var(--c) 0%, var(--b) 30%, var(--a) 55%, #ffffff 70%, var(--b) 100%); background-size: 100% 300%; animation: fx-bwflame 1.2s steps(8) infinite;
+  -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 3px var(--d)) drop-shadow(0 -2px 3px var(--b)); }
+.fxc-frost { filter: drop-shadow(0 0 4px #bfefff) drop-shadow(0 1px 0 rgba(0, 0, 0, .6)); animation-duration: 3.2s; }
+.fxc-pearl { background: linear-gradient(110deg, #c8d8f0, #ffffff 30%, #ffe0f0 45%, #e0fff8 55%, #ffffff 70%, #c8d8f0); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 0 4px #ffe9a0) drop-shadow(0 1px 0 rgba(0, 0, 0, .55)); }
+.fxc-wave { background: repeating-linear-gradient(100deg, var(--c) 0 6px, var(--b) 6px 14px, var(--a) 14px 18px, var(--b) 18px 26px); background-size: 52px 100%; -webkit-background-clip: text; background-clip: text; animation: fxc-wave 1.4s linear infinite; }
+@keyframes fxc-wave { from { background-position: 0 0; } to { background-position: 52px 0; } }
+.fxc-wind { animation-duration: 1.3s; }
+.fxc-cosmic { background: linear-gradient(90deg, #ff8a1f, #3a9aff, #7aff6a, #e0fffa, #b05cff, #ff8a1f); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; animation: fxc-sweep 4s linear infinite; filter: drop-shadow(0 0 4px #b05cff) drop-shadow(0 1px 0 #000); }
+
+/* ---- Володар драконів: найкраща картка */
+@property --lord-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.pc-lord { background: radial-gradient(130% 100% at 50% 0%, #4a0610 0%, #14020a 60%, #050103 100%); box-shadow: 0 0 26px -2px #ff8a1a, 0 0 6px #ffd23f; }
+.pc-lord .pcl-edge { position: absolute; inset: 0; z-index: 4; pointer-events: none; padding: 4px; border-radius: inherit;
+  background: conic-gradient(from var(--lord-a), #ffd23f, #e8301a, #ffd23f, #7a5aba, #ffd23f, #1aa85a, #fff6c8, #5ac8ff, #ffd23f, #f2f6ff, #ffd23f);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: lord-spin 4s linear infinite; }
+@keyframes lord-spin { to { --lord-a: 360deg; } }
+.pc-lord > .pc-scene { opacity: .7; filter: brightness(.85) saturate(1.15); }
+.pc-lord .pcl-fire { position: absolute; left: 0; right: 0; bottom: 0; height: 45%; z-index: 1; pointer-events: none; display: flex; }
+.pc-lord .pcl-fire i { flex: 1; background: radial-gradient(ellipse 60% 100% at 50% 100%, rgba(255, 138, 26, .55), rgba(232, 48, 26, .22) 45%, transparent 72%); transform-origin: bottom; animation: lord-flame 1.1s ease-in-out infinite alternate; }
+.pc-lord .pcl-fire i:nth-child(2n) { animation-duration: .8s; animation-delay: -.3s; }
+.pc-lord .pcl-fire i:nth-child(3n) { animation-duration: 1.4s; animation-delay: -.6s; }
+@keyframes lord-flame { from { transform: scaleY(.7); opacity: .7; } to { transform: scaleY(1.15); opacity: 1; } }
+.pc-lord .pcl-head { text-align: center; margin-bottom: 6px; }
+.pc-lord .pcl-head b { display: block; font-family: "NkDigitsHead", "Press Start 2P", monospace; font-size: 11px; letter-spacing: .08em; color: #fff0a0;
+  text-shadow: 0 0 6px #ffd23f, 0 0 14px #ff6a1a, 0 2px 0 #000; animation: lord-glow 1.6s ease-in-out infinite alternate; }
+.pc-lord .pcl-head span { display: block; font-size: 10px; color: #ffd23f; opacity: .9; margin-top: 3px; text-shadow: 0 1px 0 #000; }
+@keyframes lord-glow { from { text-shadow: 0 0 4px #ffd23f, 0 0 8px #ff6a1a, 0 2px 0 #000; } to { text-shadow: 0 0 10px #fff0a0, 0 0 22px #ff6a1a, 0 2px 0 #000; } }
+.pc-lord .pcl-six { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
+.pc-lord .pcl-six img { width: 26px; height: 26px; image-rendering: pixelated; border-radius: 6px; border: 1px solid #ffd23f; box-shadow: 0 0 8px #ff8a1a; animation: lord-bob 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * -.4s); }
+@keyframes lord-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+.pcard.mini.pc-lord .pcl-six img { width: 20px; height: 20px; }
+.pc-lord .pcc-own { background: linear-gradient(90deg, #ffd23f, #fff6c8, #ffd23f); color: #4a0610; box-shadow: 0 0 10px #ffd23f; }
+.pc-lord .pcc-mark { opacity: .28; }
+/* сяйво імені Володаря: розплавлене золото з вогнем */
+.fxc-royal { background: linear-gradient(100deg, #a86a08 0%, #ffd23f 20%, #fff6c8 32%, #ffd23f 44%, #ff6a1a 58%, #ffd23f 72%, #fff6c8 84%, #a86a08 100%); background-size: 260% 100%;
+  -webkit-background-clip: text; background-clip: text; animation: fxc-sweep 2.2s linear infinite, fxc-royal-glow 1.3s ease-in-out infinite alternate; }
+@keyframes fxc-royal-glow { from { filter: drop-shadow(0 0 2px #ffd23f) drop-shadow(0 0 1px #e8202a) drop-shadow(0 1px 0 #000); } to { filter: drop-shadow(0 0 6px #ffd23f) drop-shadow(0 0 10px #ff4a1a) drop-shadow(0 1px 0 #000); } }

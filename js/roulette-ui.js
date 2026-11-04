@@ -154,6 +154,10 @@ function cellarFs(r) {
   const tag = ["play", "shot"].includes(r.phase) && !BQ.busy ? `<div class="cfs-turn ${r.turn === S.me ? "me" : ""}">${r.turn === S.me ? "ТВІЙ ХІД" : "ХОДИТЬ: " + esc(turnP.name || "").toUpperCase()}</div>` : "";
   const timer = r.deadline && ["play", "load"].includes(r.phase) ? `<div class="cfs-timer" id="timer" data-total="${r.total}"><span id="timer-num">${fmtTime(remaining())}</span></div>` : "";
   const hp = seated && me.alive && ((!bl && r.maxHp > 1) || (rv && me.bounty)) ? `<div class="cfs-hp">${rv && me.bounty ? `<span class="cfs-bounty">🎯 🪙${me.bounty}</span>` : ""}${!bl && r.maxHp > 1 ? hearts(me.hp, r.maxHp) : ""}</div>` : "";
+  // «Останній заряд»: під твоїми життями — що лежить на столі в суперників (нік → картинки речей)
+  const foes = !bl && !rv && ["load", "play", "shot"].includes(r.phase) ? r.players.filter((p) => p.id !== S.me && p.alive && r.seats.includes(p.id)) : [];
+  const foesHtml = foes.length ? `<div class="cfs-foes"><div class="cff-h">Речі суперників</div>${foes.map((p) => `<div class="cff-row"><b>${esc(p.name)}</b><span class="cff-it">${(p.items || []).length
+    ? (p.items || []).map((k) => (RI()[k] ? `<i title="${esc(RI()[k].name)}">${emo(RI()[k].emoji, 16)}</i>` : "")).join("") : `<em>нічого</em>`}</span></div>`).join("")}</div>` : "";
   const rank = bl && r.table && r.table.rank ? `<div class="cfs-rank">СТІЛ: <b>${Bluff.RANKS[r.table.rank].many.toUpperCase()}</b></div>` : "";
   const sub = S.rouSub && Date.now() - S.rouSub.at < 5200 ? `<div class="cfs-sub show" id="cfs-sub" style="animation-delay:-${((Date.now() - S.rouSub.at) / 1000).toFixed(2)}s">${esc(S.rouSub.text)}</div>` : `<div class="cfs-sub" id="cfs-sub"></div>`;
   const controls = r.phase === "end" ? `<div class="cfs-end"><div class="cfs-endc">${rouEnd()}</div></div>` : bl ? bluffControls(r, me, mine) : rv ? revControls(r, me, mine) : rouControls(r, me, mine);
@@ -161,7 +165,7 @@ function cellarFs(r) {
     <div class="stage fs ${rv ? "rev" : ""}" id="stage"><div class="stage-msg" id="stage-msg"></div><div class="stage-loading" id="stage-loading">завантаження підвалу…</div></div>
     <div class="cfs-top">
       <div class="cfs-btns"><button data-a="leave" title="Вийти">🚪</button><button data-a="rou-sound">${S.sound === false ? "🔇" : "🔊"}</button>${r.players.length > 1 ? `<button data-a="chat">💬<span id="chat-badge"></span></button>` : ""}<button data-a="rou-rot" title="Повернути екран">⟲</button></div>
-      <div class="cfs-mid">${rank}${tag}${timer}</div>${hp}
+      <div class="cfs-mid">${rank}${tag}${timer}</div>${hp || foesHtml ? `<div class="cfs-side">${hp}${foesHtml}</div>` : ""}
     </div>
     ${sub}${controls}
   </div>`;

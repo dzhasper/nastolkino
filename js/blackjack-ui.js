@@ -18,8 +18,8 @@ function viewBlackjackMenu() {
     <div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>Блекджек</h1>
       <div class="muted small">Гравці проти гравців · ${Blackjack.MIN_PLAYERS}–${Blackjack.MAX_PLAYERS} за столом</div></div>${coinPill()}</div>
     <div class="card bj-rules">
-      <p>Кожен отримує дві карти: <b>перша закрита</b> від суперників, решта відкриті. По черзі: <b>«Ще»</b> — узяти карту, <b>«Досить»</b> — зупинитися, <b>«Подвоїти»</b> — подвоїти ставку й узяти рівно одну карту.</p>
-      <p>Більше 21 — перебір. <b>Найближчий до 21 забирає банк</b>. Блекджек (туз + десятка з перших двох карт) сильніший за будь-які інші 21. Нічия — банк ділиться. Усі перебрали — ставки повертаються.</p>
+      <p>Кожен отримує дві карти: <b>перша закрита</b> від суперників, решта відкриті. Ходимо <b>по колу, по одній дії</b>: <b>«Ще»</b> — узяти карту, <b>«Пас»</b> — не брати, <b>«Подвоїти»</b> (лише першим ходом) — подвоїти ставку й узяти рівно одну карту. <b>Карти відкриваються, коли всі гравці підряд сказали «Пас»</b>; хтось узяв карту — пасуємо заново.</p>
+      <p>Більше 21 — перебір, але про нього знаєш лише ти: тисни «Пас», як усі. <b>Найближчий до 21 забирає банк</b>. Блекджек (туз + десятка з перших двох карт) сильніший за будь-які інші 21. Нічия — банк ділиться. Усі перебрали — ставки повертаються.</p>
       <p>Хост обирає: <b>на інтерес</b> або <b>на монети</b>. На монетах ставлять усі однаково.</p>
     </div>
     <div class="card bj-fair">🔒 <b>Чесна роздача.</b> Перед кожною роздачею нова колода з 52 карт. Хост заздалегідь «запечатує» її відбитком (SHA-256), кожен телефон додає свою випадковість, а після розкриття твій телефон сам перевіряє, що жодну карту не підмінили.</div>
@@ -50,7 +50,7 @@ function bjLobby() {
 
 function bjSeat(p) {
   const r = S.room, win = r.results && r.results.winners.includes(p.id), turn = r.turn === p.id;
-  const tag = p.blackjack ? "БЛЕКДЖЕК" : p.bust ? "ПЕРЕБІР" : p.folded ? "СКИДАННЯ" : p.doubled ? "×2" : r.phase === "play" && p.done ? "ДОСИТЬ" : "";
+  const tag = p.blackjack ? "БЛЕКДЖЕК" : p.bust ? "ПЕРЕБІР" : p.folded ? "СКИДАННЯ" : p.doubled ? "×2" : r.phase === "play" && p.stood ? "ПАС" : "";
   const pay = r.phase === "show" && r.results ? r.results.payout[p.id] : null;
   return `<div class="bj-seat ${turn ? "turn" : ""} ${win ? "win" : ""} ${p.bust ? "bust" : ""} ${p.id === S.me ? "me" : ""}">
     <div class="bj-who">${av(p, "sm")}<div class="grow"><b>${p.id === S.me ? "Ви" : nm(p)}</b>
@@ -74,10 +74,11 @@ function bjTable() {
     const mine = r.turn === S.me, myp = r.players.find((p) => p.id === S.me);
     if (mine) {
       const canDouble = myp.cards.length === 2 && (!s.stake || (S.profile.coins || 0) >= s.stake);
-      actions = `<div class="your-turn bj">ТВІЙ ХІД · ${myp.score} оч.</div>
-        <div class="bj-act3"><button class="btn" data-a="bj-act" data-v="hit">Ще</button><button class="btn ghost" data-a="bj-act" data-v="stand">Досить</button>
+      actions = `<div class="your-turn bj">ТВІЙ ХІД · ${myp.score} оч.${myp.bust ? " · перебір" : ""}</div>${myp.bust ? `<div class="small muted center">Про перебір знаєш лише ти — тисни «Пас»</div>` : ""}
+        <div class="bj-act3"><button class="btn" data-a="bj-act" data-v="hit" ${myp.bust ? "disabled" : ""}>Ще</button><button class="btn ghost" data-a="bj-act" data-v="stand">Пас</button>
         <button class="btn gold" data-a="bj-act" data-v="double" ${canDouble ? "" : "disabled"}>Подвоїти${s.stake ? ` · ${s.stake}` : ""}</button></div>`;
-    } else actions = `<div class="card center">Ходить <b>${esc(turnP ? turnP.name : "")}</b>${myp && myp.playing ? `<div class="small muted mt">У тебе ${myp.score} оч.</div>` : ""}</div>`;
+    } else actions = `<div class="card center">Ходить <b>${esc(turnP ? turnP.name : "")}</b>${myp && myp.playing ? `<div class="small muted mt">У тебе ${myp.score} оч.${myp.bust ? " · перебір" : ""}</div>` : ""}</div>`;
+    actions += `<div class="small muted center mt bj-passes">Пас поспіль: <b>${r.passes || 0}</b> з ${r.need || 0} · карти відкриються, коли всі підряд скажуть «Пас». Узяв карту — рахунок пасів з нуля</div>`;
   } else if (r.phase === "show") {
     const res = r.results, v = bjVerify(r);
     actions = `<div class="card center bj-result">${res.winners.length ? `🏆 <b>${res.winners.map((id) => esc((r.players.find((p) => p.id === id) || {}).name || "?")).join(", ")}</b> ${res.winners.length > 1 ? "ділять" : "забирає"} банк${r.pot ? ` ${chip(r.pot)}` : ""}` : "Усі перебрали — ставки повернулися"}
