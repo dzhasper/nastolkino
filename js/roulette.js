@@ -271,15 +271,17 @@
         else { this.hp[hit] = Math.max(0, this.hp[hit] - dmg); this.wounds[hit] = (this.wounds[hit] || 0) + dmg; }
       }
       const self = target === pid, out = live && !absorbed && this.hp[hit] === 0;
-      if (out) this.deaths[hit] = Math.random() < .5 ? "table" : "head";          // как падает: лицом в стол или назад с простреленной головой
+      // как умирает от дроби: лицом в стол, голову сносит, отбрасывает назад, разворачивает и роняет, отрывает руку
+      if (out) this.deaths[hit] = pick(["table", "head", "flyback", "spin", "limb"]);
+      const wait = +((self ? .9 + Math.random() * 1.9 : .5 + Math.random() * 1.4)).toFixed(2);   // палец на спуске: заминка, одна на всех
       const who = this.name(pid), tn = this.name(target);
       const text = !live ? (self ? `${who} стреляет в себя… щёлк. Холостой — ещё один ход` : `${who} стреляет в ${tn}… щёлк. Холостой`)
         : dice ? `${who} стреляет в ${tn} — два зеркала! Пуля мечется по столу, кубики решили: ${this.name(hit)}${absorbed ? ", но жилет спасает" : out ? " — и он(а) падает" : ""}`
         : redirected ? `${who} стреляет в ${tn} — зеркальце! Пуля уходит в самого стрелка${absorbed ? ", но жилет спасает" : ""}`
         : absorbed ? `${who} стреляет в ${self ? "себя" : tn} — БАХ! Жилет принял удар`
         : `${who} стреляет в ${self ? "себя" : tn}${dmg > 1 ? " из обреза" : ""} — БАХ! ${this.hp[hit] > 0 ? (dmg > 1 ? "Минус два сердца" : "Минус сердце") : `${this.name(hit)} падает со стула`}`;
-      this.event({ kind: "shot", who: pid, target, hit, live, redirected, absorbed, self, dmg, out, death: out ? this.deaths[hit] : null, dice, text });
-      this.afterShot(pid, !live && self, dice ? DICE_PAUSE : SHOT_PAUSE);
+      this.event({ kind: "shot", who: pid, target, hit, live, redirected, absorbed, self, dmg, out, death: out ? this.deaths[hit] : null, dice, wait, text });
+      this.afterShot(pid, !live && self, (dice ? DICE_PAUSE : SHOT_PAUSE) + wait);
     }
 
     afterShot(pid, again, pause = SHOT_PAUSE) {

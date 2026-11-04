@@ -52,6 +52,8 @@ const Sfx = (() => {
     revBang: () => { noise(.7, 2600, 1.2, 3.4); tone(110, .35, .9, "sine", .35); },
     cylSpin: () => { for (let i = 0; i < 14; i++) setTimeout(() => tone(1400 - i * 40, .015, .1, "square"), i * 45 + i * i * 2); },
     dice: () => { for (let i = 0; i < 16; i++) setTimeout(() => tone(600 + Math.random() * 900, .02, .08, "square"), i * 100 + Math.random() * 40); },
+    heart: (loud) => { tone(56, .14, loud ? 1 : .5, "sine", .7); setTimeout(() => tone(48, .17, loud ? .85 : .42, "sine", .7), 150); },
+    breath: () => noise(1.1, 700, .12, 1.4),
     card: () => { noise(.05, 5000, .25, 3); setTimeout(() => noise(.04, 3500, .18, 3), 60); },
     shuffle: () => { for (let i = 0; i < 12; i++) setTimeout(() => noise(.03, 4200 + Math.random() * 1500, .16, 3), i * 45 + Math.random() * 20); },
     liar: () => { tone(180, .25, .5, "square", .6); setTimeout(() => tone(120, .35, .5, "square", .5), 160); },
@@ -72,19 +74,22 @@ const modeOf = (r) => (isBluff(r) ? "bluff" : isRev(r) ? "revolver" : "roulette"
 const CONTROLS = `<p>🎮 <b>Управление — от первого лица.</b> Во время партии экран сам переходит в горизонтальный вид — поверни телефон. Нажми на соперника — ствол повернётся на него, «Выстрел» — нажать на спуск, «В себя» — навести ствол на себя. Пальцем влево-вправо — оглядеться.</p>`;
 function rouRulesHtml(mode) {
   if (mode === "bluff") return `
-    <p>Колода: <b>6 королей, 6 дам, 6 тузов и 2 джокера</b>. Каждому раздают по ${Bluff.HAND} карт. Над столом висит карта — <b>что требует стол</b>: короли, дамы или тузы.</p>
+    <p>Колода: <b>6 королей, 6 дам, 6 тузов и 2 джокера</b>. Каждому раздают по ${Bluff.HAND} карт. В начале раздачи над столом появляется карта — <b>что требует стол</b>: короли, дамы или тузы. Она делает один оборот и исчезает (что требует стол — написано вверху экрана).</p>
     <p>В свой ход кладёшь рубашкой вверх <b>1–3 карты</b> и говоришь, что это то, что требует стол. <b>Джокер</b> подходит за что угодно. Можно и соврать.</p>
     <p>Следующий решает: поверить и положить свои — или сказать <b>«Не верю!»</b>. Карты вскрывают: соврал — стреляет лжец, сказал правду — стреляет тот, кто не поверил.</p>
-    <p>🔫 <b>У каждого свой револьвер</b>: шесть гнёзд, один патрон, где он — не знает никто. Барабан не крутят — каждый щелчок приближает патрон. Сколько раз ты уже нажимал(а) на спуск — помни сам(а).</p>
+    <p>🔫 <b>У каждого свой револьвер</b>: шесть гнёзд, один патрон, где он — не знает никто. Барабан не крутят — каждый щелчок приближает патрон. Сколько раз ты уже нажимал(а) на спуск — помни сам(а). Проигравший подносит револьвер к виску, рука дрожит — и случайная заминка перед выстрелом.</p>
+    <p>🃏 <b>Джокер</b> — фиолетовая карта со звездой: подходит за любую. При вскрытии видно, чьи карты открыли, и под каждой картой — что это.</p>
     <p>Кончились карты — тебя пропускают. Остались карты только у одного — следующий обязан сказать «Не верю!». После выстрела — новая раздача и новая карта стола.</p>
     <p>🪙 На монеты: каждый ставит одинаково, последний живой забирает весь банк.</p>
     <p>🎮 Свои карты — внизу экрана: нажми на 1–3 карты и «Положить». Или «Не верю!», если не веришь тому, кто положил перед тобой.</p>`;
   if (mode === "revolver") return `
     <p>Револьвер на ${Revolver.CHAMBERS} гнёзд, патрон один, где он — не знает никто. Ходят по кругу. Никаких подсказок и счётчиков — только револьвер и нервы.</p>
     <p>В свой ход выбираешь цель — <b>себя или любого за столом</b> — и жмёшь на спуск. Выстрелило — минус сердце (обычно оно одно), барабан перезаряжается.</p>
-    <p>🎖 <b>Храбрец.</b> Выстрелил(а) в себя и выжил(а) — берёшь со стола фишку храбреца, и до твоего следующего хода в тебя целиться нельзя.</p>
+    <p>🎖 <b>Храбрец.</b> Выстрелил(а) в себя и выжил(а) — до твоего следующего хода в тебя целиться нельзя.</p>
     <p>🔄 Раз за зарядку можно <b>крутануть барабан</b> — нажми на револьвер у себя в руке.</p>
-    <p>🪙 <b>Деньги.</b> Каждый ставит одинаково. Выбил соперника — <b>забираешь все его фишки</b>. Погиб от своей руки — твои фишки остаются на столе и уходят победителю. В конце <b>половина банка делится по фишкам</b> (даже выбывшим — за их фишки), вторая половина — последнему за столом. Ни у кого нет фишек — весь банк победителю. Играете на интерес — за каждую фишку +${Revolver.CHIP_COIN} 🪙 (до ${Revolver.CHIP_COIN_MAX} за партию, если за столом нет ботов).</p>
+    <p>🪙 <b>Банк.</b> Каждый ставит одинаково — сколько в банке, показывают в начале партии. Весь банк забирает последний за столом.</p>
+    <p>🎯 <b>Награда за голову</b> (только когда за столом одни живые игроки, без ботов): выбил соперника — над тобой появляется <b>+${Revolver.BOUNTY} 🪙</b> и всё, что было над ним. Выбил двоих — над тобой уже 🪙100 и больше. Победил — забираешь банк и свою награду. Выбили тебя — твою награду забирает стрелок (и получает ещё ${Revolver.BOUNTY} сверху). Погиб от своей руки — награда сгорает.</p>
+    <p>😰 Перед выстрелом палец замирает на спуске — случайная заминка, сердце колотится. Пуля не сносит голову: человек валится вбок, оседает на стол, сползает со стула или падает назад.</p>
     ${CONTROLS}`;
   const it = Object.values(RI());
   return `
@@ -107,8 +112,8 @@ function viewRouletteMenu() {
         <button class="btn" data-a="rou-create" data-v="roulette">Сесть за стол</button>
       </div>
       <div class="card bm-mode revolver">
-        <div class="bm-head"><div class="bm-ico">🔫</div><div class="grow"><b>Русская рулетка</b><div class="tiny muted">револьвер · ${Revolver.MIN_PLAYERS}–${Revolver.MAX_PLAYERS} игроков · фишки храбреца</div></div></div>
-        <p class="small">В барабане на ${Revolver.CHAMBERS} гнёзд — один патрон. Стреляешь в себя — берёшь фишку храбреца, выбиваешь соперника — забираешь его фишки. Банк делится по фишкам и победителю.</p>
+        <div class="bm-head"><div class="bm-ico">🔫</div><div class="grow"><b>Русская рулетка</b><div class="tiny muted">револьвер · ${Revolver.MIN_PLAYERS}–${Revolver.MAX_PLAYERS} игроков · награда за голову</div></div></div>
+        <p class="small">В барабане на ${Revolver.CHAMBERS} гнёзд — один патрон. Последний за столом забирает банк. За каждого выбитого над тобой растёт награда за голову — выбьют тебя, её заберёт стрелок.</p>
         <button class="btn" data-a="rou-create" data-v="revolver">Сесть за стол</button>
       </div>
       <div class="card bm-mode bluff">
@@ -146,9 +151,9 @@ function cellarFs(r) {
   const me = rouMe(), seated = !!me && r.seats.includes(S.me), bl = isBluff(r), rv = isRev(r);
   const mine = seated && me.alive && r.turn === S.me && r.phase === "play" && !BQ.busy;
   const turnP = r.players.find((p) => p.id === r.turn) || {};
-  const tag = ["play", "shot"].includes(r.phase) ? `<div class="cfs-turn ${r.turn === S.me ? "me" : ""}">${r.turn === S.me ? "ТВОЙ ХОД" : "ХОДИТ: " + esc(turnP.name || "").toUpperCase()}</div>` : "";
+  const tag = ["play", "shot"].includes(r.phase) && !BQ.busy ? `<div class="cfs-turn ${r.turn === S.me ? "me" : ""}">${r.turn === S.me ? "ТВОЙ ХОД" : "ХОДИТ: " + esc(turnP.name || "").toUpperCase()}</div>` : "";
   const timer = r.deadline && ["play", "load"].includes(r.phase) ? `<div class="cfs-timer" id="timer" data-total="${r.total}"><span id="timer-num">${fmtTime(remaining())}</span></div>` : "";
-  const hp = seated && !bl && r.maxHp > 1 && me.alive ? `<div class="cfs-hp">${hearts(me.hp, r.maxHp)}</div>` : "";
+  const hp = seated && me.alive && ((!bl && r.maxHp > 1) || (rv && me.bounty)) ? `<div class="cfs-hp">${rv && me.bounty ? `<span class="cfs-bounty">🎯 🪙${me.bounty}</span>` : ""}${!bl && r.maxHp > 1 ? hearts(me.hp, r.maxHp) : ""}</div>` : "";
   const rank = bl && r.table && r.table.rank ? `<div class="cfs-rank">СТОЛ: <b>${Bluff.RANKS[r.table.rank].many.toUpperCase()}</b></div>` : "";
   const sub = S.rouSub && Date.now() - S.rouSub.at < 5200 ? `<div class="cfs-sub show" id="cfs-sub" style="animation-delay:-${((Date.now() - S.rouSub.at) / 1000).toFixed(2)}s">${esc(S.rouSub.text)}</div>` : `<div class="cfs-sub" id="cfs-sub"></div>`;
   const controls = r.phase === "end" ? `<div class="cfs-end"><div class="cfs-endc">${rouEnd()}</div></div>` : bl ? bluffControls(r, me, mine) : rv ? revControls(r, me, mine) : rouControls(r, me, mine);
@@ -196,14 +201,17 @@ function revControls(r, me, mine) {
   return fireBtns(r);
 }
 // «Верю — не верю»: свои карты внизу, «Положить» и «Не верю!»
-const CARD_HTML = { K: ["К", "♚"], Q: ["Д", "♛"], A: ["Т", "♠"], J: ["Дж", "★"] };
+const CARD_HTML = { K: ["К", "♚"], Q: ["Д", "♛"], A: ["Т", "♠"], J: ["★", "🃏"] };
+const CARD_NAME = { K: "король", Q: "дама", A: "туз", J: "джокер" };
+// карта в руке и при вскрытии; у джокера — своя фиолетовая рубашка и подпись, чтобы не спутать с дамой
+const cardInner = (c) => `<b>${CARD_HTML[c][0]}</b><i>${CARD_HTML[c][1]}</i><b class="br">${CARD_HTML[c][0]}</b>${c === "J" ? "<em>ДЖОКЕР</em>" : ""}`;
 function bluffControls(r, me, mine) {
   const w = cfsWatch(me); if (w) return w;
   const hand = r.hand || [], sel = (S.bluffSel || []).filter((i) => i < hand.length), n = hand.length;
   const canPlay = mine && n > 0 && !r.must_call;
   const cards = hand.map((c, i) => {
     const k = i - (n - 1) / 2, on = sel.includes(i);
-    return `<button class="bcard r-${c} ${on ? "on" : ""}" ${canPlay ? `data-a="bluff-pick" data-v="${i}"` : "disabled"} style="transform:translateY(${Math.abs(k) * 5 - (on ? 26 : 0)}px) rotate(${k * 6}deg)"><b>${CARD_HTML[c][0]}</b><i>${CARD_HTML[c][1]}</i><b class="br">${CARD_HTML[c][0]}</b></button>`;
+    return `<button class="bcard r-${c} ${on ? "on" : ""}" ${canPlay ? `data-a="bluff-pick" data-v="${i}"` : "disabled"} style="transform:translateY(${Math.abs(k) * 5 - (on ? 26 : 0)}px) rotate(${k * 6}deg)">${cardInner(c)}</button>`;
   }).join("");
   const note = mine && r.must_call ? `<div class="cfs-note hot up">Карт нет — остаётся только «Не верю!»</div>` : "";
   return `${note}<div class="cfs-hand ${canPlay ? "live" : ""}">${cards}</div>
@@ -236,7 +244,7 @@ function rouLobby() {
     : `❤️ Сердец: <b>${s.hp}</b> · ⏱ Ход: <b>${s.turnTime} с</b> · 🎒 Предметов за зарядку: <b>${s.items}</b> (не больше ${Roulette.MAX_ITEMS})`;
   return lobbyBento({ kicker: "Подвал", title, codeLabel: "Код двери", countLabel: "Мест", seats: "За столом", max: M.MAX_PLAYERS,
     settings: "rou-settings", scene: "cellar", rulesLabel: "Правила стола",
-    rules: `<div class="small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, банк ${s.stake * Math.min(r.players.length, M.MAX_PLAYERS)}${mode === "revolver" ? " — половина по фишкам храбреца" : ", выживший забирает всё"}<br>` : "🎲 На интерес<br>"}${line}</div>
+    rules: `<div class="small">${s.stake ? `🪙 <b>На монеты: ставка ${s.stake}</b>, банк ${s.stake * Math.min(r.players.length, M.MAX_PLAYERS)}${mode === "revolver"  ? ", последний забирает всё + 🎯 награда за головы" : ", выживший забирает всё"}<br>` : "🎲 На интерес<br>"}${line}</div>
       <button class="btn ghost small mt" data-a="rou-rules">📖 Как играть</button>`,
     enough, start: "Закрыть дверь и начать", waitText: `Ждём игроков (минимум ${M.MIN_PLAYERS})`, hostWait: "Ждём, когда хост закроет дверь…" });
 }
@@ -244,10 +252,8 @@ function rouLobby() {
 function rouEnd() {
   const r = S.room, w = r.players.find((p) => p.id === r.winner);
   const rw = S.reward && S.reward.key === store.lastGame ? S.reward.sum : 0;
-  const share = r.payout ? r.payout[S.me] || 0 : 0, me = rouMe();
   return `<div class="win rou-win"><div class="kicker">${r.winner === S.me ? "ТЫ ВЫБРАЛСЯ(ЛАСЬ) ИЗ ПОДВАЛА" : "ДВЕРЬ ОТКРЫЛАСЬ"}</div>
-      ${w ? `<div class="mt">${av(w, "big")}</div><h2>${nm(w)}</h2><p>последний(яя) за столом${w.stakes ? ` · ставок: ${w.stakes}` : ""}${isRev(r) && w.chips ? ` · фишек: ${w.chips}` : ""}</p>` : "<h2>Никто</h2>"}
-      ${isRev(r) && me && me.chips && r.winner !== S.me ? `<p class="small">🎖 Твои фишки храбреца: ${me.chips}${share ? ` — доля банка 🪙 ${share}` : ""}</p>` : ""}
+      ${w ? `<div class="mt">${av(w, "big")}</div><h2>${nm(w)}</h2><p>последний(яя) за столом${w.stakes ? ` · ставок: ${w.stakes}` : ""}${r.pot ? ` · банк 🪙${r.pot}` : ""}${isRev(r) && w.bounty ? ` · 🎯 награда 🪙${w.bounty}` : ""}</p>` : "<h2>Никто</h2>"}
       ${rw ? `<div class="reward-coins">${PX() ? Pixel.sprite("coin", 3) : "🪙"} +${rw} монет</div>` : ""}</div>
     <div class="row mt">${isHost() ? `<button class="btn grow" data-a="again">🔁 Ещё партия</button>` : `<div class="card center grow muted small">Хост может начать новую партию</div>`}
     <button class="btn ghost grow" data-a="leave">Наверх</button></div>`;
@@ -262,7 +268,7 @@ function rouSettingsSheet() {
     ${mode === "roulette" ? `<div class="section-title">Предметов за каждую зарядку</div>${opt("items", Roulette.ITEM_OPTIONS, (v) => (v ? v : "без предметов"))}<div class="tiny muted">Больше ${Roulette.MAX_ITEMS} предметов на руках не бывает</div>` : ""}
     <div class="section-title">Ставка (монеты, которые ты нафармил)</div>${opt("stake", M.STAKES, (v) => (v ? `🪙 ${v}` : "на интерес"))}
     ${stakeOwnRow(s.stake, M.STAKE_MAX, M.STAKES)}
-    <div class="small muted mt">${mode === "revolver" ? "Каждый ставит одинаково. Половина банка делится по фишкам храбреца, остальное — последнему за столом." : "Каждый за столом ставит одинаково. Выживший забирает весь банк."}</div>`;
+    <div class="small muted mt">Каждый за столом ставит одинаково. Последний за столом забирает весь банк.${mode === "revolver" ? ` С живыми игроками ещё и награда за голову: +${Revolver.BOUNTY} 🪙 за каждого выбитого.` : ""}</div>`;
 }
 
 // своя сумма ставки — больше, чем на кнопках (общая для подвала и блэкджека)
@@ -351,13 +357,28 @@ function rouEvents() {
   const gameKey = bqKey(r);
   if (S.rouGame !== gameKey) {                                          // новая партия — чистый стол, без старых анимаций
     S.rouGame = gameKey; S.rouSeen = top; S.rouItem = null; S.rouSteal = null; S.rouInspect = null; S.rouView = null;
-    Cellar.reset(); Cellar.setView(null); Cellar.sync(r, S.me); return;
+    Cellar.reset(); Cellar.setView(null); Cellar.sync(r, S.me);
+    if (r.phase !== "lobby" && evs.length && evs[0].kind === "start" && evs.length <= 4) evs.forEach((e) => rouPlay1(e, r));   // только что началась: банк, раздача, карта стола
+    return;
   }
   evs.filter((e) => e.n > (S.rouSeen || 0)).forEach((e) => rouPlay1(e, r));
   S.rouSeen = Math.max(S.rouSeen || 0, top);
 }
 
 // одно событие: 3D-анимация, звук и надпись — звук выстрела ровно в момент удара
+// заминка перед выстрелом: сердце бьётся всё чаще, у того, кто стреляет или под прицелом, — громко и с вибрацией
+const RH = { timers: [] };
+function rouHeart(e, tm) {
+  const w = e.wait || 0; if (!w) return;
+  RH.timers.forEach(clearTimeout); RH.timers = [];
+  const mine = e.who === S.me || e.target === S.me, end = tm.when - .12;
+  let at = Math.max(0, tm.when - w), gap = .82;
+  RH.timers.push(setTimeout(() => Sfx.breath(), at * 1000));
+  while (at < end) {
+    RH.timers.push(setTimeout(() => { Sfx.heart(mine); if (mine) haptic("light"); }, at * 1000));
+    at += gap; gap = Math.max(.36, gap * .86);
+  }
+}
 function rouSub(text) {
   S.rouSub = { text, at: Date.now() };
   const el = document.getElementById("cfs-sub"); if (!el) return;
@@ -369,8 +390,10 @@ function rouPlay1(e, r) {
   if (e.text && !rouSecret(e) && e.kind !== "load") setTimeout(() => rouSub(e.text), e.kind === "shot" ? tm.when * 1000 : e.kind === "call" ? 2300 : 0);
   if (isBluff(r)) return bluffPlay1(e, r, tm);
   const msg = (cls, text) => { const m = document.getElementById("stage-msg"); if (m) { m.className = "stage-msg show " + cls; m.textContent = text; } };
+  if (e.kind === "start") setTimeout(() => rouPotIntro(r), 300);
   if (e.kind === "shot") {
-    if (e.dice) setTimeout(() => rouDice(e, r), 1050);
+    rouHeart(e, tm);
+    if (e.dice) setTimeout(() => rouDice(e, r), 1050 + (e.wait || 0) * 1000);
     if (rv && e.self) setTimeout(() => Sfx.cock(), 250);
     setTimeout(() => {
       const meHit = e.live && e.hit === S.me && !e.absorbed;
@@ -396,8 +419,10 @@ function bluffPlay1(e, r, tm) {
   if (e.kind === "deal") { Sfx.shuffle(); msg("load", Bluff.RANKS[e.rank].many.toUpperCase()); }
   else if (e.kind === "play") Sfx.card();
   else if (e.kind === "call") { Sfx.liar(); msg("bang", "НЕ ВЕРЮ!"); haptic("heavy"); setTimeout(() => bluffReveal(e, r), 750); }
+  else if (e.kind === "start") setTimeout(() => rouPotIntro(r), 300);
   else if (e.kind === "shot") {
-    setTimeout(() => Sfx.cock(), 300);
+    rouHeart(e, tm);
+    setTimeout(() => Sfx.cock(), 900);
     setTimeout(() => {
       if (e.live && e.hit === S.me) rouHurt(e);
       else if (e.live) { Sfx.revBang(); notify("warning"); try { tg && tg.HapticFeedback.impactOccurred("heavy"); } catch (x) { /* нет */ } }
@@ -407,18 +432,36 @@ function bluffPlay1(e, r, tm) {
     }, tm.when * 1000);
   } else if (e.kind === "win") Sfx.thud();
 }
-// вскрытие: крупно карты и приговор
-function bluffReveal(e, r) {
-  const nm = (id) => (id === S.me ? "ты" : ((r.players.find((p) => p.id === id) || {}).name || "?"));
+// начало партии: сколько в банке и за что капают монеты
+function rouPotIntro(r) {
+  const bounty = isRev(r) && r.bounty_on;
+  if (!r.pot && !bounty) return;
   const old = document.getElementById("rou-reveal"); if (old) old.remove();
-  const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal bluff " + (e.truth ? "blank" : "live");
-  d.innerHTML = `<div class="rr-card"><div class="rr-small">${esc(nm(e.target))} сказал(а): «${esc(Bluff.claimText(e.cards.length, e.rank))}»</div>
-    <div class="bl-cards">${e.cards.map((c, i) => `<span class="bcard r-${c} ${c === e.rank || c === "J" ? "ok" : "bad"}" style="--i:${i}"><b>${CARD_HTML[c][0]}</b><i>${CARD_HTML[c][1]}</i><b class="br">${CARD_HTML[c][0]}</b></span>`).join("")}</div>
-    <div class="rr-big">${e.truth ? "ПРАВДА" : "ВРАНЬЁ!"}</div><div class="rr-small">Стреляет в себя: <b>${esc(nm(e.loser))}</b></div></div>`;
+  const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal pot";
+  d.innerHTML = `<div class="rr-card">${r.pot ? `<div class="rr-small">БАНК ПАРТИИ</div><div class="rr-big">🪙 ${r.pot}</div><div class="rr-small">заберёт последний за столом</div>` : `<div class="rr-big">🎯 Награда за голову</div>`}
+    ${bounty ? `<div class="rr-small mt">🎯 За каждого выбитого — <b>+${Revolver.BOUNTY} 🪙 над головой</b>. Выбьют тебя — всё, что над тобой, заберёт стрелок. Победишь — заберёшь банк и свою награду.</div>` : ""}</div>`;
   d.onclick = () => d.remove();
   document.body.appendChild(d);
-  setTimeout(() => d.classList.add("fade"), 2000);
-  setTimeout(() => d.remove(), 2500);
+  setTimeout(() => d.classList.add("fade"), 3600);
+  setTimeout(() => d.remove(), 4100);
+}
+
+// вскрытие: чьи карты, что он сказал, каждая карта с подписью и почему правда или враньё
+function bluffReveal(e, r) {
+  const nm = (id) => (id === S.me ? "ты" : ((r.players.find((p) => p.id === id) || {}).name || "?"));
+  const many = Bluff.RANKS[e.rank].many.toLowerCase(), bad = e.cards.filter((c) => c !== e.rank && c !== "J");
+  const why = e.truth ? (e.cards.includes("J") ? `все карты — ${many} (джокер подходит за любую)` : `все карты — ${many}`)
+    : `${bad.map((c) => CARD_NAME[c]).join(", ")} — не ${Bluff.RANKS[e.rank].forms[0]}`;
+  const old = document.getElementById("rou-reveal"); if (old) old.remove();
+  const d = document.createElement("div"); d.id = "rou-reveal"; d.className = "rou-reveal bluff " + (e.truth ? "blank" : "live");
+  d.innerHTML = `<div class="rr-card"><div class="rr-small">${esc(nm(e.who))} не поверил(а). Вскрываем карты: <b>${esc(nm(e.target))}</b></div>
+    <div class="rr-small">сказал(а): «${esc(Bluff.claimText(e.cards.length, e.rank))}»</div>
+    <div class="bl-cards">${e.cards.map((c, i) => `<div class="bl-c" style="--i:${i}"><span class="bcard r-${c} ${c === e.rank || c === "J" ? "ok" : "bad"}">${cardInner(c)}</span><small>${CARD_NAME[c]}</small></div>`).join("")}</div>
+    <div class="rr-big">${e.truth ? "ПРАВДА" : "ВРАНЬЁ!"}</div><div class="rr-small">${esc(why)}</div><div class="rr-small">Стреляет в себя: <b>${esc(nm(e.loser))}</b></div></div>`;
+  d.onclick = () => d.remove();
+  document.body.appendChild(d);
+  setTimeout(() => d.classList.add("fade"), 2300);
+  setTimeout(() => d.remove(), 2800);
 }
 
 // два зеркала: пуля мечется по столу, а у каждого (кроме стрелка) катится кубик 1–50
@@ -549,10 +592,10 @@ function recordRoulette(room) {
   const won = room.winner === S.me;
   if (won) store.wins = (store.wins || 0) + 1;
   let sum = gameReward(room, won, me.alive);
-  const share = room.payout ? room.payout[S.me] || 0 : won ? room.pot || 0 : 0;   // банк: выжившему, в «Русской рулетке» — ещё и по фишкам храбреца
+  const share = room.payout ? room.payout[S.me] || 0 : won ? room.pot || 0 : 0;   // банк — выжившему
   if (share) { if (Api.table(room)) [4000, 9000].forEach((ms) => setTimeout(() => Api.coins().then(() => render()).catch(() => {}), ms)); else store.coins += share; sum += share; }   // с сервера — переводом из банка стола
   if (won && me.stakes) { store.coins += me.stakes * 15; sum += me.stakes * 15; }
-  if (isRev(room) && !room.stake && me.chips && !botCount(room)) { const add = Math.min(Revolver.CHIP_COIN_MAX, me.chips * Revolver.CHIP_COIN); store.coins += add; sum += add; }   // на интерес — немного за храбрость
+  if (isRev(room) && won && room.bounty_on && me.bounty) { store.coins += me.bounty; sum += me.bounty; }   // награда за голову — победителю (только с живыми игроками)
   store.lastGame = key; S.reward = { key, sum };
   saveProfile(); syncProfile();
 }

@@ -11,7 +11,7 @@
   const { GameError } = Engine;
 
   const MIN_PLAYERS = 2, MAX_PLAYERS = 4, HAND = 5, MAX_PLAY = 3, CHAMBERS = 6, CHAT_LIMIT = 80, CHAR_N = 10;
-  const DEAL_PAUSE = 2.4, CALL_PAUSE = 6.0, LIVE_EXTRA = 1.4;
+  const DEAL_PAUSE = 3.6, CALL_PAUSE = 6.0, LIVE_EXTRA = 1.4;   // раздача: карта стола показывается и делает один оборот
   const TURN_TIMES = [15, 20, 30, 45], STAKES = [0, 10, 25, 50, 100, 250, 500, 1000], STAKE_MAX = 10000;
   const okStake = (v) => Number.isInteger(v) && v >= 0 && v <= STAKE_MAX;
   const RANKS = {
@@ -190,11 +190,12 @@
         text: `${this.name(pid)}: «Не верю!» Вскрываем: ${L.cards.map((c) => RANKS[c].name.toLowerCase()).join(", ")} — ${truth ? `правда. Стреляет ${this.name(pid)}` : `${this.name(L.by)} соврал(а) и стреляет`}` });
       const g = this.guns[loser], live = g.pos === 0;
       g.pulls += 1; if (!live) g.pos -= 1;
-      if (live) { this.hp[loser] = 0; this.deaths[loser] = "head"; this.hands[loser] = []; }
-      this.event({ kind: "shot", who: loser, target: loser, hit: live ? loser : null, self: true, live, out: live, pulls: g.pulls, death: live ? "head" : null,
+      const wait = +(1.2 + Math.random() * 2.4).toFixed(2);              // рука дрожит у виска — заминка, одна на всех
+      if (live) { this.hp[loser] = 0; this.deaths[loser] = pick(["temple", "slump", "side"]); this.hands[loser] = []; }
+      this.event({ kind: "shot", who: loser, target: loser, hit: live ? loser : null, self: true, live, out: live, pulls: g.pulls, death: live ? this.deaths[loser] : null, wait,
         text: live ? `${this.name(loser)} приставляет револьвер к виску — БАХ!` : `${this.name(loser)} приставляет револьвер к виску… щёлк. Повезло` });
       this.last = null; this.phase = "reveal"; this.pending = { first: loser };
-      this.setTimer(CALL_PAUSE + (live ? LIVE_EXTRA : 0)); this.touch();
+      this.setTimer(CALL_PAUSE + wait + (live ? LIVE_EXTRA : 0)); this.touch();
     }
 
     checkWin() {

@@ -100,8 +100,8 @@ const Cellar = (() => {
       g.fillStyle = "#9a1a1e"; for (let y = 3; y < 40; y += 4) for (let x = 3 + ((y >> 2) % 2) * 2; x < 28; x += 4) g.fillRect(x, y, 2, 2);
       g.fillStyle = "#e0b040"; g.fillRect(13, 17, 4, 8); g.fillRect(11, 19, 8, 4);
     } else {
-      const red = rank === "Q" || rank === "J", ink = red ? "#b0101a" : "#141014";
-      g.fillStyle = "#f0e6cc"; g.fillRect(0, 0, 30, 42);
+      const red = rank === "Q", ink = rank === "J" ? "#ffd23f" : red ? "#b0101a" : "#141014";   // джокер — фиолетовый с золотом, не спутать с дамой
+      g.fillStyle = rank === "J" ? "#3a1466" : "#f0e6cc"; g.fillRect(0, 0, 30, 42);
       g.fillStyle = "#c8b890"; g.fillRect(0, 0, 30, 1); g.fillRect(0, 41, 30, 1); g.fillRect(0, 0, 1, 42); g.fillRect(29, 0, 1, 42);
       g.fillStyle = ink; g.font = "bold 9px monospace"; g.textBaseline = "top";
       const L = { K: "К", Q: "Д", A: "Т", J: "Дж" }[rank];
@@ -328,8 +328,7 @@ const Cellar = (() => {
     const pool = put(g, new T.Mesh(new T.CircleGeometry(.42, 9), mat({ color: 0x5a0008, transparent: true, opacity: .9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 })), 0, .787, .72, -Math.PI / 2);
     pool.position.z = .86; pool.visible = false;                                           // лужа под головой (растёт после смерти лицом в стол)
     const fan = new T.Group(); fan.position.set(0, 1.02, .5); fan.rotation.x = -.35; person.body.add(fan);   // карты в руках («Верю — не верю»)
-    const chips = new T.Group(); chips.position.set(.42, .785, .78); chips.scale.setScalar(1.7); g.add(chips);   // фишки храбреца (револьвер)
-    Object.assign(ud, { hearts, items, mirror, rug, rugM, chair, stars, pool, fan, chips, fanN: -1, chipN: -1 });
+    Object.assign(ud, { hearts, items, mirror, rug, rugM, chair, stars, pool, fan, fanN: -1 });
     g.userData = ud;
     return g;
   }
@@ -452,7 +451,7 @@ const Cellar = (() => {
     if (rev) { scene.remove(rev); disposeTree(rev); rev = null; }
     if (red) { rev = makeRevolver(); rev.position.set(0, .8, 0); rev.rotation.set(0, .6, Math.PI / 2); scene.add(rev); state.revPos = rev.position.clone(); state.revQ = rev.quaternion.clone(); }
     else if (cards) {                                                    // карта стола висит под лампой и медленно крутится; куча карт — в центре
-      const hang = new T.Group(); hang.position.set(0, 1.62, 0); tableGroup.add(hang);
+      const hang = new T.Group(); hang.position.set(0, 1.62, 0); hang.visible = false; tableGroup.add(hang);
       put(hang, box(.006, .5, .006, mat({ color: 0x2a2a2a })), 0, .45, 0);
       const fm = mat({ map: cardTex("K"), emissive: 0x1a1408 }), ed = mat({ color: 0xe8dcc0 });
       const big = put(hang, new T.Mesh(new T.BoxGeometry(.34, .48, .006), [ed, ed, ed, ed, fm, fm]), 0, 0, 0);
@@ -576,14 +575,7 @@ const Cellar = (() => {
       // свой револьвер у каждого («Верю — не верю»): лежит на столе перед игроком
       if (state.mode === "bluff" && !ud.rv) { ud.rv = makeRevolver(); ud.rv.scale.setScalar(1.25); scene.add(ud.rv); ud.rvPos = worldOf(f, .4, .8, .74); ud.rvQ = new T.Quaternion(); ud.rv.position.copy(ud.rvPos); }
       if (ud.rv) ud.rv.visible = !ud.dead || ud.deathKind !== "left";
-      // фишки храбреца стопкой (револьвер)
-      const chipN = state.mode === "revolver" ? Math.min(12, p.chips || 0) : 0;
-      if (ud.chipN !== chipN) {
-        ud.chips.children.slice().forEach((m) => { ud.chips.remove(m); m.geometry.dispose(); m.material.dispose(); });
-        for (let k = 0; k < chipN; k++) put(ud.chips, cyl(.05, .05, .014, mat({ color: k % 2 ? 0xe0203a : 0xffd23f, emissive: k % 2 ? 0x400008 : 0x5a3a00, flatShading: true }), 10), (k % 2) * .006, .008 + k * .016, 0, 0, k * .7);
-        if (chipN > ud.chipN && ud.chipN >= 0 && rel !== 0) burst(worldOf(f, .42, .9, .82), 0xffd23f, 8, .4, { size: .025, life: .5 });
-        ud.chipN = chipN;
-      }
+      ud.bounty = state.mode === "revolver" ? p.bounty || 0 : 0;          // награда за голову (револьвер) — подпись над головой
       ud.frozen = !!st.frozen;
       ud.stars.visible = ud.frozen && !ud.dead && rel !== 0;
       if (!p.alive && !ud.dead) die(f, p.death || "table", true);
@@ -593,7 +585,7 @@ const Cellar = (() => {
     state.turn = room.turn; state.phase = room.phase;
     if (state.mode === "bluff" && room.table) {
       const rc = state.rankCard;
-      if (rc && rc.rank !== room.table.rank) { rc.rank = room.table.rank; rc.mat.map = cardTex(room.table.rank || "back"); rc.mat.needsUpdate = true; if (room.table.rank) burst(rc.g.position.clone(), 0xffe0a0, 10, .4, { size: .025, life: .6, gravity: 0 }); }
+      if (rc && rc.rank !== room.table.rank) { rc.rank = room.table.rank; rc.mat.map = cardTex(room.table.rank || "back"); rc.mat.needsUpdate = true; }
       setPile(room.table.pile || 0);
       state.myCards = (room.hand || []).length;
     }
@@ -632,6 +624,11 @@ const Cellar = (() => {
     ud.stars.visible = false; ud.hearts.visible = false;
     if (kind === "left" || ud.rel === 0) { f.visible = false; return; }   // ушёл из-за стола; свои руки после смерти не показываем
     if (kind === "head") { ud.person.head.visible = false; ud.person.stump.visible = true; }
+    if (kind === "limb") {                                             // дробь оторвала руку: культя у плеча
+      const arm = ud.person.arms.R; arm.sh.visible = false;
+      if (!ud.limbStump) { ud.limbStump = put(arm.sh.parent, box(.15, .1, .15, mat({ color: 0x7a000c })), arm.sh.position.x, arm.sh.position.y - .04, arm.sh.position.z); }
+      ud.limbStump.visible = true;
+    }
     if (instant) {
       const wp = f.position;
       if (kind === "table") { ud.pool.visible = ud.rel !== 0; ud.pool.scale.setScalar(1); }
@@ -641,7 +638,8 @@ const Cellar = (() => {
   function revive(f) {
     const ud = f.userData;
     ud.dead = false; ud.deathKind = null; f.visible = true; ud.pool.visible = false;
-    ud.person.head.visible = true; ud.person.stump.visible = false; ud.person.tilt.rotation.x = 0;
+    ud.person.head.visible = true; ud.person.stump.visible = false; ud.person.tilt.rotation.set(0, 0, 0); ud.person.tilt.position.z = -.6;
+    ud.person.arms.R.sh.visible = true; if (ud.limbStump) ud.limbStump.visible = false;
   }
   function headBurst(f, from) {                                     // голова разлетается: кровь, осколки, брызги на стене
     const h = headOf(f), dir = h.clone().sub(from || new T.Vector3(0, 1.2, 0)).setY(0).normalize();
@@ -653,6 +651,15 @@ const Cellar = (() => {
     wallSplat(wp.clone().add(dir.clone().multiplyScalar(1.2)), 1.8); wallSplat(wp, 1.2);
     splat(new T.Vector3(wp.x * .62, .786, wp.z * .62), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .9, 0x7a000a, true);
     state.flicker = Math.max(state.flicker, .8);
+  }
+
+  function limbBurst(f, from) {                                     // рука отлетает: куски рукава и кожи, кровь фонтаном
+    const sh = f.userData.person.arms.R.sh.getWorldPosition(new T.Vector3()), dir = sh.clone().sub(from || new T.Vector3(0, 1.2, 0)).setY(0).normalize();
+    burst(sh, 0x9a000c, 44, 1.5, { size: .045, life: 1.4, push: dir });
+    burst(sh, f.userData.person.look.topC || 0x3a3430, 4, 1.6, { size: .11, life: 3, push: dir, up: .8 });
+    burst(sh, 0xc89068, 3, 1.5, { size: .08, life: 3, push: dir, up: .9 });
+    wallSplat(f.position.clone().add(dir.clone().multiplyScalar(1.1)), 1.4);
+    state.flicker = Math.max(state.flicker, .6);
   }
 
   /* ---------------------------------------------------------------- частицы, трассеры, гильзы, ножовка, зеркало */
@@ -722,12 +729,12 @@ const Cellar = (() => {
       if (e.kind === "deal") return { when: 0, hold: 1.3 };
       if (e.kind === "play") return { when: 0, hold: .9 };
       if (e.kind === "call") return { when: 0, hold: 2.9 };
-      if (e.kind === "shot") return { when: 1.35, hold: 1.35 + (e.live ? 1.4 : .9) };
+      if (e.kind === "shot") { const w = 1.35 + (e.wait || 0); return { when: w, hold: w + (e.live ? 1.6 : 1.0) }; }
       return { when: 0, hold: e.kind === "redeal" ? .8 : 0 };
     }
     if (e.kind === "shot") {
-      if (state.mode === "revolver" || e.chance != null) { const w = e.self ? 1.15 : .95; return { when: w, hold: w + (e.live ? .9 : .5) }; }
-      const w = e.dice ? 4.05 : e.redirected ? 1.05 : .7;
+      if (state.mode === "revolver" || e.chance != null) { const w = (e.self ? 1.15 : .95) + (e.wait || 0); return { when: w, hold: w + (e.live ? 1.1 : .6) }; }
+      const w = (e.dice ? 4.05 : e.redirected ? 1.05 : .7) + (e.wait || 0);
       return { when: w, hold: w + (e.live ? .7 : .45) };
     }
     if (e.kind === "load") return { when: 0, hold: e.chambers ? 1.3 : 1.4 };
@@ -749,7 +756,9 @@ const Cellar = (() => {
   function bluffEvent(e) {
     const f = state.figs[e.who];
     if (e.kind === "deal") {
-      Object.values(state.figs).filter((x) => !x.userData.dead).forEach((x, i) => { for (let k = 0; k < 3; k++) flyCard(pileAt(), handOf(x), i * .12 + k * .07, .45); });
+      const rc = state.rankCard;
+      if (rc && e.rank) { rc.rank = e.rank; rc.mat.map = cardTex(e.rank); rc.mat.needsUpdate = true; state.rankShow = { at: performance.now() }; }
+      Object.values(state.figs).filter((x) => !x.userData.dead).forEach((x, i) => { for (let k = 0; k < 3; k++) flyCard(pileAt(), handOf(x), .3 + i * .12 + k * .07, .45); });
       state.claim = null;
     } else if (e.kind === "play") {
       for (let k = 0; k < e.cnt; k++) flyCard(handOf(f), pileAt().add(new T.Vector3((rnd() - .5) * .2, 0, (rnd() - .5) * .2)), k * .1, .5);
@@ -767,16 +776,18 @@ const Cellar = (() => {
           done: () => { burst(to.clone(), ok ? 0x5aff7a : 0xff2a2a, 10, .4, { size: .03, life: .6, gravity: 0 }); } });
         anim.push({ t: 0, dur: 4.6, done: () => { anim.push({ t: 0, dur: .4, step: (k) => { c.position.y = 1.2 - k * .4; c.scale.setScalar(1.9 * (1 - k * .8)); }, done: () => { scene.remove(c); c.geometry.dispose(); [].concat(c.material).forEach((m) => m.dispose()); } }); } });
       });
-    } else if (e.kind === "shot") {
-      state.firing = true; state.evAim = { who: e.who, target: e.who, until: performance.now() + timing(e).hold * 1000 + 300 };
-      anim.push({ t: 0, dur: timing(e).when, done: () => { fireBluff(e); state.firing = false; } });
+    } else if (e.kind === "shot") {                                   // берёт свой револьвер, подносит к виску, рука дрожит — и заминка
+      const now = performance.now(), tm = timing(e);
+      state.firing = true; state.evAim = { who: e.who, target: e.who, at: now, until: now + tm.hold * 1000 + 300 };
+      state.sus = { who: e.who, target: e.who, self: true, from: now + 1350, until: now + tm.when * 1000 };
+      anim.push({ t: 0, dur: tm.when, done: () => { fireBluff(e); state.firing = false; } });
     }
   }
   function fireBluff(e) {
     const f = state.figs[e.who]; if (!f || !f.userData.rv) return;
     const ud = f.userData, r = ud.rv, mz = r.localToWorld(new T.Vector3(0, .05, .38));
-    ud.rvRecoil = e.live ? 1 : .25; ud.pull = performance.now() / 1000; ud.rvTurn = (ud.rvTurn || 0) + 1;
-    if (!e.live) { burst(mz, 0x8a8070, 3, .2, { size: .02, life: .4, gravity: -.2 }); return; }
+    ud.rvRecoil = e.live ? 1 : .25; ud.pull = performance.now() / 1000; ud.rvTurn = (ud.rvTurn || 0) + 1; state.sus = null;
+    if (!e.live) { burst(mz, 0x8a8070, 3, .2, { size: .02, life: .4, gravity: -.2 }); state.relief = { pid: e.who, at: performance.now() }; return; }
     state.flash = 1; state.shake = e.who === state.me ? 1 : .6; state.flicker = .7;
     r.userData.muzzle.intensity = 6;
     impact(f, Object.assign({ dmg: 1 }, e), mz);
@@ -786,14 +797,17 @@ const Cellar = (() => {
     if (!scene || !e) return;
     if (state.mode === "bluff") return bluffEvent(e);
     if (e.kind === "shot") {
-      state.firing = true; state.evAim = { who: e.who, target: e.target, until: performance.now() + timing(e).hold * 1000 + 300 };
+      const now = performance.now(), tm = timing(e), w = e.wait || 0;
+      state.firing = true; state.evAim = { who: e.who, target: e.target, at: now, until: now + tm.hold * 1000 + 300 };
       if (state.mode === "revolver") {
-        anim.push({ t: 0, dur: timing(e).when, done: () => { fireRevolver(e); state.firing = false; } });
+        state.sus = { who: e.who, target: e.target, self: !!e.self, from: now + 300, until: now + tm.when * 1000 };
+        anim.push({ t: 0, dur: tm.when, done: () => { fireRevolver(e); state.firing = false; } });
         return;
       }
       const target = state.figs[e.target];
       if (target) spinTo(yawTo(target.position.x, target.position.z), false);
-      anim.push({ t: 0, dur: .7, done: () => { fire(e); state.firing = false; } });
+      state.sus = { who: e.who, target: e.target, self: !!e.self, from: now + 700, until: now + (.7 + w) * 1000 };
+      anim.push({ t: 0, dur: .7 + w, done: () => { fire(e); state.firing = false; } });
     } else if (e.kind === "load") {
       if (state.mode === "revolver") {                                // барабан: патрон вставляют и раскручивают
         state.revSpin = 1.2; state.revHome = performance.now() + 1300;
@@ -865,21 +879,33 @@ const Cellar = (() => {
       ud.vestTorn = true; ud.person.vest.visible = false; ud.hasVest = false; ud.jolt = .7;
       return;
     }
-    const n = e.dmg > 1 ? 2 : 1, aimHead = e.out && e.death === "head";
+    const n = e.dmg > 1 ? 2 : 1, aimHead = e.out && e.death === "head", pellets = state.mode === "shotgun";
     if (!me) {
-      const at = aimHead ? h : c.clone().lerp(h, .3);
-      burst(at, 0x9a000c, 36 * n, 1.4, { size: .045, life: 1.3 });
-      burst(at, 0x6a0008, 22 * n, .7, { size: .035, life: 1.6, up: -.2 });
-      burst(at, 0xc0101a, 12, 2.2, { size: .025, life: .6, gravity: 1 });
-      ud.wounds += e.dmg || 1; ud.person.setWounds(ud.wounds, state.mode === "shotgun");
-      ud.jolt = 1; ud.redT = .35;
+      if (pellets) {                                                 // дробь: облако крови
+        const at = aimHead ? h : c.clone().lerp(h, .3);
+        burst(at, 0x9a000c, 36 * n, 1.4, { size: .045, life: 1.3 });
+        burst(at, 0x6a0008, 22 * n, .7, { size: .035, life: 1.6, up: -.2 });
+        burst(at, 0xc0101a, 12, 2.2, { size: .025, life: .6, gravity: 1 });
+      } else {                                                       // пуля: маленький вход и струйка брызг с другой стороны
+        const at = e.self || ["temple", "slump"].includes(e.death) || !e.out ? h.clone().add(new T.Vector3(0, -.08, 0)) : c.clone().lerp(h, .55);
+        const dir = at.clone().sub(from || new T.Vector3(0, 1.2, 0)).normalize();
+        burst(at, 0x9a000c, 8, .4, { size: .025, life: .8 });
+        burst(at.clone().addScaledVector(dir, .14), 0x8a000c, 30, 1.25, { size: .02, life: 1.1, push: dir, up: .05 });
+        burst(at.clone().addScaledVector(dir, .14), 0xc0101a, 10, 2.1, { size: .014, life: .45, gravity: 1, push: dir });
+      }
+      ud.wounds += e.dmg || 1; ud.person.setWounds(ud.wounds, pellets);
+      ud.jolt = pellets ? 1 : .8; ud.redT = .35;
     }
     const wp = hf.position, k = state.mode === "revolver" ? .7 : .55;
-    for (let i = 0; i < n + 1; i++) splat(new T.Vector3(wp.x * (k + rnd() * .15) + (rnd() - .5) * .4, .786 + rnd() * .002, wp.z * (k + rnd() * .15) + (rnd() - .5) * .4), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .4 + rnd() * .45, 0x7a000a, i === 0);
-    if (!me) wallSplat(wp, 1.2);
+    for (let i = 0; i < (pellets ? n + 1 : 1); i++) splat(new T.Vector3(wp.x * (k + rnd() * .15) + (rnd() - .5) * .4, .786 + rnd() * .002, wp.z * (k + rnd() * .15) + (rnd() - .5) * .4), new T.Euler(-Math.PI / 2, 0, rnd() * 6), (pellets ? .4 : .25) + rnd() * .35, 0x7a000a, i === 0 && pellets);
+    if (!me) wallSplat(wp, pellets ? 1.2 : .7);
     splat(new T.Vector3(wp.x * 1.25 + (rnd() - .5) * .5, .012, wp.z * 1.25 + (rnd() - .5) * .5), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .9 + rnd() * .5, 0x4a0006);
     if (me) { state.hurt = 1; splat(new T.Vector3((rnd() - .5) * .6, .787, geo().R - .65), new T.Euler(-Math.PI / 2, 0, rnd() * 6), .8, 0x8a000c, true); }
-    if (e.out) { if (aimHead && !me) headBurst(hf, from); die(hf, e.death || "table", false); }
+    if (e.out) {
+      if (pellets && aimHead && !me) headBurst(hf, from);              // голову и руки сносит только дробь
+      if (pellets && e.death === "limb" && !me) limbBurst(hf, from);
+      die(hf, e.death || "table", false);
+    }
   }
 
   function fire(e) {                                                  // дробовик
@@ -888,7 +914,8 @@ const Cellar = (() => {
     ejectShell(e.live, gun.localToWorld(new T.Vector3(0, .1, .05)));
     state.gunKick = e.live ? 1 : .3;
     if (sf) sf.userData.pull = performance.now() / 1000;
-    if (!e.live) return;
+    state.sus = null;
+    if (!e.live) { if (e.self) state.relief = { pid: e.who, at: performance.now() }; return; }
     state.flash = 1; state.shake = e.hit === state.me ? 1 : .55; state.flicker = .6;
     gun.userData.muzzle.intensity = 6;
     for (let i = 0; i < 8; i++) puff();
@@ -914,14 +941,25 @@ const Cellar = (() => {
     const mz = muzzleWorld(), hf = state.figs[e.target], sf = state.figs[e.who];
     state.revRecoil = e.live ? 1 : .25; state.revTurn = (state.revTurn || 0) + 1;
     if (sf) sf.userData.pull = performance.now() / 1000;
-    if (!e.live) { burst(mz, 0x8a8070, 3, .2, { size: .02, life: .4, gravity: -.2 }); return; }
+    state.sus = null;
+    if (!e.live) { burst(mz, 0x8a8070, 3, .2, { size: .02, life: .4, gravity: -.2 }); if (e.self) state.relief = { pid: e.who, at: performance.now() }; return; }
     state.flash = 1; state.shake = e.target === state.me ? 1 : .6; state.flicker = .7;
     rev.userData.muzzle.intensity = 6;
     if (e.who !== state.me) for (let i = 0; i < 6; i++) puff();        // дым у самого лица закрыл бы весь экран
     if (!e.self) tracer(mz, headOf(hf));
+    if (e.took && hf && sf) setTimeout(() => flyCoins(headOf(hf).add(new T.Vector3(0, .4, 0)), sf.userData.rel === 0 ? camera.localToWorld(new T.Vector3(0, -.3, -.8)) : headOf(sf).add(new T.Vector3(0, .4, 0))), 900);
     impact(hf, Object.assign({ dmg: 1 }, e), e.self ? mz.clone().add(new T.Vector3(0, 0, 0)) : sf ? headOf(sf) : mz);
   }
 
+  // награда за голову переходит к стрелку: монетки летят дугой
+  function flyCoins(a, b) {
+    for (let i = 0; i < 9; i++) {
+      const c = cyl(.035, .035, .01, mat({ color: 0xffd23f, emissive: 0x5a3a00 }), 8); c.visible = false; scene.add(c);
+      const off = new T.Vector3((rnd() - .5) * .2, (rnd() - .5) * .1, (rnd() - .5) * .2);
+      anim.push({ t: -i * .07, dur: .75, step: (k) => { if (k <= 0) return; c.visible = true; c.position.lerpVectors(a, b, ease(k)).add(off); c.position.y += Math.sin(k * Math.PI) * .5; c.rotation.x = k * 12; },
+        done: () => { scene.remove(c); c.geometry.dispose(); c.material.dispose(); if (i === 8) burst(b, 0xffd23f, 10, .4, { size: .025, life: .5 }); } });
+    }
+  }
   function puff() {
     const m = new T.Mesh(partGeo(), new T.MeshBasicMaterial({ color: 0x8a8070, transparent: true, opacity: .55 }));
     m.scale.setScalar(.08); m.position.copy(muzzleWorld());
@@ -949,26 +987,73 @@ const Cellar = (() => {
     if (aimedAt) { L = [.3, 1.42, .28]; R = [-.3, 1.42, .28]; lean = -.14; }
     if (!rev0 && turn && state.aim && !aimedAt) { R = [-.08, .84, 1.0]; lean = .34; }
     if (ud.pull && t - ud.pull < .25) lean += .12;
-    // смерть
-    let tilt = 0, sp = null, hx = null;
+    // напряжение: палец на спуске — стрелок часто дышит и дрожит, тот, в кого целятся, трясётся с поднятыми руками, остальные отшатываются
+    const nowP = performance.now(), sus = !ud.dead && state.sus && nowP < state.sus.until && nowP >= state.sus.from ? state.sus : null, sk = sus ? state.susK || 0 : 0;
+    let shiver = 0;
+    if (sus) {
+      if (sus.who === ud.pid) shiver = .012 + sk * .03;
+      else if (sus.target === ud.pid) shiver = .01 + sk * .026;
+      else { lean -= .1 * (.4 + sk); if (i % 2 === 0) L = [.07, 1.43, .24]; else R = [-.08, 1.38, .26]; }   // ладонь ко рту
+    }
+    if (shiver) { const j = (a, b) => (Math.sin(t * a + i) + Math.sin(t * b)) * shiver * .5; L = [L[0] + j(31, 47), L[1] + j(37, 29), L[2]]; R = [R[0] + j(41, 23), R[1] + j(33, 53), R[2]]; }
+    const relief = state.relief && state.relief.pid === ud.pid ? (nowP - state.relief.at) / 1000 : 9;   // щёлк — выдох, плечи опускаются
+    if (relief < 1.8 && !ud.dead) lean += .32 * Math.sin(Math.min(1, relief / 1.8) * Math.PI);
+    // смерть: у каждого вида своя анимация. Дробь: лицом в стол, голову сносит, отбрасывает назад, разворачивает и роняет, отрывает руку.
+    // Пуля (револьвер): валится вбок у виска, оседает лицом в стол, сползает со стула, падает назад вместе со стулом
+    let tilt = 0, tiltZ = 0, slideZ = 0, sp = null, hx = null, hyD = null, hz = 0, tw = null;
     if (ud.dead) {
-      const k = t - ud.deadAt;
-      if (ud.deathKind === "table") {
+      const k = t - ud.deadAt, K = ud.deathKind, side = ud.idx % 2 ? 1 : -1;
+      const pr = (a, b) => Math.min(1, Math.max(0, (k - a) / (b - a)));
+      const thud = (at, size) => {                                     // удар об пол: пыль, лужа, тряска
+        if (k < at || ud.impact) return; ud.impact = true;
+        const wp = f.position; burst(new T.Vector3(wp.x * 1.25, .1, wp.z * 1.25), 0x6a5a4a, 14, .6, { size: .05, life: .7 });
+        splat(new T.Vector3(wp.x * 1.28, .013, wp.z * 1.28), new T.Euler(-Math.PI / 2, 0, rnd() * 6), size, 0x4a0006, true); state.shake = Math.max(state.shake, .25);
+      };
+      const pool = (at) => {                                           // лужа под головой на столе
+        if (k >= at && !ud.impact) { ud.impact = true; if (ud.rel !== 0) { burst(headOf(f), 0x8a000c, 14, .5, { size: .04, life: 1 }); ud.pool.visible = true; ud.poolAt = t; } }
+        if (ud.pool.visible) { const g = ud.poolAt ? Math.min(1, (t - ud.poolAt) / 3.5) : 1; ud.pool.scale.setScalar(.25 + g * .9); }
+      };
+      if (K === "table" || K === "limb") {
         sp = k < .12 ? -.35 * (k / .12) : k < .62 ? -.35 + 1.47 * Math.pow((k - .12) / .5, 2) : k < .8 ? 1.12 - Math.sin((k - .62) / .18 * Math.PI) * .12 : 1.05;
-        hx = .45; L = [.44, .79, .78]; R = [-.4, .79, .66];
-        if (k >= .6 && !ud.impact) { ud.impact = true; if (ud.rel !== 0) { burst(headOf(f), 0x8a000c, 18, .6, { size: .04, life: 1 }); ud.pool.visible = true; ud.poolAt = t; } }
-        if (ud.pool.visible) { const g = ud.poolAt ? Math.min(1, (t - ud.poolAt) / 3) : 1; ud.pool.scale.setScalar(.25 + g * .9); }
-      } else {
+        hx = .45; L = [.44, .79, .78]; R = K === "limb" ? R : [-.4, .79, .66];
+        pool(.6);
+      } else if (K === "slump") {                                       // дёрнулся, замер — и медленно оседает лицом в стол, голова набок
+        sp = k < .12 ? -.28 * (k / .12) : k < .7 ? -.28 + .2 * pr(.12, .7) : k < 1.7 ? -.08 + 1.13 * Math.pow(pr(.7, 1.7), 2.2) : 1.05 - Math.sin(pr(1.7, 1.85) * Math.PI) * .06;
+        hx = .3 + .15 * pr(1.2, 1.7); hyD = side * .9; hz = side * .25 * pr(1.3, 1.7);
+        L = [.46, .79, .74]; R = [-.25, .45 + .3 * (1 - pr(.8, 1.6)), .35];
+        pool(1.7);
+      } else if (K === "temple") {                                      // у виска: голову дёргает вбок, тело заваливается на бок, рука с револьвером падает
+        hz = (k < .08 ? (k / .08) : 1) * .75 * -side; hx = .25 * pr(.1, .6);
+        tiltZ = side * .95 * Math.pow(pr(.18, 1.15), 2) - (k > 1.15 && k < 1.35 ? Math.sin(pr(1.15, 1.35) * Math.PI) * .06 * side : 0);
+        sp = .25 * pr(.1, .7);
+        L = [.3, .55, .35]; R = [-.35, .3 + .4 * (1 - pr(.1, .5)), .25];
+        if (k >= 1.15 && !ud.impact) { ud.impact = true; const wp = f.position; splat(new T.Vector3(wp.x * 1.05 + side * .5, .013, wp.z * 1.05), new T.Euler(-Math.PI / 2, 0, rnd() * 6), 1, 0x4a0006, true); state.shake = Math.max(state.shake, .15); }
+      } else if (K === "side") {                                        // сползает со стула вбок и падает на пол
+        sp = .2 * pr(0, .3); tiltZ = side * (1.5 * Math.pow(pr(.25, 1.05), 2) - (k > 1.05 && k < 1.25 ? Math.sin(pr(1.05, 1.25) * Math.PI) * .1 : 0));
+        hyD = side * .5; hz = side * .3 * pr(.4, 1);
+        L = [.55, .4, .2]; R = [-.55, .4, .2];
+        thud(1.05, 1.2);
+      } else if (K === "flyback") {                                     // дробь отбрасывает назад вместе со стулом, руки вверх
+        tilt = -1.5 * Math.pow(pr(0, .42), 1.4) + (k > .42 && k < .62 ? Math.sin(pr(.42, .62) * Math.PI) * .14 : 0);
+        slideZ = -.55 * Math.pow(pr(0, .45), .7); sp = -.45;
+        L = [.7, 1.55, -.35]; R = [-.7, 1.45, -.2];
+        thud(.45, 1.6);
+      } else if (K === "spin") {                                        // разворачивает от удара и роняет на бок
+        tw = side * (1.1 * (1 - Math.pow(1 - pr(0, .4), 3)) - .45 * pr(.5, 1.1)); sp = .3 * pr(.2, .6);
+        tiltZ = -side * 1.45 * Math.pow(pr(.35, 1.05), 2); hz = -side * .3;
+        L = [.45, .55, .4]; R = [-.45, .6, .35];
+        thud(1.05, 1.3);
+      } else {                                                          // «head» (дробь, голову снесло) и «back» (пуля, падает назад) — назад вместе со стулом
         sp = k < .25 ? -.4 * (k / .25) : -.2;
         tilt = k < .25 ? 0 : k < .95 ? -1.42 * Math.pow((k - .25) / .7, 2) : k < 1.12 ? -1.42 + Math.sin((k - .95) / .17 * Math.PI) * .12 : -1.42;
         L = [.5, 1.15, -.1]; R = [-.5, 1.05, .05];
-        if (k >= .95 && !ud.impact) { ud.impact = true; const wp = f.position; burst(new T.Vector3(wp.x * 1.25, .1, wp.z * 1.25), 0x6a5a4a, 14, .6, { size: .05, life: .7 }); splat(new T.Vector3(wp.x * 1.28, .013, wp.z * 1.28), new T.Euler(-Math.PI / 2, 0, rnd() * 6), 1.5, 0x4a0006, true); state.shake = Math.max(state.shake, .25); }
+        thud(.95, 1.5);
       }
     }
-    ps.tilt.rotation.x = tilt;
+    ps.tilt.rotation.set(tilt, 0, tiltZ); ps.tilt.position.z = -.6 + slideZ;
     ud.sp = sp != null ? sp : lp(ud.sp, lean - ud.jolt * .5, 6);
-    ps.spine.rotation.set(ud.sp, lp(ps.spine.rotation.y, twist, 5), ud.frozen && !ud.dead ? Math.sin(t * 3 + i) * .07 : 0);
-    ps.spine.scale.y = 1 + (ud.dead ? 0 : Math.sin(t * 1.6 + i) * .012);
+    ps.spine.rotation.set(ud.sp, tw != null ? tw : lp(ps.spine.rotation.y, twist, 5), ud.frozen && !ud.dead ? Math.sin(t * 3 + i) * .07 : 0);
+    ps.spine.scale.y = 1 + (ud.dead ? 0 : shiver ? Math.sin(t * 8.5 + i) * .028 : Math.sin(t * 1.6 + i) * .012);
     // голова: смотрит на того, кто ходит, или на того, в кого целятся
     let look = null;
     if (!ud.dead) {
@@ -981,12 +1066,12 @@ const Cellar = (() => {
     let wantY = 0, wantX = .05;
     if (look) { const lc = ps.body.worldToLocal(tv().a.copy(look)); wantY = Math.max(-1.1, Math.min(1.1, Math.atan2(lc.x, lc.z))); wantX = Math.max(-.5, Math.min(.6, Math.atan2(1.45 - lc.y, Math.hypot(lc.x, lc.z)) - ud.sp * .6)); }
     if (holder && (aim === ud.pid || bl)) { wantY = 0; wantX = .15; }
-    ud.hy = lp(ud.hy, ud.dead ? (ud.deathKind === "table" ? .35 : 0) : wantY, 4);
+    ud.hy = lp(ud.hy, ud.dead ? (hyD != null ? hyD : ud.deathKind === "table" ? .35 : 0) : wantY, 4);
     ud.hx = hx != null ? hx : lp(ud.hx, wantX - ud.jolt * .6, 5);
-    ps.head.rotation.set(ud.hx, ud.hy, ud.frozen && !ud.dead ? Math.sin(t * 3.2 + i) * .22 : holder && (aim === ud.pid || bl) ? -.15 : 0);
+    ps.head.rotation.set(ud.hx + (shiver ? Math.sin(t * 27 + i) * shiver * .9 : 0) + (relief < 1.8 && !ud.dead ? .3 * Math.sin(Math.min(1, relief / 1.8) * Math.PI) : 0), ud.hy, ud.dead ? hz : ud.frozen ? Math.sin(t * 3.2 + i) * .22 : holder && (aim === ud.pid || bl) ? -.15 : 0);
     // кисти — плавно к нужным точкам, затем руки по IK
     ud.hands = ud.hands || { L: new T.Vector3(...L), R: new T.Vector3(...R) };
-    const k = ud.dead ? 1 : Math.min(1, dt * (aimedAt ? 9 : 6));
+    const k = Math.min(1, dt * (ud.dead ? 7 : aimedAt || shiver ? 9 : 6));
     ud.hands.L.lerp(tv().b.set(...L), k); ud.hands.R.lerp(tv().c.set(...R), k);
     f.updateMatrixWorld(true);
     const reachArm = (arm, local, side) => {
@@ -1047,6 +1132,7 @@ const Cellar = (() => {
     }
     state.revQ.slerp(RQ.q, k);
     rev.position.copy(state.revPos); rev.quaternion.copy(state.revQ);
+    if (!onTable && susOf(holderId)) { shake3(rev, t, (.002 + .012 * (state.susK || 0)) * (hf.userData.rel === 0 ? .7 : 1.3)); if (state.revWant) state.revWant.copy(rev.position); }
     rev.scale.setScalar(rev.scale.x + (state.vmScale - rev.scale.x) * Math.min(1, dt * 8));
     state.revRecoil = Math.max(0, (state.revRecoil || 0) - dt * 4);
     if (state.revRecoil) rev.rotateX(-state.revRecoil * .6);
@@ -1057,6 +1143,14 @@ const Cellar = (() => {
     rev.userData.muzzle.intensity = Math.max(0, rev.userData.muzzle.intensity - dt * 30);
   }
 
+  // дрожь ствола, пока палец на спуске: чем дольше заминка, тем сильнее
+  function shake3(o, t, amp) {
+    if (!amp) return;
+    o.position.x += (Math.sin(t * 41) + Math.sin(t * 67 + 1)) * amp * .5; o.position.y += (Math.sin(t * 37 + 2) + Math.sin(t * 59)) * amp * .5; o.position.z += Math.sin(t * 47 + 3) * amp * .4;
+    o.rotateX(Math.sin(t * 31) * amp * 2.2); o.rotateY(Math.sin(t * 43 + 1) * amp * 2.2);
+  }
+  const susOf = (pid) => { const n = performance.now(), su = state.sus; return su && su.who === pid && n >= su.from && n < su.until ? su : null; };
+
   // «Верю — не верю»: у каждого свой револьвер. Лежит на столе; проигравший вскрытие поднимает его к виску
   function placeBluff(t, dt) {
     const ev = state.evAim && performance.now() < state.evAim.until ? state.evAim : null;
@@ -1066,20 +1160,24 @@ const Cellar = (() => {
       const hold = ev && ev.who === ud.pid && !ud.dead, vm = r.userData.vm;
       const pos = tv().a, look = tv().b;
       let scale = 1.25; vm.visible = false;
+      const el = hold && ev.at ? (performance.now() - ev.at) / 1000 : 9, pick = el < .6;   // сначала берёт со стола и смотрит на него, потом медленно — к виску
       if (hold && ud.rel === 0) {
-        vm.visible = true; scale = .5; state.selfAim = 1;
-        pos.copy(camera.localToWorld(new T.Vector3(.25, 0, -.5))); look.copy(camera.localToWorld(new T.Vector3(-.5, .05, -.36)));
+        vm.visible = true; scale = .5; state.selfAim = pick ? 0 : 1;
+        if (pick) { pos.copy(camera.localToWorld(new T.Vector3(.1, -.3, -.6))); look.copy(camera.localToWorld(new T.Vector3(-.1, -.4, -1.8))); }
+        else { pos.copy(camera.localToWorld(new T.Vector3(.25, 0, -.5))); look.copy(camera.localToWorld(new T.Vector3(-.5, .05, -.36))); }
       } else if (hold) {
         const ps = ud.person; ps.head.updateWorldMatrix(true, false);
-        pos.copy(ps.head.localToWorld(new T.Vector3(-.21, .17, .02))); look.copy(ps.head.localToWorld(new T.Vector3(.3, .17, 0)));
+        if (pick) { pos.copy(ps.body.localToWorld(new T.Vector3(-.12, 1.08, .48))); look.copy(ps.body.localToWorld(new T.Vector3(-.12, .95, 1.6))); }
+        else { pos.copy(ps.head.localToWorld(new T.Vector3(-.21, .17, .02))); look.copy(ps.head.localToWorld(new T.Vector3(.3, .17, 0))); }
       }
-      const k = Math.min(1, dt * (hold ? 9 : 5));
+      const k = Math.min(1, dt * (hold ? (pick ? 5 : 3.2) : 5));
       ud.rvPos = ud.rvPos || r.position.clone(); ud.rvQ = ud.rvQ || r.quaternion.clone();
       const want = new T.Quaternion();
       if (hold) { const m = new T.Matrix4().lookAt(look, pos, new T.Vector3(0, 1, 0)); want.setFromRotationMatrix(m); ud.rvPos.lerp(pos, k); }
       else { ud.rvPos.lerp(worldOf(f, .42, .8, .74), k); want.setFromEuler(new T.Euler(0, f.rotation.y + 2.2, Math.PI / 2, "YXZ")); }
       ud.rvQ.slerp(want, k);
       r.position.copy(ud.rvPos); r.quaternion.copy(ud.rvQ);
+      if (hold && susOf(ud.pid)) shake3(r, t, (.002 + .013 * (state.susK || 0)) * (ud.rel === 0 ? .7 : 1.4));
       r.scale.setScalar(r.scale.x + (scale - r.scale.x) * Math.min(1, dt * 8));
       ud.rvRecoil = Math.max(0, (ud.rvRecoil || 0) - dt * 4);
       if (ud.rvRecoil) r.rotateX(-ud.rvRecoil * .6);
@@ -1087,7 +1185,7 @@ const Cellar = (() => {
       r.userData.cyl.rotation.z += (cylZ - r.userData.cyl.rotation.z) * Math.min(1, dt * 12);
       r.userData.hammer.rotation.x = hold ? -1.0 : -.5;
       r.userData.muzzle.intensity = Math.max(0, r.userData.muzzle.intensity - dt * 30);
-      if (hold && ud.rel !== 0) P().reach(T, ud.person.arms.R, ud.rvPos, ud.person.body.localToWorld(new T.Vector3(-.9, 1.2, -.3)));
+      if (hold && ud.rel !== 0) P().reach(T, ud.person.arms.R, r.position, ud.person.body.localToWorld(new T.Vector3(-.9, 1.2, -.3)));
     });
   }
 
@@ -1112,6 +1210,7 @@ const Cellar = (() => {
     Object.values(state.figs).forEach((f) => {
       const ud = f.userData;
       if (ud.rel !== 0 && f.visible) items.push({ kind: "name", text: ud.name + (ud.brave && ud.alive ? " 🎖" : ""), world: worldOf(f, 0, ud.dead ? 1.3 : 2.1, 0), turn: state.turn === ud.pid && ["play", "shot"].includes(state.phase), dead: !ud.alive, prio: 0 });
+      if (ud.bounty && ud.alive && ud.rel !== 0 && f.visible) items.push({ kind: "bounty", text: "🪙 " + ud.bounty, world: worldOf(f, 0, 2.42, 0), prio: -1 });
       if (state.claim && state.claim.pid === ud.pid && now < state.claim.until && ud.rel !== 0 && f.visible) items.push({ kind: "claim", text: state.claim.text, hot: state.claim.hot, world: worldOf(f, 0, 2.45, 0), prio: -1 });
       if (ud.rel === 0 && ud.items.visible) ud.items.children.forEach((m) => {             // свои предметы подписаны значком — их можно нажать
         const info = ITEMS[m.userData.key] || { emoji: "?" };
@@ -1149,6 +1248,12 @@ const Cellar = (() => {
     if (document.hidden || ms - lastDraw < 22) return;
     lastDraw = ms;
     const t = ms / 1000, dt = Math.min(.05, clock0 ? t - clock0 : .016); clock0 = t;
+    const nowF = performance.now(), su = state.sus && nowF < state.sus.until ? state.sus : null;
+    state.susK = su && nowF >= su.from ? Math.min(1, (nowF - su.from) / Math.max(1, su.until - su.from)) : 0;
+    state.beat = (state.beat || 0) + dt * (1.1 + state.susK * 1.8);
+    const pulse = state.susK ? Math.pow(Math.max(0, Math.sin(state.beat * Math.PI * 2)), 12) : 0;
+    const fovWant = (state.baseFov || camera.fov) * (1 - .17 * state.susK);
+    if (Math.abs(camera.fov - fovWant) > .05) { camera.fov += (fovWant - camera.fov) * Math.min(1, dt * (state.susK ? 1.6 : 4)); camera.updateProjectionMatrix(); }
     lamp.rotation.z = Math.sin(t * .9) * .09; lamp.rotation.x = Math.sin(t * .63) * .05;
     const flick = state.flicker > 0 ? (Math.random() < .5 ? .2 : 1) : (Math.random() < .004 ? .35 : 1);
     state.flicker = Math.max(0, state.flicker - dt);
@@ -1195,6 +1300,7 @@ const Cellar = (() => {
       state.gunUp = (state.gunUp || 0) + ((state.aim ? 1 : 0) - (state.gunUp || 0)) * Math.min(1, dt * 5);
       gun.position.y = .86 + state.gunUp * .06 + (state.spin ? .04 : 0);
       if (state.aim && !state.spin) gun.rotation.z = Math.sin(t * 9) * .015;
+      if (state.susK) { gun.rotation.z += (Math.sin(t * 37) + Math.sin(t * 53)) * .012 * state.susK; gun.position.y += Math.sin(t * 43) * .006 * state.susK; }
       gun.userData.muzzle.intensity = Math.max(0, gun.userData.muzzle.intensity - dt * 30);
     }
     const lit = .55 + .45 * flick;
@@ -1203,7 +1309,15 @@ const Cellar = (() => {
     if (state.mode === "bluff") placeBluff(t, dt);
     const mf = state.figs[state.me];                                   // свой выбранный предмет приподнят
     if (mf) mf.userData.items.children.forEach((m) => { const up = m.userData.index === state.sel ? .1 + Math.sin(t * 5) * .015 : 0; m.position.y += (up - m.position.y) * Math.min(1, dt * 8); });
-    if (state.rankCard) { state.rankCard.g.rotation.y = t * .6; state.rankCard.g.rotation.z = Math.sin(t * .9) * .05; }
+    if (state.rankCard) {                                              // карта стола: спускается, делает один полный оборот и уходит вверх
+      const rc = state.rankCard, sh = state.rankShow, k = sh ? (performance.now() - sh.at) / 2700 : 2;
+      rc.g.visible = k < 1;
+      if (k < 1) {
+        const inK = Math.min(1, k / .16), outK = Math.max(0, (k - .84) / .16);
+        rc.g.position.y = 1.62 + (1 - ease(inK)) * .9 + ease(outK) * .9; rc.g.scale.setScalar(Math.max(.01, ease(inK) * (1 - ease(outK))));
+        rc.g.rotation.y = ease(Math.min(1, Math.max(0, (k - .1) / .78))) * Math.PI * 2; rc.g.rotation.z = Math.sin(t * .9) * .04;
+      } else state.rankShow = null;
+    }
     Object.values(state.figs).forEach((f) => { if (rev0 && f.userData.rel !== 0) { const ud = f.userData, ev2 = state.evAim && performance.now() < state.evAim.until ? state.evAim : null; if ((ev2 ? ev2.who : state.turn) === ud.pid && state.revWant && !ud.dead && ["play", "shot"].includes(state.phase)) { const pole = ud.person.body.localToWorld(new T.Vector3(-.9, (ev2 ? ev2.target : state.aim) === ud.pid ? 1.2 : -.4, -.3)); P().reach(T, ud.person.arms.R, state.revWant, pole); } } });
     void lit;
     // орбита пули между зеркалами, пока катятся кубики
@@ -1235,12 +1349,13 @@ const Cellar = (() => {
     }
     casings.forEach((m) => { const u = m.userData; if (u.rest) return; u.v.y -= 6 * dt; m.position.addScaledVector(u.v, dt); m.rotation.x += u.spin * dt; m.rotation.z += u.spin * .5 * dt;
       const fl = Math.hypot(m.position.x, m.position.z) < tr - .02 ? .8 : .03; if (m.position.y <= fl) { m.position.y = fl; u.v.multiplyScalar(.3); u.v.y = Math.abs(u.v.y) > .5 ? -u.v.y * .3 : 0; if (u.v.length() < .2) { u.rest = true; m.rotation.x = Math.PI / 2; } } });
-    if (af && aimNow !== state.me && af.userData.rel !== 0 && !af.userData.dead) { state.cross.visible = true; state.cross.position.copy(headOf(af)); state.cross.scale.setScalar(.3 + Math.sin(t * 8) * .05); }
+    if (af && aimNow !== state.me && aimNow !== turnNow && af.userData.rel !== 0 && !af.userData.dead) { state.cross.visible = true; state.cross.position.copy(headOf(af)); state.cross.scale.setScalar(.3 + Math.sin(t * 8) * .05); }
     else state.cross.visible = false;
     for (let i = anim.length - 1; i >= 0; i--) { const a = anim[i]; a.t += dt; const k = Math.min(1, a.t / a.dur); if (a.step) a.step(k); if (k >= 1) { anim.splice(i, 1); if (a.done) a.done(); } }
     state.flash = Math.max(0, state.flash - dt * 5); state.hurt = Math.max(0, state.hurt - dt * .7);
     state.dark = (state.dark || 0) + ((state.selfAim ? 1 : 0) - (state.dark || 0)) * Math.min(1, dt * 3);
-    post.uniforms.flash.value = state.flash; post.uniforms.hurt.value = state.hurt; post.uniforms.time.value = t; post.uniforms.dark.value = state.dark;
+    post.uniforms.flash.value = state.flash; post.uniforms.hurt.value = Math.max(state.hurt, pulse * .12 * state.susK); post.uniforms.time.value = t;
+    post.uniforms.dark.value = Math.max(state.dark, state.susK * .5 + pulse * .35);
     renderer.setRenderTarget(rt); renderer.render(scene, camera);
     renderer.setRenderTarget(null); renderer.render(postScene, postCam);
     updateLabels();
@@ -1254,7 +1369,7 @@ const Cellar = (() => {
     renderer.setSize(W, H, false);
     rt.setSize(W, H);
     post.uniforms.res.value.set(W, H);
-    camera.aspect = W / H; camera.fov = W / H < 1.1 ? (state.mode === "revolver" ? 70 : 66) : W / H > 1.6 ? (state.mode === "revolver" ? 54 : 50) : 56; camera.updateProjectionMatrix();
+    camera.aspect = W / H; camera.fov = W / H < 1.1 ? (state.mode === "revolver" ? 70 : 66) : W / H > 1.6 ? (state.mode === "revolver" ? 54 : 50) : 56; state.baseFov = camera.fov; camera.updateProjectionMatrix();
   }
 
   function pickAt(lx, ly) {
@@ -1356,7 +1471,7 @@ const Cellar = (() => {
     casings.forEach((m) => { scene.remove(m); disposeTree(m); }); casings.length = 0;
     if (state.sawn && gun) { gun.attach(gun.userData.front); gun.userData.front.position.set(0, 0, 0); gun.userData.front.quaternion.identity(); state.sawn = false; }
     resetDecals();
-    state.aim = null; state.spin = null; state.evAim = null; state.orbit = null; anim.length = 0; state.firing = false;
+    state.aim = null; state.spin = null; state.evAim = null; state.orbit = null; anim.length = 0; state.firing = false; state.sus = null; state.relief = null; state.rankShow = null;
   }
 
   window.addEventListener("resize", resize);
