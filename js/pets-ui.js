@@ -228,8 +228,10 @@ function petMgSheet() {
   const p = Api.state && Api.state.pets.find((x) => x.id === S.petSel);
   if (!p) return "";
   const list = (Api.state.inv || []).filter((x) => x.startsWith("mg:")).map((k) => Shop.byKey(k)).filter(Boolean);
-  const used = (p.mg || []).length;
-  return `<h2>💉 Мутагени</h2><p class="muted small">Укол змінює вигляд назавжди. Не більше двох на улюбленця (уколото ${used}/2). Мутація тієї самої групи замінить стару.</p>
+  const used = (p.mg || []).length, reset = (Api.state.food || {}).obnul || 0;
+  const resetBtn = used && reset ? `<button class="card mg-row mg-reset" data-a="pet-feed" data-v="obnul"><span class="mg-candy">🍬</span><div class="grow"><b>Цукерка-обнулятор ×${reset}</b>
+    <div class="small">Скине вколоті мутагени: знову 0 з 2. Вроджені мутації (і ті, що замінив укол) повернуться</div></div><span class="muted">›</span></button>` : "";
+  return `<h2>💉 Мутагени</h2>${resetBtn}<p class="muted small">Укол змінює вигляд назавжди. Не більше двох на улюбленця (уколото ${used}/2). Мутація тієї самої групи замінить стару.</p>
     ${!p.receptive ? `<div class="card">Цей улюбленець не приймає мутагени — у нього немає значка 🧬</div>` : used >= 2 ? `<div class="card">Уже вколото два мутагени — більше не можна</div>`
       : list.length ? `<div class="mg-list">${list.map((it) => { const m = Pets.MUTATIONS.find((x) => x.key === it.mg);
         return `<button class="card mg-row" data-a="pet-mg-inject" data-v="mg:${it.id}">${Pets.syringe(40)}<div class="grow"><b>«${esc(it.name)}»</b><div class="small">${m.emoji} ${esc(m.name)}</div><div class="small muted">${esc(m.desc)}</div></div><span class="muted">›</span></button>`; }).join("")}</div>`
@@ -410,6 +412,7 @@ const PET_ACTIONS = {
       const k = petKnow(p.id);
       if (st.reaction === "fav") { k.fav = 1; saveProfile(); notify("success"); toast(`${t.name} обожнює це! ❤`); }
       else if (st.reaction === "dis") { k.dis = 1; saveProfile(); toast(`${t.name} кривиться… з’їв, але без радості`); }
+      else if (item === "obnul") { S.sheet = null; renderOverlay(); notify("success"); toast("🍬 Вколоті мутагени скинуто — знову 0 з 2, вроджене повернулося"); }
       else { haptic("medium"); toast("Ням!"); }
       setTimeout(() => { petFx(st.reaction === "dis" ? "🤢" : st.reaction === "fav" ? "😍" : "🍖"); petJump("act-chew"); if (t.quirkIdx === 10) setTimeout(() => petSay("ік!"), 900); }, 60);
     }).catch(petErr);

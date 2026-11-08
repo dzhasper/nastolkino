@@ -11,7 +11,7 @@ const Shop = (() => {
     { key: "title", name: "Титули", icon: "🏷️" },
     { key: "fx", name: "Ефекти", icon: "✨" },
     { key: "pic", name: "Аватарки", icon: "👾" },
-    { key: "ava", name: "Значки", icon: "🐉" },
+    { key: "ava", name: "Значки", icon: "😎" },
     { key: "toy", name: "Іграшки", icon: "🧸" },
     { key: "hat", name: "Приколи", icon: "🎩" },
     { key: "mg", name: "Мутагени", icon: "💉" },
@@ -31,7 +31,7 @@ const Shop = (() => {
     I("frame", "cards", "Картковий стіл", 220, { fresh: 1 }), I("frame", "shells", "Патронташ", 260, { fresh: 1 }),
     I("frame", "ghost", "Привид", 380, { fresh: 1, strip: 4, speed: .9 }), I("frame", "lightning", "Блискавка", 480, { fresh: 1, strip: 4, speed: .5 }),
     I("frame", "lava", "Лава", 560, { fresh: 1, strip: 4, speed: .7 }), I("frame", "galaxy", "Галактика", 750, { fresh: 1, strip: 6, speed: 1.2 }),
-    I("frame", "plasma", "Плазма", 1000, { fresh: 1, strip: 6, speed: .8 }), I("frame", "dragon", "Драконяча луска", 1000, { fresh: 1, strip: 4, speed: 1 }),
+    I("frame", "plasma", "Плазма", 1000, { fresh: 1, strip: 6, speed: .8 }), I("frame", "dragon", "Зміїна луска", 1000, { fresh: 1, strip: 4, speed: 1 }),
     I("frame", "royal", "Королівська", 2000, { fresh: 1, strip: 6, speed: 1.1 }),
     I("frame", "bubbles", "Бульбашки", 140, { fresh: 1, strip: 4, speed: 1.2 }), I("frame", "hearts", "Сердечка", 180, { fresh: 1, strip: 4, speed: .8 }),
     I("frame", "glass", "Вітраж", 220, { fresh: 1 }), I("frame", "confetti", "Конфеті", 280, { fresh: 1, strip: 4, speed: .6 }),
@@ -64,8 +64,8 @@ const Shop = (() => {
         ["title", "s_neon2", "Привид мережі", 1, { text: "Привид мережі" }], ["ava", "s_neon2", "НЛО", 1, { emoji: "🛸" }], ["bg", "s_neon", "Неон-сіті", 2],
         ["fx", "s_neon", "Неон", 2], ["frame", "s_holo", "Голограма", 3, { strip: 6, speed: .6 }], ["style", "s_neon", "Кібер-ID", 3, { desc: "Неонове посвідчення з перешкодами" }]]],
       ["s_dragon", [["title", "s_dragon1", "Син неба", 0, { text: "Син неба" }], ["ava", "s_dragon1", "Ліхтарик", 0, { emoji: "🏮" }], ["frame", "s_clouds", "Хмари", 1],
-        ["title", "s_dragon2", "Господар дракона", 1, { text: "Господар дракона" }], ["ava", "s_dragon2", "Драконик", 1, { emoji: "🐲" }], ["bg", "s_dragon", "Храм дракона", 2],
-        ["fx", "s_dragon", "Золото дракона", 2], ["frame", "s_gdragon", "Золотий дракон", 3, { strip: 6, speed: 1.2 }], ["style", "s_dragon", "Сувій імператора", 3, { desc: "Червоний лак, золото й печатка дракона" }]]],
+        ["title", "s_dragon2", "Господар ліхтарів", 1, { text: "Господар ліхтарів" }], ["ava", "s_dragon2", "Тигреня", 1, { emoji: "🐯" }], ["bg", "s_dragon", "Храм ліхтарів", 2],
+        ["fx", "s_dragon", "Золото імператора", 2], ["frame", "s_gdragon", "Золотий короп", 3, { strip: 6, speed: 1.2 }], ["style", "s_dragon", "Сувій імператора", 3, { desc: "Червоний лак, золото й печатка удачі" }]]],
     ].flatMap(([season, list]) => list.map(([cat, id, name, tier, extra]) => I(cat, id, name, 0, Object.assign({ season, tier }, extra || {})))),
 
     I("bg", "none", "Без фону", 0), I("bg", "rpg", "Замок", 90), I("bg", "arcade", "Аркада", 80), I("bg", "office", "Офіс", 100), I("bg", "classic", "Нуар", 100),
@@ -101,7 +101,7 @@ const Shop = (() => {
     I("fx", "shake", "Тремтіння", 180, { fresh: 1 }), I("fx", "toxic", "Радіоактив", 260, { fresh: 1 }), I("fx", "ghosty", "Примарне", 320, { fresh: 1 }),
     I("fx", "frost", "Іній", 350, { fresh: 1 }), I("fx", "bloody", "Криваве", 600, { fresh: 1 }), I("fx", "royal", "Королівське", 1000, { fresh: 1 }),
 
-    I("ava", "dragon", "Дракон", 40, { emoji: "🐉" }), I("ava", "dino", "Динозавр", 40, { emoji: "🦖" }), I("ava", "invader", "Прибулець", 50, { emoji: "👾" }),
+    I("ava", "dragon", "Ящірка", 40, { emoji: "🦎" }), I("ava", "dino", "Динозавр", 40, { emoji: "🦖" }), I("ava", "invader", "Прибулець", 50, { emoji: "👾" }),
     I("ava", "wizard", "Чарівник", 50, { emoji: "🧙" }), I("ava", "shark", "Акула", 50, { emoji: "🦈" }), I("ava", "bat", "Кажан", 60, { emoji: "🦇" }),
     I("ava", "spider", "Павук", 60, { emoji: "🕷️" }), I("ava", "skull", "Череп", 70, { emoji: "💀" }), I("ava", "clown", "Клоун", 70, { emoji: "🤡" }),
     I("ava", "oni", "Демон", 80, { emoji: "👹" }), I("ava", "genie", "Джин", 80, { emoji: "🧞" }), I("ava", "villain", "Лиходій", 90, { emoji: "🦹" }),
@@ -178,10 +178,10 @@ const Shop = (() => {
     { key: "s_ice", name: "Крижана ніч", emoji: "❄️", price: 400, w: [50, 30, 15, 5], color: "#7ad8ff", desc: "Іній, північне сяйво й вічний холод" },
     { key: "s_moon", name: "Кривавий місяць", emoji: "🌕", price: 400, w: [50, 30, 15, 5], color: "#ff3b4a", desc: "Ніч, коли місяць наливається кров’ю" },
     { key: "s_neon", name: "Неонове місто", emoji: "🌃", price: 400, w: [50, 30, 15, 5], color: "#ff3ec8", desc: "Дощ, неон і перешкоди в мережі" },
-    { key: "s_dragon", name: "Золотий дракон", emoji: "🐲", price: 400, w: [50, 30, 15, 5], color: "#ffc23b", desc: "Ліхтарі, хмари й золото імператора" },
+    { key: "s_dragon", name: "Свято ліхтарів", emoji: "🏮", price: 400, w: [50, 30, 15, 5], color: "#ffc23b", desc: "Ліхтарі, хмари й золото імператора" },
   ];
   SEASONS.forEach((x) => { x.when = "any"; });
-  if (typeof Loot !== "undefined") Loot.SETS.forEach((x) => SEASONS.push({ key: x.key, name: x.name, emoji: x.emoji, price: x.price, w: x.w, color: x.color, desc: x.desc, when: x.when, triple: !!x.triple }));
+  if (typeof Loot !== "undefined") Loot.SETS.forEach((x) => SEASONS.push({ key: x.key, name: x.name, emoji: x.emoji, price: x.price, w: x.w, color: x.color, desc: x.desc, when: x.when, triple: !!x.triple, spins: x.spins || (x.triple ? 3 : 0) }));
   const seasonByKey = (k) => SEASONS.find((x) => x.key === k);
   const seasonPool = (k) => ITEMS.filter((x) => x.season === k);
   const POOL = ITEMS.filter((x) => x.price > 0);
@@ -379,11 +379,13 @@ const Shop = (() => {
     },
     s_clouds(t) { t.bevel("#ff6a5a", "#c8202a", "#7a0a10", 4); t.ring(4, (x, y, d) => (d === 2 && (x + y) % 6 === 0 ? "#ffd23f" : null));
       [[A - 3, A - 3], [B + 2, A - 3], [A - 3, B + 2], [B + 2, B + 2], [24, A - 3], [24, B + 2]].forEach(([x, y]) => { t.Rr(x - 2, y, 5, 1, "#ffd23f"); t.P(x - 2, y - 1, "#ffd23f"); t.P(x + 2, y + 1, "#ffd23f"); t.P(x, y - 1, "#fff4b0"); }); },
-    s_gdragon(t, R, f, n) {                                      // золотой дракон ползёт вокруг аватара
+    s_gdragon(t, R, f, n) {                                      // золотий короп пливе довкола аватара (код рамки лишився старий — щоб у гравців нічого не зникло)
       t.bevel("#fff4b0", "#ffd23f", "#b87a10", 5);
       const h = f / n, L = A - 3, M = B + 2, w = M - L, at = (u) => { const p = ((u % 1) + 1) % 1 * 4, k = Math.floor(p), q = p - k; return [[L + q * w, L], [M, L + q * w], [M - q * w, M], [L, M - q * w]][k]; };
-      t.ring(5, (x, y, d, u) => { const k = (h - u + 1) % 1; return k < .35 && d >= 1 && d <= 3 ? (d === 2 ? (Math.floor(u * 90) % 2 ? "#d0202a" : "#ff4a2a") : "#7a0a10") : null; });
-      const [hx, hy] = at(h); t.Rr(hx - 2, hy - 2, 5, 5, "#ffd23f"); t.P(hx, hy - 1, "#ff2a2a"); t.P(hx - 2, hy - 3, "#fff4b0"); t.P(hx + 2, hy - 3, "#fff4b0");
+      t.ring(5, (x, y, d, u) => { const k = (h - u + 1) % 1; return k < .2 && d >= 1 && d <= 3 ? (d === 2 ? (Math.floor(k * 70) % 3 === 0 ? "#ffffff" : "#ff7a1a") : (k < .05 ? "#ffb84a" : "#e8501a")) : null; });
+      const [tx, ty] = at(h - .21); t.Rr(tx - 2, ty - 2, 4, 4, "#ffb84a"); t.P(tx - 1, ty - 1, "#ffffff"); t.P(tx + 1, ty + 1, "#ffffff");   // хвіст
+      const [hx, hy] = at(h); t.Rr(hx - 2, hy - 2, 5, 5, "#ff7a1a"); t.Rr(hx - 1, hy - 2, 3, 1, "#ffffff"); t.P(hx, hy, "#1d1210"); t.P(hx + 2, hy + 1, "#ffd0a0");   // голова
+      for (let i = 0; i < 3; i++) { const [bx, by] = at(h + .025 + i * .02); t.P(bx + (i % 2 ? 2 : -2), by - 2 - i, "#bfefff"); }   // бульбашки
     },
     royal(t, R, f, n) {                                          // золото, камни по очереди вспыхивают, корона с искрой
       t.bevel("#fff4b0", "#ffd23f", "#b87a10", 5);
@@ -568,6 +570,7 @@ const Shop = (() => {
     if (!fx || fx === "none") return `<span class="nmfx">${n}</span>`;
     const cfx = byId("fx", fx);
     if (cfx && cfx.cx) { const [a, b, c, d] = cfx.pal; return `<span class="nmfx fx-coll fxc-${COLL_KIND[fx.slice(2)] || "gold"}" data-t="${n}" style="--a:${a};--b:${b};--c:${c};--d:${d}">${n}</span>`; }
+    if (cfx && cfx.fxk && cfx.pal) { const [a, b, c, d] = cfx.pal; return `<span class="nmfx fx-coll fxp-${cfx.fxk}" data-t="${n}" style="--a:${a};--b:${b};--c:${c};--d:${d}">${n}</span>`; }   // турнірне / кристальне сяйво
     const gfx = typeof Loot !== "undefined" ? Loot.fx(fx) : null;
     if (gfx) return `<span class="nmfx fx-gen" style="--a:${gfx[0]};--b:${gfx[1]};--c:${gfx[2]}">${n}</span>`;
     if (fx === "wave") return `<span class="nmfx fx-wave">${[...String(name)].map((ch, i) => `<i style="animation-delay:${i * .08}s">${esc(ch) === " " ? "&nbsp;" : esc(ch)}</i>`).join("")}</span>`;
@@ -623,7 +626,7 @@ const Shop = (() => {
         <div class="pc-stats">${p.games || 0} ночей · ${p.wins || 0} перемог · рівень ${lv}</div>`,
       s_neon: `<div class="pc-scan"></div>${bg}<div class="pc-top"><b>CYBER·ID</b><span>#${String(1000 + (p.games || 0) * 13).slice(-4)}</span></div>
         <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div><div class="pc-code">LV ${lv} · WIN ${rate}%</div></div></div><div class="pc-barcode"></div>`,
-      s_dragon: `${bg}<div class="pc-seal">龍</div><div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
+      s_dragon: `${bg}<div class="pc-seal">福</div><div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
           <div class="pc-code">Рівень ${lv} · ${p.wins || 0} перемог</div></div></div>`,
       creator: `<div class="pc-flames"><i></i><i></i><i></i></div>${bg}<div class="pc-seal">✦ ТВОРЕЦЬ ✦</div>
         <div class="pc-body">${avatar}<div class="pc-main"><div class="pc-name">${name}</div><div class="pc-sub">${esc(title)}</div>
@@ -653,6 +656,11 @@ const Shop = (() => {
         <div class="pc-foot"><span>LV ${lv}</span><span>${p.wins || 0} перемог</span><span>${p.games || 0} ігор</span><span>${rate}%</span></div></div>`;
     }
     const gs = !T[lk.style] && typeof Loot !== "undefined" ? Loot.style(lk.style) : null;
+    if (gs && gs.tpl && typeof IdCards !== "undefined") {               // у картки свій макет (js/idcards.js), колір — із палітри речі
+      const [g1, g2, g3, g4] = gs.pal;
+      const html = IdCards.render(gs.tpl, { name, plain: cleanName(p.name || ""), title, lv, rate, wins: p.wins || 0, games: p.games || 0, avatar, bg });
+      if (html) return `<div class="pcard pc-t pc-t-${gs.tpl} ${gs.kind === "foil" ? "holo" : ""} ${opts.mini ? "mini" : ""}" style="--g1:${g1};--g2:${g2};--g3:${g3};--g4:${g4}">${html}${gs.kind === "foil" ? `<div class="pc-holo"></div>` : ""}</div>`;
+    }
     if (gs) {
       const [g1, g2, g3, g4] = gs.pal;
       return `<div class="pcard pc-gen pc-gen-${gs.kind} ${opts.mini ? "mini" : ""}" style="--g1:${g1};--g2:${g2};--g3:${g3};--g4:${g4}">${gs.kind === "foil" ? `<div class="pc-shine"></div>` : ""}${bg}

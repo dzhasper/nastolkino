@@ -291,6 +291,9 @@ function onMessage(m, queued) {
   } else if (m.t === "error") {
     notify("error");
     toast(m.text);
+    if (S.screen === "connecting" && !S.room) { Net.stop(); S.joining = null; S.screen = S.cup ? "cup" : "home"; render(); }   // стіл не пустив — не висимо на «Підключаємося»
+  } else if (m.t === "host-moved") {                                     // хост пішов — стіл тепер на моєму телефоні
+    toast("👑 Хост вийшов — стіл тепер тримає твій телефон, гра триває");
   } else if (m.t === "left" || m.t === "kicked") {
     if (m.t === "kicked") toast("Хост прибрав вас із кімнати");
     S.room = null; S.screen = "home"; S.chatOpen = false; render(); renderChat();
@@ -651,6 +654,7 @@ function lobbyBento(o) {
 }
 function viewRoomInner() {
   const r = S.room;
+  if (r.phase === "lobby" && r.settings && r.settings.tour && !r.settings.tour.started && typeof tourHall === "function") return tourHall(r);   // турнір: зал з аватарками
   if (r.game === "draw") return viewDrawRoom();
   if (r.game === "spy") return viewSpyRoom();
   if (CELLAR_GAMES.includes(r.game)) return viewRouletteRoom();

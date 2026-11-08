@@ -163,3 +163,90 @@ body.pixel .ct-slot, body.pixel .key-row, body.pixel .shop-item .inv-n { border-
 body.pixel .craft-odds span { border-radius: 0; }
 .ct-pic img { width: 46px; height: 46px; image-rendering: pixelated; border-radius: 8px; }
 body.pixel .ct-pic img { border-radius: 0; }
+/* турнірний кейс: п’ять стрічок і п’ять призів */
+.cl-box.triple.n5 .reel.sm { height: 74px; margin-bottom: 6px; }
+.cl-box.triple.n5 .rcell { width: 62px; }
+.cl-box.triple.n5 .ct-ico { font-size: 22px; }
+.cl-three.n5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+.cl-three.n5 .cl-mini b { font-size: 10px; }
+.case-card.c-s_cup { background: linear-gradient(135deg, rgba(255, 194, 26, .28), rgba(232, 32, 58, .18)); box-shadow: inset 0 0 0 2px #ffc21a, 0 0 22px rgba(255, 194, 26, .35); }
+.case-card.c-s_shard { background: linear-gradient(135deg, rgba(122, 240, 255, .22), rgba(255, 154, 240, .18)); box-shadow: inset 0 0 0 2px #7af0ff, 0 0 22px rgba(122, 240, 255, .35); }
+
+/* ================================================================ преміальні скрині: турнірний кейс і скриня уламків */
+/* мітка на речах в інвентарі */
+.shop-item.prem-cup { box-shadow: inset 0 0 0 2px #ffc21a, 0 0 14px rgba(255, 194, 26, .45); background: linear-gradient(160deg, rgba(255, 194, 26, .18), var(--card) 60%); position: relative; }
+.shop-item.prem-shard { box-shadow: inset 0 0 0 2px #7af0ff, 0 0 14px rgba(122, 240, 255, .45); background: linear-gradient(160deg, rgba(122, 240, 255, .16), rgba(255, 154, 240, .08) 50%, var(--card)); position: relative; }
+.shop-item.prem-cup::after, .shop-item.prem-shard::after { position: absolute; top: 4px; right: 5px; font-size: 14px; filter: drop-shadow(0 0 4px #000); }
+.shop-item.prem-cup::after { content: "🏆"; } .shop-item.prem-shard::after { content: "💎"; }
+.prem-chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-weight: 800; font-size: 11px; color: #1a1006; }
+.prem-chip.pc-cup { background: linear-gradient(90deg, #fff3b0, #ffc21a); } .prem-chip.pc-shard { background: linear-gradient(90deg, #b8f4ff, #ff9af0); }
+/* вітрина «Що всередині» */
+.showcase .sc-hero { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 18px; margin-bottom: 10px; }
+.showcase .sc-hero h2 { margin: 0 0 4px; }
+.sc-cup .sc-hero { background: radial-gradient(circle at 20% 50%, rgba(255, 194, 26, .45), transparent 60%), linear-gradient(135deg, #3a2400, #1a0a12); box-shadow: inset 0 0 0 2px #ffc21a; }
+.sc-shard .sc-hero { background: radial-gradient(circle at 20% 50%, rgba(122, 240, 255, .4), transparent 60%), linear-gradient(135deg, #0a2a4a, #1a0a3a); box-shadow: inset 0 0 0 2px #7af0ff; }
+.sc-chest { animation: sc-bob 2.4s ease-in-out infinite; filter: drop-shadow(0 0 12px rgba(255, 220, 120, .6)); }
+.sc-shard .sc-chest { filter: drop-shadow(0 0 12px rgba(122, 240, 255, .7)); }
+@keyframes sc-bob { 50% { transform: translateY(-4px) rotate(-2deg); } }
+.sc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.sc-grid.g-style, .sc-grid.g-bg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sc-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px; border-radius: 14px; background: var(--card); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tc) 60%, transparent); text-align: center; min-width: 0; overflow: hidden; }
+.sc-tile b { font-size: 11px; line-height: 1.2; }
+.sc-tile small { font-size: 10px; color: var(--muted); line-height: 1.2; }
+.sc-tile .sc-t { font-size: 10px; font-weight: 800; color: var(--tc); }
+.sc-tile.have { box-shadow: inset 0 0 0 2px var(--tc), 0 0 10px color-mix(in srgb, var(--tc) 50%, transparent); }
+.sc-tile .sp-av, .sc-tile .sp-pic, .sc-tile .sp-ava { transform: scale(.8); margin: -6px 0; }
+.sc-tile .sp-pic img { width: 72px; height: 72px; }
+.sc-tile .sp-bg { width: 100%; height: 64px; }
+.sc-title { font-weight: 800; font-size: 13px; padding: 10px 4px; color: #ffe9a0; text-shadow: 0 0 8px rgba(255, 194, 26, .6); }
+.sc-shard .sc-title, .trophy-room.tr-shard .sc-title { color: #c8f8ff; text-shadow: 0 0 8px rgba(122, 240, 255, .7); }
+.sc-badge { font-size: 34px; line-height: 1.3; filter: drop-shadow(0 0 6px rgba(255, 255, 255, .35)); }
+.sc-card { width: 100%; overflow: hidden; position: relative; }
+.sc-card { display: flex; justify-content: center; }
+.sc-card > .pcard { width: 340px; flex: none; zoom: .46; margin: 0; }
+.tr-grid .tr-item .sc-card > .pcard { zoom: .46; }
+.tr-grid.n5 .tr-item:last-child .sc-card > .pcard, .tr-grid.n3 .tr-item:first-child .sc-card > .pcard { zoom: .9; }
+/* зал трофеїв після відкриття */
+.cl-box.prem-done > .reel, .cl-box.prem-done > .cl-title { display: none; }
+.trophy-room { position: relative; padding: 14px 4px 4px; border-radius: 22px; overflow: hidden; isolation: isolate; }
+.trophy-room .tr-rays { position: absolute; inset: -50%; z-index: -1; animation: idc-spin 18s linear infinite; }
+.trophy-room.tr-cup .tr-rays { background: repeating-conic-gradient(rgba(255, 210, 63, .22) 0 10deg, transparent 10deg 20deg), radial-gradient(circle, rgba(255, 194, 26, .35), transparent 60%); }
+.trophy-room.tr-shard .tr-rays { background: repeating-conic-gradient(rgba(122, 240, 255, .2) 0 8deg, rgba(255, 154, 240, .14) 8deg 16deg, transparent 16deg 24deg), radial-gradient(circle, rgba(122, 240, 255, .3), transparent 60%); }
+.trophy-room .tr-head { font-family: "Unbounded", sans-serif; font-weight: 800; font-size: 20px; letter-spacing: .02em; margin-bottom: 12px; animation: tr-glow 1.6s ease-in-out infinite alternate; }
+.trophy-room.tr-cup .tr-head { color: #ffe066; } .trophy-room.tr-shard .tr-head { color: #b8f4ff; }
+@keyframes tr-glow { from { text-shadow: 0 0 6px currentColor; } to { text-shadow: 0 0 18px currentColor, 0 0 30px currentColor; } }
+.tr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tr-grid.n5 .tr-item:last-child, .tr-grid.n3 .tr-item:first-child { grid-column: span 2; }
+.tr-item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 26px 8px 10px; border-radius: 16px; overflow: hidden; min-width: 0;
+  background: linear-gradient(170deg, color-mix(in srgb, var(--tc) 30%, #120a1e), #0c0814 70%); box-shadow: inset 0 0 0 2px var(--tc), 0 0 18px color-mix(in srgb, var(--tc) 55%, transparent);
+  opacity: 0; transform: scale(.6) translateY(20px); animation: tr-pop .55s cubic-bezier(.2, 1.6, .4, 1) forwards; animation-delay: calc(var(--i) * .28s); }
+@keyframes tr-pop { to { opacity: 1; transform: none; } }
+.tr-item b { font-size: 13px; color: #fff; }
+.tr-item .tr-ribbon { position: absolute; top: 0; left: 0; right: 0; padding: 3px 0; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #1a1006; }
+.trophy-room.tr-cup .tr-ribbon { background: linear-gradient(90deg, #ffc21a, #fff3b0, #ffc21a); } .trophy-room.tr-shard .tr-ribbon { background: linear-gradient(90deg, #7af0ff, #ff9af0, #7af0ff); }
+.tr-item .tr-new { font-size: 11px; font-weight: 800; color: #7aff9a; animation: tr-blink 1s steps(2) infinite; }
+@keyframes tr-blink { 50% { opacity: .4; } }
+
+.tr-item .sp-pic img { width: 96px; height: 96px; }
+.trophy-room .cl-btns { margin-top: 12px; }
+.cup-case-btn { width: 100%; background: linear-gradient(90deg, #ffc21a, #fff3b0, #ffc21a); color: #2a1606; }
+.case-layer:has(.prem-done) { align-items: flex-start; overflow-y: auto; }
+.cl-box.prem-done .cl-res { margin-top: 0; align-items: stretch; }
+.trophy-room { width: 100%; box-sizing: border-box; }
+.sc-grid.g-frame { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sc-grid.g-frame .sp-av { transform: none; margin: 4px 0; }
+.sc-grid.g-hat { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sc-tile .sc-pet, .tr-item .sc-pet { transform: none; margin: 0; }
+.sc-pet { background: radial-gradient(circle at 50% 60%, rgba(255, 255, 255, .12), transparent 65%); border-radius: 50%; }
+.sc-tile .sp-ava.sc-pet, .tr-item .sp-ava.sc-pet { height: 104px; width: 104px; transform: none; margin: 0 auto; }
+.sp-ava.sc-pet > *, .sp-ava.sc-pet canvas.pix, .sp-ava.sc-pet img { width: 96px !important; height: 96px !important; }
+/* ID-картка з кейса: видно, як вона виглядатиме */
+.cl-prize.cl-card { flex-direction: column; align-items: center; width: 100%; }
+.clc-wrap { width: 340px; max-width: 100%; }
+.clc-wrap > .pcard { margin: 0; box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
+.ct-card { width: 100%; display: flex; justify-content: center; overflow: hidden; pointer-events: none; }
+.ct-card > .pcard { width: 340px; flex: none; margin: 0; zoom: .22; }
+.cl-mini .ct-card > .pcard, .craft-res .ct-card > .pcard { zoom: .3; }
+.cl-three.n5 .cl-mini .ct-card > .pcard { zoom: .17; }
+.cl-box.triple .rcell .ct-card > .pcard { zoom: .19; }
+.cl-box.triple.n5 .rcell .ct-card > .pcard { zoom: .16; }

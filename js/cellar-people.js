@@ -90,12 +90,20 @@ const CellarPeople = (() => {
   /* ---------------------------------------------------------------- раны: каждая в своём месте, кровь стекает вниз */
   const FACE_SPOTS = [[22, 8], [9, 19], [16, 4], [25, 21], [6, 9], [13, 27]];
   const CHEST_SPOTS = [[16, 14], [9, 9], [23, 21], [11, 25], [24, 7], [17, 28], [5, 18]];
-  function wound(g, x, y, k, r, pellets) {
+  // рана: велика пляма свіжої крові (яскрава середина, темніші краї), діри, бризки довкола й потёки донизу — щоб було видно і в темному підвалі
+  function wound(g, x, y, k, r, pellets, H = 32) {
     const R = (a, b, w, h, c) => { g.fillStyle = c; g.fillRect(a | 0, b | 0, w, h); };
-    const holes = pellets ? 5 : 1;
-    for (let i = 0; i < 40 * k; i++) { const a = r() * 6.28, d = Math.pow(r(), .8) * 6 * k; R(x + Math.cos(a) * d, y + Math.sin(a) * d * .8, 1 + (r() < .3), 1, r() < .5 ? "#8a000c" : "#5e0008"); }
-    for (let i = 0; i < holes; i++) { const hx = x + (pellets ? (r() - .5) * 7 : 0), hy = y + (pellets ? (r() - .5) * 6 : 0); R(hx - 1, hy - 1, 3, 3, "#3a0006"); R(hx, hy, 1 + (pellets ? 0 : 1), 1 + (pellets ? 0 : 1), "#0e0002"); }
-    for (let i = 0; i < 3 + k * 3; i++) { const sx = x - 4 + r() * 8; R(sx, y + 1, 1, 4 + r() * 12 * k, r() < .5 ? "#6a000a" : "#7c000c"); }   // потёки
+    const rad = (pellets ? 6.5 : 5) * k, pick = (l) => l[(r() * l.length) | 0];
+    for (let i = 0; i < 170 * k; i++) { const a = r() * 6.28, d = Math.pow(r(), .55) * rad; R(x + Math.cos(a) * d, y + Math.sin(a) * d * .85, 1 + (r() < .4), 1 + (r() < .3), pick(["#d0101c", "#e81822", "#b80c18", "#f02028"])); }
+    for (let i = 0; i < 60 * k; i++) { const a = r() * 6.28, d = Math.pow(r(), 1.3) * rad * .6; R(x + Math.cos(a) * d, y + Math.sin(a) * d * .85, 1, 1, r() < .5 ? "#ff3a40" : "#ff5a5a"); }
+    const holes = pellets ? 6 : 1;
+    for (let i = 0; i < holes; i++) { const hx = x + (pellets ? (r() - .5) * rad * 1.3 : 0), hy = y + (pellets ? (r() - .5) * rad * 1.1 : 0); R(hx - 1, hy - 1, 3, 3, "#3a0004"); R(hx, hy, 1 + (pellets ? 0 : 1), 1 + (pellets ? 0 : 1), "#0a0001"); }
+    for (let i = 0; i < 16 * k; i++) { const a = r() * 6.28, d = rad * (1 + r() * 1.4); R(x + Math.cos(a) * d, y + Math.sin(a) * d * .9, 1, 1, pick(["#e8141e", "#d0101a"])); }   // бризки
+    for (let i = 0; i < 4 + k * 4; i++) {                                // потёки донизу
+      let sx = x - rad * .7 + r() * rad * 1.4; const len = 4 + r() * Math.max(4, H - y - 2);
+      for (let j = 0; j < len; j++) { if (j % 5 === 4 && r() < .4) sx += r() < .5 ? -1 : 1; R(sx, y + j, 1 + (j < 3 && r() < .5), 1, j < len * .6 ? "#d81420" : "#a00c16"); }
+      R(sx - (r() < .5), y + len, 2, 1, "#8a000e");                       // крапля на кінці
+    }
   }
 
   /* ---------------------------------------------------------------- сборка персонажа */
@@ -111,6 +119,9 @@ const CellarPeople = (() => {
     const faceC = canvas(32, 32), chestC = canvas(32, 32), armC = canvas(16, 16);
     paintFace(faceC.getContext("2d"), L); paintChest(chestC.getContext("2d"), L); paintArm(armC.getContext("2d"), L);
     const face0 = faceC.getContext("2d").getImageData(0, 0, 32, 32), chest0 = chestC.getContext("2d").getImageData(0, 0, 32, 32);
+    const arm0 = armC.getContext("2d").getImageData(0, 0, 16, 16);
+    const sideC = canvas(16, 32), sg0 = sideC.getContext("2d"); sg0.fillStyle = L.topC; sg0.fillRect(0, 0, 16, 32);   // боки тулуба: теж у крові
+    const side0 = sg0.getImageData(0, 0, 16, 32), sideT = texOf(sideC), sideM = lam({ map: sideT });
     const faceT = texOf(faceC), chestT = texOf(chestC), armT = texOf(armC);
     const faceM = lam({ map: faceT }), chestM = lam({ map: chestT }), armM = lam({ map: armT });
     const topM = lam({ color: L.topC }), pantsM = lam({ color: L.pants || "#22222a" }), shoeM = lam({ color: "#141210" });
@@ -129,7 +140,7 @@ const CellarPeople = (() => {
       put(hips, box(.14, .07, .22, shoeM), s * .1 * W, -.53, .46);
     });
     const spine = new T.Group(); spine.position.y = .07; hips.add(spine);
-    const torso = put(spine, box(.46 * W, .56, .26, [topM, topM, topM, topM, chestM, topM]), 0, .28, 0);
+    const torso = put(spine, box(.46 * W, .56, .26, [sideM, sideM, topM, topM, chestM, topM]), 0, .28, 0);
     const vest = new T.Group(); vest.visible = false; spine.add(vest);
     const vestM = lam({ color: "#3e5a2c" }), vestD = lam({ color: "#2a4020" }), strap = lam({ color: "#1e1e1a" });
     put(vest, box(.5 * W, .42, .3, vestM), 0, .3, 0);
@@ -166,23 +177,27 @@ const CellarPeople = (() => {
     });
     const hit = [torso, headMesh];
     let wounds = 0;
-    function setWounds(n, pellets) {                           // n ранений: по очереди грудь, лицо, грудь…
+    function setWounds(n, pellets) {                           // n ранень: кожне — на груді (і дедалі більше), з другого — ще й обличчя, руки в бризках
       if (n === wounds) return;
       wounds = n;
-      const fg = faceC.getContext("2d"), cg = chestC.getContext("2d");
-      fg.putImageData(face0, 0, 0); cg.putImageData(chest0, 0, 0);
+      const fg = faceC.getContext("2d"), cg = chestC.getContext("2d"), ag = armC.getContext("2d");
+      const sg = sideC.getContext("2d");
+      fg.putImageData(face0, 0, 0); cg.putImageData(chest0, 0, 0); ag.putImageData(arm0, 0, 0); sg.putImageData(side0, 0, 0);
       const r = rng(hash(L.name + ":w"));
+      if (n >= 2) { cg.fillStyle = `rgba(200,0,16,${Math.min(.62, .22 + n * .12)})`; cg.fillRect(3, 12, 26, 20); }        // одяг просочується кров’ю
+      if (n >= 3) { cg.fillStyle = "rgba(170,0,14,.55)"; cg.fillRect(0, 6, 32, 26); fg.fillStyle = "rgba(200,0,16,.3)"; fg.fillRect(0, 14, 32, 18); }
       for (let i = 0; i < n; i++) {
-        if (i % 2 === 0) { const [x, y] = CHEST_SPOTS[(i / 2) % CHEST_SPOTS.length]; wound(cg, x, y, 1 + i * .15, r, pellets); }
-        else { const [x, y] = FACE_SPOTS[((i - 1) / 2) % FACE_SPOTS.length]; wound(fg, x, y, .7 + i * .1, r, pellets); }
+        const [x, y] = CHEST_SPOTS[i % CHEST_SPOTS.length]; wound(cg, x, y, 1 + i * .18, r, pellets);
+        if (i >= 1) { const [fx, fy] = FACE_SPOTS[(i - 1) % FACE_SPOTS.length]; wound(fg, fx, fy, .7 + i * .12, r, pellets); }
+        for (let j = 0; j < 10 + i * 6; j++) { ag.fillStyle = r() < .5 ? "#e8141e" : "#b00c18"; ag.fillRect((r() * 16) | 0, (r() * 16) | 0, 1 + (r() < .3), 1 + (r() < .5)); }   // бризки на руках
+        wound(sg, 3 + r() * 10, 6 + r() * 12, .55 + i * .1, r, pellets);                                                     // і на боках
       }
-      if (n >= 3) { cg.fillStyle = "rgba(90,0,8,.45)"; cg.fillRect(4, 18, 24, 14); }   // одежда пропиталась
-      faceT.needsUpdate = true; chestT.needsUpdate = true;
+      faceT.needsUpdate = true; chestT.needsUpdate = true; armT.needsUpdate = true; sideT.needsUpdate = true;
     }
     function setRed(k) { mats.forEach((m) => { if (m.emissive) m.emissive.setRGB(k * .6, 0, 0); }); }
     function dispose() {
       root.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
-      [faceT, chestT, armT].forEach((t) => t.dispose()); mats.forEach((m) => m.dispose());
+      [faceT, chestT, armT, sideT].forEach((t) => t.dispose()); mats.forEach((m) => m.dispose());
     }
     return { root, tilt, body, hips, spine, torso, vest, neck, head, hairG, stump, arms, hit, setWounds, setRed, dispose, look: L,
       self: (on) => { root.traverse((o) => { if (o.isMesh) o.visible = !on || !!o.userData.keep; }); } };   // за себя видны только предплечья и кисти

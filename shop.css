@@ -489,3 +489,17 @@ body.pixel .pic-opt, body.pixel .sp-pic img { border-radius: 0; }
 .fxc-royal { background: linear-gradient(100deg, #a86a08 0%, #ffd23f 20%, #fff6c8 32%, #ffd23f 44%, #ff6a1a 58%, #ffd23f 72%, #fff6c8 84%, #a86a08 100%); background-size: 260% 100%;
   -webkit-background-clip: text; background-clip: text; animation: fxc-sweep 2.2s linear infinite, fxc-royal-glow 1.3s ease-in-out infinite alternate; }
 @keyframes fxc-royal-glow { from { filter: drop-shadow(0 0 2px #ffd23f) drop-shadow(0 0 1px #e8202a) drop-shadow(0 1px 0 #000); } to { filter: drop-shadow(0 0 6px #ffd23f) drop-shadow(0 0 10px #ff4a1a) drop-shadow(0 1px 0 #000); } }
+/* сяйво імені з турнірного кейса й скрині уламків */
+.fxp-gold, .fxp-champ { background: radial-gradient(circle, #ffffff 0 1px, transparent 1.6px) 0 0 / 11px 9px, linear-gradient(110deg, #a86a00 0%, #ffc21a 25%, #fff3b0 45%, #ffffff 50%, #fff3b0 55%, #ffc21a 75%, #a86a00 100%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; animation: fxp-gold 2.4s linear infinite; filter: drop-shadow(0 0 4px rgba(255, 194, 26, .8)) drop-shadow(0 1px 0 #000); }
+@keyframes fxp-gold { from { background-position: 0 0, 125% 0; } to { background-position: 22px 18px, -125% 0; } }
+.fxp-champ { filter: drop-shadow(0 0 3px #ff5a1a) drop-shadow(0 1px 0 #000); animation: fxp-gold 2s linear infinite, fxp-throb 1.2s ease-in-out infinite alternate; }
+@keyframes fxp-throb { to { filter: drop-shadow(0 0 9px #ffc21a) drop-shadow(0 0 3px #ff5a1a) drop-shadow(0 1px 0 #000); } }
+.fxp-fireworks { background: linear-gradient(90deg, #ff5a8a, #ffe066, #7aff9a, #5ad8ff, #a05bff, #ff5a8a) 0 0 / 300% 100%; -webkit-background-clip: text; background-clip: text;
+  animation: fxc-sweep 1.6s linear infinite, fxp-burst 1.4s ease-in-out infinite; }
+@keyframes fxp-burst { 0%, 100% { filter: drop-shadow(0 0 2px #ff5a8a) drop-shadow(0 1px 0 #000); } 50% { filter: drop-shadow(0 0 8px #5ad8ff) drop-shadow(0 1px 0 #000); } }
+.fxp-prism { background: linear-gradient(90deg, #ff7ae0, #7af0ff, #ffe066, #7aff9a, #ff7ae0) 0 0 / 300% 100%; -webkit-background-clip: text; background-clip: text;
+  animation: fxc-sweep 2.2s linear infinite, fxp-hue 4s linear infinite; filter: drop-shadow(0 0 5px rgba(122, 240, 255, .9)) drop-shadow(0 1px 0 #000); }
+@keyframes fxp-hue { to { filter: hue-rotate(360deg) drop-shadow(0 0 5px rgba(122, 240, 255, .9)) drop-shadow(0 1px 0 #000); } }
+.fxp-diamond { background: radial-gradient(circle, #ffffff 0 1px, transparent 1.6px) 0 0 / 9px 8px, linear-gradient(110deg, #7ad8f0 0%, #b8f4ff 40%, #ffffff 50%, #b8f4ff 60%, #7ad8f0 100%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; animation: fxp-gold 2.2s linear infinite; filter: drop-shadow(0 0 5px rgba(184, 244, 255, .9)) drop-shadow(0 1px 0 #000); }

@@ -1,0 +1,332 @@
+/* ID-картки з власними макетами (js/idcards.js). Палітра речі: --g1 світлий, --g2 середній, --g3 темний, --g4 акцент */
+.pc-t { padding: 14px; color: #fff; isolation: isolate; }
+.pc-t .pc-body { padding: 0; gap: 14px; }
+.pc-t .pc-holo { position: absolute; inset: 0; z-index: 9; pointer-events: none; mix-blend-mode: color-dodge; opacity: .4;
+  background: linear-gradient(115deg, transparent 20%, #ff7ae0 32%, #7af0ff 42%, #ffe066 52%, transparent 64%) 0 0 / 260% 100%; animation: idc-holo 4.5s linear infinite; }
+@keyframes idc-holo { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+.pc-t.mini { padding: 10px; }
+
+/* ---------------------------------------------------------------- газета (Ранкова) */
+.pc-t-newspaper { background: #f3ead6; color: #1c1612; font-family: "Old Standard TT", "Playfair Display", serif; box-shadow: inset 0 0 40px rgba(120, 90, 40, .25); }
+.pc-t-newspaper .tn-mast { text-align: center; font-family: "Playfair Display", serif; font-weight: 700; font-size: 26px; letter-spacing: .02em; color: var(--g3); line-height: 1.05; border-bottom: 3px double #1c1612; padding-bottom: 4px; }
+.pc-t-newspaper .tn-date { display: flex; justify-content: space-between; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid #1c1612; padding: 3px 0; }
+.pc-t-newspaper .tn-head { font-family: "Playfair Display", serif; font-weight: 700; font-size: 17px; line-height: 1.15; margin: 8px 0; }
+.pc-t-newspaper .tn-head .pc-fx, .pc-t-newspaper .tn-head * { font-family: inherit !important; }
+.pc-t-newspaper .tn-row { display: flex; gap: 10px; }
+.pc-t-newspaper .tn-photo { position: relative; flex: none; width: 46%; height: 104px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; box-shadow: 0 0 0 1px #1c1612; filter: grayscale(1) contrast(1.1) sepia(.25); }
+.pc-t-newspaper .tn-photo .pc-scene { position: absolute; inset: 0; height: auto; }
+.pc-t-newspaper .tn-photo .pc-av { position: relative; margin: 0 0 -6px; padding: 8px; }
+.pc-t-newspaper .tn-cols { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+.pc-t-newspaper .tn-cols b { font-style: italic; }
+.pc-t-newspaper .tn-cols i { display: block; height: 4px; background: repeating-linear-gradient(90deg, #4a3e30 0 6px, transparent 6px 8px); opacity: .5; }
+.pc-t-newspaper .tn-cols span { margin-top: auto; font-size: 11px; border-top: 1px solid #1c1612; padding-top: 3px; }
+
+/* ---------------------------------------------------------------- листівка з моря (Пляжна) */
+.pc-t-postcard { background: #fffaf0; color: #24324a; padding: 12px; border: 8px solid transparent;
+  border-image: repeating-linear-gradient(45deg, var(--g2) 0 10px, #fff 10px 16px, #2a7ad8 16px 26px, #fff 26px 32px) 8; }
+.pc-t-postcard .tp-hello { font-family: "Unbounded", sans-serif; font-weight: 800; font-size: 22px; line-height: 1; color: var(--g2); text-shadow: 2px 2px 0 #2a7ad8, 4px 4px 0 rgba(0, 0, 0, .15); transform: rotate(-3deg); margin: 2px 0 10px; }
+.pc-t-postcard .tp-row { display: flex; gap: 10px; }
+.pc-t-postcard .tp-pic { position: relative; flex: none; width: 44%; height: 116px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; border: 4px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, .25); transform: rotate(-2deg); }
+.pc-t-postcard .tp-pic .pc-scene { position: absolute; inset: 0; height: auto; }
+.pc-t-postcard .tp-pic .pc-av { position: relative; margin: 0 0 -4px; padding: 8px; }
+.pc-t-postcard .tp-addr { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12px; padding-top: 34px; border-left: 1px dashed #9aa8c0; padding-left: 10px; }
+.pc-t-postcard .tp-addr i { color: #7a88a0; font-size: 11px; }
+.pc-t-postcard .tp-addr .pc-name { color: #24324a; font-size: 11px; }
+.pc-t-postcard .tp-addr u { display: block; height: 1px; background: #9aa8c0; margin: 4px 0; }
+.pc-t-postcard .tp-stamp { position: absolute; right: 0; top: 0; width: 38px; height: 44px; background: var(--g1); border: 2px dashed var(--g2); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 18px; }
+.pc-t-postcard .tp-stamp small { font-size: 8px; color: var(--g3); }
+.pc-t-postcard .tp-post { position: absolute; right: 22px; top: 18px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(40, 60, 100, .5);
+  background: repeating-linear-gradient(0deg, transparent 0 5px, rgba(40, 60, 100, .45) 5px 6px); transform: rotate(-12deg); }
+
+/* ---------------------------------------------------------------- кіноквиток (Вечірня) */
+.pc-t-cinema { background: linear-gradient(135deg, var(--g3), #1a0618); padding: 0; font-family: "Oswald", sans-serif; }
+.pc-t-cinema .tc-film { height: 14px; background: #0a0408 radial-gradient(circle, transparent 0, transparent 0) ; background-image: linear-gradient(90deg, #f6e8d0 0 7px, transparent 7px); background-size: 14px 6px; background-repeat: repeat-x; background-position: 4px 4px; }
+.pc-t-cinema .tc-wrap { display: flex; }
+.pc-t-cinema .tc-main { flex: 1; min-width: 0; padding: 10px 12px; }
+.pc-t-cinema .tc-top { display: flex; justify-content: space-between; align-items: baseline; text-transform: uppercase; letter-spacing: .06em; font-size: 12px; color: var(--g1); margin-bottom: 8px; }
+.pc-t-cinema .tc-top b { font-size: 14px; color: #ffe066; }
+.pc-t-cinema .pc-name { font-size: 12px; }
+.pc-t-cinema .pc-sub { color: var(--g1); font-style: italic; }
+.pc-t-cinema .tc-seat { display: flex; gap: 10px; margin-top: 8px; text-transform: uppercase; font-size: 11px; color: var(--g1); }
+.pc-t-cinema .tc-seat b { display: block; font-size: 18px; color: #fff; }
+.pc-t-cinema .tc-stub { flex: none; width: 52px; border-left: 2px dashed rgba(255, 255, 255, .45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; writing-mode: vertical-rl; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; color: var(--g1); background: rgba(0, 0, 0, .2); }
+.pc-t-cinema .tc-stub b { font-size: 18px; color: #ffe066; }
+
+/* ---------------------------------------------------------------- зоряна карта (Нічна) */
+.pc-t-starmap { background: radial-gradient(ellipse at 30% 20%, var(--g3), #04041a 75%); color: #e8ecff; }
+.pc-t-starmap .ts-sky { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+.pc-t-starmap .ts-sky .d circle { fill: #ffffff; opacity: .55; }
+.pc-t-starmap .ts-sky polyline { fill: none; stroke: var(--g1); stroke-width: 1; stroke-dasharray: 3 3; opacity: .7; }
+.pc-t-starmap .ts-sky .s circle { fill: var(--g4); filter: drop-shadow(0 0 3px #fff); animation: idc-tw 2.4s ease-in-out infinite; }
+.pc-t-starmap .ts-sky .s circle:nth-child(2n) { animation-delay: -1.2s; }
+@keyframes idc-tw { 50% { opacity: .35; } }
+.pc-t-starmap > *:not(.ts-sky) { position: relative; z-index: 1; }
+.pc-t-starmap .ts-top { display: flex; justify-content: space-between; font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--g1); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+.pc-t-starmap .ts-k { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 14px; color: var(--g1); }
+.pc-t-starmap .pc-sub { color: var(--g4); }
+.pc-t-starmap .ts-foot { margin-top: 12px; text-align: center; font-family: "Cormorant Garamond", serif; font-style: italic; color: var(--g1); border-top: 1px solid rgba(255, 255, 255, .2); padding-top: 6px; }
+
+/* ---------------------------------------------------------------- вирізаний гарбуз (Гарбузова) */
+.pc-t-pumpkin { background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .14) 0 3px, transparent 3px 34px), radial-gradient(ellipse at 50% 30%, #ffb048, #ff7a18 55%, #b8480a);
+  color: #2a0e02; padding-top: 30px; clip-path: polygon(0 12px, 6% 0, 12% 12px, 18% 0, 24% 12px, 30% 0, 36% 12px, 42% 0, 48% 12px, 54% 0, 60% 12px, 66% 0, 72% 12px, 78% 0, 84% 12px, 90% 0, 96% 12px, 100% 2px, 100% 100%, 0 100%); }
+.pc-t-pumpkin .tk-face { position: absolute; top: 18px; right: 14px; width: 74px; height: 50px; z-index: 0; }
+.pc-t-pumpkin .tk-face i, .pc-t-pumpkin .tk-face b { position: absolute; background: #ffe36a; box-shadow: 0 0 12px #ffcf3a; animation: idc-candle 1.6s ease-in-out infinite; }
+.pc-t-pumpkin .tk-face i { top: 0; width: 22px; height: 18px; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.pc-t-pumpkin .tk-face i:first-child { left: 4px; } .pc-t-pumpkin .tk-face i:nth-child(2) { right: 4px; }
+.pc-t-pumpkin .tk-face b { left: 6px; right: 6px; bottom: 0; height: 16px; clip-path: polygon(0 0, 16% 60%, 33% 0, 50% 60%, 67% 0, 84% 60%, 100% 0, 100% 100%, 0 100%); }
+@keyframes idc-candle { 50% { opacity: .65; filter: brightness(1.2); } }
+.pc-t-pumpkin .tk-title { position: relative; font-family: "Russo One", sans-serif; font-size: 15px; color: #2a0e02; text-shadow: 0 1px 0 #ffd08a; margin-bottom: 10px; max-width: 64%; }
+.pc-t-pumpkin .pc-name { color: #fff6e0; text-shadow: 2px 2px 0 #4a1a02; }
+.pc-t-pumpkin .pc-sub { color: #3a1204; font-weight: 700; }
+.pc-t-pumpkin .tk-candy { margin-top: 6px; font-size: 12px; font-weight: 700; color: #3a1204; }
+.pc-t-pumpkin .tk-corn { height: 12px; margin: 12px -14px -14px; background: linear-gradient(180deg, #fff6e0 0 33%, #ffc21a 33% 66%, #ff6a1a 66%); }
+
+/* ---------------------------------------------------------------- нашивка місії (Зоряна) */
+.pc-t-mission { background: linear-gradient(160deg, #0a0420, var(--g3)); }
+.pc-t-mission > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .25; z-index: 0; }
+.pc-t-mission > *:not(.pc-scene) { position: relative; z-index: 1; }
+.pc-t-mission .tm-row { display: flex; gap: 14px; align-items: center; }
+.pc-t-mission .tm-patch { position: relative; flex: none; width: 108px; height: 108px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, var(--g2) 0 52%, #0a0420 53% 60%, var(--g1) 61% 64%, #0a0420 65%); box-shadow: 0 0 0 3px var(--g4), 0 0 18px var(--g2); }
+.pc-t-mission .tm-patch .pc-av { margin: 0; padding: 0; transform: scale(.78); border-radius: 50%; }
+.pc-t-mission .tm-orbit { position: absolute; inset: -8px; border: 1px dashed var(--g4); border-radius: 50%; transform: scaleY(.45) rotate(0); animation: idc-orbit 6s linear infinite; }
+.pc-t-mission .tm-orbit i { position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: var(--g4); box-shadow: 0 0 8px var(--g4); }
+@keyframes idc-orbit { to { transform: scaleY(.45) rotate(360deg); } }
+.pc-t-mission .tm-info { min-width: 0; flex: 1; }
+.pc-t-mission .tm-info small { font-family: "JetBrains Mono", monospace; text-transform: uppercase; font-size: 10px; color: var(--g4); letter-spacing: .08em; }
+.pc-t-mission .pc-sub { color: var(--g1); }
+.pc-t-mission .tm-data { display: flex; gap: 12px; margin-top: 8px; font-family: "JetBrains Mono", monospace; font-size: 10px; text-transform: uppercase; color: var(--g1); }
+.pc-t-mission .tm-data b { display: block; font-size: 16px; color: #fff; }
+.pc-t-mission .tm-foot { margin-top: 12px; text-align: center; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: .1em; color: var(--g4); white-space: nowrap; overflow: hidden; }
+
+/* ---------------------------------------------------------------- кам’яна скрижаль (Боги) */
+.pc-t-tablet { padding: 0; color: #2a2418; font-family: "Cormorant SC", "Cormorant Garamond", serif;
+  background: linear-gradient(115deg, transparent 40%, rgba(150, 140, 120, .25) 41%, transparent 43%), linear-gradient(35deg, transparent 60%, rgba(150, 140, 120, .2) 61%, transparent 62%), linear-gradient(180deg, #f6f0e2, #ddd2b8);
+  box-shadow: inset 6px 0 0 #c8b890, inset -6px 0 0 #c8b890, inset 10px 0 0 #efe6d0, inset -10px 0 0 #efe6d0; }
+.pc-t-tablet .tt-mea { height: 16px; background: #3a2e1a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Cpath d='M0 14V2h12v8H6V6h2' fill='none' stroke='%23e8c890' stroke-width='2'/%3E%3C/svg%3E") repeat-x; }
+.pc-t-tablet .tt-in { padding: 10px 20px 12px; }
+.pc-t-tablet .tt-head { text-align: center; font-size: 18px; letter-spacing: .3em; color: var(--g3); margin-bottom: 8px; }
+.pc-t-tablet .pc-name { color: #2a2418; text-shadow: 0 1px 0 #fff; }
+.pc-t-tablet .pc-sub { color: #6a5430; font-size: 16px; font-style: italic; }
+.pc-t-tablet .tt-num { font-size: 16px; color: var(--g3); margin-top: 4px; letter-spacing: .1em; }
+
+/* ---------------------------------------------------------------- нефритовий сувій (Дракон) */
+.pc-t-jade { padding: 0 6px; background: transparent; color: #f2fff4; }
+.pc-t-jade .tj-roll { height: 12px; margin: 0 -6px; border-radius: 6px; background: linear-gradient(180deg, #8a4a1a, #4a2208 60%, #2a1204); box-shadow: inset 12px 0 0 #ffd23f, inset -12px 0 0 #ffd23f; }
+.pc-t-jade .tj-paper { position: relative; padding: 14px 14px 14px 46px; background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, .25), transparent 40%), linear-gradient(160deg, #2ab86a, #0a5a2a 70%, #04240e);
+  background-color: #1a8a4a; box-shadow: inset 0 0 0 3px rgba(255, 210, 63, .5); }
+.pc-t-jade .tj-col { position: absolute; left: 12px; top: 12px; writing-mode: vertical-rl; font-size: 20px; color: #ffd23f; text-shadow: 0 0 8px rgba(255, 210, 63, .6); letter-spacing: .15em; }
+.pc-t-jade .pc-sub { color: #ffe9a0; }
+.pc-t-jade .tj-txt { font-size: 12px; color: #c8ffd8; margin-top: 6px; }
+.pc-t-jade .tj-seal { position: absolute; right: 12px; bottom: 10px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; background: #c8101e; border: 2px solid #fff4e0; transform: rotate(-8deg); box-shadow: 0 2px 6px rgba(0, 0, 0, .4); opacity: .92; }
+
+/* ---------------------------------------------------------------- квиток на фінал (турнір) */
+.pc-t-finalticket { display: flex; padding: 0; color: #2a1606; font-family: "Oswald", sans-serif;
+  background: linear-gradient(120deg, #fff3c8, var(--g2) 45%, #fff3b0 60%, var(--g2)); background-size: 220% 100%; animation: gen-foil 6s linear infinite;
+  -webkit-mask: radial-gradient(circle at calc(100% - 78px) 0, transparent 9px, #000 10px) top / 100% 51% no-repeat, radial-gradient(circle at calc(100% - 78px) 100%, transparent 9px, #000 10px) bottom / 100% 51% no-repeat;
+  mask: radial-gradient(circle at calc(100% - 78px) 0, transparent 9px, #000 10px) top / 100% 51% no-repeat, radial-gradient(circle at calc(100% - 78px) 100%, transparent 9px, #000 10px) bottom / 100% 51% no-repeat; }
+.pc-t-finalticket .tf-main { flex: 1; min-width: 0; padding: 12px 12px 12px 14px; }
+.pc-t-finalticket .tf-top { display: flex; justify-content: space-between; align-items: baseline; text-transform: uppercase; margin-bottom: 8px; }
+.pc-t-finalticket .tf-top b { font-size: 22px; color: var(--g4); text-shadow: 1px 1px 0 #fff; letter-spacing: .04em; }
+.pc-t-finalticket .tf-top span { font-size: 12px; letter-spacing: .12em; }
+.pc-t-finalticket .pc-name { color: #2a1606; text-shadow: 0 1px 0 #fff8d8; }
+.pc-t-finalticket .pc-sub { color: #6a3a06; font-weight: 700; }
+.pc-t-finalticket .tf-seat { display: flex; gap: 12px; margin-top: 10px; text-transform: uppercase; font-size: 10px; letter-spacing: .1em; }
+.pc-t-finalticket .tf-seat b { display: block; font-size: 18px; letter-spacing: 0; color: var(--g4); }
+.pc-t-finalticket .tf-stub { position: relative; flex: none; width: 78px; border-left: 3px dotted rgba(42, 22, 6, .55); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase; font-size: 11px; letter-spacing: .08em; }
+.pc-t-finalticket .tf-holo { width: 34px; height: 34px; border-radius: 50%; background: conic-gradient(#ff7ae0, #7af0ff, #ffe066, #7aff9a, #ff7ae0); box-shadow: 0 0 0 2px #fff; animation: idc-spin 5s linear infinite; }
+@keyframes idc-spin { to { transform: rotate(360deg); } }
+.pc-t-finalticket .tf-bar { width: 52px; height: 26px; background: repeating-linear-gradient(90deg, #2a1606 0 2px, transparent 2px 4px, #2a1606 4px 5px, transparent 5px 7px); }
+.pc-t-finalticket .tf-stub small { font-size: 10px; }
+
+/* ---------------------------------------------------------------- колекційна картка чемпіона */
+.pc-t-champion { padding: 5px; background: conic-gradient(from var(--idc-a, 0deg), #ff7ae0, #ffe066, #7aff9a, #7af0ff, #a05bff, #ff7ae0); animation: idc-ring 4s linear infinite; text-align: center; }
+@property --idc-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes idc-ring { to { --idc-a: 360deg; } }
+.pc-t-champion .tch-in { position: relative; padding: 10px 12px 12px; background: linear-gradient(170deg, var(--g3), #0a0414); border-radius: 4px; }
+.pc-t-champion .tch-stars { color: #ffe066; letter-spacing: .25em; font-size: 14px; text-shadow: 0 0 8px #ffe066; }
+.pc-t-champion .tch-photo { position: relative; height: 120px; margin: 8px 0; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; box-shadow: 0 0 0 2px var(--g2), inset 0 0 30px rgba(0, 0, 0, .5); }
+.pc-t-champion .tch-photo .pc-scene { position: absolute; inset: 0; height: auto; }
+.pc-t-champion .tch-photo .pc-av { position: relative; margin: 0 0 -4px; padding: 8px; }
+.pc-t-champion .tch-rib { position: absolute; top: 14px; right: -34px; width: 140px; transform: rotate(35deg); background: var(--g4); color: #fff; font-family: "Russo One", sans-serif; font-size: 12px; letter-spacing: .1em; padding: 3px 0; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
+.pc-t-champion .pc-name { color: var(--g1); text-shadow: 0 0 10px rgba(255, 210, 63, .5); }
+.pc-t-champion .pc-sub { color: #fff; opacity: .85; }
+.pc-t-champion .tch-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 10px; }
+.pc-t-champion .tch-stats div { background: rgba(255, 255, 255, .08); border-radius: 6px; padding: 4px 0; }
+.pc-t-champion .tch-stats b { display: block; font-size: 15px; color: #ffe066; }
+.pc-t-champion .tch-stats span { font-size: 9px; text-transform: uppercase; opacity: .75; }
+
+/* ---------------------------------------------------------------- чемпіонський пояс */
+.pc-t-belt { display: flex; align-items: center; justify-content: center; gap: 0; padding: 18px 6px; background: transparent; }
+.pc-t-belt .tb-strap { position: absolute; left: 0; right: 0; top: 50%; height: 64px; margin-top: -32px; background: linear-gradient(180deg, #3a1a0a, #1a0804); border-radius: 10px;
+  box-shadow: inset 0 6px 0 -3px transparent, inset 0 0 0 4px #2a1206; background-image: linear-gradient(180deg, #3a1a0a, #1a0804), repeating-linear-gradient(90deg, #d8b070 0 6px, transparent 6px 10px); z-index: 0; }
+.pc-t-belt .tb-strap::before, .pc-t-belt .tb-strap::after { content: ""; position: absolute; left: 6px; right: 6px; height: 2px; background: repeating-linear-gradient(90deg, #d8b070 0 6px, transparent 6px 10px); }
+.pc-t-belt .tb-strap::before { top: 6px; } .pc-t-belt .tb-strap::after { bottom: 6px; }
+.pc-t-belt .tb-side { position: relative; z-index: 1; flex: none; width: 46px; height: 74px; border-radius: 10px; background: linear-gradient(160deg, #fff3b0, var(--g2) 50%, #8a5a00); box-shadow: 0 0 0 2px #5a3a00, inset 0 0 8px rgba(255, 255, 255, .6); display: flex; align-items: center; justify-content: center; }
+.pc-t-belt .tb-side i { width: 16px; height: 16px; background: var(--g4); transform: rotate(45deg); box-shadow: 0 0 0 2px #fff3b0, 0 0 10px var(--g4); }
+.pc-t-belt .tb-plate { position: relative; z-index: 2; flex: 1; max-width: 230px; margin: 0 -4px; padding: 12px 12px 14px; border-radius: 50% / 34%; text-align: center; color: #3a2000;
+  background: radial-gradient(ellipse at 40% 30%, #fffbe0, var(--g2) 55%, #8a5a00); box-shadow: 0 0 0 3px #5a3a00, 0 0 0 6px var(--g1), 0 0 0 8px #5a3a00, 0 0 22px rgba(255, 194, 26, .55); }
+.pc-t-belt .tb-plate .pc-av { margin: 2px auto; padding: 0; display: inline-block; }
+.pc-t-belt .tb-wc { font-family: "Russo One", sans-serif; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #5a1a00; }
+.pc-t-belt .tb-wc.s { font-size: 8px; margin-top: 4px; }
+.pc-t-belt .pc-name { color: #2a1400; text-shadow: 0 1px 0 #fff3b0; font-size: 11px; }
+.pc-t-belt .pc-sub { color: #6a2a00; font-weight: 700; font-size: 12px; }
+
+/* ---------------------------------------------------------------- кристалічна */
+.pc-t-crystal { background: linear-gradient(160deg, var(--g3), #05051a); }
+.pc-t-crystal > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .3; z-index: 0; }
+.pc-t-crystal > *:not(.pc-scene):not(.tcr-shards) { position: relative; z-index: 2; }
+.pc-t-crystal .tcr-shards { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.pc-t-crystal .tcr-shards i { position: absolute; background: linear-gradient(135deg, rgba(255, 255, 255, .7), var(--g2) 45%, var(--g4)); opacity: .45; animation: idc-shard 3.6s ease-in-out infinite; }
+.pc-t-crystal .tcr-shards i:nth-child(1) { right: 6%; top: -10px; width: 46px; height: 90px; clip-path: polygon(50% 0, 100% 40%, 70% 100%, 20% 90%, 0 30%); }
+.pc-t-crystal .tcr-shards i:nth-child(2) { right: 22%; bottom: -14px; width: 34px; height: 70px; clip-path: polygon(40% 0, 100% 30%, 80% 100%, 0 100%, 10% 25%); animation-delay: -.9s; }
+.pc-t-crystal .tcr-shards i:nth-child(3) { left: -8px; bottom: 10px; width: 30px; height: 60px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); animation-delay: -1.8s; }
+.pc-t-crystal .tcr-shards i:nth-child(4) { right: 34%; top: 6px; width: 16px; height: 30px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); animation-delay: -2.4s; }
+.pc-t-crystal .tcr-shards i:nth-child(5) { right: 2%; bottom: 8px; width: 24px; height: 44px; clip-path: polygon(50% 0, 100% 35%, 60% 100%, 0 70%); animation-delay: -1.2s; }
+.pc-t-crystal .tcr-shards i:nth-child(6) { left: 38%; top: -6px; width: 12px; height: 22px; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); animation-delay: -3s; }
+@keyframes idc-shard { 50% { opacity: .85; filter: brightness(1.4); } }
+.pc-t-crystal .tcr-top { font-family: "Unbounded", sans-serif; font-size: 12px; letter-spacing: .14em; color: var(--g1); text-shadow: 0 0 10px var(--g2); margin-bottom: 12px; text-transform: uppercase; }
+.pc-t-crystal .pc-sub { color: var(--g1); }
+.pc-t-crystal .tcr-cut { margin-top: 6px; font-family: "JetBrains Mono", monospace; font-size: 10px; text-transform: uppercase; color: var(--g4); }
+
+/* ================================================================ 12 макетів звичайних карток */
+/* паспорт */
+.pc-t-passport { background: linear-gradient(160deg, color-mix(in srgb, var(--g1) 55%, #fff), var(--g1)); color: #1a1a2a; padding: 0; }
+.pc-t-passport .tg-ph { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: var(--g3); color: var(--g1); font-family: "Oswald", sans-serif; text-transform: uppercase; letter-spacing: .14em; font-size: 13px; }
+.pc-t-passport .tg-ph b { font-size: 18px; }
+.pc-t-passport .tg-pp { display: flex; gap: 14px; align-items: center; padding: 12px 14px 8px; background: repeating-linear-gradient(135deg, transparent 0 8px, rgba(255, 255, 255, .25) 8px 9px); }
+.pc-t-passport .tg-f { display: flex; flex-direction: column; min-width: 0; font-size: 13px; }
+.pc-t-passport .tg-f i { font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--g3); opacity: .8; margin-top: 3px; }
+.pc-t-passport .tg-f .pc-name { color: #1a1a2a; font-size: 11px; }
+.pc-t-passport .tg-mrz { padding: 6px 14px 10px; font-family: "JetBrains Mono", monospace; font-size: 10px; line-height: 1.35; letter-spacing: .06em; color: #1a1a2a; background: rgba(255, 255, 255, .55); word-break: break-all; }
+/* посвідчення */
+.pc-t-license { background: linear-gradient(135deg, var(--g1), color-mix(in srgb, var(--g2) 45%, #fff)); color: #142030; border-radius: 14px; }
+.pc-t-license .tg-lh { display: flex; justify-content: space-between; align-items: center; font-family: "Oswald", sans-serif; text-transform: uppercase; letter-spacing: .08em; font-size: 14px; color: var(--g3); }
+.pc-t-license .tg-lh span { width: 34px; height: 24px; border-radius: 4px; background: var(--g3); color: var(--g1); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.pc-t-license .tg-ll { display: flex; gap: 14px; align-items: center; margin-top: 10px; }
+.pc-t-license .tg-lf { display: flex; flex-direction: column; gap: 2px; font-size: 12px; min-width: 0; }
+.pc-t-license .tg-lf i { font-style: normal; color: var(--g3); font-weight: 700; margin-right: 6px; }
+.pc-t-license .tg-lf .pc-name { color: #142030; font-size: 10px; }
+.pc-t-license .tg-cat { display: flex; gap: 4px; margin-top: 4px; }
+.pc-t-license .tg-cat span { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--g3); font-weight: 800; font-size: 11px; }
+.pc-t-license .tg-cat span.no { opacity: .3; }
+.pc-t-license .tg-sign { margin-top: 8px; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 20px; color: var(--g3); border-top: 1px solid rgba(20, 32, 48, .3); padding-top: 2px; transform: rotate(-2deg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* читацький квиток */
+.pc-t-library { background: #fbf6e8 repeating-linear-gradient(180deg, transparent 0 21px, color-mix(in srgb, var(--g2) 35%, transparent) 21px 22px); color: #2a2418; box-shadow: inset 6px 0 0 var(--g2); padding-left: 20px; }
+.pc-t-library .tg-bh { font-family: "Old Standard TT", serif; font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--g3); margin-bottom: 10px; }
+.pc-t-library .pc-name { color: #2a2418; }
+.pc-t-library .pc-sub { color: var(--g3); font-style: italic; }
+.pc-t-library .tg-due { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.pc-t-library .tg-due .st { padding: 3px 8px; border: 2px solid var(--g2); color: var(--g2); border-radius: 50%; font-family: "Oswald", sans-serif; text-transform: uppercase; font-size: 11px; transform: rotate(-6deg); opacity: .85; }
+.pc-t-library .tg-due .st.r { transform: rotate(5deg); border-color: #c8202a; color: #c8202a; border-radius: 6px; }
+.pc-t-library .tg-due .st.b { transform: rotate(-2deg); border-color: #2a5ad0; color: #2a5ad0; border-radius: 6px; }
+/* посадковий талон */
+.pc-t-boarding { display: flex; padding: 0; background: #fff; color: #1a2030; border-radius: 12px; }
+.pc-t-boarding .tg-bpm { flex: 1; min-width: 0; padding: 0 12px 12px; }
+.pc-t-boarding .tg-air { display: flex; justify-content: space-between; align-items: center; margin: 0 -12px 8px; padding: 8px 12px; background: var(--g2); color: #fff; font-family: "Oswald", sans-serif; text-transform: uppercase; font-size: 12px; letter-spacing: .06em; }
+.pc-t-boarding .tg-route { display: flex; align-items: center; justify-content: space-between; font-family: "Oswald", sans-serif; font-size: 24px; color: var(--g3); margin-bottom: 6px; }
+.pc-t-boarding .tg-route i { font-style: normal; font-size: 12px; color: var(--g2); }
+.pc-t-boarding .pc-name { color: #1a2030; font-size: 11px; }
+.pc-t-boarding .pc-sub { color: var(--g3); }
+.pc-t-boarding .tg-fl { display: flex; gap: 12px; margin-top: 8px; text-transform: uppercase; font-size: 9px; color: #6a7080; letter-spacing: .06em; }
+.pc-t-boarding .tg-fl b { display: block; font-family: "Oswald", sans-serif; font-size: 16px; color: #1a2030; }
+.pc-t-boarding .tg-bps { flex: none; width: 58px; border-left: 2px dashed #b8c0d0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: color-mix(in srgb, var(--g1) 40%, #fff); font-size: 10px; }
+.pc-t-boarding .tg-bar { width: 34px; height: 70px; background: repeating-linear-gradient(180deg, #1a2030 0 2px, transparent 2px 4px, #1a2030 4px 5px, transparent 5px 7px); }
+.pc-t-boarding .tg-bps small { writing-mode: vertical-rl; font-size: 8px; letter-spacing: .2em; }
+/* чек */
+.pc-t-receipt { background: transparent; padding: 8px 18px 0; }
+.pc-t-receipt .tg-rc { position: relative; background: #fdfdf8; color: #222; font-family: "JetBrains Mono", monospace; font-size: 12px; padding: 12px 14px 18px; box-shadow: 0 6px 14px rgba(0, 0, 0, .3);
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 12px 100%; mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 12px 100%; }
+.pc-t-receipt .tg-rc::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: var(--g2); }
+.pc-t-receipt .tg-rch { text-align: center; font-size: 11px; letter-spacing: .08em; margin: 2px 0 10px; }
+.pc-t-receipt .tg-rch:last-child { margin: 10px 0 0; font-weight: 800; }
+.pc-t-receipt .pc-body { padding-bottom: 8px; border-bottom: 1px dashed #888; margin-bottom: 6px; }
+.pc-t-receipt .pc-name { color: #222; font-size: 10px; }
+.pc-t-receipt .pc-sub { color: var(--g3); font-size: 12px; }
+.pc-t-receipt .tg-rl { display: flex; justify-content: space-between; }
+.pc-t-receipt .tg-rl.tot { border-top: 1px dashed #888; margin-top: 4px; padding-top: 4px; font-weight: 800; color: var(--g3); }
+/* полароїд */
+.pc-t-polaroid { background: radial-gradient(circle at 20% 30%, rgba(0, 0, 0, .12) 0 1px, transparent 2px) 0 0 / 7px 7px, linear-gradient(135deg, var(--g2), var(--g3)); padding: 18px 26px 16px; }
+.pc-t-polaroid .tg-po { position: relative; background: #fbfbf6; padding: 10px 10px 8px; transform: rotate(-2.5deg); box-shadow: 0 8px 18px rgba(0, 0, 0, .45); }
+.pc-t-polaroid .tg-tape { position: absolute; top: -10px; left: 50%; width: 70px; height: 20px; margin-left: -35px; background: rgba(255, 245, 200, .7); transform: rotate(3deg); box-shadow: 0 1px 2px rgba(0, 0, 0, .15); }
+.pc-t-polaroid .tg-pph { position: relative; height: 130px; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; background: #222; }
+.pc-t-polaroid .tg-pph .pc-scene { position: absolute; inset: 0; height: auto; filter: saturate(1.2) contrast(1.05); }
+.pc-t-polaroid .tg-pph .pc-av { position: relative; margin: 0 0 -4px; padding: 8px; }
+.pc-t-polaroid .tg-cap { display: flex; flex-direction: column; align-items: center; padding-top: 8px; color: #2a2a3a; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 16px; }
+.pc-t-polaroid .tg-cap .pc-name { color: var(--g3); font-size: 11px; font-style: normal; }
+/* поштова марка */
+.pc-t-stamp { background: color-mix(in srgb, var(--g3) 70%, #000); padding: 14px 40px; }
+.pc-t-stamp .tg-st { padding: 7px; background: #fbf8ee; -webkit-mask: radial-gradient(circle 5px at 50% 50%, #0000 98%, #000) -7px -7px / 14px 14px, linear-gradient(#000 0 0) 7px 7px / calc(100% - 14px) calc(100% - 14px) no-repeat;
+  mask: radial-gradient(circle 5px at 50% 50%, #0000 98%, #000) -7px -7px / 14px 14px, linear-gradient(#000 0 0) 7px 7px / calc(100% - 14px) calc(100% - 14px) no-repeat; }
+.pc-t-stamp .tg-sti { position: relative; overflow: hidden; padding: 12px; text-align: center; background: linear-gradient(180deg, var(--g1), var(--g2)); color: #1a1420; box-shadow: inset 0 0 0 2px var(--g3); }
+.pc-t-stamp .tg-sti > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .35; mix-blend-mode: multiply; }
+.pc-t-stamp .tg-sti > *:not(.pc-scene) { position: relative; }
+.pc-t-stamp .tg-stv { position: absolute !important; left: 8px; top: 6px; font-family: "Oswald", sans-serif; font-size: 22px; line-height: 1; color: var(--g3); text-align: left; }
+.pc-t-stamp .tg-stv small { display: block; font-size: 9px; text-transform: uppercase; }
+.pc-t-stamp .tg-stc { font-family: "Oswald", sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: .14em; color: var(--g3); margin: 0 0 6px 30px; text-align: right; }
+.pc-t-stamp .pc-av { display: inline-block; margin: 0; padding: 4px; }
+.pc-t-stamp .pc-name { color: #1a1420; font-size: 11px; margin-top: 6px; }
+.pc-t-stamp .pc-sub { color: var(--g3); font-weight: 700; }
+.pc-t-stamp .tg-pm { position: absolute !important; right: -6px; bottom: 6px; width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(30, 20, 40, .55); display: flex; align-items: center; justify-content: center; font-family: "JetBrains Mono", monospace; font-size: 9px; color: rgba(30, 20, 40, .7); transform: rotate(-16deg); }
+/* жетон */
+.pc-t-dogtag { background: radial-gradient(ellipse at 70% 0%, color-mix(in srgb, var(--g2) 50%, transparent), transparent 60%), #14141c; padding: 22px 18px 18px; }
+.pc-t-dogtag .tg-chain { position: absolute; left: 50%; top: -6px; width: 160px; height: 40px; margin-left: -80px; border-radius: 0 0 50% 50%; border: 3px dotted #b8bcc8; border-top: 0; }
+.pc-t-dogtag .tg-tag { position: relative; display: flex; gap: 12px; align-items: center; padding: 16px 16px 16px 30px; border-radius: 26px; color: #2a2e38;
+  background: linear-gradient(160deg, #f4f6fa, color-mix(in srgb, var(--g1) 50%, #b8bcc8) 45%, #8a90a0); box-shadow: inset 0 2px 0 #fff, inset 0 -3px 0 rgba(0, 0, 0, .25), 0 6px 14px rgba(0, 0, 0, .5); }
+.pc-t-dogtag .tg-hole { position: absolute; left: 10px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #14141c; box-shadow: inset 0 2px 2px rgba(0, 0, 0, .6); }
+.pc-t-dogtag .tg-emb { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-family: "JetBrains Mono", monospace; font-size: 11px; text-transform: uppercase; text-shadow: 0 1px 0 rgba(255, 255, 255, .8), 0 -1px 0 rgba(0, 0, 0, .25); }
+.pc-t-dogtag .tg-emb .pc-name { color: #2a2e38; font-size: 10px; }
+/* комікс */
+.pc-t-comic { padding: 6px; background: #111; }
+.pc-t-comic .tg-cm { position: relative; overflow: hidden; padding: 12px; background: var(--g1); border: 3px solid #111; min-height: 150px; font-family: "Russo One", sans-serif; }
+.pc-t-comic .tg-cm > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .45; }
+.pc-t-comic .tg-dots { position: absolute; inset: 0; background: radial-gradient(circle, var(--g2) 1.6px, transparent 2px) 0 0 / 8px 8px; opacity: .55; }
+.pc-t-comic .tg-cm > *:not(.pc-scene):not(.tg-dots) { position: relative; }
+.pc-t-comic .tg-boom { position: absolute !important; right: 8px; top: 6px; padding: 10px 12px; font-size: 20px; color: #ffe066; -webkit-text-stroke: 1.5px #111; background: var(--g4);
+  clip-path: polygon(50% 0, 61% 30%, 98% 20%, 72% 48%, 100% 72%, 64% 70%, 56% 100%, 42% 74%, 6% 90%, 28% 56%, 0 30%, 36% 32%); transform: rotate(8deg); animation: idc-boom 1.4s ease-in-out infinite; }
+@keyframes idc-boom { 50% { transform: rotate(8deg) scale(1.08); } }
+.pc-t-comic .tg-cmb { display: flex; gap: 12px; align-items: flex-end; margin-top: 36px; }
+.pc-t-comic .tg-bub { position: relative; flex: 1; min-width: 0; background: #fff; color: #111; border: 3px solid #111; border-radius: 18px; padding: 8px 10px; display: flex; flex-direction: column; font-size: 12px; }
+.pc-t-comic .tg-bub::after { content: ""; position: absolute; left: -12px; bottom: 10px; border: 8px solid transparent; border-right: 12px solid #111; }
+.pc-t-comic .tg-bub .pc-name { color: #111; font-size: 10px; }
+.pc-t-comic .tg-cap2 { margin-top: 10px; display: inline-block; background: #ffe066; color: #111; border: 2px solid #111; padding: 2px 8px; font-size: 11px; text-transform: uppercase; }
+/* креслення */
+.pc-t-blueprint { background: linear-gradient(rgba(255, 255, 255, .12) 1px, transparent 1px) 0 0 / 14px 14px, linear-gradient(90deg, rgba(255, 255, 255, .12) 1px, transparent 1px) 0 0 / 14px 14px, linear-gradient(160deg, var(--g2), var(--g3));
+  color: #f0f8ff; font-family: "JetBrains Mono", monospace; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .5), inset 0 0 0 6px transparent, inset 0 0 0 7px rgba(255, 255, 255, .3); }
+.pc-t-blueprint .tg-bt { display: flex; justify-content: space-between; text-transform: uppercase; font-size: 11px; letter-spacing: .08em; border-bottom: 1px solid rgba(255, 255, 255, .5); padding-bottom: 6px; margin-bottom: 12px; }
+.pc-t-blueprint .tg-dim { position: relative; flex: none; padding: 0 14px 14px 0; }
+.pc-t-blueprint .tg-dim .pc-av { margin: 0; padding: 0; }
+.pc-t-blueprint .tg-dim i { position: absolute; border-color: rgba(255, 255, 255, .7); }
+.pc-t-blueprint .tg-dim i.h { left: 0; right: 14px; bottom: 4px; border-top: 1px solid; }
+.pc-t-blueprint .tg-dim i.v { top: 0; bottom: 14px; right: 4px; border-left: 1px solid; }
+.pc-t-blueprint .pc-name { color: #fff; font-size: 11px; }
+.pc-t-blueprint .pc-sub { color: var(--g1); }
+.pc-t-blueprint .tg-spec { display: grid; grid-template-columns: auto auto; gap: 1px 10px; margin-top: 8px; font-size: 10px; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, .5); padding: 4px 6px; }
+.pc-t-blueprint .tg-spec b { text-align: right; }
+/* картридж */
+.pc-t-cartridge { padding: 0 10px 0; background: linear-gradient(180deg, #4a4a58, #2a2a34); border-radius: 12px 12px 4px 4px; clip-path: polygon(0 0, 100% 0, 100% 100%, 94% 100%, 94% calc(100% - 10px), 6% calc(100% - 10px), 6% 100%, 0 100%); }
+.pc-t-cartridge .tg-ridge { display: flex; justify-content: center; gap: 6px; padding: 8px 0 6px; }
+.pc-t-cartridge .tg-ridge i { width: 24px; height: 6px; border-radius: 3px; background: #1a1a22; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15); }
+.pc-t-cartridge .tg-label { position: relative; overflow: hidden; padding: 10px 12px 12px; border-radius: 6px; background: linear-gradient(160deg, var(--g2), var(--g3)); box-shadow: inset 0 0 0 3px var(--g1); }
+.pc-t-cartridge .tg-label > .pc-scene { position: absolute; inset: 0; height: auto; opacity: .45; }
+.pc-t-cartridge .tg-label > *:not(.pc-scene) { position: relative; }
+.pc-t-cartridge .tg-lt { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-family: "Russo One", sans-serif; }
+.pc-t-cartridge .tg-lt b { font-size: 16px; color: var(--g4); -webkit-text-stroke: 1px #111; letter-spacing: .06em; font-style: italic; }
+.pc-t-cartridge .tg-lt span { font-size: 11px; background: #111; color: var(--g1); padding: 2px 6px; border-radius: 4px; }
+.pc-t-cartridge .pc-sub { color: var(--g1); }
+.pc-t-cartridge .tg-pins { height: 16px; margin: 8px 6% 0; background: repeating-linear-gradient(90deg, #d8b040 0 5px, #2a2a34 5px 8px); }
+/* грамота */
+.pc-t-diploma { background: #fffaf0; padding: 8px; }
+.pc-t-diploma .tg-dip { position: relative; padding: 14px 16px; text-align: center; color: #2a1e10; border: 3px double var(--g2); outline: 2px solid var(--g3); outline-offset: 3px; background: radial-gradient(ellipse, #fffdf6, #f6ecd4); }
+.pc-t-diploma .tg-dh { font-family: "Cormorant SC", serif; font-size: 30px; line-height: 1; color: var(--g3); letter-spacing: .12em; text-shadow: 1px 1px 0 var(--g1); }
+.pc-t-diploma .tg-dt { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 15px; margin: 6px 0; color: #5a4628; }
+.pc-t-diploma .pc-body { justify-content: center; text-align: left; }
+.pc-t-diploma .pc-name { color: #2a1e10; }
+.pc-t-diploma .pc-sub { color: var(--g3); font-weight: 700; }
+.pc-t-diploma .tg-seal { position: absolute; right: 10px; bottom: 6px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px;
+  background: radial-gradient(circle, var(--g2), var(--g3)); box-shadow: 0 0 0 3px var(--g1), 0 0 0 4px var(--g3); }
+
+/* мінімум місця в списках і попередньому перегляді */
+.pcard.mini.pc-t-newspaper .tn-mast { font-size: 20px; } .pcard.mini.pc-t-newspaper .tn-photo, .pcard.mini.pc-t-postcard .tp-pic { height: 86px; }
+.pcard.mini.pc-t-polaroid .tg-pph, .pcard.mini.pc-t-champion .tch-photo { height: 96px; }
+.pcard.mini.pc-t-diploma .tg-dh { font-size: 24px; }

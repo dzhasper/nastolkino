@@ -1,5 +1,5 @@
 /* Генератор вещей: рамки (материал × узор), карточки, фоны, переливы имени, титулы, аватары, приколы и игрушки для питомцев,
-   а ещё наборы сезонных сундуков: утро / день / вечер / ночь, Хэллоуин, Золотой дракон, супер-сундуки.
+   а ещё наборы сезонных сундуков: утро / день / вечер / ночь, Хэллоуин, Свято ліхтарів, супер-сундуки.
    Коды и редкость вещей такие же в server/worker.js (блок LOOT) — тест tests_js/server.test.js сверяет списки.
    Порядок в списках титулов и аватаров менять нельзя (код вещи = номер): новое — только в конец. */
 const Loot = (() => {
@@ -27,6 +27,9 @@ const Loot = (() => {
     ["rhomb", "ромби", "p", 1], ["scale", "луска", "f", 1], ["lace", "мереживо", "n", 1], ["stars", "зорі", "p", 1, 4, 1.2], ["rope", "канат", "m", 1],
     ["spikes", "шипи", "p", 2], ["wave", "хвиля", "f", 2, 6, 1.2], ["pulse", "пульс", "m", 2, 4, .8], ["gem", "огранка", "f", 2, 4, 1],
     ["flame", "полум’я", "n", 3, 4, .6], ["vortex", "вихор", "m", 3, 6, 1], ["aura", "аура", "f", 3, 6, 1.4]];
+  // макети ID-карток із генератора (js/idcards.js): код, назва, рід
+  const CARD_LAY = [["passport", "паспорт", "m"], ["license", "посвідчення", "n"], ["library", "читацький квиток", "m"], ["boarding", "посадковий талон", "m"], ["receipt", "чек", "m"],
+    ["polaroid", "полароїд", "m"], ["stamp", "марка", "f"], ["dogtag", "жетон", "m"], ["comic", "комікс", "m"], ["blueprint", "креслення", "n"], ["cartridge", "картридж", "m"], ["diploma", "грамота", "f"]];
   // пейзажи для фонов: код, имя, род, редкость
   const SCENES = [["hills", "пагорби", "p", 0], ["sea", "море", "n", 0], ["peaks", "гори", "p", 1], ["city", "мегаполіс", "m", 1], ["sky", "небо", "n", 2]];
   // пиксельные аватарки (картинка вместо фото Telegram): стиль, имя, редкость. Картинки — docs/img/pics/p<номер>.png. Порядок не менять: новое — в конец
@@ -42,7 +45,7 @@ const Loot = (() => {
     ["skull", "Череп", 2], ["skull", "Неоновий череп", 2, { anim: 1 }], ["skull", "Череп у вогні", 2, { anim: 1 }], ["skull", "Пірат", 2], ["skull", "Цукровий череп", 2], ["skull", "Кришталевий череп", 3, { anim: 1 }],
     ["mask", "Ніндзя", 2], ["mask", "Лицар", 2], ["mask", "Протигаз", 2], ["mask", "Лучадор", 2], ["mask", "Хокейна маска", 2], ["mask", "Самурай", 2], ["mask", "Чумний лікар", 2],
     ["astro", "Космонавт", 2], ["astro", "Космонавтка", 2], ["astro", "Марсіанин у шоломі", 2], ["astro", "Зоряний пілот", 2], ["astro", "Кіт-космонавт", 3, { anim: 1 }],
-    ["legend", "Гетьман", 3], ["legend", "Король", 3], ["legend", "Дракон", 3, { anim: 1 }], ["legend", "Демон", 3, { anim: 1 }], ["legend", "Золота маска", 3], ["legend", "Чарівник", 3, { anim: 1 }], ["legend", "Фенікс", 3, { anim: 1 }],
+    ["legend", "Гетьман", 3], ["legend", "Король", 3], ["legend", "Кракен", 3, { anim: 1 }], ["legend", "Демон", 3, { anim: 1 }], ["legend", "Золота маска", 3], ["legend", "Чарівник", 3, { anim: 1 }], ["legend", "Фенікс", 3, { anim: 1 }],
     // приколы: смайлики, еда, звери, вещи
     ["smiley", "Крутий смайлик", 0], ["smiley", "Ботан", 0], ["smiley", "Сміхота", 0], ["smiley", "Закоханий", 0], ["smiley", "Сонько", 0], ["smiley", "Грошовий", 1],
     ["smiley", "Ковбой", 1], ["smiley", "Тусовщик", 2, { anim: 1 }], ["smiley", "Чортик", 1], ["smiley", "Янголятко", 1], ["smiley", "Зомбі-смайлик", 1], ["smiley", "Клоун-смайлик", 1],
@@ -112,7 +115,7 @@ const Loot = (() => {
       ["frame", "x_dawn2", "Перший промінь", 2, { pat: "wave", pal: P("#fff4d0", "#ffb36a", "#8a3a2a", "#ffffff"), emb: "sun" }],
       ["frame", "x_dawn3", "Схід сонця", 3, { pat: "aura", pal: P("#fff0f4", "#ff9ab8", "#6a1a4a", "#ffe066"), emb: "sun" }],
       ["bg", "x_dawn", "Світанок над пагорбами", 1, { scene: "hills", pal: P("#ffd0a0", "#ff8a6a", "#4a2a5a", "#fff4b0") }],
-      ["style", "x_dawn", "Ранкова картка", 2, { kind: "foil", pal: P("#fff0d8", "#ff9a6a", "#5a2a4a", "#ffe066") }],
+      ["style", "x_dawn", "Ранкова картка", 2, { kind: "tpl", tpl: "newspaper", pal: P("#fff0d8", "#ff9a6a", "#5a2a4a", "#ffe066") }],
       ["fx", "x_dawn", "Світанкове ім’я", 2, { pal: P("#ffe066", "#ff9ab8", "#ff6a3a", "#ffffff") }],
       ["hat", "sunhat", "Панамка", 0], ["hat", "sunflower", "Соняшник", 1], ["toy", "croissant", "Круасан", 0, { emoji: "🥐" }], ["toy", "alarm", "Будильник", 1, { emoji: "⏰" }]] },
     { key: "s_noon", name: "Полудень", emoji: "☀️", when: "noon", price: 350, w: [50, 30, 15, 5], color: "#ffd23f", desc: "Лише вдень: спека, море й сонячні зайчики", items: [
@@ -122,7 +125,7 @@ const Loot = (() => {
       ["frame", "x_noon2", "Полуденний блиск", 2, { pat: "gem", pal: P("#ffffff", "#fff0a0", "#c8900a", "#3ec8ff"), emb: "sun" }],
       ["frame", "x_noon3", "Сонячне коло", 3, { pat: "vortex", pal: P("#fff8c0", "#ffc21a", "#a84a00", "#ffffff"), emb: "sun" }],
       ["bg", "x_noon", "Полудень біля моря", 1, { scene: "sea", pal: P("#bfefff", "#3ac0ff", "#0a4a7a", "#ffe066") }],
-      ["style", "x_noon", "Пляжна картка", 2, { kind: "foil", pal: P("#fffbe0", "#ffc21a", "#1a6a9a", "#ffffff") }],
+      ["style", "x_noon", "Пляжна картка", 2, { kind: "tpl", tpl: "postcard", pal: P("#fffbe0", "#ffc21a", "#1a6a9a", "#ffffff") }],
       ["fx", "x_noon", "Сонячне ім’я", 2, { pal: P("#ffe066", "#ffffff", "#ffb020", "#ffe066") }],
       ["hat", "cap", "Кепка", 0], ["hat", "shades", "Окуляри на лобі", 1], ["toy", "icecream", "Морозиво", 0, { emoji: "🍦" }], ["toy", "beachball", "Пляжний м’яч", 1, { emoji: "🏐" }]] },
     { key: "s_dusk", name: "Заграва", emoji: "🌇", when: "dusk", price: 350, w: [50, 30, 15, 5], color: "#ff6a3a", desc: "Лише ввечері: сутінки, фламінго й вогні міста", items: [
@@ -132,7 +135,7 @@ const Loot = (() => {
       ["frame", "x_dusk2", "Багряний захід", 2, { pat: "wave", pal: P("#ffe0a0", "#ff5a3a", "#3a0a2a", "#ffd23f"), emb: "sun" }],
       ["frame", "x_dusk3", "Останній промінь", 3, { pat: "aura", pal: P("#ffe8c0", "#ff7a4a", "#4a0a3a", "#ff9ad0"), emb: "sun" }],
       ["bg", "x_dusk", "Місто на заході сонця", 1, { scene: "city", pal: P("#ffb36a", "#c84a6a", "#2a0a3a", "#ffe066") }],
-      ["style", "x_dusk", "Вечірня картка", 2, { kind: "foil", pal: P("#ffd0a0", "#c84a6a", "#2a0a3a", "#ffe066") }],
+      ["style", "x_dusk", "Вечірня картка", 2, { kind: "tpl", tpl: "cinema", pal: P("#ffd0a0", "#c84a6a", "#2a0a3a", "#ffe066") }],
       ["fx", "x_dusk", "Ім’я заходу", 2, { pal: P("#ffd23f", "#ff6a3a", "#c84ad0", "#ffd23f") }],
       ["hat", "beret", "Берет", 0], ["hat", "fedora", "Капелюх детектива", 1], ["toy", "marshmallow", "Зефірки", 0, { emoji: "🍡" }], ["toy", "candle", "Свічка", 1, { emoji: "🕯️" }]] },
     { key: "s_night", name: "Опівніч", emoji: "🌙", when: "night", price: 350, w: [45, 32, 17, 6], color: "#7a6aff", desc: "Лише вночі: місяць, сови й рамки, яких удень не дістати", items: [
@@ -144,7 +147,7 @@ const Loot = (() => {
       ["frame", "x_night3", "Зоряна ніч", 2, { pat: "stars", pal: P("#fff4b0", "#3a3aa0", "#05051a", "#ffffff"), emb: "moon" }],
       ["frame", "x_night4", "Опівніч", 3, { pat: "vortex", pal: P("#d8d0ff", "#5a3ae0", "#05031a", "#ffe066"), emb: "moon" }],
       ["bg", "x_night", "Зоряне небо", 2, { scene: "sky", pal: P("#4a4ad0", "#1a1a6a", "#05051a", "#fff4b0") }],
-      ["style", "x_night", "Нічна картка", 3, { kind: "foil", pal: P("#c8d0ff", "#3a3aa0", "#05051a", "#fff4b0") }],
+      ["style", "x_night", "Нічна картка", 3, { kind: "tpl", tpl: "starmap", pal: P("#c8d0ff", "#3a3aa0", "#05051a", "#fff4b0") }],
       ["fx", "x_night", "Місячне ім’я", 2, { pal: P("#ffffff", "#b8c8ff", "#7a6aff", "#ffffff") }],
       ["hat", "nightcap", "Нічний ковпак", 0], ["hat", "moonhat", "Півмісяць", 2], ["toy", "moontoy", "Місячний м’ячик", 1, { emoji: "🌙" }], ["toy", "owl", "Плюшева сова", 2, { emoji: "🦉" }]] },
     { key: "s_halloween", name: "Гелловін", emoji: "🎃", when: "any", price: 450, w: [45, 32, 17, 6], color: "#ff7a18", desc: "Гарбузи, відьми, привиди — для тебе й для улюбленців", items: [
@@ -160,7 +163,7 @@ const Loot = (() => {
       ["frame", "x_hw6", "Ніч гарбузів", 3, { pat: "vortex", pal: P("#ffd08a", "#ff7a18", "#120604", "#ffe066"), emb: "pumpkin" }],
       ["bg", "x_hw1", "Гарбузове поле", 1, { scene: "hills", pal: P("#ff9a3a", "#5a1a6a", "#0a0414", "#ff7a18") }],
       ["bg", "x_hw2", "Місто-привид", 2, { scene: "city", pal: P("#7aff8a", "#2a1a4a", "#05020a", "#ffb020") }],
-      ["style", "x_hw1", "Гарбузова картка", 2, { kind: "foil", pal: P("#ffd08a", "#ff7a18", "#1a0a04", "#5ac83a") }],
+      ["style", "x_hw1", "Гарбузова картка", 2, { kind: "tpl", tpl: "pumpkin", pal: P("#ffd08a", "#ff7a18", "#1a0a04", "#5ac83a") }],
       ["style", "x_hw2", "Гримуар", 3, { kind: "foil", pal: P("#d0ffc0", "#4a1a6a", "#05020a", "#7aff6a") }],
       ["fx", "x_hw1", "Гарбузове ім’я", 1, { pal: P("#ffb020", "#ff7a18", "#ffe066", "#ff7a18") }],
       ["fx", "x_hw2", "Примарне зелене", 2, { pal: P("#c8ff9a", "#5aff6a", "#c86aff", "#c8ff9a") }],
@@ -181,7 +184,7 @@ const Loot = (() => {
       ["frame", "x_cos5", "Чорна діра", 3, { pat: "vortex", pal: P("#ffb0f0", "#6a2ad0", "#000000", "#ffe066"), emb: "eye" }],
       ["bg", "x_cos1", "Невідома планета", 2, { scene: "peaks", pal: P("#ff9ae0", "#6a2ad0", "#0a041a", "#7ae0ff") }],
       ["bg", "x_cos2", "Галактика", 3, { scene: "sky", pal: P("#a05bff", "#2a0a5a", "#05020f", "#ffffff") }],
-      ["style", "x_cos", "Зоряна картка", 3, { kind: "foil", pal: P("#ffc8f0", "#6a2ad0", "#05020f", "#7ae0ff") }],
+      ["style", "x_cos", "Зоряна картка", 3, { kind: "tpl", tpl: "mission", pal: P("#ffc8f0", "#6a2ad0", "#05020f", "#7ae0ff") }],
       ["fx", "x_cos", "Космос", 3, { pal: P("#7ae0ff", "#ff7ae0", "#a05bff", "#7ae0ff") }],
       ["hat", "antennae", "Антени", 1], ["hat", "ufohat", "НЛО на голові", 2], ["hat", "astro", "Шолом космонавта", 3],
       ["toy", "comet", "Хвостата комета", 2, { emoji: "☄️" }], ["toy", "planet", "Планетка", 2, { emoji: "🪐" }], ["toy", "satellite", "Супутник", 3, { emoji: "🛰️" }]] },
@@ -198,29 +201,98 @@ const Loot = (() => {
       ["frame", "x_ol5", "Олімп", 3, { pat: "aura", pal: P("#ffffff", "#fff0a0", "#a88a3a", "#7ae0ff"), emb: "crown" }],
       ["bg", "x_ol1", "Храм на пагорбі", 2, { scene: "city", pal: P("#fff4d0", "#e8c890", "#3a2a1a", "#ffe066") }],
       ["bg", "x_ol2", "Гора Олімп", 3, { scene: "peaks", pal: P("#fff8e0", "#c8b8ff", "#2a2050", "#ffe066") }],
-      ["style", "x_ol", "Скрижаль богів", 3, { kind: "foil", pal: P("#fff8e0", "#e8c890", "#3a2a1a", "#ffd23f") }],
+      ["style", "x_ol", "Скрижаль богів", 3, { kind: "tpl", tpl: "tablet", pal: P("#fff8e0", "#e8c890", "#3a2a1a", "#ffd23f") }],
       ["fx", "x_ol", "Божественне", 3, { pal: P("#ffffff", "#ffe066", "#7ae0ff", "#ffffff") }],
       ["hat", "laurel", "Лавровий вінок", 2], ["hat", "helmet", "Шолом Афіни", 3], ["hat", "glory", "Сяйво богів", 3],
       ["toy", "goldapple", "Золоте яблуко", 2, { emoji: "🍎" }], ["toy", "lyre", "Ліра", 2, { emoji: "🪕" }], ["toy", "trident", "Тризуб", 3, { emoji: "🔱" }]] },
+    // турнірний кейс: не продається — лише переможцю турніру; одразу 5 прокрутів, 52 речі, яких більше ніде немає
+    { key: "s_cup", name: "Турнірний кейс", emoji: "🏆", when: "cup", spins: 5, price: 0, w: [0, 30, 45, 25], color: "#ffc21a",
+      desc: "Приз за перемогу в турнірі: одразу 5 прокрутів, 52 топові речі", items: [
+      ["title", "x_cup1", "🏆 Турнірний боєць", 1, { text: "🏆 Турнірний боєць" }], ["title", "x_cup2", "🏆 Гроза столів", 1, { text: "🏆 Гроза столів" }],
+      ["title", "x_cup3", "🏆 Майстер плей-офф", 2, { text: "🏆 Майстер плей-офф" }], ["title", "x_cup4", "🏆 Непереможний", 2, { text: "🏆 Непереможний" }],
+      ["title", "x_cup7", "🏆 Король фіналів", 2, { text: "🏆 Король фіналів" }], ["title", "x_cup5", "🏆 Чемпіон Настолкіно", 3, { text: "🏆 Чемпіон Настолкіно" }],
+      ["title", "x_cup6", "🏆 Легенда турнірів", 3, { text: "🏆 Легенда турнірів" }], ["title", "x_cup8", "🏆 Той, хто забрав кубок", 3, { text: "🏆 Той, хто забрав кубок" }],
+      ["ava", "x_cup1", "Медаль", 1, { emoji: "🏅✨" }], ["ava", "x_cup2", "Золото", 1, { emoji: "🥇🔥" }], ["ava", "x_cup3", "Орден", 1, { emoji: "🎖️⭐" }],
+      ["ava", "x_cup4", "Схрещені мечі", 2, { emoji: "⚔️🛡️" }], ["ava", "x_cup5", "Лев", 2, { emoji: "🦁👑" }], ["ava", "x_cup6", "Кубок", 2, { emoji: "🏆✨" }],
+      ["ava", "x_cup7", "Корона", 3, { emoji: "👑🏆" }], ["ava", "x_cup8", "Найкращий усіх часів", 3, { emoji: "🐐🏆" }],
+      ["frame", "x_cup1", "Лавровий кубок", 1, { pat: "braid", pal: P("#f0ffc0", "#7ab83a", "#1a3a06", "#ffd23f"), emb: "laurel" }],
+      ["frame", "x_cup2", "Арена", 1, { pat: "check", pal: P("#ffe0b0", "#c8301a", "#3a0a04", "#ffd23f"), emb: "sword" }],
+      ["frame", "x_cup3", "Золотий п’єдестал", 2, { pat: "gem", pal: P("#fff8c0", "#ffc21a", "#6a4000", "#ffffff"), emb: "cup" }],
+      ["frame", "x_cup4", "Срібний фінал", 2, { pat: "scale", pal: P("#ffffff", "#b8c4d8", "#3a4a6a", "#7ae0ff"), emb: "star" }],
+      ["frame", "x_cup5", "Чемпіонський пояс", 2, { pat: "rope", pal: P("#fff3b0", "#e8a01a", "#3a2000", "#e8203a"), emb: "crown" }],
+      ["frame", "x_cup6", "Гладіатор", 2, { pat: "spikes", pal: P("#ffd8a0", "#a8642a", "#2a1206", "#ffe066"), emb: "sword" }],
+      ["frame", "x_cup7", "Феєрверк перемоги", 3, { pat: "stars", pal: P("#ffffff", "#ff3a8a", "#14062a", "#ffe066"), emb: "cup" }],
+      ["frame", "x_cup8", "Полум’я фіналу", 3, { pat: "flame", pal: P("#fff0a0", "#ff6a1a", "#3a0400", "#ffd23f"), emb: "cup" }],
+      ["frame", "x_cup9", "Аура чемпіона", 3, { pat: "aura", pal: P("#fffbe0", "#ffd23f", "#6a4a00", "#ffffff"), emb: "crown" }],
+      ["frame", "x_cup10", "Вихор слави", 3, { pat: "vortex", pal: P("#ffe8a0", "#a05bff", "#1a0630", "#ffd23f"), emb: "cup" }],
+      ["bg", "x_cup1", "Стадіон уночі", 2, { scene: "stadium", pal: P("#ffe066", "#2a3a8a", "#060a20", "#ffffff") }],
+      ["bg", "x_cup2", "Арена гладіаторів", 2, { scene: "arena", pal: P("#ffe0a0", "#c8803a", "#3a1a06", "#ffd23f") }],
+      ["bg", "x_cup3", "Вершина слави", 3, { scene: "peaks", pal: P("#fff8c0", "#ffc21a", "#4a2a00", "#ffffff") }],
+      ["bg", "x_cup4", "Салют над містом", 3, { scene: "fireworks", pal: P("#ff7ae0", "#2a0a5a", "#05020f", "#ffe066") }],
+      ["style", "x_cup1", "Квиток на фінал", 2, { kind: "tpl", tpl: "finalticket", pal: P("#fff3c8", "#ffc21a", "#2a1a06", "#e8203a") }],
+      ["style", "x_cup2", "Картка чемпіона", 3, { kind: "tpl", tpl: "champion", pal: P("#fff8c0", "#ffc21a", "#1a0a2a", "#a05bff") }],
+      ["style", "x_cup3", "Чемпіонський пояс", 3, { kind: "tpl", tpl: "belt", pal: P("#fff3b0", "#ffc21a", "#1a0a06", "#e8203a") }],
+      ["fx", "x_cup1", "Золоте ім’я", 2, { fxk: "gold", pal: P("#fff3b0", "#ffc21a", "#ffffff", "#ffd23f") }],
+      ["fx", "x_cup2", "Ім’я чемпіона", 3, { fxk: "champ", pal: P("#ffffff", "#ffd23f", "#ff7a1a", "#ffffff") }],
+      ["fx", "x_cup3", "Салют", 3, { fxk: "fireworks", pal: P("#ff7ae0", "#7ae0ff", "#ffe066", "#ff7ae0") }],
+      ["hat", "medalband", "Пов’язка з медаллю", 1], ["hat", "victorycap", "Кепка переможця", 1], ["hat", "cuphat", "Кубок на голові", 2],
+      ["hat", "goldlaurel", "Золотий лавр", 2], ["hat", "gladhelm", "Шолом гладіатора", 3], ["hat", "champcrown", "Корона чемпіона", 3],
+      ["toy", "medal", "Медалька", 1, { emoji: "🥇" }], ["toy", "darts", "Дартс", 1, { emoji: "🎯" }], ["toy", "skittle", "Кегля", 1, { emoji: "🎳" }],
+      ["toy", "minicup", "Міні-кубок", 2, { emoji: "🏆" }], ["toy", "chessking", "Шаховий король", 2, { emoji: "♟️" }], ["toy", "pinata", "Піньята перемоги", 3, { emoji: "🪅" }],
+      // власні рамки, яких немає ніде: лаври, медалі, шахи, конфеті, прожектори, кубки по кутах
+      ["frame", "x_cup11", "Вінок чемпіона", 2, { pat: "laurel", pal: P("#c8ff9a", "#3aa84a", "#0a3a10", "#ffd23f"), strip: 4, speed: 1.2 }],
+      ["frame", "x_cup12", "Медальна стіна", 2, { pat: "medals", pal: P("#fff3b0", "#ffc21a", "#2a1a06", "#e8203a"), strip: 4, speed: 1 }],
+      ["frame", "x_cup13", "Шаховий турнір", 2, { pat: "chess", pal: P("#f6f0e0", "#2a2a34", "#0a0a10", "#ffd23f"), strip: 4, speed: 1.4 }],
+      ["frame", "x_cup14", "Конфеті фіналу", 3, { pat: "confetti", pal: P("#ffffff", "#a05bff", "#1a0a3a", "#ffe066"), strip: 6, speed: .9 }],
+      ["frame", "x_cup15", "Прожектори арени", 3, { pat: "spotlight", pal: P("#fffbe0", "#3a4aa8", "#05051a", "#ffe066"), strip: 6, speed: 1.2 }],
+      ["frame", "x_cup16", "Зала трофеїв", 3, { pat: "trophies", pal: P("#fff3b0", "#ffc21a", "#4a2a00", "#ffffff"), strip: 4, speed: 1 }],
+      ["bg", "x_cup5", "П’єдестал під софітами", 3, { scene: "podium", pal: P("#fff3b0", "#3a2a8a", "#06041a", "#ffe066") }],
+      ["bg", "x_cup6", "Шахова зала", 2, { scene: "chesshall", pal: P("#f6f0e0", "#8a5a3a", "#1a0a04", "#ffd23f") }],
+      ["hat", "torchhat", "Олімпійський вогонь", 3], ["hat", "boxhelm", "Боксерський шолом", 2],
+      // прикраси для улюбленців — лише тут: на очі, на шию, у рот, на голову
+      ["hat", "goldmedal", "Золота медаль на шиї", 3], ["hat", "champshades", "Окуляри чемпіона", 2], ["hat", "luchador", "Маска рестлера", 2],
+      ["hat", "cuphorns", "Ріжки-кубки", 2], ["hat", "refwhistle", "Свисток судді", 1], ["hat", "rosette", "Бант-розетка переможця", 1]] },
+    // скриня уламків: дуже рідко випадає в майстерні замість ключа — три найкращі речі за раз
+    { key: "s_shard", name: "Скриня уламків", emoji: "💎", when: "shard", spins: 3, price: 0, w: [0, 0, 55, 45], color: "#7af0ff",
+      desc: "Дуже рідкісна знахідка з майстерні: одразу три найкращі речі", items: [
+      ["title", "x_sh1", "💎 Кристальна душа", 2, { text: "💎 Кристальна душа" }], ["title", "x_sh2", "💎 Збирач уламків", 2, { text: "💎 Збирач уламків" }],
+      ["title", "x_sh3", "💎 Алмазний розум", 3, { text: "💎 Алмазний розум" }],
+      ["ava", "x_sh1", "Діамант", 2, { emoji: "💎✨" }], ["ava", "x_sh2", "Кристал", 2, { emoji: "💠🌌" }], ["ava", "x_sh3", "Куля провидця", 3, { emoji: "🔮💎" }],
+      ["frame", "x_sh1", "Кристальна решітка", 2, { pat: "gem", pal: P("#e8fbff", "#7af0ff", "#0a2a4a", "#ffffff"), emb: "shard" }],
+      ["frame", "x_sh2", "Призма", 3, { pat: "pulse", pal: P("#ffffff", "#ff7ae0", "#1a0a3a", "#7af0ff"), emb: "shard" }],
+      ["frame", "x_sh3", "Уламки зірки", 3, { pat: "stars", pal: P("#ffffff", "#7af0ff", "#05051a", "#ff9af0"), emb: "shard" }],
+      ["frame", "x_sh4", "Діамантове серце", 3, { pat: "aura", pal: P("#ffffff", "#b8f4ff", "#1a3a6a", "#ff7ae0"), emb: "shard" }],
+      ["bg", "x_sh1", "Кристальна печера", 2, { scene: "crystal", pal: P("#c8f8ff", "#3a8ac8", "#05102a", "#ff9af0") }],
+      ["bg", "x_sh2", "Призматичне небо", 3, { scene: "sky", pal: P("#ff9af0", "#5a3ad0", "#0a0420", "#7af0ff") }],
+      ["style", "x_sh", "Кристалічна картка", 3, { kind: "tpl", tpl: "crystal", pal: P("#e8fbff", "#7af0ff", "#0a1a3a", "#ff7ae0") }],
+      ["fx", "x_sh1", "Призматичне ім’я", 3, { fxk: "prism", pal: P("#ff7ae0", "#7af0ff", "#ffe066", "#ff7ae0") }],
+      ["fx", "x_sh2", "Діамантовий блиск", 2, { fxk: "diamond", pal: P("#ffffff", "#b8f4ff", "#7af0ff", "#ffffff") }],
+      ["hat", "prismvisor", "Призма-візор", 2], ["hat", "crystalcrown", "Кришталева корона", 3], ["hat", "shardhalo", "Німб з уламків", 3],
+      ["toy", "crystal", "Кристал", 2, { emoji: "💎" }], ["toy", "orb", "Куля провидця", 3, { emoji: "🔮" }],
+      ["frame", "x_sh5", "Друза кристалів", 3, { pat: "crystals", pal: P("#e8fbff", "#7af0ff", "#0a2a4a", "#ff9af0"), strip: 4, speed: 1 }],
+      ["frame", "x_sh6", "Веселкова призма", 3, { pat: "prism", pal: P("#ffffff", "#7af0ff", "#0a0420", "#ff7ae0"), strip: 6, speed: 1 }],
+      ["frame", "x_sh7", "Розбите скло", 2, { pat: "shatter", pal: P("#ffffff", "#b8f4ff", "#0a1a3a", "#7af0ff"), strip: 4, speed: 1.2 }],
+      ["bg", "x_sh3", "Усередині жеоди", 3, { scene: "geode", pal: P("#f0d8ff", "#a05bff", "#14062a", "#7af0ff") }],
+      ["hat", "crystalhorn", "Кришталевий ріг", 3], ["hat", "shardwings", "Крильця з уламків", 2]] },
   ];
-  // добавки к старым сезонным сундукам (дракон — сильно разнообразнее, остальным — вещи для питомцев и новые рамки)
+  // добавки к старым сезонным сундукам (свято ліхтарів — сильно разнообразнее; драконів тут немає — вони лише в колекціонерів, остальным — вещи для питомцев и новые рамки)
   const EXTRA = {
     s_dragon: [
       ["frame", "x_dr1", "Хмарний шлях", 0, { pat: "braid", pal: P("#ffffff", "#ffd0d0", "#8a1018", "#ffd23f"), emb: "cloud" }],
       ["frame", "x_dr2", "Ліхтарики", 1, { pat: "dots", pal: P("#ffe066", "#e8202a", "#4a0408", "#ffd23f"), emb: "lantern" }],
-      ["frame", "x_dr3", "Вогняна луска", 2, { pat: "scale", pal: P("#ffe066", "#e8202a", "#3a0206", "#ffffff"), emb: "dragon" }],
-      ["frame", "x_dr4", "Нефритовий дракон", 3, { pat: "wave", pal: P("#d8ffe0", "#2ab86a", "#04240e", "#ffd23f"), emb: "dragon" }],
-      ["title", "x_dr1", "Майстер кунг-фу", 0, { text: "Майстер кунг-фу" }], ["title", "x_dr2", "Той, хто танцює з драконом", 1, { text: "Той, хто танцює з драконом" }],
+      ["frame", "x_dr3", "Червоні віяла", 2, { pat: "scale", pal: P("#ffe066", "#e8202a", "#3a0206", "#ffffff"), emb: "lantern" }],
+      ["frame", "x_dr4", "Нефритовий тигр", 3, { pat: "wave", pal: P("#d8ffe0", "#2ab86a", "#04240e", "#ffd23f"), emb: "lantern" }],
+      ["title", "x_dr1", "Майстер кунг-фу", 0, { text: "Майстер кунг-фу" }], ["title", "x_dr2", "Той, хто танцює з левом", 1, { text: "Той, хто танцює з левом" }],
       ["title", "x_dr3", "Хранитель перлини", 2, { text: "Хранитель перлини" }],
       ["ava", "x_dr1", "Червоний конверт", 0, { emoji: "🧧" }], ["ava", "x_dr2", "Місячний пряник", 1, { emoji: "🥮" }], ["ava", "x_dr3", "Ляльки", 1, { emoji: "🎎" }],
-      ["ava", "x_dr4", "Червоний дракон", 2, { emoji: "🀄" }],
+      ["ava", "x_dr4", "Маджонг", 2, { emoji: "🀄" }],
       ["bg", "x_dr1", "Вулиця ліхтарів", 1, { scene: "city", pal: P("#ff5a3a", "#8a1018", "#1a0204", "#ffd23f") }],
       ["bg", "x_dr2", "Нефритові гори", 2, { scene: "peaks", pal: P("#d8ffe0", "#4aa87a", "#0a2a14", "#ffd23f") }],
-      ["style", "x_dr", "Нефритова печатка", 3, { kind: "foil", pal: P("#d8ffe0", "#2ab86a", "#04240e", "#ffd23f") }],
+      ["style", "x_dr", "Нефритова печатка", 3, { kind: "tpl", tpl: "jade", pal: P("#d8ffe0", "#2ab86a", "#04240e", "#ffd23f") }],
       ["fx", "x_dr", "Нефритове ім’я", 2, { pal: P("#d8ffe0", "#2ab86a", "#ffd23f", "#d8ffe0") }],
-      ["hat", "douli", "Солом’яний капелюх", 0], ["hat", "dlantern", "Ліхтарик на голові", 1], ["hat", "dhorns", "Роги дракона", 2], ["hat", "dcrown", "Корона Імператора", 3],
+      ["hat", "douli", "Солом’яний капелюх", 0], ["hat", "dlantern", "Ліхтарик на голові", 1], ["hat", "dhorns", "Роги буйвола", 2], ["hat", "dcrown", "Корона Імператора", 3],
       ["toy", "lantern", "Ліхтарик", 0, { emoji: "🏮" }], ["toy", "dumpling", "Вареник", 0, { emoji: "🥟" }], ["toy", "firework", "Хлопавка", 1, { emoji: "🧨" }],
-      ["toy", "fan", "Віяло", 1, { emoji: "🪭" }], ["toy", "dpearl", "Перлина дракона", 3, { emoji: "🔮" }]],
+      ["toy", "fan", "Віяло", 1, { emoji: "🪭" }], ["toy", "dpearl", "Нефритова перлина", 3, { emoji: "🔮" }]],
     s_ice: [["frame", "x_ice1", "Іній", 1, { pat: "lace", pal: P("#ffffff", "#bfefff", "#2a5a8a", "#ffffff"), emb: "snow" }],
       ["frame", "x_ice2", "Хуртовина", 2, { pat: "wave", pal: P("#ffffff", "#8ad8ff", "#0a2a5a", "#e8fbff"), emb: "snow" }],
       ["hat", "snowcap", "Снігова шапка", 1], ["toy", "snowball", "Сніжка", 0, { emoji: "❄️" }], ["toy", "skates", "Ковзани", 2, { emoji: "⛸️" }]],
@@ -242,9 +314,19 @@ const Loot = (() => {
       ["pic", "x_hw_p4", "Кістяк у циліндрі", 3, { art: ["season", "baron"], anim: 1 }]],
     s_cosmos: [["pic", "x_cos_p1", "НЛО", 2, { art: ["season", "ufo"] }], ["pic", "x_cos_p2", "Зоряний кіт", 3, { art: ["season", "starcat"], anim: 1 }], ["pic", "x_cos_p3", "Чорна діра", 3, { art: ["season", "blackhole"], anim: 1 }]],
     s_olymp: [["pic", "x_ol_p1", "Афіна", 2, { art: ["season", "athena"] }], ["pic", "x_ol_p2", "Зевс", 3, { art: ["season", "zeus"], anim: 1 }], ["pic", "x_ol_p3", "Медуза Горгона", 3, { art: ["season", "medusa"], anim: 1 }]],
-    s_dragon: [["pic", "x_dr_p1", "Ліхтарик", 1, { art: ["season", "lantern"] }], ["pic", "x_dr_p2", "Червоний дракон", 2, { art: ["season", "lunardragon"], anim: 1 }]],
+    s_dragon: [["pic", "x_dr_p1", "Ліхтарик", 1, { art: ["season", "lantern"] }], ["pic", "x_dr_p2", "Лев-танцюрист", 2, { art: ["season", "liondance"], anim: 1 }]],
     s_ice: [["pic", "x_ice_p1", "Сніговик", 0, { art: ["season", "snowman"] }], ["pic", "x_ice_p2", "Пінгвін у шарфі", 1, { art: ["season", "penguin"] }], ["pic", "x_ice_p3", "Крижаний велетень", 2, { art: ["season", "icegiant"], anim: 1 }]],
     s_moon: [["pic", "x_moon_p1", "Перевертень", 1, { art: ["season", "werewolf"] }], ["pic", "x_moon_p2", "Вампір", 2, { art: ["season", "vampire"], anim: 1 }]],
+    s_cup: [["pic", "x_cup_p1", "Кубок з характером", 2, { art: ["season", "goldcup"], anim: 1 }], ["pic", "x_cup_p2", "Гладіатор", 2, { art: ["season", "gladiator"] }],
+      ["pic", "x_cup_p3", "Чемпіон", 3, { art: ["season", "champion"], anim: 1 }], ["pic", "x_cup_p4", "Шаховий король", 3, { art: ["season", "chessking"], anim: 1 }],
+      ["pic", "x_cup_p5", "Боксер-чемпіон", 2, { art: ["season", "boxer"], anim: 1 }], ["pic", "x_cup_p6", "Олімпійський вогонь", 2, { art: ["season", "torch"], anim: 1 }],
+      ["pic", "x_cup_p7", "Золота статуя", 3, { art: ["season", "goldstatue"], anim: 1 }], ["pic", "x_cup_p8", "Лев у короні", 3, { art: ["season", "lionking"], anim: 1 }],
+      ["pic", "x_cup_p9", "Лицар турніру", 2, { art: ["season", "knight"], anim: 1 }], ["pic", "x_cup_p10", "Кіт-чемпіон", 1, { art: ["season", "medalcat"], anim: 1 }]],
+    s_shard: [["pic", "x_sh_p1", "Кристальний голем", 2, { art: ["season", "crystalgolem"] }], ["pic", "x_sh_p2", "Призматична лисиця", 3, { art: ["season", "prismfox"], anim: 1 }],
+      ["pic", "x_sh_p3", "Кришталевий вовк", 3, { art: ["season", "crystalwolf"], anim: 1 }],
+      ["pic", "x_sh_p4", "Кришталева медуза", 2, { art: ["season", "crystaljelly"], anim: 1 }], ["pic", "x_sh_p5", "Аметистова відьма", 2, { art: ["season", "amethystwitch"], anim: 1 }],
+      ["pic", "x_sh_p6", "Діамантовий кіт", 3, { art: ["season", "diamondcat"], anim: 1 }], ["pic", "x_sh_p7", "Кришталева сова", 2, { art: ["season", "crystalowl"], anim: 1 }],
+      ["pic", "x_sh_p8", "Король жеод", 3, { art: ["season", "geodeking"], anim: 1 }]],
     s_neon: [["pic", "x_neon_p1", "Кіберпанк", 1, { art: ["season", "cyberpunk"] }], ["pic", "x_neon_p2", "Хакер у капюшоні", 2, { art: ["season", "hacker"], anim: 1 }]],
   };
   for (const [k, list] of Object.entries(SEASON_PICS)) { const set = SETS.find((x) => x.key === k); if (set) set.items.push(...list); else (EXTRA[k] = EXTRA[k] || []).push(...list); }
@@ -265,14 +347,17 @@ const Loot = (() => {
   ];
   const BOUND = Object.fromEntries(COLL.map(([key]) => [key, ["pic", "frame", "bg", "style", "fx", "ava"].map((c) => c + ":c_" + key)]));
 
+  const PREM = { s_cup: "cup", s_shard: "shard" };                  // преміальні скрині: свій знак на речах і сяйво на рамках
   /* ---------------------------------------------------------------- список вещей */
   const I = (cat, id, name, tier, extra) => Object.assign({ cat, id, name, tier, price: PRICE[tier] }, extra || {});
   function items() {
     const out = [];
     for (const [pk, pn, pg, pt, strip, speed] of PATS) for (const [mk, ms] of MATS)
       out.push(I("frame", `g_${pk}_${mk}`, `${adj(ms, pg)} ${pn}`, pt, strip ? { strip, speed, gen: 1 } : { gen: 1 }));
-    for (const [mk, ms, mn] of MATS) { out.push(I("style", "k_" + mk, `${adj(ms, "f")} картка`, 1, { gen: 1, desc: "Глянцева картка в кольорах «" + mn + "»" }));
-      out.push(I("style", "f_" + mk, `Голограма «${mn}»`, 2, { gen: 1, desc: "Переливчаста картка з біжучим відблиском" })); }
+    MATS.forEach(([mk, ms, mn], i) => {                              // у кожної картки свій макет (паспорт, квиток, чек…), колір — від матеріалу
+      const [, kn, kg] = CARD_LAY[i % CARD_LAY.length], [, fn] = CARD_LAY[(i + 6) % CARD_LAY.length];
+      out.push(I("style", "k_" + mk, `${adj(ms, kg)} ${kn}`, 1, { gen: 1, desc: `ID-картка «${kn}» у кольорах «${mn}»` }));
+      out.push(I("style", "f_" + mk, `Голограма «${mn}»: ${fn}`, 2, { gen: 1, desc: `Переливчаста ID-картка «${fn}» з голограмою` })); });
     for (const [sk, sn, sg, st] of SCENES) for (const [mk, ms] of MATS) out.push(I("bg", `b_${sk}_${mk}`, `${adj(ms, sg)} ${sn}`, st, { gen: 1 }));
     for (const [mk, , mn] of MATS) out.push(I("fx", "n_" + mk, `Переливи «${mn}»`, 1, { gen: 1 }));
     TITLES.forEach(([text, t], i) => out.push(I("title", "t" + i, text, t, { text, gen: 1 })));
@@ -293,7 +378,7 @@ const Loot = (() => {
     }
     ZOO_HATS.forEach(([id, name, t]) => out.push(I("hat", id, name, t, { petcase: 1, price: 0 })));
     ZOO_TOYS.forEach(([id, name, emoji, t]) => out.push(I("toy", id, name, t, { petcase: 1, emoji, price: 0 })));
-    const season = (key, list) => list.forEach(([cat, id, name, t, extra]) => out.push(I(cat, id, name, t, Object.assign({ season: key, price: 0 }, extra || {},
+    const season = (key, list) => list.forEach(([cat, id, name, t, extra]) => out.push(I(cat, id, name, t, Object.assign({ season: key, price: 0 }, PREM[key] && cat === "frame" ? { strip: 4, speed: 1, prem: PREM[key] } : PREM[key] ? { prem: PREM[key] } : {}, extra || {},
       cat === "frame" && extra && ["wave", "pulse", "gem", "flame", "vortex", "aura", "stars"].includes(extra.pat) ? { strip: (PATS.find((p) => p[0] === extra.pat) || [])[4] || 4, speed: (PATS.find((p) => p[0] === extra.pat) || [])[5] || 1 } : {}))));
     SETS.forEach((s) => season(s.key, s.items));
     Object.entries(EXTRA).forEach(([k, list]) => season(k, list));
@@ -325,6 +410,10 @@ const Loot = (() => {
     planet: [["   LL   ", "  LMML  ", "aaaaaaaa", "  LMML  ", "   LL   "], 8],
     eye: [["  LLL  ", " LaDaL ", "LaDDDaL", " LaDaL ", "  LLL  "], 7],
     snow: [["L  L  L", " L L L ", "  LLL  ", "LLLaLLL", "  LLL  ", " L L L ", "L  L  L"], 7],
+    cup: [["L aaa L", "LaLaaaL", " aLaaa ", "  aaa  ", "   a   ", "  MMM  ", " DDDDD "], 7],
+    sword: [["a     a", " L   L ", "  L L  ", "   L   ", "  L L  ", " M   M ", "D     D"], 7],
+    laurel: [["a     a", "Ma   aM", " Ma aM ", "M  a  M", " M   M ", "  M M  "], 7],
+    shard: [["   L   ", "  LaL  ", " LaaaM ", "LaaLaaM", " MaaaD ", "  MaD  ", "   D   "], 7],
   };
   function emblem(t, key, pal, f) {
     const e = EMB[key]; if (!e) return;
@@ -366,14 +455,51 @@ const Loot = (() => {
           t.ring(5, (x, y, d, u, s) => { if (d === 0 || d === 4) return K; const q = ((u - ph) % 1 + 1) % 1, w = Math.min(q, 1 - q); if (w < .04) return "#ffffff"; if (w < .08) return AC;
             return d === 1 ? (s === "t" || s === "l" ? L : M) : d === 2 ? M : D; });
           for (let j = 0; j < 3; j++) { const [sx, sy] = PERD(ph + j / 3, 7); t.P(sx, sy, "#ffffff"); const [tx, ty] = PERD(ph + j / 3 - .02, 7); t.P(tx, ty, AC); } break;
+        /* ---------- турнірні */
+        case "laurel": t.ring(5, (x, y, d) => (d === 0 || d === 4 ? K : D));                      // лаврові листки по колу, ягоди блимають, бант унизу
+          for (let i = 0; i < 40; i++) { const [x, y, dx, dy] = PERD(i / 40, 2), tx = -dy, ty = dx, c1 = i % 2 ? L : M;
+            t.P(x, y, c1); t.P(x + tx, y + ty, c1); t.P(x + dx, y + dy, M); if (i % 5 === 0) t.P(x - dx, y - dy, (i / 5 + f) % 2 ? AC : "#fff6c8"); }
+          t.Rr(21, 42, 6, 4, "#e8203a"); t.Rr(19, 43, 2, 2, "#ff5a6a"); t.Rr(27, 43, 2, 2, "#ff5a6a"); t.Rr(23, 46, 2, 2, "#a8101a"); break;
+        case "medals": t.bevel(L, M, D, 4);                                                           // медалі на стрічках по колу, блищать по черзі
+          for (let i = 0; i < 12; i++) { const [x, y] = PERD(i / 12 + 1 / 24, 3), col = ["#ffd23f", "#e8ecf4", "#e0904a"][i % 3];
+            t.Rr(x - 1, y - 3, 1, 2, i % 2 ? "#e8203a" : "#3a8ae8"); t.Rr(x, y - 3, 1, 2, "#ffffff");
+            t.Rr(x - 2, y - 1, 4, 4, "#05030a"); t.Rr(x - 1, y, 2, 2, (i + f) % 4 === 0 ? "#ffffff" : col); } break;
+        case "chess": t.ring(5, (x, y, d) => (d === 0 || d === 4 ? K : ((x >> 1) + (y >> 1)) % 2 ? L : M));     // шахова дошка, фігури по кутах, клітинка бігає
+          { const [hx, hy] = PERD(f / n, 2); t.Rr(Math.round(hx) - 1, Math.round(hy) - 1, 2, 2, AC); }
+          [["  a  ", " aaa ", "  a  ", " aaa ", "aaaaa"], [" a a ", " aaa ", " aaa ", "  a  ", "aaaaa"], ["a a a", "aaaaa", " aaa ", " aaa ", "aaaaa"], [" aa  ", "aaaa ", "  aa ", " aaa ", "aaaaa"]].forEach((g, i) => {
+            const [cx, cy] = [[1, 1], [42, 1], [1, 42], [42, 42]][i]; t.Rr(cx - 1, cy - 1, 7, 7, K); g.forEach((row, j) => [...row].forEach((ch, k) => { if (ch === "a") t.P(cx + k, cy + j, i % 2 ? L : AC); })); }); break;
+        case "confetti": t.ring(4, (x, y, d, u) => (d === 0 || d === 3 ? K : d === 1 ? M : D));   // конфеті сиплеться по рамці
+          for (let i = 0; i < 34; i++) { const [x, y] = PERD(i / 34, 1 + (i % 3)), col = [L, AC, "#ff5a8a", "#5ad8ff", "#7aff6a", M][i % 6], dy = (i * 3 + f) % 3 - 1;
+            if ((i + f) % 2) t.Rr(x, y + dy, 2, 1, col); else t.Rr(x, y + dy, 1, 2, col); } break;
+        case "spotlight": t.bevel(M, D, "#000000", 4);                                                // прожектори ковзають по рамці
+          t.ring(4, (x, y, d, u) => { let b = 0; for (let k = 0; k < 4; k++) { const q = Math.abs(((u - k / 4 - f / n / 4) % 1 + 1.5) % 1 - .5); if (q < .045) b = Math.max(b, q < .02 ? 2 : 1); } return b === 2 ? "#ffffff" : b ? AC + "cc" : null; });
+          t.corners((x, y, i) => { t.Rr(x - 2, y - 2, 5, 5, K); t.Rr(x - 1, y - 1, 3, 3, (i + f) % 2 ? AC : L); }); break;
+        case "trophies": t.bevel(L, M, D, 5);                                                         // кубки по кутах, по краю зірочки
+          t.corners((x, y, i) => { const cx = x - 3, cy = y - 3; t.Rr(cx - 1, cy - 1, 9, 9, K); t.Rr(cx, cy, 7, 3, M); t.Rr(cx + 1, cy + 3, 5, 1, M); t.Rr(cx + 3, cy + 4, 1, 1, D); t.Rr(cx + 1, cy + 5, 5, 2, D);
+            t.P(cx - 1, cy + 1, M); t.P(cx + 7, cy + 1, M); t.P(cx + 1 + ((f + i) % 4), cy + 1, "#ffffff"); });
+          for (let i = 0; i < 8; i++) { const [x, y] = PERD(i / 8 + 1 / 16, 2); if ((i + f) % 2) t.P(x, y, AC); } break;
+        /* ---------- кристалічні */
+        case "crystals": t.ring(3, (x, y, d) => (d === 0 ? K : d === 1 ? D : M));                     // друза: кристали ростуть назовні, верхівки блищать
+          for (let i = 0; i < 24; i++) { const [x, y, dx, dy] = PERD(i / 24, 3), h = 2 + ((i * 7) % 4);
+            for (let k = 0; k < h; k++) { t.P(x + dx * k, y + dy * k, k === h - 1 ? ((i + f) % 4 === 0 ? "#ffffff" : AC) : k % 2 ? L : M); if (k < h - 1) t.P(x + dx * k - dy, y + dy * k + dx, D); } } break;
+        case "prism": t.ring(5, (x, y, d, u) => (d === 0 || d === 4 ? K : `hsl(${Math.round(((u * 2 + f / n + d * .04) % 1) * 360)}, 95%, ${d === 2 ? 78 : 62}%)`));   // веселка біжить по колу
+          for (let j = 0; j < 2; j++) { const [x, y] = PERD(f / n + j / 2, 2); t.Rr(x - 1, y - 1, 3, 3, "#ffffff"); } break;
+        case "shatter": t.bevel(L, M, D, 4);                                                          // тріщини, уламки й іскра
+          for (let i = 0; i < 8; i++) { const [x, y, dx, dy] = PERD(i / 8 + .06, 2); let px = x, py = y; for (let k = 0; k < 4; k++) { px += dy * (k % 2 ? 1 : -1) || (k % 2 ? 1 : -1); py += dx * (k % 2 ? -1 : 1) || (k % 2 ? 1 : -1); t.P(px, py, "#ffffff"); } }
+          for (let i = 0; i < 10; i++) { const [x, y] = PERD(i / 10, 6); t.P(x, y, (i + f) % 3 ? L + "88" : AC); } { const [sx, sy] = PERD(f / n, 2); t.Rr(sx - 1, sy, 3, 1, "#ffffff"); t.Rr(sx, sy - 1, 1, 3, "#ffffff"); } break;
         default: t.bevel(L, M, D, 4);
       }
     };
   }
+  // сяйво преміальних рамок: золото турнірного кейса, кристали скрині уламків
+  function premGlow(t, kind, f, n) {
+    if (kind === "cup") { t.ring(1, (x, y, d, u) => ((Math.floor(u * 28) + f) % 4 === 0 ? "#fff3b0" : "#ffc21a66"), 5); const [x, y] = PERD(f / n, 6); t.P(x, y, "#ffffff"); t.Rr(x - 1, y, 3, 1, "#ffffffaa"); }
+    else if (kind === "shard") { t.ring(1, (x, y, d, u) => ((Math.floor(u * 28) + f) % 4 === 0 ? "#ffffff" : (Math.floor(u * 28) % 2 ? "#7af0ff66" : "#ff9af066")), 5); [0, .25, .5, .75].forEach((q, i) => { if ((i + f) % 2) { const [x, y] = PERD(q + .125, 6); t.P(x, y, "#ffffff"); } }); }
+  }
   function frame(id) {
     const it = meta["frame:" + id]; if (!it) return null;
     if (it.gen) { const [, pk, mk] = id.split("_"); return painter(pk, matOf(mk)); }
-    if (it.pat) { const p = painter(it.pat, it.pal); return (t, R, f, n) => { p(t, R, f, n); if (it.emb) emblem(t, it.emb, it.pal, f); }; }
+    if (it.pat) { const p = painter(it.pat, it.pal); return (t, R, f, n) => { p(t, R, f, n); if (it.prem) premGlow(t, it.prem, f, n); if (it.emb) emblem(t, it.emb, it.pal, f); }; }
     return null;
   }
 
@@ -392,7 +518,7 @@ const Loot = (() => {
     const R1 = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a, b, w, h); };
     if (scene === "sky" || scene === "city" || scene === "peaks") for (let i = 0; i < 40; i++) R1(Math.floor(R() * W), Math.floor(R() * H * .5), 1, 1, R() < .3 ? AC : L);
     const disc = (cx, cy, r, col) => { for (let yy = -r; yy <= r; yy++) for (let xx = -r; xx <= r; xx++) if (xx * xx + yy * yy <= r * r) R1(cx + xx, cy + yy, 1, 1, col); };
-    disc(20 + Math.floor(R() * 56), 10 + Math.floor(R() * 6), scene === "sky" ? 5 : 6, AC);
+    if (!["stadium", "fireworks", "crystal", "podium", "chesshall", "geode"].includes(scene)) disc(20 + Math.floor(R() * 56), 10 + Math.floor(R() * 6), scene === "sky" ? 5 : 6, AC);
     if (scene === "hills") { [[30, .3, mix(M, D, .3)], [36, .45, mix(M, D, .6)], [42, .6, D]].forEach(([base, amp, col], k) => {
         const ph = R() * 6; for (let xx = 0; xx < W; xx++) { const top = Math.round(base - 6 * amp * 2 * (1 + Math.sin(xx / (10 + k * 4) + ph))); R1(xx, top, 1, H - top, col); } }); }
     if (scene === "sea") { R1(0, 30, W, 18, mix(M, D, .5)); for (let yy = 31; yy < H; yy += 3) for (let xx = (yy * 7) % 6; xx < W; xx += 6) R1(xx, yy, 3, 1, mix(L, M, .4));
@@ -402,13 +528,82 @@ const Loot = (() => {
         px += w * .7; } } }
     if (scene === "city") { let px = 0; while (px < W) { const w = 6 + Math.floor(R() * 9), h = 12 + Math.floor(R() * 22); R1(px, H - h, w, h, D);
         for (let yy = H - h + 2; yy < H - 2; yy += 3) for (let xx = px + 1; xx < px + w - 1; xx += 2) if (R() < .45) R1(xx, yy, 1, 1, R() < .5 ? AC : L); px += w + 1; } }
+    if (scene === "stadium") {                                     // стадіон: прожектори, трибуни з глядачами, поле
+      for (const sx of [10, 86]) { R1(sx, 6, 2, 28, D); R1(sx - 3, 4, 8, 3, L); for (let k = 0; k < 16; k++) R1(sx - k * (sx < 48 ? -1 : 1) - 1, 8 + k, Math.max(1, k >> 1), 1, AC + "33"); }
+      for (let r = 0; r < 4; r++) { const yy = 24 + r * 4; R1(0, yy, W, 4, r % 2 ? mix(M, D, .6) : D); for (let xx = (r * 3) % 4; xx < W; xx += 3) if (R() < .7) R1(xx, yy + 1, 1, 2, [L, AC, M, "#ff5a6a", "#7ae0ff"][Math.floor(R() * 5)]); }
+      R1(0, 40, W, 8, "#2a8a3a"); for (let xx = 0; xx < W; xx += 8) R1(xx, 40, 4, 8, "#34a046"); R1(0, 40, W, 1, "#ffffff"); R1(47, 40, 1, 8, "#ffffff");
+      for (let yy = -3; yy <= 3; yy++) for (let xx = -3; xx <= 3; xx++) if (Math.abs(xx * xx + yy * yy - 9) < 3) R1(48 + xx, 44 + yy, 1, 1, "#ffffff"); }
+    if (scene === "arena") {                                       // колізей: арки в два яруси, пісок
+      R1(0, 14, W, 26, mix(M, D, .25)); for (let tier = 0; tier < 2; tier++) for (let xx = 2; xx < W; xx += 10) { const yy = 17 + tier * 12; R1(xx, yy + 2, 6, 8, D); for (let k = 0; k < 3; k++) R1(xx + k, yy + 2 - (k < 1 ? 0 : 1) + (k > 1 ? 1 : 0), 6 - k * 2, 1, D); R1(xx - 2, yy, 2, 10, L); }
+      R1(0, 14, W, 2, L); R1(0, 26, W, 2, L); for (let xx = 0; xx < W; xx += 4) R1(xx, 12, 2, 2, L);
+      R1(0, 40, W, 8, mix(L, M, .5)); for (let i = 0; i < 40; i++) R1(Math.floor(R() * W), 41 + Math.floor(R() * 7), 1, 1, M); }
+    if (scene === "fireworks") {                                   // салют над нічним містом
+      for (let b = 0; b < 5; b++) { const cx = 10 + Math.floor(R() * 76), cy = 6 + Math.floor(R() * 16), rr = 5 + Math.floor(R() * 5), col = [L, AC, M, "#ffffff", "#7ae0ff"][b % 5];
+        for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2; for (let d = rr - 3; d <= rr; d++) R1(Math.round(cx + Math.cos(a) * d), Math.round(cy + Math.sin(a) * d), 1, 1, d === rr ? "#ffffff" : col); } R1(cx, cy, 1, 1, "#ffffff"); }
+      let px = 0; while (px < W) { const w = 5 + Math.floor(R() * 8), h = 8 + Math.floor(R() * 14); R1(px, H - h, w, h, "#05020a"); for (let yy = H - h + 2; yy < H - 1; yy += 3) for (let xx = px + 1; xx < px + w - 1; xx += 2) if (R() < .35) R1(xx, yy, 1, 1, AC); px += w + 1; } }
+    if (scene === "crystal") {                                     // печера з кристалами знизу й зверху
+      R1(0, 0, W, H, mix(D, "#000000", .3)); const spike = (x0, base, h, w, up) => { for (let k = 0; k < h; k++) { const ww = Math.max(1, Math.round(w * (1 - k / h))); R1(x0 - (ww >> 1), up ? base - k : base + k, ww, 1, k > h * .6 ? L : M); R1(x0 - (ww >> 1), up ? base - k : base + k, 1, 1, AC + "aa"); } };
+      for (let i = 0; i < 9; i++) spike(4 + i * 11 + Math.floor(R() * 4), H, 10 + Math.floor(R() * 18), 5 + Math.floor(R() * 4), true);
+      for (let i = 0; i < 8; i++) spike(8 + i * 12 + Math.floor(R() * 4), 0, 5 + Math.floor(R() * 9), 4, false);
+      for (let i = 0; i < 24; i++) R1(Math.floor(R() * W), Math.floor(R() * H), 1, 1, R() < .5 ? "#ffffff" : AC); }
+    if (scene === "podium") {                                      // п’єдестал під софітами: промені, 1-2-3, конфеті
+      R1(0, 0, W, H, D); for (const sx of [20, 48, 76]) for (let yy = 0; yy < 40; yy++) { const w = 2 + yy * .35; R1(Math.round(sx - w / 2 + (sx - 48) * yy / 80), yy, Math.round(w), 1, AC + "22"); }
+      const DIG = { 1: [" a ", "aa ", " a ", " a ", "aaa"], 2: ["aaa", "  a", "aaa", "a  ", "aaa"], 3: ["aaa", "  a", "aaa", "  a", "aaa"] };
+      [[36, 26, 24, L, 1], [12, 32, 22, "#d8dce8", 2], [62, 35, 22, "#e0904a", 3]].forEach(([x, y, w, col, n]) => { R1(x, y, w, H - y, col); R1(x, y, w, 2, "#ffffff"); R1(x + 2, y + 2, w - 4, 1, "#00000033");
+        DIG[n].forEach((row, j) => [...row].forEach((ch, i) => { if (ch === "a") R1(x + Math.floor(w / 2) - 1 + i, y + 4 + j, 1, 1, D); })); });
+      for (let i = 0; i < 46; i++) R1(Math.floor(R() * W), Math.floor(R() * 30), 1 + (i % 2), 2 - (i % 2), ["#ff5a8a", "#5ad8ff", "#7aff6a", AC, "#ffffff"][i % 5]); }
+    if (scene === "chesshall") {                                   // шахова зала: панелі, арочні вікна з місяцем, штори, промені, підлога-шахівниця в перспективі, король і ферзь
+      const HZ = 27, hm = (a, b, k) => "#" + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - k) + parseInt(b.slice(i, i + 2), 16) * k).toString(16).padStart(2, "0")).join("");
+      for (let yy = 0; yy < HZ; yy++) R1(0, yy, W, 1, mix(D, M, .18 + yy / HZ * .3));                              // стіна
+      for (let xx = 6; xx < W; xx += 14) { R1(xx, 2, 1, HZ - 6, mix(D, "#000000", .35)); R1(xx + 1, 2, 1, HZ - 6, mix(D, M, .55)); }
+      R1(0, HZ - 4, W, 1, mix(M, L, .35)); R1(0, HZ - 3, W, 3, mix(D, M, .4));                                     // плінтус
+      for (const wx of [14, 42, 70]) {                                                                              // арочні вікна
+        for (let yy = 2; yy < 21; yy++) for (let xx = -1; xx < 13; xx++) { const r = Math.hypot(xx - 5.5, (yy - 8) * 1.15);
+          if (yy < 8 && r > 7.4) continue; const frame = xx < 0 || xx > 11 || yy < 3 || yy > 19 || (yy < 8 && r > 6.2);
+          R1(wx + xx, yy, 1, 1, frame ? mix(D, "#000000", .45) : mix("#14204a", "#3a5aa8", (yy - 3) / 17)); }
+        R1(wx + 5, 3, 2, 17, mix(D, M, .5)); R1(wx, 12, 12, 1, mix(D, M, .5));
+        R1(wx + 8, 5, 2, 2, "#fff6c8"); R1(wx + 2, 8, 1, 1, "#ffffff"); R1(wx + 9, 15, 1, 1, "#c8d8ff"); }
+      for (const [x0, d] of [[0, 1], [W - 1, -1]]) for (let yy = 0; yy < HZ - 1; yy++) {                            // оксамитові штори
+        const w = 7 - Math.round(Math.max(0, yy - 14) * .25); for (let k = 0; k < w; k++) R1(x0 + d * k, yy, 1, 1, (k + Math.floor(yy / 9)) % 3 === 0 ? "#5a0812" : k % 3 === 1 ? "#b8182a" : "#8a1020"); }
+      R1(0, 0, W, 2, mix(D, "#000000", .3)); R1(0, 2, W, 1, AC + "88");
+      for (let yy = HZ; yy < H; yy++) {                                                                              // шахівниця в перспективі
+        const z = 60 / (yy - HZ + 2), fade = Math.min(1, (yy - HZ) / 15), far = hm(D, M, .35), lite = hm(L, M, .12), dark = hm(D, M, .22);
+        const th = .8 * (yy - HZ + 2) ** 2 / 60, sharp = Math.min(1, Math.max(0, (th - .9) / 1.6)), midc = hm(lite, dark, .5);   // далекі клітинки дрібніші за піксель — зливаємо в рівний тон
+        for (let xx = 0; xx < W; xx++) { const wx = (xx - 48) * z / 30, c = (Math.floor(wx) + Math.floor(z / .8)) & 1;
+          R1(xx, yy, 1, 1, hm(hm(midc, c ? lite : dark, sharp), far, yy - HZ < 2 ? 1 : Math.pow(1 - fade, 1.5) * .7)); } }
+      for (const wx of [14, 42, 70]) for (let yy = HZ; yy < H; yy++) R1(Math.round(wx - (yy - HZ) * .7), yy, 12 + Math.round((yy - HZ) * .5), 1, "#fff6c814");   // світло з вікон
+      // фігура: профіль півширин зверху вниз, світла / темна, тінь на підлозі
+      const piece = (cx, base, prof, white, top) => {
+        const C = white ? ["#fffaf0", "#e0d6bc", "#a8987a"] : ["#6a6a7a", "#30303c", "#16161e"], o = white ? "#3a2a18" : "#000000";
+        const sw = prof[prof.length - 1] + 2; R1(cx - sw, base + 1, sw * 2 + 1, 1, "#00000066"); R1(cx - sw + 2, base + 2, sw * 2 - 3, 1, "#00000033");
+        const y0 = base - prof.length + 1;
+        prof.forEach((hw, j) => { const yy = y0 + j; R1(cx - hw - 1, yy, hw * 2 + 3, 1, o); });
+        R1(cx - prof[0], y0 - 1, prof[0] * 2 + 1, 1, o);
+        prof.forEach((hw, j) => { const yy = y0 + j; for (let dx = -hw; dx <= hw; dx++) { const t = hw ? dx / hw : 0; R1(cx + dx, yy, 1, 1, t < -.35 ? C[0] : t > .45 ? C[2] : C[1]); } if (hw > 1 && j % 3 === 1) R1(cx - hw + 1, yy, 1, 1, "#ffffff"); });
+        if (top) top(cx, y0, C, o);
+      };
+      piece(22, 45, [2, 3, 3, 3, 2, 5, 5, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 6, 7, 7, 8], true, (cx, y0, C, o) => {      // білий король із хрестом
+        R1(cx - 1, y0 - 7, 3, 7, o); R1(cx - 3, y0 - 5, 7, 3, o); R1(cx, y0 - 6, 1, 5, C[0]); R1(cx - 2, y0 - 4, 5, 1, C[0]); R1(cx, y0 - 1, 1, 1, AC); });
+      piece(74, 45, [1, 3, 3, 2, 5, 5, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 6, 7, 7, 8], false, (cx, y0, C, o) => {        // чорний ферзь у короні
+        for (const dx of [-3, 0, 3]) { R1(cx + dx - 1, y0 - 4, 3, 3, o); R1(cx + dx, y0 - 3, 1, 2, AC); }
+        R1(cx - 1, y0 - 7, 3, 3, o); R1(cx, y0 - 6, 1, 1, "#ffffff"); R1(cx - 3, y0 - 1, 7, 1, AC); });
+      piece(39, 35, [1, 2, 2, 1, 1, 2, 2, 3], true); piece(57, 34, [1, 2, 2, 1, 1, 2, 2, 3], false);                  // пішаки вдалині
+    }
+    if (scene === "geode") {                                       // усередині жеоди: кільця кристалів до центру
+      for (let yy = 0; yy < H; yy++) for (let xx = 0; xx < W; xx++) { const dx = (xx - 48) / 1.8, dy = yy - 24, d = Math.hypot(dx, dy), a = Math.atan2(dy, dx);
+        R1(xx, yy, 1, 1, d > 26 ? "#3a2a20" : d > 23 ? "#8a7a6a" : d > 21 ? "#e8e0d8" : (Math.floor(a * 6 + d * .5) % 2 ? M : d < 8 ? L : D)); }
+      for (let i = 0; i < 30; i++) { const a = R() * Math.PI * 2, d = 6 + R() * 14, x = Math.round(48 + Math.cos(a) * d * 1.8), y = Math.round(24 + Math.sin(a) * d); R1(x, y, 1, 1, R() < .5 ? "#ffffff" : AC); } }
     if (scene === "sky") { for (let xx = 0; xx < W; xx++) { const yy = Math.round(22 + Math.sin(xx / 9) * 5); R1(xx, yy, 1, 3, AC + "66"); R1(xx, yy + 3, 1, 2, L + "44"); }
       R1(0, 42, W, 6, D); for (let xx = 0; xx < W; xx += 3) R1(xx, 40 + Math.floor(R() * 3), 2, 3, D); }
     return (bgCache[id] = c.toDataURL());
   }
   const isBg = (id) => !!meta["bg:" + id] && (meta["bg:" + id].gen || meta["bg:" + id].scene);
   // карточка-«генератор»: стекло или голограмма в цветах палитры
-  function style(id) { const it = meta["style:" + id]; if (!it) return null; if (it.gen) return { kind: id[0] === "f" ? "foil" : "glass", pal: matOf(id.slice(2)) }; return it.pal ? { kind: it.kind, pal: it.pal } : null; }
+  function style(id) {
+    const it = meta["style:" + id]; if (!it) return null;
+    if (it.gen) { const i = MATS.findIndex((m) => m[0] === id.slice(2)), f = id[0] === "f"; return { kind: f ? "foil" : "glass", pal: matOf(id.slice(2)), tpl: CARD_LAY[(i + (f ? 6 : 0)) % CARD_LAY.length][0] }; }
+    return it.pal ? { kind: it.kind, pal: it.pal, tpl: it.tpl || null } : null;
+  }
   function fx(id) { const it = meta["fx:" + id]; if (!it) return null; return it.gen ? matOf(id.slice(2)) : it.pal || null; }
 
   const HAT_ART = {};   // малюнки всіх приколів на голову — у js/pets.js (HAT_ART 2.0: контур, шапка на кожну голову)

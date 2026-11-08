@@ -49,13 +49,14 @@ const Net = (() => {
     return null;
   }
 
-  function host(settings, snapshot) {
+  // opts.code — постійний код (турнірний стіл): зайнятий — значить, хост уже є, треба просто сісти; opts.takeover — перехоплюємо стіл після хоста
+  function host(settings, snapshot, opts = {}) {
     stop();
     role = "host"; wanted = true;
     return new Promise((resolve, reject) => {
       let attempts = 0;
       const tryOpen = () => {
-        const c = snapshot ? snapshot.code : Engine.newCode();
+        const c = snapshot ? snapshot.code : opts.code || Engine.newCode();
         peer = new Peer(peerId(c), options());
         peer.on("open", () => {
           code = c;
@@ -65,9 +66,15 @@ const Net = (() => {
             delete snapshot._remaining;
           }
           hub = new Engine.Hub(deliver, Object.assign({ id: h.me }, h.profile()), settings, c, snapshot || null);
-          hub.listeners.push(saveSnapshot);
+          if (opts.takeover) { hub.room.host = h.me; if (opts.left && hub.room.members[opts.left]) { try { hub.room.leave(opts.left); } catch (e) { /* уже немає */ } } }
+          hub.listeners.push(saveSnapshot, replicate);
           clearInterval(ticker);
-          ticker = setInterval(() => hub && hub.tick(), 500);
+          let pingAt = 0;
+          ticker = setInterval(() => {
+            if (!hub) return;
+            hub.tick();
+            if (Date.now() - pingAt > 2000) { pingAt = Date.now(); conns.forEach((x) => { if (x.open) { try { x.send({ t: "ping" }); } catch (e) { /* закрито */ } } }); }   // «пульс»: гравці бачать, що хост живий
+          }, 500);
           status("ok");
           hub.push();
           resolve(c);
@@ -80,9 +87,14 @@ const Net = (() => {
         });
         peer.on("disconnected", () => { if (wanted && peer && !peer.destroyed) setTimeout(() => peer && !peer.destroyed && peer.reconnect(), 1500); });
         peer.on("error", (err) => {
+          if (err.type === "unavailable-id" && code && hub && role === "host") {   // телефон «спав», а стіл уже підхопив інший — сідаємо до нього гравцем
+            const c0 = code; stop(); join(c0); return;
+          }
           if (err.type === "unavailable-id") {
             peer.destroy();
             attempts += 1;
+            if (opts.code && !snapshot) return reject(Object.assign(new Error("busy"), { busy: true }));   // стіл уже відкрив інший — сідаємо до нього
+            if (opts.takeover && attempts >= 8) return reject(new Error("Стіл уже тримає інший гравець"));
             if (!snapshot && attempts < 10) return tryOpen();                 // код занят — берём другой
             if (snapshot && attempts < 25) return setTimeout(tryOpen, 3000);  // старое соединение ещё не отпустило код
             return reject(new Error("Не вдалося відкрити кімнату"));
@@ -113,6 +125,31 @@ const Net = (() => {
     if (c.pid && conns.get(c.pid) === c && hub) hub.handle(c.pid, d);
   }
 
+  // наступник — перший живий гравець після хоста: у нього завжди свіжа копія стану, і якщо хост зникне, стіл продовжиться на його телефоні
+  const isBot = (p) => /^bot_/.test(p);
+  const successors = (room) => room.order.filter((p) => p !== h.me && !isBot(p) && room.members[p] && room.members[p].online).slice(0, 2);
+  const successor = (room) => successors(room)[0];
+  let repAt = 0, repTimer = null;
+  function replicate(room) {                                   // копія — двом наступникам: другий підхопить, якщо й перший зник
+    const doIt = () => {
+      repAt = Date.now(); const dump = room.dump();
+      successors(room).forEach((sp, rank) => { const c = conns.get(sp); if (c && c.open) { try { c.send({ t: "snap", room: dump, at: Date.now(), rank }); } catch (e) { /* завелике чи закрите */ } } });
+    };
+    clearTimeout(repTimer);
+    if (Date.now() - repAt > 800) doIt(); else repTimer = setTimeout(doIt, 800);
+  }
+  // хост іде, а гра триває (турнір або вже йде партія й є люди) — віддаємо стіл наступникові замість закриття
+  function handover() {
+    const room = hub && hub.room; if (!room) return false;
+    const sp = successor(room), c = sp && conns.get(sp);
+    if (!c || !c.open) return false;
+    if (!(room.settings && room.settings.tour) && ["lobby", "end"].includes(room.phase)) return false;
+    try { c.send({ t: "handover", room: room.dump(), at: Date.now(), left: h.me }); } catch (e) { return false; }
+    try { localStorage.removeItem(SNAPSHOT); } catch (e) { /* ничего */ }
+    wanted = false; setTimeout(stop, 500);
+    return true;
+  }
+
   function closeRoom() {
     conns.forEach((c) => { try { c.send({ t: "closed" }); } catch (e) { /* уже закрыто */ } });
     try { localStorage.removeItem(SNAPSHOT); } catch (e) { /* ничего */ }
@@ -120,9 +157,21 @@ const Net = (() => {
   }
 
   /* ---------------------------------------------------------------- игрок */
-  function join(roomCode) {
+  let snap = null, onNoHost = null;
+  // хост зник (сервер зустрічей його не знає) або сам передав стіл: наступник відкриває той самий код зі своєю копією
+  function takeover(room, at, left) {
+    if (!room || role !== "client") return false;
+    const c0 = code, r = JSON.parse(JSON.stringify(room));
+    if (r.deadline) r._remaining = r.deadline - (at || Date.now()) / 1000;
+    r.code = c0; snap = null; status("connecting");
+    host(null, r, { takeover: true, left: left || null })
+      .then(() => h.onMessage({ t: "host-moved" }))
+      .catch(() => join(c0));
+    return true;
+  }
+  function join(roomCode, opts = {}) {
     stop();
-    role = "client"; wanted = true; everConnected = false;
+    role = "client"; wanted = true; everConnected = false; snap = null; onNoHost = opts.noHost || null;
     code = roomCode.toUpperCase();
     status("connecting");
     peer = new Peer(options());
@@ -130,28 +179,47 @@ const Net = (() => {
     peer.on("disconnected", () => { if (wanted && peer && !peer.destroyed) setTimeout(() => peer && !peer.destroyed && peer.reconnect(), 1500); });
     peer.on("error", (err) => {
       if (err.type === "peer-unavailable") {
-        if (!everConnected) { h.onMessage({ t: "error", text: "Кімнату не знайдено. Перевірте код" }); stop(); h.onMessage({ t: "left" }); }
+        if (!everConnected && onNoHost) { const fn = onNoHost; onNoHost = null; stop(); fn(); }                          // турнірний стіл: хоста ще немає — стаємо ним
+        else if (!everConnected) { h.onMessage({ t: "error", text: "Кімнату не знайдено. Перевірте код" }); stop(); h.onMessage({ t: "left" }); }
+        else if (snap && Date.now() - snap.at < 15 * 60 * 1000 && snap.room.phase !== "end") {                       // хоста немає — стіл продовжується в мене
+          if (!snap.rank) takeover(snap.room, snap.at);
+          else { const s0 = snap; retry(); setTimeout(() => { if (snap === s0 && (!conn || !conn.open)) takeover(s0.room, s0.at); }, 7000); }   // другий наступник чекає першого
+        }
         else retry();
       } else if (["network", "server-error", "socket-error", "socket-closed"].includes(err.type)) retry();
     });
   }
 
+  // хост мовчить довше 7 секунд (телефон вимкнувся, зник зв’язок) — перепідключаємося; якщо його вже немає на сервері зустрічей — стіл підхоплює наступник
+  let lastData = 0;
+  setInterval(() => {
+    if (role !== "client" || !wanted || !conn || !conn.open || !lastData) return;
+    if (Date.now() - lastData > 7000) { lastData = 0; const c = conn; conn = null; try { c.close(); } catch (e) { /* ничего */ } retry(); }
+  }, 1000);
+
   function connectToHost() {
     if (!wanted || !peer || peer.destroyed) return;
-    if (conn) { try { conn.close(); } catch (e) { /* ничего */ } }
-    conn = peer.connect(peerId(code), { reliable: true, serialization: "json" });
-    const timeout = setTimeout(() => { if (conn && !conn.open) retry(); }, 12000);
-    conn.on("open", () => {
+    if (conn) { const old = conn; conn = null; try { old.close(); } catch (e) { /* ничего */ } }
+    const my = peer.connect(peerId(code), { reliable: true, serialization: "json" });
+    conn = my;
+    const timeout = setTimeout(() => { if (conn === my && !my.open) retry(); }, 12000);
+    my.on("open", () => {
       clearTimeout(timeout);
-      everConnected = true;
+      if (conn !== my) return;
+      everConnected = true; lastData = Date.now();
       status("ok");
-      conn.send({ t: "hello", pid: h.me, profile: h.profile(), key: deviceKey });
+      my.send({ t: "hello", pid: h.me, profile: h.profile(), key: deviceKey });
     });
-    conn.on("data", (d) => {
+    my.on("data", (d) => {
+      if (conn !== my) return;
+      lastData = Date.now();
+      if (d && d.t === "ping") return;
+      if (d && d.t === "snap") { if (d.room && d.room.code === code) snap = { room: d.room, at: d.at || Date.now(), rank: d.rank || 0 }; return; }   // копія стану на випадок, якщо хост зникне
+      if (d && d.t === "handover") { if (d.room) takeover(d.room, d.at, d.left); return; }
       if (d && (d.t === "closed" || d.t === "kicked" || d.t === "left")) { wanted = false; setTimeout(stop, 100); }
       h.onMessage(d);
     });
-    conn.on("close", () => { if (wanted) retry(); });
+    my.on("close", () => { if (wanted && conn === my) retry(); });
   }
 
   function retry() {
@@ -169,7 +237,7 @@ const Net = (() => {
   /* ---------------------------------------------------------------- общее */
   function send(msg) {
     if (role === "host" && hub) {
-      if (msg.t === "leave") { closeRoom(); setTimeout(() => h.onMessage({ t: "left" }), 0); return; }
+      if (msg.t === "leave") { if (!handover()) closeRoom(); clearInterval(ticker); hub = null; setTimeout(() => h.onMessage({ t: "left" }), 0); return; }   // свій стан більше не шлемо — інакше екран повернеться в кімнату
       hub.handle(h.me, msg);
     } else if (role === "client" && conn && conn.open) {
       conn.send(msg);
@@ -200,5 +268,14 @@ const Net = (() => {
     hiddenAt = null;
   });
 
-  return Object.assign(h, { host, join, send, stop, loadSnapshot, isHost: () => role === "host", code: () => code, _hub: () => hub });
+  function hostOrJoin(fixed, settings) {
+    return new Promise((resolve, reject) => {
+      const asHost = () => host(settings, null, { code: fixed }).then((c) => resolve({ host: true, code: c }))
+        .catch((e) => { if (e && e.busy) { join(fixed, { noHost: () => setTimeout(asHost, 1500) }); resolve({ host: false, code: fixed }); } else reject(e); });
+      join(fixed, { noHost: asHost });
+      setTimeout(() => resolve({ host: role === "host", code: fixed }), 9000);
+    });
+  }
+
+  return Object.assign(h, { host, join, hostOrJoin, send, stop, loadSnapshot, isHost: () => role === "host", code: () => code, _hub: () => hub, _snap: () => snap, _takeover: takeover });
 })();

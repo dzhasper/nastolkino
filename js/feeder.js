@@ -60,7 +60,7 @@ function feederCard() {
   if (fd.active) {
     const left = fd.until - Math.floor(Date.now() / 1000), k = FEEDER_INFO[fd.kind] ? fd.kind : "wood";
     return `<button class="card fdr-card on" data-a="feeder-open">${feederArt(k, 58, true)}<div class="grow"><b>🪣 Годівничка працює</b>
-      <div class="small">${esc(FEEDER_INFO[k].name)} · ще ${feederLeft(left)}</div><div class="small muted">Годує сама, коли ситість нижче 40%${have ? ` · у запасі ще ${have}` : ""}</div></div><span class="pill on">УВІМК</span></button>`;
+      <div class="small">${esc(FEEDER_INFO[k].name)} · ще ${feederLeft(left)} · запущено ${fd.n || 1} з ${fd.max || 3}</div><div class="small muted">Годує сама, коли ситість нижче 40%${have ? ` · у запасі ще ${have}` : ""}</div></div><span class="pill on">УВІМК</span></button>`;
   }
   return `<button class="card fdr-card" data-a="feeder-open">${feederArt(best, 58)}<div class="grow"><b>🪣 Годівничка</b>
     <div class="small muted">${have ? `У запасі: ${have}. Увімкни — і вона сама годуватиме улюбленців, навіть коли тебе немає` : "Сама годує улюбленців, поки тебе немає в грі. Є в крамниці"}</div></div>
@@ -69,9 +69,9 @@ function feederCard() {
 // няня: только внимание — играет, гладит, развлекает (и ночью), не кормит. Сутки за монеты, месяц — за звёзды
 function nannyCard() {
   const n = Api.state && Api.state.nanny; if (!n) return "";
-  const left = n.until - Math.floor(Date.now() / 1000);
+  const left = n.until - Math.floor(Date.now() / 1000), maxA = (n.ahead || 3) * 86400, more = Math.max(0, left) + 86400 <= maxA + 60;
   if (n.active) return `<div class="card fdr-card nanny on"><span class="nn-ico">👩‍🍼</span><div class="grow"><b>Няня працює</b><div class="small">ще ${feederLeft(left)} · грається, гладить, не дає нудьгувати — навіть уночі</div>
-    <div class="small muted">Не годує — для їжі потрібна годівничка</div></div><button class="btn ghost small" data-a="nanny-buy" ${S.profile.coins < n.price ? "disabled" : ""}>+1 день</button></div>`;
+    <div class="small muted">Не годує — для їжі потрібна годівничка${more ? "" : ` · наперед — щонайбільше ${n.ahead || 3} дні, докупити можна пізніше`}</div></div><button class="btn ghost small" data-a="nanny-buy" ${S.profile.coins < n.price || !more ? "disabled" : ""}>+1 день</button></div>`;
   return `<div class="card fdr-card nanny"><span class="nn-ico">👩‍🍼</span><div class="grow"><b>Няня для улюбленців</b><div class="small muted">Грається, гладить і розважає, поки тебе немає — увага не падає, депресії не буде. Не годує.</div>
     <div class="row nn-btns"><button class="btn small" data-a="nanny-buy" ${S.profile.coins < n.price ? "disabled" : ""}>Доба · 🪙 ${n.price}</button><button class="btn small star" data-a="stars-buy" data-v="nanny_month">Місяць · ${n.stars} ⭐</button></div></div></div>`;
 }
@@ -80,10 +80,11 @@ function feederSheet() {
   const fd = Api.state && Api.state.feeder; if (!fd) return "";
   const now = Math.floor(Date.now() / 1000);
   return `<h2>🪣 Годівнички</h2><div class="small muted mt">Годує всіх улюбленців їжею з комори, коли ситість нижче 40%. Знає улюблену їжу — дає її, інакше будь-яку, крім нелюбої. Сплячих не будить.</div>
-    ${fd.active ? `<div class="card fdr-now mt">${feederArt(fd.kind || "wood", 40, true)}<div class="grow small">Працює ще <b>${feederLeft(fd.until - now)}</b>. Нова годівничка додасть свій час.</div></div>` : ""}
+    ${fd.active ? `<div class="card fdr-now mt">${feederArt(fd.kind || "wood", 40, true)}<div class="grow small">Працює ще <b>${feederLeft(fd.until - now)}</b>. Запущено <b>${fd.n || 1} з ${fd.max || 3}</b>.
+      ${(fd.n || 1) < (fd.max || 3) ? "Нова годівничка додасть свій час." : "Більше не можна — нові ввімкнеш, коли мине весь час цих трьох."}</div></div>` : `<div class="tiny muted mt">Поспіль можна ввімкнути до ${fd.max || 3} годівничок (їхній час додається). Наступні — коли всі скінчаться.</div>`}
     <div class="fdr-list mt">${FEEDER_ORDER.map((k) => { const n = fd.have[k] || 0, I = FEEDER_INFO[k];
       return `<div class="fdr-row t${I.tier} ${n ? "" : "none"}">${feederArt(k, 52, false)}<div class="grow"><b>${esc(I.name)}</b><div class="small muted">${I.dur} · ${n ? `у тебе ${n}` : esc(I.how)}</div></div>
-        ${n ? `<button class="btn small" data-a="feeder-use" data-v="${k}">Увімкнути</button>` : k === "wood" ? `<button class="btn ghost small" data-a="feeder-shop">У крамницю</button>` : k === "pass" ? "" : `<button class="btn ghost small" data-a="stars-buy" data-v="${k === "copper" ? "feeder_week" : "feeder_month"}">${k === "copper" ? "49" : "149"} ⭐</button>`}</div>`; }).join("")}</div>`;
+        ${n ? `<button class="btn small" data-a="feeder-use" data-v="${k}" ${fd.active && (fd.n || 1) >= (fd.max || 3) ? "disabled" : ""}>Увімкнути</button>` : k === "wood" ? `<button class="btn ghost small" data-a="feeder-shop">У крамницю</button>` : k === "pass" ? "" : `<button class="btn ghost small" data-a="stars-buy" data-v="${k === "copper" ? "feeder_week" : "feeder_month"}">${k === "copper" ? "49" : "149"} ⭐</button>`}</div>`; }).join("")}</div>`;
 }
 // раздел лавки
 function feederShop() {

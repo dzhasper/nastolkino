@@ -573,6 +573,10 @@
         else if (t === "again") room.backToLobby(pid);
         else if (t === "finish" && room.kind === "blackjack") room.finish(pid);
         else if (t === "chat") room.say(pid, msg.channel || "all", msg.text);
+        else if (t === "ready") {                            // турнірний зал: «Готово» / «Скасувати»
+          const tour = this.hall(); if (!tour) throw new GameError("Гра вже почалася");
+          tour.ready = tour.ready || {}; tour.ready[pid] = !!msg.on; this.hallCheck(); room.touch();
+        }
         else if (t === "leave") { room.leave(pid); this.send(pid, { t: "left" }); }
         else throw new GameError("Невідома команда");
       } catch (e) {
@@ -584,10 +588,34 @@
       if (msg.t === "hello" && room.phase === "draw" && room.ink) this.send(pid, { t: "ink", all: room.ink });   // вернулся во время рисования
     }
 
-    offline(pid) { this.room.setOnline(pid, false); this.push(); }
+    offline(pid) { this.room.setOnline(pid, false); if (this.hall()) this.hallCheck(); this.push(); }
     tick() {
-      try { if (this.room.tick()) this.push(); }
+      try { if (this.hallTick() || this.room.tick()) this.push(); }
       catch (e) { console.error(e); this.room.deadline = null; this.push(); }   // одна ошибка не должна вешать стол навсегда
+    }
+
+    /* турнірний зал перед грою: аватарки тих, хто прийшов, таймер 10 хвилин; натиснула «Готово» половина (і нас хоча б двоє) —
+       старт за 10 секунд; хтось скасував — знову йде основний таймер. Минули 10 хвилин — стартуємо з тими, хто є */
+    hall() { const r = this.room, t = r.settings && r.settings.tour; return t && r.phase === "lobby" && !t.started ? t : null; }
+    hallOnline() { const r = this.room, t = this.hall(); return t ? (t.players || r.order).filter((p) => r.members[p] && r.members[p].online) : []; }
+    hallCheck() {
+      const t = this.hall(); if (!t) return false;
+      const on = this.hallOnline(), ready = on.filter((p) => t.ready && t.ready[p]).length, was = t.go || null;
+      if (on.length >= 2 && ready * 2 >= on.length) { if (!t.go) t.go = Date.now() / 1000 + 10; } else t.go = null;
+      return (t.go || null) !== was;
+    }
+    hallTick() {
+      const t = this.hall(); if (!t) return false;
+      const now = Date.now() / 1000; let ch = this.hallCheck();
+      if (!t.until) { t.until = now + 600; ch = true; }
+      const on = this.hallOnline();
+      if ((t.go && now >= t.go) || (now >= t.until && on.length >= 2)) {
+        t.started = true; t.go = null;
+        try { this.room.start(this.room.host); }
+        catch (e) { t.started = false; t.until = now + 30; if (!(e instanceof GameError)) console.error(e); }
+        return true;
+      }
+      return ch;
     }
 
     push() {

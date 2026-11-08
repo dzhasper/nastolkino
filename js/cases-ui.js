@@ -25,6 +25,8 @@ function caseArt(key) {
     s_halloween: { wood: "#ff7a18", dark: "#a83a08", light: "#ffb060", metal: "#2a1a3a", mlight: "#5a3a7a", lock: "#7aff6a", glow: "#7aff6a" },
     s_cosmos: { wood: "#3a1a7a", dark: "#14062a", light: "#6a3ad0", metal: "#7ae0ff", mlight: "#ffffff", lock: "#ff7ae0", glow: "#7ae0ff" },
     s_olymp: { wood: "#fff4d0", dark: "#c8a050", light: "#ffffff", metal: "#ffc21a", mlight: "#fff8c0", lock: "#3ac0ff", glow: "#ffe066" },
+    s_cup: { wood: "#e8a01a", dark: "#8a5a00", light: "#ffe066", metal: "#e8203a", mlight: "#ff7a6a", lock: "#ffffff", glow: "#ffffff" },
+    s_shard: { wood: "#3a8ac8", dark: "#0a2a5a", light: "#b8f4ff", metal: "#ff9af0", mlight: "#ffffff", lock: "#7af0ff", glow: "#7af0ff" },
   }[key] || { wood: "#8a5a2b", dark: "#5e3a17", light: "#b77d40", metal: "#6b6f78", mlight: "#b5b9c2", lock: "#c9a227", glow: null };
   const g = Array.from({ length: H }, () => Array(W).fill(null));
   for (let y = 3; y <= 24; y++) for (let xx = 2; xx <= 29; xx++) {
@@ -35,9 +37,17 @@ function caseArt(key) {
     if ((xx === 6 || xx === 7 || xx === 24 || xx === 25)) col = xx % 2 ? pal.metal : pal.mlight;
     if (xx >= 13 && xx <= 18 && y >= 8 && y <= 15) col = (xx === 13 || xx === 18 || y === 8 || y === 15) ? pal.metal : pal.mlight;
     if (xx >= 15 && xx <= 16 && y >= 11 && y <= 12) col = pal.lock;
-    if ((key === "dark" || key === "s_neon" || key === "s_moon" || key === "s_night" || key === "s_halloween" || key === "s_cosmos") && y >= 16 && y <= 20 && (xx === 10 || xx === 20) ) col = pal.glow;
+    if ((key === "dark" || key === "s_neon" || key === "s_moon" || key === "s_night" || key === "s_halloween" || key === "s_cosmos" || key === "s_shard") && y >= 16 && y <= 20 && (xx === 10 || xx === 20) ) col = pal.glow;
     if (key === "dark" && y === 18 && (xx === 11 || xx === 19)) col = pal.glow;
     g[y][xx] = col;
+  }
+  if (key === "s_cup") {                                     // турнірний: кубок на кришці й лаври з боків
+    [[13, 0], [14, 0], [15, 0], [16, 0], [17, 0], [18, 0], [12, 1], [14, 1], [15, 1], [16, 1], [17, 1], [19, 1], [14, 2], [15, 2], [16, 2], [17, 2]].forEach(([a, b]) => { g[b][a] = b === 0 ? "#fff3b0" : "#ffd23f"; });
+    g[1][15] = "#ffffff";
+    for (let yy = 14; yy <= 21; yy++) { g[yy][3] = "#3aa84a"; g[yy][28] = "#3aa84a"; if (yy % 2) { g[yy][4] = "#7ad84a"; g[yy][27] = "#7ad84a"; } }
+  }
+  if (key === "s_shard") {                                   // скриня уламків: кристали ростуть із кришки
+    [[8, 2, 3], [12, 1, 4], [19, 1, 4], [23, 2, 3]].forEach(([a, b, h]) => { for (let k = 0; k < h; k++) { g[b + 2 - k] && (g[b + 2 - k][a] = k === h - 1 ? "#ffffff" : "#b8f4ff"); if (k < h - 1) g[b + 2 - k][a + 1] = "#7af0ff"; } });
   }
   if (key === "zoo") {                                       // «Питомник»: ушки на крышке, лапка спереди, травка снизу
     [[5, 2], [6, 1], [6, 2], [7, 2], [24, 2], [25, 1], [25, 2], [26, 2]].forEach(([a, b]) => { g[b][a] = pal.dark; });
@@ -56,11 +66,11 @@ function caseArt(key) {
 const caseImg = (key, w = 96) => `<img class="case-img" src="${caseArt(key)}" style="width:${w}px;height:${Math.round(w * 28 / 32)}px" alt="">`;
 
 /* ---------------------------------------------------------------- экран: кейсы | инвентарь */
-const anyCase = (k) => Shop.caseByKey(k) || (Shop.seasonByKey(k) ? Object.assign({ season: true, food: 0, egg: 0 }, Shop.seasonByKey(k), { name: "Кейс «" + Shop.seasonByKey(k).name + "»" }) : null);
+const anyCase = (k) => Shop.caseByKey(k) || (Shop.seasonByKey(k) ? Object.assign({ season: true, food: 0, egg: 0 }, Shop.seasonByKey(k), { name: /кейс|скриня/i.test(Shop.seasonByKey(k).name) ? Shop.seasonByKey(k).name : "Кейс «" + Shop.seasonByKey(k).name + "»" }) : null);
 const seasonsLive = () => (Api.on && Api.state ? Api.state.seasons || (Api.state.season ? [Api.state.season] : []) : []);
 const seasonLeft = (k) => { const se = seasonsLive().find((x) => !k || x.key === k); return se ? se.until - (Date.now() + (Api.state.skew || 0)) / 1000 : 0; };
 const seasonOnShelf = (k) => seasonLeft(k) > 0;
-const WHEN_RU = { dawn: "🌅 буває лише вранці", noon: "☀️ буває лише вдень", dusk: "🌇 буває лише ввечері", night: "🌙 буває лише вночі", any: "🎲 з’являється у випадковий час", super: "🌌 СУПЕРРІДКІСНИЙ · три речі одразу" };
+const WHEN_RU = { cup: "🏆 лише за перемогу в турнірі · 5 прокрутів одразу", shard: "💎 рідкісна знахідка з майстерні · три речі одразу", dawn: "🌅 буває лише вранці", noon: "☀️ буває лише вдень", dusk: "🌇 буває лише ввечері", night: "🌙 буває лише вночі", any: "🎲 з’являється у випадковий час", super: "🌌 СУПЕРРІДКІСНИЙ · три речі одразу" };
 const fmtLeft = (sec) => `${Math.floor(Math.max(0, sec) / 60)}:${String(Math.floor(Math.max(0, sec) % 60)).padStart(2, "0")}`;
 const caseFree = (key) => (Api.on && Api.state && Api.state.cases && Api.state.cases[key]) || 0;
 const invCount = () => Shop.ITEMS.filter((it) => (it.price || it.excl || it.season || it.petcase || it.mg) && Shop.owns(it)).length;
@@ -87,13 +97,13 @@ function seasonCards() {
   const keys = [...new Set([...live, ...Shop.SEASONS.map((x) => x.key).filter((k) => caseFree(k))])];
   const cards = keys.map((k) => {
     const c = anyCase(k), free = caseFree(k), on = live.includes(k), can = free || (on && coins >= c.price);
-    return `<div class="case-card season c-${k} ${c.triple ? "super" : ""}" style="--sc:${c.color}"><div class="season-tag">${on ? `⏳ зникне через <b data-season-until="${k}">${fmtLeft(seasonLeft(k))}</b>` : "🎟 твоя сезонна скриня"}</div>
+    return `<div class="case-card season c-${k} ${c.spins ? "super" : ""}" style="--sc:${c.color}"><div class="season-tag">${on ? `⏳ зникне через <b data-season-until="${k}">${fmtLeft(seasonLeft(k))}</b>` : k === "s_cup" ? "🏆 твій приз за турнір" : k === "s_shard" ? "💎 твоя знахідка з майстерні" : "🎟 твоя сезонна скриня"}</div>
       <div class="case-art">${caseImg(k, 92)}${free ? `<span class="case-free">×${free}</span>` : ""}</div>
       <div class="grow"><b class="case-name">${c.emoji} ${esc(c.name)}</b><div class="small muted">${esc(c.desc)}. Речі з нього більше ніде не випадають.</div>
         <div class="season-when">${WHEN_RU[c.when] || ""}</div>
         <div class="case-tiers">${c.w.map((w, i) => (w ? `<i style="background:${Shop.TIERS[i].color};flex:${w}"></i>` : "")).join("")}</div>
         <div class="row case-btns"><button class="btn small" data-a="case-open" data-v="${k}" ${can ? "" : "disabled"}>${free ? "Відкрити безплатно" : can ? `Відкрити · 🪙 ${c.price}` : `Бракує ${c.price - coins}`}</button>
-          <button class="btn ghost small" data-a="case-odds" data-v="${k}">Шанси</button></div></div></div>`;
+          <button class="btn ghost small" data-a="case-odds" data-v="${k}">${PREM_CASE[k] ? "👁 Що всередині" : "Шанси"}</button></div></div></div>`;
   }).join("");
   return cards + (Api.on && !live.length ? `<div class="card small season-hint">🌗 <b>Сезонні скрині</b> з’являються на годину: свої — вранці, вдень, увечері й уночі, тематичні — у випадковий час, а зрідка — суперскриня на три речі одразу. Поява — пост у групі.</div>` : "");
 }
@@ -113,9 +123,40 @@ function viewCaseList() {
     ${Api.on ? `Повторна річ не зникає — копії накопичуються (×2, ×3…). У майстерні 5 речей однієї рідкісності міняються на одну — з шансом на вищу рідкісність, а ✨ уламки — на ключі до кейсів.` : `Повторна річ перетворюється на монети: ${Shop.DUP.map((d, i) => `<b style="color:${Shop.TIERS[i].color}">${d}</b>`).join(" / ")}.`}</div>`;
 }
 
+/* ---------------------------------------------------------------- преміальні скрині: турнірний кейс і скриня уламків */
+const PREM_CASE = { s_cup: { ico: "🏆", word: "Турнірна", head: "🏆 Твої турнірні трофеї", cls: "cup", src: "🏆 Турнірна річ — лише з турнірного кейса (приз за перемогу)" },
+  s_shard: { ico: "💎", word: "Кристальна", head: "💎 Скарби скрині уламків", cls: "shard", src: "💎 Кристальна річ — лише зі скрині уламків" } };
+const PREVIEW_PET = "2e1b91dd6af88e56ba0e7e37a68ce8fb0";                 // гарненький зразок, на якому видно прикраси, якщо своїх улюбленців ще немає
+const premKey = (it) => (it && it.prem === "cup" ? "s_cup" : it && it.prem === "shard" ? "s_shard" : null);
+// велике прев’ю речі: для вітрини й залу трофеїв
+function bigThumb(it) {
+  const p = S.profile;
+  if (it.cat === "style") return `<div class="sc-card">${Shop.card({ name: p.name, games: p.games, wins: p.wins, avatarHtml: av(p, "sm") }, Object.assign({}, p.look, { style: it.id }), { mini: true })}</div>`;
+  if (it.cat === "title") return `<div class="sc-title">${esc(it.text)}</div>`;
+  if (it.cat === "ava") return `<div class="sc-badge">${esc(it.emoji)}</div>`;
+  if (it.cat === "toy") return `<div class="sc-badge">${esc(it.emoji)}</div>`;
+  if (it.cat === "hat") { const st = Api.state, mp = st && st.pets && (st.pets.find((x) => x.id === st.main_pet && x.alive && !x.egg) || st.pets.find((x) => x.alive && !x.egg));
+    return `<div class="sp-ava sc-pet">${Pets.sprite((mp ? mp.rarity + mp.dna : PREVIEW_PET) + "-" + it.id, 96)}</div>`; }      // прикраса — на твоєму улюбленці (або на гарненькому зразку)
+  if (it.cat === "frame" && !p.photo) return `<div class="sp-av">${av(Object.assign({}, p, { look: { frame: it.id }, photo: Loot.picUrl(it.prem === "shard" ? "x_sh_p3" : "x_cup_p3") }), "big")}</div>`;   // рамку видно на аватарці, а не на порожньому силуеті
+  return shopPreview(it);
+}
+function caseShowcase(key) {
+  const c = anyCase(key), P = PREM_CASE[key], pool = Shop.seasonPool(key), have = pool.filter((it) => Shop.owns(it)).length, sum = c.w.reduce((a, b) => a + b, 0);
+  const groups = [["pic", "🖼 Піксельні аватарки"], ["frame", "🖼 Рамки — власні, яких немає ніде"], ["style", "🪪 ID-картки"], ["bg", "🏞 Фони профілю"], ["hat", "🐾 Прикраси для улюбленців — з бойовими бонусами"],
+    ["fx", "✨ Сяйво імені"], ["title", "🏷 Титули"], ["ava", "😎 Значки біля ніка"], ["toy", "🧸 Іграшки для улюбленців"]];
+  return `<div class="showcase sc-${P.cls}"><div class="sc-hero"><div class="sc-chest">${caseImg(key, 110)}</div><div class="grow"><h2>${c.emoji} ${esc(c.name)}</h2>
+      <div class="small"><b>${pool.length} речей</b>, яких більше ніде немає · ${key === "s_cup" ? "<b>5 прокрутів</b> одразу" : "<b>3 речі</b> одразу"}</div>
+      <div class="small muted">У тебе вже ${have} з ${pool.length}</div></div></div>
+    <div class="odds">${c.w.map((w, i) => (w ? `<div class="odd"><span>${tierTag(i)}</span><b>${Math.round(w / sum * 100)}%</b></div>` : "")).join("")}</div>
+    ${groups.map(([cat, title]) => { const L = pool.filter((it) => it.cat === cat).sort((a, b) => Shop.tier(b) - Shop.tier(a)); if (!L.length) return "";
+      return `<div class="section-title">${title} · ${L.length}</div><div class="sc-grid g-${cat}">${L.map((it) => { const t = Shop.tier(it), own = Shop.owns(it);
+        return `<div class="sc-tile ${own ? "have" : ""}" style="--tc:${Shop.TIERS[t].color}">${bigThumb(it)}<b>${esc(it.name)}</b>${it.cat === "hat" ? `<small>${esc(Pets.hatFxText(it.id))}</small>` : ""}<span class="sc-t">${Shop.TIERS[t].name}${own ? " · ✓ є" : ""}</span></div>`; }).join("")}</div>`; }).join("")}</div>`;
+}
+
 function caseOddsSheet(key) {
   const c = anyCase(key);
   if (!c) return "";
+  if (PREM_CASE[key]) return caseShowcase(key);
   if (c.season) {
     const sum = c.w.reduce((a, b) => a + b, 0), have = Shop.seasonPool(key).filter((it) => Shop.owns(it));
     return `<h2>${c.emoji} ${esc(c.name)}</h2><p class="muted small">Сезонний кейс: його речі більше ніде не випадають. Що всередині — секрет, доки не виб’єш.</p>
@@ -161,14 +202,14 @@ function viewInv() {
   const ranked = (it) => it.price || it.excl || it.season || it.petcase || it.mg;
   let bar = "";
   if (tryIt && Shop.owns(tryIt)) {
-    const t = Shop.tier(tryIt), src = tryIt.coll ? "🐉 " + tryIt.desc : tryIt.excl ? (tryIt.cat === "title" && tryIt.desc ? "🐉 " + tryIt.desc : "👑 набір Творця") : tryIt.season ? "🌙 " + (Shop.seasonByKey(tryIt.season) || {}).name : "";
+    const t = Shop.tier(tryIt), src = premKey(tryIt) ? PREM_CASE[premKey(tryIt)].src : tryIt.coll ? "🐉 " + tryIt.desc : tryIt.excl ? (tryIt.cat === "title" && tryIt.desc ? "🐉 " + tryIt.desc : "👑 набір Творця") : tryIt.season ? "🌙 " + (Shop.seasonByKey(tryIt.season) || {}).name : "";
     const m = tryIt.mg ? Pets.MUTATIONS.find((x) => x.key === tryIt.mg) : null;
     const act = tryIt.cat === "toy" ? `<button class="btn small" data-a="case-pets">🐾 До улюбленців</button>` : tryIt.cat === "hat" || tryIt.cat === "mg" ? `<button class="btn small" data-a="case-pets">🐾 До улюбленців</button>`
       : tryIt.cat === "pic" ? (worn(tryIt) ? `<button class="btn small ghost" data-a="pic-set" data-v="none">Повернути фото Telegram</button>` : `<button class="btn small" data-a="shop-equip">Поставити аватаркою</button>`)
       : tryIt.cat === "ava" ? (worn(tryIt) ? `<button class="btn small ghost" data-a="badge" data-v="none">Зняти з ніка</button>` : `<button class="btn small" data-a="shop-equip">Поставити біля ніка</button>`)
       : worn(tryIt) ? `<button class="btn small" disabled>Вдягнуто ✓</button>` : `<button class="btn small" data-a="shop-equip">Вдягнути</button>`;
     if (tryIt.cat === "toy" && typeof toyInfo === "function") bar = toyBar(tryIt);
-    else bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${ranked(tryIt) ? tierTag(t) : ""} ${m ? `${m.emoji} ${esc(m.name)} — уколи улюбленцю зі значком 🧬` : tryIt.cat === "hat" ? "У бою: " + Pets.hatFxText(tryIt.id) + ". Вдягається улюбленцю в його картці" : src ? esc(src) : worn(tryIt) ? "Вдягнуто" : "Є в тебе"}</div></div>
+    else bar = `<div class="shop-bar"><div class="grow"><b>${esc(tryIt.name)}</b><div class="small muted">${ranked(tryIt) ? tierTag(t) : ""} ${tryIt.prem ? `<span class="prem-chip pc-${tryIt.prem}">${PREM_CASE[premKey(tryIt)].ico} ${PREM_CASE[premKey(tryIt)].word}</span> ` : ""}${m ? `${m.emoji} ${esc(m.name)} — уколи улюбленцю зі значком 🧬` : tryIt.cat === "hat" ? "У бою: " + Pets.hatFxText(tryIt.id) + ". Вдягається улюбленцю в його картці" : src ? esc(src) : worn(tryIt) ? "Вдягнуто" : "Є в тебе"}</div></div>
       ${act}</div>`;
   }
   if (S.craft && Api.on) return viewCraftBench();
@@ -178,7 +219,7 @@ function viewInv() {
     <div class="cats">${Shop.CATS.map((c) => { const have = Shop.ITEMS.filter((x) => x.cat === c.key && ranked(x) && Shop.owns(x)).length;
       return `<button class="pill ${c.key === cat ? "on" : ""}" data-a="shop-cat" data-v="${c.key}">${c.icon} ${c.name}${have ? ` <span class="seg-n">${have}</span>` : ""}</button>`; }).join("")}</div>
     <div class="shop-grid ${cat}">${items.map((it) => { const t = Shop.tier(it);
-      return `<button class="shop-item ${tryIt === it ? "sel" : ""} ${worn(it) ? "worn" : ""}" style="--tc:${ranked(it) ? Shop.TIERS[t].color : "transparent"}" data-a="shop-try" data-v="${it.id}">
+      return `<button class="shop-item ${tryIt === it ? "sel" : ""} ${worn(it) ? "worn" : ""} ${it.prem ? "prem-" + it.prem : ""}" style="--tc:${ranked(it) ? Shop.TIERS[t].color : "transparent"}" data-a="shop-try" data-v="${it.id}">
         ${shopPreview(it)}<b>${esc(it.name)}</b><span class="price">${worn(it) ? "✓ вдягнуто" : ranked(it) ? Shop.TIERS[t].name : "є"}</span>${it.cat === "toy" ? toyTileMarks(it.id) : invN(it.cat + ":" + it.id) > 1 ? `<span class="inv-n">×${invN(it.cat + ":" + it.id)}</span>` : ""}</button>`; }).join("")}</div>
     ${items.filter(ranked).length ? "" : `<div class="card small muted center mt">${cat === "mg" ? "Шприців поки немає. Їх дають за турніри, а в «Розпліднику» — шанс 0,01%" : petCat ? "Поки порожньо — це випадає з кейса «Розплідник»" : "Тут поки тільки стартове. Усе, що виб’єш у кейсах, з’явиться тут."}</div>`}
     ${bar}`;
@@ -240,10 +281,14 @@ function craftDo(body) {
 }
 function craftDoneSheet() {
   const c = S.sheet;
+  if (c.op === "key" && c.chest) return `<div class="center craft-res up"><div class="key-pop">💎</div><h2>Неймовірно! Замість ключа — Скриня уламків!</h2>
+    <div class="cl-prize">${caseImg(c.kind, 110)}</div><div class="cl-name">💎 Скриня уламків</div>
+    <div class="small mt">Таке випадає дуже рідко: усередині три найкращі речі, яких більше ніде немає — корони з кристалів, призматичні рамки, дракон з уламків…</div>
+    <button class="btn mt2" data-a="key-open" data-v="${c.kind}">Відкрити скриню</button><button class="btn ghost mt" data-a="case-odds" data-v="s_shard">👁 Що всередині</button></div>`;
   if (c.op === "key") return `<div class="center craft-res"><div class="key-pop">🗝</div><h2>Ключ викувано!</h2>
     <div class="cl-prize">${caseImg(c.kind, 96)}</div><div class="cl-name">${esc(c.name)}</div>
     ${c.season ? `<div class="small mt">Сезонний кейс: ключ відкриває його будь-коли, навіть коли кейса немає на вітрині</div>` : ""}
-    <button class="btn mt2" data-a="case-open" data-v="${c.kind}">Відкрити зараз</button></div>`;
+    <button class="btn mt2" data-a="key-open" data-v="${c.kind}">Відкрити зараз</button></div>`;
   const it = Shop.byKey(c.item); if (!it) return "";
   const t = Shop.tier(it);
   const p = c.odds ? Math.round((c.odds[c.up] || 0) * 100) : 0;
@@ -256,6 +301,9 @@ function craftDoneSheet() {
 /* ---------------------------------------------------------------- открытие: лента с предметами */
 let caseBusy = false;
 const caseLayer = () => document.getElementById("case-layer");
+// ID-картка гравця в стилі з кейса: його ім’я, аватарка, рамка й статистика — як вона виглядатиме в профілі
+const idCardHtml = (id, size = "big", mini = false) => { const p = S.profile;
+  return Shop.card({ name: p.name, games: p.games, wins: p.wins, avatarHtml: av(p, size) }, Object.assign({}, p.look, { style: id }), mini ? { mini: true } : {}); };
 function caseThumb(d) {
   if (d.type === "mystery") return `<div class="ct-ico mystery">❔</div>`;
   if (d.type === "egg") return `<div class="ct-ico egg">🥚</div>`;
@@ -265,10 +313,10 @@ function caseThumb(d) {
   if (!it) return "";
   if (it.cat === "frame") return `<div class="ct-av">${av(Object.assign({}, S.profile, { look: { frame: it.id } }), "")}</div>`;
   if (it.cat === "bg") return `<div class="ct-bg" style="background-image:url(${Shop.sceneUrl(it.id)})"></div>`;
-  if (it.cat === "style") return `<div class="ct-ico">🪪</div>`;
+  if (it.cat === "style") return `<div class="ct-card">${idCardHtml(it.id, "sm", true)}</div>`;   // мініатюра самої картки, а не просто 🪪
   if (it.cat === "toy") return `<div class="ct-ico">${it.emoji}</div>`;
   if (it.cat === "pic") return `<div class="ct-ico ct-pic"><img src="${Loot.picUrl(it.id)}" alt=""></div>`;
-  if (it.cat === "hat") return `<div class="ct-ico">${Pets.sprite("2" + "8c3a9c51e2b84d06a1c3f5e7092b4d6e-" + it.id, 44)}</div>`;
+  if (it.cat === "hat") return `<div class="ct-ico">${Pets.sprite(PREVIEW_PET + "-" + it.id, 44)}</div>`;
   if (it.cat === "mg") return `<div class="ct-ico">${Pets.syringe(40)}</div>`;
   if (it.cat === "title") return `<div class="ct-title">«${esc(it.text)}»</div>`;
   if (it.cat === "fx") return `<div class="ct-fx">${Shop.nameFx([...Shop.splitBadge(S.profile.name || "Ім’я").base].slice(0, 7).join(""), it.id)}</div>`;
@@ -347,16 +395,17 @@ function caseSpin(c, drop, drops) {
 function caseSpinMany(c, drops) {
   const el = caseLayer();
   if (!el) return;
-  const N = 46, WIN = 36, CW = 80;
-  el.innerHTML = `<div class="cl-box triple"><div class="cl-title">${esc(c.name)} · три речі</div>
+  const N = 46, WIN = 36, CW = drops.length > 3 ? 70 : 80;           // ширина клітинки + відступ (див. cases.css: 72 / 62 px)
+  const nw = drops.length === 5 ? "п’ять речей" : "три речі";
+  el.innerHTML = `<div class="cl-box triple n${drops.length}"><div class="cl-title">${esc(c.name)} · ${nw}</div>
     ${drops.map((d, k) => `<div class="reel sm" id="reel${k}"><div class="reel-strip">${reelCells(c, d, N, WIN).map(caseCell).join("")}</div><i class="reel-mark"></i></div>`).join("")}
-    <div class="cl-res" id="cl-res"><div class="muted small">Крутимо три стрічки…</div></div></div>`;
+    <div class="cl-res" id="cl-res"><div class="muted small">Крутимо ${drops.length === 5 ? "п’ять стрічок" : "три стрічки"}…</div></div></div>`;
   if (PX()) Pixel.apply(el);
   let left = drops.length;
   drops.forEach((d, k) => {
     const reel = el.querySelector("#reel" + k), strip = reel.querySelector(".reel-strip");
     const target = WIN * CW + CW / 2 - reel.clientWidth / 2 + (Math.random() - .5) * 50;
-    reelRun(strip, reel, target, 4.6 + k * 1.9 + Math.random() * .8, CW, () => {
+    reelRun(strip, reel, target, (drops.length > 3 ? 3.6 + k * 1.3 : 4.6 + k * 1.9) + Math.random() * .8, CW, () => {
       reel.classList.add("stopped"); const w = strip.children[WIN];
       if (w) { w.outerHTML = caseCell(d); const w2 = strip.children[WIN]; w2.classList.add("won", "reveal"); if (PX()) Pixel.apply(w2); }
       notify(dropTier(d) >= 2 ? "success" : "warning");
@@ -364,13 +413,29 @@ function caseSpinMany(c, drops) {
     });
   });
 }
+// «Ще» під відкритим кейсом: якщо кейс був із ключа — новий ключ за уламки (не монети); інакше — безплатний або за монети
+function againBtn(c, can, free) {
+  if (S.caseFromKey) { const sh = (Api.state && Api.state.shards) || 0; return `<button class="btn ghost" data-a="key-again" ${sh >= KEY_COST ? "" : "disabled"}>🔑 Ще ключ · ✨${KEY_COST}${sh < KEY_COST ? ` (є ${sh})` : ""}</button>`; }
+  if (!free && !(c.price > 0)) return "";                               // турнірний кейс / скриня уламків — не купуються
+  return `<button class="btn ghost" data-a="case-again" data-v="${c.key}" ${can ? "" : "disabled"}>${free ? `Ще (безплатно ×${free})` : `Ще · 🪙 ${c.price}`}</button>`;
+}
 function caseResultMany(c, drops) {
   caseBusy = false;
   const box = document.getElementById("cl-res"); if (!box) return;
-  const best = Math.max(...drops.map(dropTier)), free = caseFree(c.key), can = free || (S.profile.coins >= c.price && seasonOnShelf(c.key));
-  box.innerHTML = `<div class="cl-three">${drops.map((d) => { const it = Shop.byKey(d.item), t = dropTier(d);
+  const best = Math.max(...drops.map(dropTier)), free = caseFree(c.key), can = free || (S.profile.coins >= c.price && seasonOnShelf(c.key)), P = PREM_CASE[c.key];
+  if (P) {                                                               // зал трофеїв: великі прев’ю, стрічка «Турнірна / Кристальна», по черзі з’являються
+    const cb = box.closest(".cl-box"); if (cb) cb.classList.add("prem-done", "sc-" + P.cls);
+    box.innerHTML = `<div class="trophy-room tr-${P.cls}"><div class="tr-rays"></div><div class="tr-head">${P.head}</div>
+      <div class="tr-grid n${drops.length}">${drops.map((d, i) => { const it = Shop.byKey(d.item), t = dropTier(d);
+        return `<div class="tr-item" style="--tc:${Shop.TIERS[t].color};--i:${i}"><div class="tr-ribbon">${P.ico} ${P.word}</div>${it ? bigThumb(it) : caseThumb(d)}
+          <b>${esc(dropName(d))}</b>${tierTag(t)}${d.copy ? `<span class="small">копія ×${d.copy}</span>` : d.dup ? `<span class="small">повтор · +${d.shards} ✨</span>` : `<span class="tr-new">НОВЕ!</span>`}</div>`; }).join("")}</div>
+      <div class="cl-btns"><button class="btn" data-a="case-close">Забрати трофеї</button>${againBtn(c, can, free)}<button class="btn ghost" data-a="case-show" data-v="${c.key}">👁 Що ще всередині</button></div></div>`;
+    if (PX()) Pixel.apply(box);
+    notify("success"); coinRain(); return;
+  }
+  box.innerHTML = `<div class="cl-three n${drops.length}">${drops.map((d) => { const it = Shop.byKey(d.item), t = dropTier(d);
     return `<div class="cl-mini" style="--tc:${Shop.TIERS[t].color}">${it ? caseThumb(d) : ""}<b style="color:${Shop.TIERS[t].color}">${esc(dropName(d))}</b>${tierTag(t)}${d.copy ? `<span class="small">копія ×${d.copy}</span>` : d.dup ? `<span class="small">+${d.shards} ✨</span>` : ""}</div>`; }).join("")}</div>
-    <div class="cl-btns"><button class="btn" data-a="case-close">Забрати</button><button class="btn ghost" data-a="case-again" data-v="${c.key}" ${can ? "" : "disabled"}>${free ? `Ще (безплатно ×${free})` : `Ще · 🪙 ${c.price}`}</button></div>`;
+    <div class="cl-btns"><button class="btn" data-a="case-close">Забрати</button>${againBtn(c, can, free)}</div>`;
   if (PX()) Pixel.apply(box);
   notify("success");
   if (best >= 3) coinRain();
@@ -387,7 +452,8 @@ function caseResult(c, drop) {
   const lay = caseLayer(); if (lay) { lay.style.setProperty("--tc", Shop.TIERS[t].color); lay.classList.remove("flash"); void lay.offsetWidth; lay.classList.add("flash"); }
   let prize = "", info = "", main = "";
   if (it) {
-    prize = `<div class="cl-prize">${shopPreview(it)}</div>`;
+    prize = it.cat === "style" ? `<div class="cl-prize cl-card"><div class="clc-wrap">${idCardHtml(it.id)}</div><div class="tiny muted mt">Так виглядатиме твоя ID-картка в профілі</div></div>`
+      : `<div class="cl-prize">${shopPreview(it)}</div>`;
     info = drop.copy ? `<div class="cl-dup">${it.cat === "toy" ? "🧸" : "📦"} Ще одна копія! Тепер їх <b>×${drop.copy}</b> — ${it.cat === "toy" ? "менше сварок через іграшку" : "знадобляться для крафту: 5 однакових за рідкісністю → 1"}</div>` : drop.dup ? `<div class="cl-dup">Повтор — уже є. Перетворилося на <b>${drop.shards != null ? `+${drop.shards} ✨ уламків` : `+${drop.refund} 🪙`}</b></div>`
       : it.mg ? `<div class="small">💉 Мутаген! Уколи улюбленцю зі значком 🧬 — вигляд зміниться назавжди</div>` : `<div class="small muted">Уже в інвентарі</div>`;
     if (!drop.dup) main = ["toy", "hat", "mg"].includes(it.cat) ? `<button class="btn" data-a="case-pets">🐾 До улюбленців</button>` : `<button class="btn" data-a="case-equip" data-v="${esc(drop.item)}">Вдягнути</button>`;
@@ -406,7 +472,7 @@ function caseResult(c, drop) {
   }
   const free = caseFree(c.key), can = free || (S.profile.coins >= c.price && (!c.season || seasonOnShelf(c.key)));
   box.innerHTML = `${prize}<div class="cl-name" style="color:${Shop.TIERS[t].color}">${esc(dropName(drop))}</div>${drop.type === "item" ? tierTag(t) : ""}${info}
-    <div class="cl-btns">${main}<button class="btn ghost" data-a="case-again" data-v="${c.key}" ${can ? "" : "disabled"}>${free ? `Ще (безплатно ×${free})` : `Ще · 🪙 ${c.price}`}</button>
+    <div class="cl-btns">${main}${againBtn(c, can, free)}
     <button class="btn ghost" data-a="case-close">Закрити</button></div>`;
   if (PX()) Pixel.apply(box);
   notify(t >= 2 || drop.type === "egg" ? "success" : "warning");
@@ -439,10 +505,18 @@ function caseBack() { if (!caseLayer()) return false; if (!caseBusy) { caseLayer
 
 const CASE_ACTIONS = {
   "shop-tab": (v) => { S.shopTab = v; S.shopTry = null; S.craft = null; haptic(); render(); window.scrollTo(0, 0); },
-  "case-open": caseOpen,
+  "case-open": (key) => { S.caseFromKey = false; caseOpen(key); },
   "case-again": (key) => { caseLayerClose(); caseOpen(key); },
+  "key-open": (key) => { S.caseFromKey = true; S.sheet = null; renderOverlay(); caseOpen(key); },
+  "key-again": () => {                                                  // новий ключ за уламки — і одразу відкрити те, до чого він підійшов
+    if (caseBusy) return;
+    if (((Api.state && Api.state.shards) || 0) < KEY_COST) { notify("error"); return toast(`Потрібно ${KEY_COST} уламків`); }
+    caseLayerClose();
+    Api.act("/api/craft", { op: "key" }).then((st) => { S.caseFromKey = true; toast(st.craft.chest ? "💎 Неймовірно! Замість ключа — Скриня уламків!" : "🗝 Ключ до: " + st.craft.name); if (st.craft.chest) { notify("success"); coinRain(); } caseOpen(st.craft.kind); }).catch((e) => { notify("error"); toast(e.message); render(); });
+  },
   "case-close": () => { caseLayerClose(); render(); },
   "case-odds": (key) => { S.sheet = { type: "case-odds", key }; renderOverlay(); },
+  "case-show": (key) => { caseLayerClose(); S.sheet = { type: "case-odds", key }; renderOverlay(); },
   "case-craft": () => { caseLayerClose(); S.screen = "shop"; S.shopTab = "craft"; render(); window.scrollTo(0, 0); },
   "craft-key": () => craftDo({ op: "key" }),
   "craft-start": (k) => { const it = Shop.byKey(k); if (!craftOk(it)) return; S.craft = { cat: it.cat, tier: Shop.tier(it), sel: [k] }; haptic(); render(); window.scrollTo(0, 0); },

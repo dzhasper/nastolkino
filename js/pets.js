@@ -12,7 +12,7 @@
   // порядок еды обязан совпадать с server/worker.js (FOODS)
   const FOOD_KEYS = ["korm", "zhuk", "kasha", "sup", "konfeta", "yagody", "ryba", "syr", "pirog", "kotleta"];
   const FOOD_EMOJI = { korm: "🥣", zhuk: "🪲", kasha: "🍚", sup: "🍲", konfeta: "🍬", yagody: "🫐", ryba: "🐟", syr: "🧀", pirog: "🥟", kotleta: "🍖", zoloto: "🍏",
-    pechenka: "🍪", morozhenoe: "🍦", tort: "🍰", energetik: "🥤", baton: "🍫", bronya: "🥫", perets: "🌶️", pyl: "✨", rost: "🍼", rost2: "🧃", dnk: "🍭" };
+    pechenka: "🍪", morozhenoe: "🍦", tort: "🍰", energetik: "🥤", baton: "🍫", bronya: "🥫", perets: "🌶️", pyl: "✨", rost: "🍼", rost2: "🧃", dnk: "🍭", obnul: "🍬" };
   const NAME_A = ["Шур", "Бул", "М’як", "Хрум", "Пух", "Тоф", "Зю", "Бяк", "Кус", "Моч", "Фир", "Жуж", "Плюх", "Тик", "Бор", "Гіз", "Чух", "Вінь", "Ляп", "Ням", "Шмиг", "Бубл", "Крак", "Тяп"];
   const NAME_B = ["ик", "ша", "зя", "ок", "уся", "иш", "он", "ка", "ля", "еня", "м’як", "ус", "ня", "бас"];
   const SOCIAL = [
@@ -1019,6 +1019,33 @@
     octopus: [["   pppp   ", "  pPpppp  ", " ppwkpwkp ", " pppppppp ", "pp pp pp p", "p  p  p  p"], { p: "#ff6a9a", P: "#ffb0c8", w: "#ffffff", k: "#1d1210" },
       ["   pppp   ", "  pPpppp  ", " ppwkpwkp ", " pppppppp ", " pp pp ppp", "p  p  p  p "], { sink: 2 }],
     mushroomcap: [["   rrrrr   ", "  rwrrrwr  ", " rrrrwrrrr ", "rwrrrrrrrwr", "rrrrrrrrrrr", "  sssssss  "], { r: "#e8202a", w: "#ffffff", s: "#f6e8c8" }, null, { sink: 1 }],
+    // турнірний кейс
+    medalband: [["rrrrrrrrrrr", "RRRRRyRRRRR", "    yYy    ", "    YwY    ", "     y     "], { r: "#e8203a", R: "#ff5a6a", y: "#e8a01a", Y: "#ffd23f", w: "#ffffff" }, null, { sink: 3 }],
+    victorycap: [["   bbbbb   ", "  bbbybbb  ", " bbyyyyybb ", " bbbyyybbb ", " bbybbbybb ", "BBBBBBBBBBB"], { b: "#2a62e8", B: "#1a3a8a", y: "#ffd23f" }, null, { sink: 2 }],
+    cuphat: [["  yyyyyyy  ", "yyyYYYYYyyy", "y yYYwYYy y", "y yYYYYYy y", " yyyYYYyyy ", "    yYy    ", "     y     ", "   ddddd   ", "  ddddddd  "],
+      { y: "#e8a01a", Y: "#ffd23f", w: "#ffffff", d: "#6a4000" }, ["  yyyyyyy  ", "yyyYYYYYyyy", "y yYYYYwy y", "y yYwYYYy y", " yyyYYYyyy ", "    yYy    ", "     y     ", "   ddddd   ", "  ddddddd  "], { sink: 1 }],
+    goldlaurel: [["y  y   y  y", "yY y   y Yy", " yY     Yy ", "  yY r Yy  "], { y: "#c8900a", Y: "#ffe066", r: "#e8203a" }, ["Y  y   y  Y", "yY Y   Y Yy", " yY     Yy ", "  yY w Yy  "], { sink: 2, pal2: { w: "#ffffff" } }],
+    gladhelm: [["  rrRrRrr  ", "   rRrRr   ", "    sSs    ", "  sSSSSSs  ", " sSSSSSSSs ", "sSSSSSSSSSs", "sDsDsDsDsDs"], { r: "#e8203a", R: "#ff6a5a", s: "#a8642a", S: "#e8b060", D: "#5a3010" }, null, { sink: 3 }],
+    champcrown: [["y    W    y", "yy  yYy  yy", "yYy yYy yYy", "yYYyYYYyYYy", "yYrYYbYYgYy", "yyyyyyyyyyy"], { y: "#e8a01a", Y: "#ffd23f", W: "#ffffff", r: "#e8203a", b: "#3a8ae8", g: "#3ac85a" },
+      ["W    y    W", "yy  yWy  yy", "yYy yYy yYy", "yYYyYYYyYYy", "yYrYYbYYgYy", "yyyyyyyyyyy"], { sink: 1 }],
+    torchhat: [["    rR     ", "   rRYr    ", "   RYwYr   ", "    YwY    ", "   yyyyy   ", "    dyd    ", "    dyd    "], { r: "#e8301a", R: "#ff7a1a", Y: "#ffd23f", w: "#fff3a0", y: "#ffc21a", d: "#a86a00" },
+      ["     Rr    ", "    rYRr   ", "   rYwYR   ", "    YwY    ", "   yyyyy   ", "    dyd    ", "    dyd    "], { sink: 1 }],
+    boxhelm: [["   rrrrr   ", "  rRRRRRr  ", " rRrrrrrRr ", " rr     rr ", " rr     rr ", " rrr   rrr "], { r: "#c8101e", R: "#ff4a4a" }, null, { sink: 6 }],
+    champshades: [["yyyyyyyyyyyyy", "ykKkyy yykKky", "ykkky   ykkky", " yyy     yyy "], { y: "#ffc21a", k: "#14141c", K: "#ffffff" },
+      ["yyyyyyyyyyyyy", "ykkKyy yykkKy", "ykkky   ykkky", " yyy     yyy "], { at: "eyes", oy: 1, ol: "#5a3a00" }],
+    luchador: [["  rrrrrrrrr  ", " rrwwrrrwwrr ", "rrwkkwrwkkwrr", " rrwwrrrwwrr ", "  rryyyyyrr  "], { r: "#e8203a", w: "#ffffff", k: "#14141c", y: "#ffd23f" }, null, { at: "eyes", oy: 2 }],
+    refwhistle: [["r      ", "r sssS ", " rsssss", "  r s  "], { s: "#c8ccd8", S: "#ffffff", r: "#e8203a" }, ["r      ", "r ssSs ", " rsssss", "  r s  "], { at: "mouth", oy: 1, dx: 3 }],
+    goldmedal: [["b       r", " b     r ", "  b   r  ", "   brr   ", "   yYy   ", "  yYwYy  ", "   yYy   "], { b: "#2a62e8", r: "#e8203a", y: "#e8a01a", Y: "#ffd23f", w: "#ffffff" },
+      [["b       r", " b     r ", "  b   r  ", "   brr   ", "   yYy   ", "  ywYYy  ", "   yYy   "]][0], { at: "mouth", oy: -2 }],
+    rosette: [[" bbb ", "bBwBb", "bwYwb", "bBwBb", " bbb ", " b b ", "b   b"], { b: "#2a62e8", B: "#7ab0ff", w: "#ffffff", Y: "#ffd23f" }, null, { at: "mouth", oy: -2, dx: 6 }],
+    cuphorns: [["yYy     yYy", "yyy     yyy", " y       y ", "yyy     yyy"], { y: "#e8a01a", Y: "#fff3b0" }, ["yyy     yyy", "yYy     yYy", " y       y ", "yyy     yyy"], { sink: 1 }],
+    // скриня уламків
+    crystalhorn: [["     w     ", "     C     ", "    Cc     ", "    cC     ", "    Ccc    ", "   cCcC    "], { w: "#ffffff", C: "#b8f4ff", c: "#7af0ff" }, ["     C     ", "     w     ", "    Cc     ", "    cC     ", "    Ccc    ", "   cCcC    "], { sink: 1 }],
+    shardwings: [["cw       wc", "Cc       cC", "cCc     cCc", " cC     Cc "], { c: "#7af0ff", C: "#ff9af0", w: "#ffffff" }, ["wc       cw", "cC       Cc", "Ccc     ccC", " Cc     cC "], { sink: 4 }],
+    prismvisor: [["kkkkkkkkkkkkk", "kpcywpcywpcyk", " kkkkkkkkkkk "], { k: "#0a0420", p: "#ff7ae0", c: "#7af0ff", y: "#ffe066", w: "#ffffff" }, ["kkkkkkkkkkkkk", "kcywpcywpcypk", " kkkkkkkkkkk "], { at: "eyes", oy: 1 }],
+    crystalcrown: [["     w     ", " w   C   w ", " C  CcC  C ", " Cc CcC cC ", "CcCCcccCCcC", "bbbbbbbbbbb"], { w: "#ffffff", C: "#b8f4ff", c: "#7af0ff", b: "#3a8ac8" },
+      ["     C     ", " C   w   C ", " C  CcC  C ", " Cc CcC cC ", "CcCCcccCCcC", "bbbbbbbbbbb"], { sink: 1 }],
+    shardhalo: [["  cCwCcCc  ", " C       C ", "  cCcwcCc  "], { c: "#7af0ff", C: "#ff9af0", w: "#ffffff" }, ["  CcCcwcC  ", " c       c ", "  CwCcCcC  "], { sink: -2 }],
     tiara: [["    p    ", "y  pPp  y", "yy  p  yy", "yyyyyyyyy", "yBy w yBy"], { y: "#e8e8f8", p: "#ff5ab8", P: "#ffffff", B: "#7ae0ff", w: "#ffffff" }, ["    W    ", "y  pPp  y", "yy  p  yy", "yyyyyyyyy", "yBy w yBy"], { sink: 1, pal2: { W: "#ffffff" } }],
   };
 
@@ -1036,7 +1063,10 @@
     "fangs":{"drain":0.1},"visor":{"laser":[0.15,4]},"cyberglasses":{"atk":1,"laser":[0.15,3]},"ninja":{"dodge":0.07},"knight":{"block":[0.25,5],"spd":-1},"jester":{"charm":0.08},
     "graduate":{"crit":0.06},"sombrero":{"heal":[4,4],"fireproof":1},"firehelm":{"fireproof":1,"def":2},"pilot":{"spd":4},"catears":{"dodge":0.05},"bunnyears":{"spd":2,"dodge":0.03},
     "chick":{"peck":[0.15,3]},"samurai":{"first":8,"crit":0.04},"thundercloud":{"zap":[0.14,5]},"flamecrown":{"burn":0.14},"icecrown":{"freeze":0.12},"octopus":{"stun":0.08},
-    "mushroomcap":{"heal":[3,4]},"tiara":{"charm":0.08}};
+    "mushroomcap":{"heal":[3,4]},"tiara":{"charm":0.08},"medalband":{"dodge":0.05},"victorycap":{"spd":3},"cuphat":{"atk":2,"crit":0.03},"goldlaurel":{"heal":[3,5],"atk":1},
+    "gladhelm":{"block":[0.25,5],"first":5},"champcrown":{"hp":14,"crit":0.05},"prismvisor":{"laser":[0.14,5]},"crystalcrown":{"hp":12,"block":[0.15,4]},"shardhalo":{"heal":[3,6],"dodge":0.03},
+    "torchhat":{"burn":0.12,"atk":1},"boxhelm":{"block":[0.2,4],"def":1},"crystalhorn":{"crit":0.06,"magic":[0.1,5]},"shardwings":{"spd":3,"dodge":0.05},
+    "champshades":{"crit":0.05,"charm":0.04},"luchador":{"first":6,"scare":0.04},"refwhistle":{"stun":0.07},"goldmedal":{"hp":8,"def":1},"rosette":{"charm":0.06,"heal":[5,3]},"cuphorns":{"atk":2,"first":4}};
   const pct = (x) => Math.round(x * 100) + "%";
   const HAT_FX_TXT = { atk: (v) => `⚔️ +${v} до атаки`, def: (v) => `🛡 +${v} до захисту`, spd: (v) => `💨 ${v > 0 ? "+" : ""}${v} до швидкості`, hp: (v) => `❤️ +${v} здоров’я`,
     crit: (v) => `💥 +${pct(v)} до криту`, dodge: (v) => `🌀 +${pct(v)} ухилу`, heal: (v) => `💚 кожен ${v[0]}-й хід +${v[1]} здоров’я`, laser: (v) => `🔴 лазер з очей: ${pct(v[0])} шанс −${v[1]}`,

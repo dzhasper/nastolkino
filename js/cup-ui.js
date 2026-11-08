@@ -43,7 +43,7 @@ function viewCup() {
   return `<div class="fade-in"><div class="top"><button class="avatar" data-a="tab" data-v="home">←</button><div class="grow"><h1>${c.big ? "👑 " : "🏆 "}Турнір</h1>
       <div class="muted small">${c.ico} ${esc(c.ru)} · ${st}</div></div>${coinPill()}</div>
     <div class="card cup-hero ${c.big ? "big" : ""}"><b>${esc(c.title)}</b><div class="small muted">${c.kind === "mafia" ? `${c.matches} партій поспіль за одним столом. Очки: перемога команди +3, дожив до кінця +1, вбивство мафії +2, порятунок лікарем +2, знайдена мафія +1, правильний голос +1` : "Сітка: столи по 4 → переможці далі → півфінал → фінал удвох. Кожен стіл — одна партія до останнього, хто вижив"}</div>
-      <div class="cup-prizes mt">${c.prizes.map((t) => `<div>${esc(t)}</div>`).join("")}</div><div class="tiny muted mt">Без ставок — монети не потрібні, лише призи</div></div>
+      <div class="cup-prizes mt">${c.prizes.map((t) => `<div>${esc(t)}</div>`).join("")}</div><button class="btn small cup-case-btn mt" data-a="case-odds" data-v="s_cup">🏆 Що в турнірному кейсі</button><div class="tiny muted mt">Без ставок — монети не потрібні, лише призи</div></div>
     ${body}
   </div>${tabs()}`;
 }
@@ -53,12 +53,10 @@ function cupMyTable(c) {
   if (c.status !== "play") return "";
   const t = c.tables.find((x) => x.round === c.round && x.players.some((p) => p.uid === c.me));
   if (!t) return c.joined ? `<div class="card center small">${c.my && c.my.out ? "Ти вибув(ла). Дивись сітку — хто дійде до фіналу?" : "Чекаємо наступний раунд…"}</div>` : "";
-  const host = t.host === c.me, inRoom = S.room && S.room.code === t.code && S.screen === "room";
+  const inRoom = S.room && S.room.code === tourCode(t.id) && S.screen === "room";
   let act;
   if (t.status === "done") act = `<div class="small mt">${t.winner === c.me ? "✅ Ти переміг(ла) за цим столом — чекаємо інші столи" : c.kind === "mafia" ? "Серію зіграно — чекаємо інші столи" : "Стіл дограно"}</div>`;
-  else if (host && !t.code) act = `<button class="btn mt" data-a="cup-open" data-v="${t.id}">🚪 Відкрити стіл</button><div class="tiny muted mt">Ти — хост: відкрий стіл, решта сядуть за кодом. Не відкриєш за 10 хвилин — переможця вибере випадок серед тих, хто зайшов</div>`;
-  else if (!t.code) act = `<div class="small mt">⏳ Чекаємо, поки хост відкриє стіл…</div>`;
-  else act = `<button class="btn mt" data-a="cup-sit" data-v="${t.code}">${inRoom ? "↩ Повернутися за стіл" : `🪑 Сісти за стіл · ${t.code}`}</button>`;
+  else act = `${t.status === "wait" || (t.started && cupNow() - t.started < 600) ? `<div class="cup-hall-t mt">⏳ Зал відкрито · гра почнеться не пізніше ніж через <b>${fmtLeft2(Math.max(0, (t.started || cupNow()) + 600 - cupNow()))}</b></div>` : ""}<button class="btn mt" data-a="cup-enter" data-v="${t.id}">${inRoom ? "↩ Повернутися за стіл" : "🪑 Зайти за стіл"}</button><div class="tiny muted mt">Хто перший зайде — той і тримає стіл. Вийде — стіл перейде на телефон іншого гравця, гра не зупиниться.</div>`;
   return `<div class="card cup-mine"><b>Твій стіл №${t.idx}</b>${c.kind === "mafia" && t.match ? ` · зіграно партій: ${t.match} з ${c.matches}` : ""}
     <div class="cup-seats mt">${t.players.map((p) => `<span class="${p.uid === t.host ? "host" : ""} ${p.uid === c.me ? "me" : ""}">${p.uid === t.host ? "👑 " : ""}${esc(p.uid === c.me ? "Ти" : p.name)}</span>`).join("")}</div>${act}</div>`;
 }
@@ -77,16 +75,55 @@ function cupBracket(c) {
         ${t.players.map((p) => `<div class="cb-p ${t.winner === p.uid ? "win" : t.status === "done" ? "lose" : ""} ${p.uid === c.me ? "me" : ""}">${t.winner === p.uid ? "🏆 " : ""}${esc(p.uid === c.me ? "Ти" : p.name)}</div>`).join("")}</div>`).join("")}</div>`).join("")}</div>`;
 }
 
-/* ---------------------------------------------------------------- турнирная комната */
-function cupTour(t, c) { return { cup: c.id, table: t.id, kind: c.kind, players: t.players.map((p) => "tg" + p.uid), match: 1, matches: c.matches || 1 }; }
+/* ---------------------------------------------------------------- турнирная комната
+   Код стола постоянный: «0» + номер стола. Кто первый зашёл — тот и держит стол (хост), остальные садятся сами.
+   Хост ушёл — стол продолжается на телефоне следующего игрока (js/net.js). Перед игрой — зал: аватарки, «Готово», 10 минут */
+const tourCode = (tid) => "0" + Number(tid).toString(36).toUpperCase().padStart(3, "0").slice(-3);
+function cupTour(t, c) {
+  const at = t.status === "wait" && t.started ? t.started : cupNow();
+  return { cup: c.id, table: t.id, kind: c.kind, players: t.players.map((p) => "tg" + p.uid), names: Object.fromEntries(t.players.map((p) => ["tg" + p.uid, p.name])),
+    match: 1, matches: c.matches || 1, until: Math.max(cupNow() + 60, at + 600), title: c.title, big: !!c.big };
+}
+// зал турнірного стола: фон, аватарки з рамками тих, хто прийшов, таймер 10 хвилин і кнопка «Готово»
+function tourHall(r) {
+  const tour = r.settings.tour, me = S.me, nowS = (Date.now() + (S.offset || 0)) / 1000;
+  const ids = tour.players || r.order, on = ids.filter((id) => { const p = r.players.find((x) => x.id === id); return p && p.online; });
+  const ready = tour.ready || {}, nReady = on.filter((id) => ready[id]).length, mine = !!ready[me], need = Math.max(1, Math.ceil(on.length / 2));
+  const left = tour.go ? Math.max(0, tour.go - nowS) : Math.max(0, (tour.until || nowS) - nowS);
+  const heads = ids.map((id) => {
+    const p = r.players.find((x) => x.id === id), here = p && p.online;
+    return `<div class="th-p ${here ? "on" : "off"} ${ready[id] ? "rdy" : ""} ${id === me ? "me" : ""}">${here ? av(p, "big") : `<div class="avatar big th-ghost">?</div>`}
+      <b>${esc(here ? p.name : (tour.names || {})[id] || "Гравець")}</b><span>${ready[id] && here ? "✅ готовий" : here ? "у залі" : "ще не прийшов"}</span></div>`;
+  }).join("");
+  return `${netBanner()}<div class="tour-hall fade-in" style="background-image:url(${Pixel.scene(CUP_KIND[tour.kind] ? (tour.kind === "mafia" ? "mafia" : "cellar") : "arcade")})">
+    <div class="th-top"><button class="avatar" data-a="leave" title="Вийти">🚪</button><div class="grow"><small>${tour.big ? "👑 Великий турнір" : "🏆 Турнір"}</small><h1>${esc(tour.title || "Турнірний стіл")}</h1></div></div>
+    <div class="th-timer ${tour.go ? "go" : ""}"><span id="th-left" data-go="${tour.go || ""}" data-until="${tour.until || ""}">${tour.go ? Math.ceil(left) : fmtTime(Math.ceil(left))}</span>
+      <small>${tour.go ? "до старту — половина гравців готова" : "до старту турніру"}</small></div>
+    <div class="th-heads">${heads}</div>
+    <div class="th-info small">Готові: <b>${nReady}</b> з ${on.length} · щойно «Готово» натисне половина (${need}) — старт через 10 секунд. Хтось скасував — знову йде основний таймер. Минуть 10 хвилин — граємо з тими, хто прийшов.</div>
+    <button class="btn th-ready ${mine ? "ghost" : ""}" data-a="tour-ready" ${on.length < 2 && !mine ? "disabled" : ""}>${mine ? "↩ Скасувати «Готово»" : on.length < 2 ? "⏳ Чекаємо суперників…" : "✅ Готово — почати швидше"}</button>
+  </div>`;
+}
+setInterval(() => {                                                       // живий таймер у залі
+  const el = document.getElementById("th-left"); if (!el) return;
+  const nowS = (Date.now() + (S.offset || 0)) / 1000, go = Number(el.dataset.go) || 0, until = Number(el.dataset.until) || 0;
+  el.textContent = go ? Math.ceil(Math.max(0, go - nowS)) : fmtTime(Math.ceil(Math.max(0, until - nowS)));
+}, 250);
 // хост: все за столом — начинаем сами; партия кончилась — отправляем итог; в мафии — следующая партия через 12 секунд
 function cupRoom(room) {
   const tour = room && room.settings && room.settings.tour; if (!tour) return;
   const host = Net.isHost(), hub = host ? Net._hub() : null;
-  if (host && room.phase === "lobby") {
-    const all = tour.players.every((p) => room.players.some((x) => x.id === p && x.online));
-    const key = room.code + ":" + tour.match;
-    if (all && S.cupStart !== key) { S.cupStart = key; setTimeout(() => { if (S.room && S.room.phase === "lobby") send({ t: "start" }); }, 3000); }
+  if (host && S.cupHostSent !== room.code + ":" + S.me) {                 // стіл тримає мій телефон — сервер має знати (і після перехоплення)
+    S.cupHostSent = room.code + ":" + S.me;
+    Api.call("/api/cup/room", { id: tour.cup, table: tour.table, code: room.code, takeover: true }).then((r) => { if (r && r.cup) S.cup = r.cup; }).catch(() => { S.cupHostSent = null; });
+  }
+  if (host && room.phase === "lobby" && tour.kind !== "mafia" && !tour.started) {   // 10 хвилин минули, а суперників немає — перемога без гри
+    const on = tour.players.filter((p) => room.players.some((x) => x.id === p && x.online)), nowS = (Date.now() + (S.offset || 0)) / 1000;
+    const wk = room.code + ":walk";
+    if (on.length === 1 && on[0] === S.me && tour.until && nowS > tour.until + 5 && S.cupWalk !== wk) {
+      S.cupWalk = wk;
+      Api.call("/api/cup/report", { id: tour.cup, table: tour.table, winner: S.me }).then(() => { toast("🏆 Суперники не прийшли — перемога за столом"); notify("success"); }).catch(() => { S.cupWalk = null; });
+    }
   }
   if (room.phase !== "end") return;
   const rk = room.code + ":" + tour.cup + ":" + tour.match + ":" + (room.game_no || 0);
@@ -180,6 +217,15 @@ const CUP_ACTIONS = {
   },
   "cup-join": () => Api.call("/api/cup/join", { id: S.cup.id }).then((r) => { S.cup = r.cup; notify("success"); haptic("medium"); Api.refresh().catch(() => {}); render(); }).catch((e) => toast(e.message)),
   "cup-leave": () => Api.call("/api/cup/leave", { id: S.cup.id }).then((r) => { S.cup = r.cup; render(); }).catch((e) => toast(e.message)),
+  "cup-enter": (v) => {                                                   // сісти за турнірний стіл; хоста ще немає — стати ним
+    const c = S.cup, t = c && c.tables.find((x) => x.id === Number(v)); if (!t) return;
+    const code = tourCode(t.id);
+    if (S.room && S.room.code === code) { S.screen = "room"; return render(); }
+    const tour = cupTour(t, c), settings = c.kind === "mafia" ? Object.assign({}, { theme: S.setup.theme }, { tour }) : { game: CUP_KIND[c.kind].game, tour };
+    haptic("medium"); S.screen = "connecting"; S.joining = code; render();
+    Net.hostOrJoin(code, settings).catch((e) => { toast(e.message); S.screen = "cup"; render(); });
+  },
+  "tour-ready": () => { const t = S.room && S.room.settings && S.room.settings.tour; if (!t) return; haptic("medium"); send({ t: "ready", on: !(t.ready && t.ready[S.me]) }); },
   "cup-open": (v) => {
     const c = S.cup, t = c && c.tables.find((x) => x.id === Number(v)); if (!t) return;
     const tour = cupTour(t, c), settings = c.kind === "mafia" ? Object.assign({}, { theme: S.setup.theme }, { tour }) : { game: CUP_KIND[c.kind].game, tour };
