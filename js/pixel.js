@@ -1028,6 +1028,84 @@ const Pixel = (() => {
     t.rect(0, 111, W, 2, "#e0d8c4"); t.rect(0, 116, W, 2, "#e0d8c4");
     for (let i = 0; i < 26; i++) { const x = R() * W, y = 124 + R() * 32; t.px(x, y, ["#ff6a9a", "#ffd23f", "#ffffff", "#a05bff"][i % 4]); t.px(x, y + 1, "#2e7a3a"); }
   };
+  // МАГІЧНІ ШАХИ: фіолетова ніч, магічна сфера з рунами, дошка в перспективі з лавою, кригою й порталом, кінь лишає вогняний слід, блискавка б’є чорну туру
+  SCENES.mchess = (ctx, R, t) => {
+    t.grad(0, 100, ["#05021a", "#0e0632", "#1e0a4e", "#3a0e6a", "#62147a", "#9a2a86"]);
+    t.stars(120, 80);
+    t.glow(250, 34, 40, "#7a3ad0"); t.disc(250, 34, 17, "#d8c8ff"); t.disc(250, 34, 13, "#f4eeff");
+    for (let a = 0; a < 24; a++) { const r = 26 + (a % 2) * 2, x = 250 + Math.cos(a / 24 * 6.283) * r, y = 34 + Math.sin(a / 24 * 6.283) * r; t.px(x, y, a % 3 ? "#b89aff" : "#ffe08a"); }   // кільце рун
+    [[30, 22, "#ff8a3a"], [62, 40, "#5ad0ff"], [96, 18, "#9aff7a"], [190, 12, "#ff5a9a"]].forEach(([x, y, c], i) => {   // карти-чари в небі
+      t.glow(x + 5, y + 7, 12, c);
+      t.rect(x, y, 11, 15, "#1a0c38"); t.rect(x + 1, y + 1, 9, 13, "#2c1658"); t.rect(x, y, 11, 1, c); t.rect(x, y + 14, 11, 1, c); t.rect(x, y, 1, 15, c); t.rect(x + 10, y, 1, 15, c);
+      t.disc(x + 5, y + 7, 2 + (i % 2), c); t.px(x + 5, y + 7, "#ffffff");
+    });
+    t.ridge(92, 10, .05, "#1a0838", "#4a1a6a"); t.ridge(97, 5, .09, "#10052a", "#2a0e48");
+    // дошка в перспективі: горизонт y=70, ближній край y=156
+    const HZ = 70, F = 86, S = 35, cell = (x, y) => { const z = F / (y - HZ), X = (x - 160) * z / S; return [Math.floor(X + 4), Math.floor((z - 1) / .2), z]; };
+    const fx = { "2,5": "lava", "3,5": "lava", "5,3": "ice", "6,3": "ice", "1,2": "portal", "6,6": "portal", "4,1": "fire", "4,2": "fire", "3,2": "fire" };
+    const COL = { lava: ["#ff6a1a", "#c42a0a"], ice: ["#bfefff", "#7ac8f0"], portal: ["#c86aff", "#4a2a9a"], fire: ["#ffb03a", "#e8501a"] };
+    for (let y = 98; y < 157; y++) for (let x = 0; x < W; x++) {
+      const [c, r, z] = cell(x, y); if (c < 0 || c > 7 || r < 0 || r > 7) continue;
+      const k = fx[c + "," + r], light = (c + r) % 2 === 0, shade = Math.min(1, 1.25 / z);
+      let col = light ? (shade > .8 ? "#b49ae8" : shade > .6 ? "#9a7ed6" : "#7c62b8") : (shade > .8 ? "#3a2470" : shade > .6 ? "#2e1c5c" : "#22144a");
+      if (k) { const cc = COL[k]; col = BAYER[y & 3][x & 3] < (k === "portal" ? 8 + Math.sin(x * .4 + y) * 6 : 7) ? cc[0] : cc[1]; }
+      t.px(x, y, col);
+    }
+    t.rect(20, 156, 280, 2, "#ffd76a"); t.rect(20, 158, 280, 2, "#140828");
+    for (let i = 0; i < 6; i++) t.line(160 - 54 + i * 18, 103, 160 - 140 + i * 56, 156, "#00000022");
+    const at = (c, r) => { const z = 1 + (r + .5) * .2; return [160 + (c - 3.5) * S / z, HZ + F / z, 1 / z]; };
+    // вогонь над слідом коня
+    [[4, 1], [4, 2], [3, 2]].forEach(([c, r]) => { const [x, y, s] = at(c, r); for (let i = 0; i < 9; i++) { const fx2 = x + (R() - .5) * 14 * s, h = (5 + R() * 9) * s; t.rect(fx2, y - h, 2, h, i % 3 ? "#ff7a1a" : "#ffd23a"); } t.glow(Math.round(x), Math.round(y - 4), Math.round(12 * s), "#ff8a2a"); });
+    // фігури піксель-артом: рядки маски, # — тіло
+    const ART = {
+      K: ["....#....", "...###...", "....#....", "..#####..", ".#######.", "..#####..", "...###...", "...###...", "...###...", "..#####..", ".#######.", "#########"],
+      Q: ["#..#.#..#", "#.#####.#", ".#######.", "..#####..", "...###...", "...###...", "...###...", "..#####..", ".#######.", "#########"],
+      R: ["#.#.#.#", "#######", ".#####.", ".#####.", ".#####.", ".#####.", "#######", "#######"],
+      N: ["..###..", ".#####.", "######.", "#.####.", "..####.", ".#####.", ".#####.", "#######"],
+      P: ["..#..", ".###.", "..#..", ".###.", "#####"],
+    };
+    const piece = (k, cx, by, s, white) => {
+      const a = ART[k], h = a.length, w = a[0].length, ox = Math.round(cx - w * s / 2), oy = Math.round(by - h * s);
+      t.shadow(cx, by + 1, w * s * 1.3, "#00000088");
+      a.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== "#") return;
+        const edge = x === 0 || row[x - 1] !== "#", top = y === 0 || a[y - 1][x] !== "#";
+        t.rect(ox + x * s, oy + y * s, s, s, white ? (edge || top ? "#ffffff" : x > w * .6 ? "#c8b8e8" : "#ece4ff") : (edge || top ? "#7a4ab8" : x > w * .6 ? "#120626" : "#24104a")); }));
+    };
+    const put = (k, c, r, white, big = 1) => { const [x, y, s] = at(c, r); piece(k, x, y, Math.max(1, Math.round(3.2 * s * big)), white); };
+    put("R", 1, 7, false); put("Q", 3, 7, false); put("K", 5, 7, false, 1.1); put("P", 2, 6, false); put("P", 5, 6, false);
+    // великі фігури на передньому плані — ті самі силуети, що й у грі (js/mchess-ui.js), з об’ємом і сяйвом
+    const VEC = typeof MC_BODY !== "undefined" ? MC_BODY : null;
+    if (!VEC) { put("P", 2, 1, true); put("P", 6, 1, true); put("N", 3, 1, true, 1.15); put("K", 5, 0, true, 1.05); }
+    else {
+      const big = (k, cx, by, h, white, glow, tint) => {
+        t.shadow(cx, by - 1, h * .7, "#000000aa");
+        ctx.save(); ctx.translate(cx - h / 2, by - h * .92); ctx.scale(h / 100, h / 100);
+        const path = new Path2D(VEC[k]), g = ctx.createLinearGradient(0, 0, 0, 100);
+        (tint || (white ? [[0, "#fffdf5"], [.55, "#efe2c4"], [1, "#b89a6a"]] : [[0, "#6a4aa0"], [.55, "#2a1848"], [1, "#0c0618"]])).forEach(([o, c]) => g.addColorStop(o, c));
+        if (glow) { ctx.shadowColor = glow; ctx.shadowBlur = 16; }
+        ctx.fillStyle = g; ctx.fill(path); ctx.shadowBlur = 0;
+        ctx.lineWidth = 4; ctx.lineJoin = "round"; ctx.strokeStyle = white ? "#3a2412" : "#caa6ff"; ctx.stroke(path);
+        const sh = ctx.createLinearGradient(0, 0, 100, 0); sh.addColorStop(0, "rgba(255,255,255,0)"); sh.addColorStop(.2, "rgba(255,255,255,.5)"); sh.addColorStop(.42, "rgba(255,255,255,0)"); ctx.fillStyle = sh; ctx.fill(path);
+        const re = /style="fill:([^;"]+)[^"]*" d="([^"]+)"/g; let m;
+        while ((m = re.exec(MC_TRIM[k]))) { ctx.fillStyle = m[1] === "var(--trim)" ? (white ? "#e6b34a" : "#b86aff") : m[1] === "var(--ink)" ? (white ? "#3a2412" : "#f0e2ff") : m[1]; ctx.fill(new Path2D(m[2])); }
+        ctx.restore();
+      };
+      const flames = (cx, top, w, n) => { t.glow(cx, top + 4, Math.round(w * .9), "#ff8a2a"); for (let i = 0; i < n; i++) { const x = cx - w / 2 + R() * w, hh = 6 + R() * 12; t.rect(x, top - hh, 2, hh, i % 3 ? "#ff7a1a" : "#ffd23a"); t.rect(x, top - hh * .45, 2, hh * .45, "#fff3a0"); } };
+      big("P", 168, 150, 30, false, "#a24dff");
+      big("R", 288, 144, 40, false, "#8fe3ff", [[0, "#ffffff"], [.5, "#b8ecff"], [1, "#4f9fdc"]]);
+      t.rect(270, 102, 36, 44, "#bfefff33"); t.rect(270, 102, 36, 1, "#ffffffaa"); t.rect(270, 102, 1, 44, "#ffffff88");          // крижаний блок
+      big("K", 226, 152, 82, false, "#a24dff");
+      big("N", 102, 156, 70, true, "#ff8a2a", [[0, "#fff3a0"], [.45, "#ffc06a"], [1, "#c8501a"]]);
+      flames(100, 92, 22, 16);
+      big("P", 42, 150, 34, true, null, null);
+      t.rect(38, 125, 9, 2, "#ff2e55"); t.rect(36, 136, 13, 2, "#ffd23f");                                                        // бойова розмальовка
+      t.rect(50, 128, 14, 2, "#23232e"); t.rect(52, 130, 4, 3, "#7a4420");
+    }
+    // блискавка в чорну туру + магічне сяйво над королями
+    const [bx, byy] = at(1, 7); let lx = bx + 6, ly = 0; while (ly < byy - 12) { const nx = lx + (R() - .5) * 8, ny = ly + 4 + R() * 5; t.line(Math.round(lx), Math.round(ly), Math.round(nx), Math.round(ny), "#fff6a0"); t.line(Math.round(lx) + 1, Math.round(ly), Math.round(nx) + 1, Math.round(ny), "#ffd23a88"); lx = nx; ly = ny; }
+    t.glow(Math.round(bx), Math.round(byy - 10), 12, "#fff6a0");
+    for (let i = 0; i < 50; i++) t.px(R() * W, 70 + R() * 30, R() < .5 ? "#c89aff" : "#ffd76a");
+  };
   SCENES.mafia = SCENES.classic;
 
   const cache = {};

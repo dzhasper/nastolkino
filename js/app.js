@@ -277,7 +277,7 @@ function onMessage(m, queued) {
       if (prev && prev.phase !== m.room.phase) notify(m.room.phase === "end" ? "success" : "warning");
       if (!CELLAR_GAMES.includes(m.room.game)) window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    if (m.room.phase === "end" && m.room.game !== "blackjack") (m.room.game === "draw" ? recordDraw : m.room.game === "spy" ? recordSpy : CELLAR_GAMES.includes(m.room.game) ? recordRoulette : recordGame)(m.room);
+    if (m.room.phase === "end" && m.room.game !== "blackjack") (m.room.game === "draw" ? recordDraw : m.room.game === "spy" ? recordSpy : m.room.game === "mchess" ? recordMChess : CELLAR_GAMES.includes(m.room.game) ? recordRoulette : recordGame)(m.room);
     render();
     renderChat();
     if (typeof cupRoom === "function") cupRoom(m.room);                 // турнирный стол: автостарт, итог партии
@@ -310,7 +310,7 @@ function render() {
   if (S.screen === "room" && S.room) setColors(S.room.theme.accent, S.room.theme.accent2);
   else if (S.screen === "mafia") setColors(theme(S.setup.theme).accent, theme(S.setup.theme).accent2);
   else setColors();
-  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, league: viewLeague, pass: viewPass, cup: viewCup, mini: viewMini, mafia: viewMafia, spy: viewSpyMenu, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, room: viewRoom };
+  const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, league: viewLeague, pass: viewPass, cup: viewCup, mini: viewMini, mafia: viewMafia, spy: viewSpyMenu, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, mchess: viewMChessMenu, room: viewRoom };
   const gated = Api.on && Api.state && Api.state.gate && !Api.state.admin && !["register", "connecting", "loading"].includes(S.screen);   // админ сделал подписку на группу обязательной
   $app.innerHTML = gated ? viewGate() : (screens[S.screen] || viewLoading)();
   renderOverlay();
@@ -330,7 +330,7 @@ function render() {
 
 function updateBack() {
   if (!tg) return;
-  const back = S.screen === "mafia" || S.screen === "spy" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || S.screen === "league" || S.screen === "pass" || S.screen === "cup" || S.screen === "mini" || (S.screen === "room" && !!S.room);   // во время партии «Назад» = выйти из игры (с подтверждением)
+  const back = S.screen === "mafia" || S.screen === "spy" || S.screen === "draw" || S.screen === "roulette" || S.screen === "blackjack" || S.screen === "mchess" || S.screen === "profile" || S.screen === "shop" || S.screen === "pets" || S.screen.startsWith("solo") || S.screen === "petfun" || S.screen === "league" || S.screen === "pass" || S.screen === "cup" || S.screen === "mini" || (S.screen === "room" && !!S.room);   // во время партии «Назад» = выйти из игры (с подтверждением)
   if (back) tg.BackButton.show(); else tg.BackButton.hide();
 }
 
@@ -393,7 +393,8 @@ function viewHome() {
       ${g("roulette", "cellar", "Підвал", `🩸 3D · до ${Revolver.MAX_PLAYERS}`, "w2 h2")}
       ${wheelTile()}${petTile()}
       ${g("blackjack", "casino", "Блекджек", `🃏 ${Blackjack.MIN_PLAYERS}–${Blackjack.MAX_PLAYERS} · на монети`, "w2")}
-      ${g("spy", "spy", "Шпигун", `🕵️ ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS}`, "w2", '<span class="t-new">NEW</span>')}
+      ${g("mchess", "mchess", "Магічні шахи", "♟️ 1 на 1 · навички · світи · комбо", "w4 h2 big", '<span class="t-new">NEW</span><span class="t-sub">Фігури з життями й навичками, 23 чари, 6 світів, дошка провалюється й крутиться, комбо — щоразу інша гра</span><span class="t-go">Грати ▶</span>')}
+      ${g("spy", "spy", "Шпигун", `🕵️ ${Spy.MIN_PLAYERS}–${Spy.MAX_PLAYERS}`, "w2")}
       ${passHomeTile()}
       ${g("draw", "studio", "Малювалка", `✏️ ${Draw.MIN_PLAYERS}–${Draw.MAX_PLAYERS}`, "w2")}
       ${g("", "petfun", "З улюбленцем", "🐾 міні-ігри", "w2", "", "pet-games")}
@@ -608,7 +609,7 @@ function playerTiles(list, opts = {}) {
 const leaveFab = () => (S.room && !["lobby", "end"].includes(S.room.phase) ? `<button class="leave-fab" data-a="leave" title="Вийти з гри">🚪<span>Вийти</span></button>` : "");
 function viewRoom() {
   const r = S.room;
-  return viewRoomInner() + (MChat.active() ? "" : leaveFab());
+  return viewRoomInner() + (MChat.active() || (S.room && S.room.game === "mchess") ? "" : leaveFab());   // у шахах «вийти» — стрілка в шапці
 }
 function groupDone(code, why) {
   if (!S.groupPosted || S.groupPosted[code] == null) return;
@@ -659,6 +660,7 @@ function viewRoomInner() {
   if (r.game === "spy") return viewSpyRoom();
   if (CELLAR_GAMES.includes(r.game)) return viewRouletteRoom();
   if (r.game === "blackjack") return viewBlackjackRoom();
+  if (r.game === "mchess") return viewMChessRoom();
   if (MChat.active()) return `<div class="mc-spacer"></div>`;
   const views = { lobby: viewLobby, reveal: viewReveal, night: viewNight, day: viewDay, vote: viewVote, verdict: viewVerdict, end: viewEnd };
   return `${netBanner()}${!["lobby", "end"].includes(r.phase) ? `<button class="mc-tochat" data-a="mafia-view">💬 Вигляд чату</button>` : ""}${r.phase === "night" ? '<div class="night-sky"></div><div class="stars"></div>' : ""}
@@ -926,6 +928,8 @@ function renderOverlay() {
     body = rouSettingsSheet();
   } else if (S.sheet.type === "rou-rules") {
     body = S.room ? `<h2>📖 Як грати</h2><div class="rou-rules">${rouRulesHtml(modeOf(S.room))}</div>` : "";
+  } else if (S.sheet.type === "mc-settings") {
+    body = S.room ? mcSettingsSheet() : "";
   } else if (S.sheet.type === "spy-settings") {
     body = spySettingsSheet();
   } else if (S.sheet.type === "spy-guess") {
@@ -1092,7 +1096,7 @@ const actions = {
   },
   "group-post": () => {
     const r = S.room; if (!r) return;
-    const M = { roulette: window.Roulette, revolver: window.Revolver, bluff: window.Bluff, blackjack: window.Blackjack, draw: window.Draw }[r.game];
+    const M = { roulette: window.Roulette, revolver: window.Revolver, bluff: window.Bluff, blackjack: window.Blackjack, draw: window.Draw, mchess: window.MChess }[r.game];
     const max = (M && M.MAX_PLAYERS) || (S.catalog && S.catalog.max) || 12;
     Api.call("/api/group/room", { code: r.code, game: r.game || "mafia", title: r.theme ? r.theme.title : "", players: r.players.length, max, stake: (r.settings && r.settings.stake) || 0 })
       .then(() => { (S.groupPosted = S.groupPosted || {})[r.code] = 1; (S.groupEver = S.groupEver || {})[r.code] = (S.groupEver || {})[r.code] || 0; toast("📢 Запрошення в групі"); notify("success"); render(); })
@@ -1117,7 +1121,7 @@ const actions = {
     const code = S.room.code;
     const link = S.bot ? (S.miniapp ? `https://t.me/${S.bot}/${S.miniapp}?startapp=${code}` : `https://t.me/${S.bot}?start=${code}`)
       : `${location.origin}${location.pathname}?room=${code}`;
-    const game = { draw: "Го в малювалку!", roulette: "Спускайся в підвал. Одна рушниця, один стіл.", revolver: "Спускайся в підвал. Револьвер, один набій, шість гнізд.", bluff: "Спускайся в підвал: карти, блеф і в кожного свій револьвер.", blackjack: "Сідай за стіл, роздаю!", spy: "Го в Шпигуна! Хтось із нас не знає, де ми 🕵️" }[S.room.game] || "Го в мафію!";
+    const game = { draw: "Го в малювалку!", roulette: "Спускайся в підвал. Одна рушниця, один стіл.", revolver: "Спускайся в підвал. Револьвер, один набій, шість гнізд.", bluff: "Спускайся в підвал: карти, блеф і в кожного свій револьвер.", blackjack: "Сідай за стіл, роздаю!", spy: "Го в Шпигуна! Хтось із нас не знає, де ми 🕵️", mchess: "Зіграймо в магічні шахи! Фігури з життями, карти-чари й дошка, що змінюється ♟️" }[S.room.game] || "Го в мафію!";
     const text = `${game} ${S.room.theme.emoji} «${S.room.theme.title}». Код кімнати: ${code}`;
     if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
     else if (navigator.share) navigator.share({ title: S.room.theme.title, text, url: link }).catch(() => {});
@@ -1169,7 +1173,7 @@ const actions = {
   "chat-tab": (v) => { S.chatTab = v; renderChat(); },
 };
 
-Object.assign(actions, FEEDER_ACTIONS, CUP_ACTIONS, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, MChat.ACTIONS, PASS_ACTIONS, SPY_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
+Object.assign(actions, FEEDER_ACTIONS, CUP_ACTIONS, DRAW_ACTIONS, ROU_ACTIONS, BJ_ACTIONS, PET_ACTIONS, LIFE_ACTIONS, Bots.ACTIONS, MChat.ACTIONS, PASS_ACTIONS, SPY_ACTIONS, MC_ACTIONS, CASE_ACTIONS, BATTLE_ACTIONS, TRADE_ACTIONS, SOLO_ACTIONS);
 
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-a]");

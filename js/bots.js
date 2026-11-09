@@ -50,6 +50,7 @@ const Bots = (() => {
         else if (room.kind === "revolver") revolverBot(h, room, id);
         else if (room.kind === "bluff") bluffBot(h, room, id);
         else if (room.kind === "blackjack") bjBot(h, room, id);
+        else if (room.kind === "mchess") mchessBot(h, room, id);
         else mafiaBot(h, room, id);
       } catch (e) { think(id, 2500, 3500); if (Bots.debug) console.error(e); }
     }
@@ -639,6 +640,22 @@ const Bots = (() => {
     else move = soft || bustP < .4 ? "hit" : "stand";
     if (chance(.15)) say(h, room, id, move === "hit" ? pick(["Ще!", "Давай ще одну", "Ризикну"]) : move === "double" ? "Подвоюю!" : pick(["Пас", "Досить", "Мені досить", "Стою"]));
     act(h, id, { slot: move }, 1000, 2500);
+  }
+
+  /* ================================================================ магічні шахи: спершу (іноді) карта, потім найкращий хід за оцінкою рушія */
+  function mchessBot(h, room, id) {
+    if (room.phase !== "play") return;
+    const c = room.colorOf(id); if (!c || room.turn !== c) return;
+    const m = mem(room, id), turnKey = room.ply;
+    if (m.mcTurn !== turnKey) { m.mcTurn = turnKey; m.mcCard = false; return think(id, 900, 2200); }   // «думає» перед ходом
+    if (!m.mcCard) {
+      m.mcCard = true;
+      const card = MChess.planCard(room, c, true);
+      if (card) { if (chance(.25)) say(h, room, id, pick(["Тримай чари ✨", "А ось і магія", "Ха!", "Не чекав?", "🔥🔥🔥"])); return act(h, id, card, 900, 1800); }
+    }
+    const mv = MChess.planMove(room, c);
+    if (!mv) return act(h, id, { slot: "end" }, 600, 1200);
+    act(h, id, mv, 1000, 2200);
   }
 
   // кнопки в лобби: у хоста своей комнаты
