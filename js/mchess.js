@@ -13,7 +13,9 @@
   const { GameError } = Engine;
 
   const MIN_PLAYERS = 2, MAX_PLAYERS = 6, TURN_SECONDS = 75, ECLIPSE = 30, OFFLINE_SECONDS = 10, REALM_ROUNDS = 4;
-  const HAND_MAX = 3, CHAT_LIMIT = 80, DRAW_CHANCE = .55, SHIELD_MAX = 3;   // щити не накопичуються безкінечно
+  const HAND_MAX = 3, CHAT_LIMIT = 80, DRAW_CHANCE = .55, SHIELD_MAX = 3;
+  const MANA_MAX = 10, UP_COST = [3, 5];                                       // мана: +1 щоходу й за кожне вбивство; посилення фігури: ветеран ✨3, герой ✨5
+  const BOT_LEVELS = { 1: "Новачок", 2: "Звичайний", 3: "Майстер" };   // щити не накопичуються безкінечно
   const PIECES = { K: { hp: 4, atk: 1, name: "Король" }, Q: { hp: 3, atk: 2, name: "Ферзь" }, R: { hp: 3, atk: 2, name: "Тура" }, B: { hp: 2, atk: 2, name: "Слон" }, N: { hp: 2, atk: 2, name: "Кінь" }, P: { hp: 1, atk: 1, name: "Пішак" } };
   const VALUE = { K: 60, Q: 9, R: 5, B: 3, N: 3, P: 1 };
   // навички фігур: замість ходу, з перезарядкою (у власних ходах)
@@ -205,7 +207,7 @@
       this.code = code; this.host = host.id;
       this.members = { [host.id]: host }; this.order = [host.id];
       this.version = 0;
-      this.settings = { game: "mchess", chaos: 1 };
+      this.settings = { game: "mchess", chaos: 1, bot: 2 };
       this.updateSettings(settings || {});
       this.phase = "lobby"; this.deadline = null; this.total = null;
       this.chat = { all: [] };
@@ -214,7 +216,7 @@
     resetGame() {
       this.board = Array(64).fill(null); this.tiles = Array(64).fill(null); this.seats = { w: null, b: null };
       this.turn = "w"; this.ply = 0; this.round = 1; this.hands = { w: [], b: [] }; this.rules = {}; this.next = null; this.nextAt = 0; this.lastEvent = null;
-      this.realm = "arcana"; this.realmLeft = 0; this.skips = 0;
+      this.realm = "arcana"; this.realmLeft = 0; this.skips = 0; this.mana = { w: 0, b: 0 };
       this.ts = null; this.log = []; this.fx = []; this.fxSeq = 0; this.winner = null; this.results = null; this.ids = 0;
       this.stats = { w: { kills: 0, cards: 0, dmg: 0, combos: 0, skills: 0 }, b: { kills: 0, cards: 0, dmg: 0, combos: 0, skills: 0 } };
     }
@@ -229,7 +231,7 @@
     online() { return this.order.filter((p) => this.members[p].online); }
     colorOf(pid) { return this.seats.w === pid ? "w" : this.seats.b === pid ? "b" : null; }
     st() { return { board: this.board, tiles: this.tiles, rules: this.rules, realm: this.realm }; }
-    updateSettings(s) { if (s.chaos != null && [1, 2].includes(Number(s.chaos))) this.settings.chaos = Number(s.chaos); this.touch(); }
+    updateSettings(s) { if (s.chaos != null && [1, 2].includes(Number(s.chaos))) this.settings.chaos = Number(s.chaos); if (s.bot != null && BOT_LEVELS[Number(s.bot)]) this.settings.bot = Number(s.bot); this.touch(); }
     pname(p) { return PIECES[p.t].name.toLowerCase() + (p.clone ? "-двійник" : ""); }
 
     join(m) {
@@ -279,7 +281,8 @@
     /* ---------- хід */
     beginTurn(first) {
       const c = this.turn;
-      this.ts = { moves: this.rules.rush ? 2 : 1, used: 0, card: false, fire: null, ghost: null, lock: null };
+      this.ts = { moves: this.rules.rush ? 2 : 1, used: 0, card: false, fire: null, ghost: null, lock: null, up: false };
+      this.mana = this.mana || { w: 0, b: 0 }; this.mana[c] = Math.min(MANA_MAX, (this.mana[c] || 0) + 1);
       // метеори, що мали впасти
       for (let i = 0; i < 64; i++) { const t = this.tiles[i]; if (t && t.k === "meteor" && t.at <= this.ply) { this.impact(i, t.own); if (this.phase !== "play") return; } }
       // отрута, лава, перезарядка навичок — на початку ходу власника
@@ -349,6 +352,7 @@
       if (A && A.vamp && A.c !== p.c) { const k = A.rage ? 2 : 1; A.hp = Math.min(A.max + 1, A.hp + a * k); this.effect("heal", src); if (A.rage) this.combo("Кривава лють", A.c, src); }
       if (p.hp > 0) return { killed: false, dealt: a };
       this.board[sq] = null; this.stats[foe].kills += 1; this.effect("die", sq, { t: p.t, c: p.c });
+      if (this.mana) this.mana[foe] = Math.min(MANA_MAX, (this.mana[foe] || 0) + 1);       // за вбивство — мана
       if (!o.silent && p.t !== "K") this.note(`💀 ${PIECES[p.t].name}${p.clone ? "-двійник" : ""} ${p.c === "w" ? "білих" : "чорних"} знищено`);
       if (A && A.c !== p.c) this.gainXp(src);
       if (p.poison) {                                                     // чума: отрута переходить на сусідів-союзників
@@ -358,11 +362,31 @@
       if (p.t === "K") { this.note(`👑 Король ${p.c === "w" ? "білих" : "чорних"} упав!`); this.finishGame(foe); }
       return { killed: true, dealt: a };
     }
+    // ранг фігури: за вбивства (1 — ветеран, 3 — герой) або за ману (посилення)
     gainXp(sq) {
       const A = this.board[sq]; if (!A || A.clone) return;
       A.xp = (A.xp || 0) + 1;
-      if (A.xp === 1) { A.rank = 1; A.max += 1; A.hp += 1; this.note(`⭐ ${PIECES[A.t].name} ${A.c === "w" ? "білих" : "чорних"} стає ветераном (+1 життя)`); this.effect("rank", sq, { rank: 1 }); }
-      else if (A.xp === 3) { A.rank = 2; A.hp = Math.min(A.max + 1, A.hp + 1); this.note(`🌟 ${PIECES[A.t].name} ${A.c === "w" ? "білих" : "чорних"} — ГЕРОЙ (+1 удар)`); this.effect("rank", sq, { rank: 2 }); }
+      const target = A.xp >= 3 ? 2 : 1;
+      while ((A.rank || 0) < target) this.rankUp(sq);
+    }
+    rankUp(sq) {
+      const A = this.board[sq]; if (!A || (A.rank || 0) >= 2) return;
+      A.rank = (A.rank || 0) + 1;
+      if (A.rank === 1) { A.max += 1; A.hp += 1; this.note(`⭐ ${PIECES[A.t].name} ${A.c === "w" ? "білих" : "чорних"} стає ветераном (+1 життя)`); }
+      else { A.hp = Math.min(A.max + 1, A.hp + 1); this.note(`🌟 ${PIECES[A.t].name} ${A.c === "w" ? "білих" : "чорних"} — ГЕРОЙ (+1 удар)`); }
+      this.effect("rank", sq, { rank: A.rank });
+    }
+    // посилення за ману: раз за хід, не забирає хід
+    doUpgrade(c, sq) {
+      const p = this.board[sq]; if (!p || p.c !== c) throw new GameError("Обери свою фігуру");
+      if (p.clone) throw new GameError("Двійника не посилити");
+      if ((p.rank || 0) >= 2) throw new GameError("Фігура вже герой — максимум");
+      if (this.ts.up) throw new GameError("Посилювати можна раз за хід");
+      const cost = UP_COST[p.rank || 0];
+      if ((this.mana[c] || 0) < cost) throw new GameError(`Бракує мани: треба ✨${cost}`);
+      this.mana[c] -= cost; this.ts.up = true;
+      this.rankUp(sq); this.effect("upgrade", sq, { rank: p.rank, c });
+      this.touch();
     }
     // блискавка: по воді й льоду б’є ланцюгом
     lightning(sq, c) {
@@ -438,6 +462,7 @@
       if (msg.slot === "move") return this.doMove(c, Number(msg.from), Number(msg.to));
       if (msg.slot === "shoot") return this.doShoot(c, Number(msg.from), Number(msg.to));
       if (msg.slot === "skill") return this.doSkill(c, Number(msg.from));
+      if (msg.slot === "upgrade") return this.doUpgrade(c, Number(msg.from));
       if (msg.slot === "card") return this.doCard(c, Number(msg.i), n(msg.a), n(msg.b));
       if (msg.slot === "end") { if (!this.ts.used && this.canMoveLocked()) throw new GameError("Спершу зроби хід"); this.endTurn(); return; }
       throw new GameError("Невідома дія");
@@ -698,7 +723,7 @@
         theme: { key: "mchess", title: "Магічні шахи", emoji: "♟️", accent: "#a05bff", accent2: "#1a0a3a" },
         settings: this.settings, phase: this.phase, deadline: this.deadline ? Math.round(this.deadline * 1000) : null, total: this.total,
         players, seats: this.seats, me, turn: this.turn, round: this.round, ply: this.ply, board, tiles, fog: seen, rules: Object.assign({}, this.rules), realm: this.realm, realmLeft: this.realmLeft,
-        hand: me ? this.hands[me].slice() : [], hands: { w: this.hands.w.length, b: this.hands.b.length }, ts: this.ts ? Object.assign({}, this.ts) : null,
+        hand: me ? this.hands[me].slice() : [], hands: { w: this.hands.w.length, b: this.hands.b.length }, ts: this.ts ? Object.assign({}, this.ts) : null, mana: Object.assign({ w: 0, b: 0 }, this.mana || {}),
         next: this.next, inRounds: Math.max(0, this.nextAt - this.round), log: this.log.slice(-10), fx: this.fx.slice(), fxSeq: this.fxSeq,
         winner: this.winner, winners: this.results ? this.results.winners : [], results: this.results || null,
         chat: { all: this.chat.all.slice(-40) }, can_write: ["all"],
@@ -707,8 +732,12 @@
   }
 
   /* ---------------------------------------------------------------- бот і автохід: карта (іноді) + найкращий хід / навичка за простою оцінкою */
+  // level: 1 — новачок, 2 — звичайний, 3 — майстер (true/false зі старих викликів = 2)
+  const lvlOf = (x) => (x === 1 || x === 3 ? x : 2);
   function planCard(room, c, smart) {
+    const level = lvlOf(smart);
     const hand = room.hands[c]; if (!hand.length || room.ts.card || room.ts.used) return null;
+    if (level === 1 && Math.random() < .6) return null;                     // новачок про карти часто забуває
     const st = room.st(), mine = [], foes = []; room.board.forEach((p, i) => { if (p) (p.c === c ? mine : foes).push(i); });
     const empty = []; for (let i = 0; i < 64; i++) if (!room.board[i] && !room.tiles[i]) empty.push(i);
     const kingSq = mine.find((i) => room.board[i].t === "K"), foeKing = foes.find((i) => room.board[i].t === "K");
@@ -740,7 +769,9 @@
     });
     if (!tries.length) return null;
     tries.sort((x, y) => y[0] - x[0]);
-    const best = tries[0]; if (best[0] < (smart ? 4 : 6) && Math.random() < .5) return null;
+    const best = level === 1 ? tries[Math.floor(Math.random() * tries.length)] : tries[0];
+    if (level === 2 && best[0] < 4 && Math.random() < .5) return null;
+    if (level === 3 && best[0] < 3) return null;
     if (room.cardOk(c, hand[best[1].i], best[1].a == null ? null : best[1].a, best[1].b == null ? null : best[1].b)) return null;
     return Object.assign({ slot: "card" }, best[1]);
   }
@@ -754,7 +785,39 @@
     if (p.t === "K") s += t.buff.filter((x) => movesOf(st, x).some((m) => m.attack)).length * 3 + (p.hp <= 2 ? 4 : 0);
     return s + Math.random();
   }
-  function planMove(room, c) {
+  // майстер: хід оцінюється разом з найкращою відповіддю суперника
+  function replyRisk(room, c, B) {
+    const st2 = { board: B, tiles: room.tiles, rules: room.rules, realm: room.realm }; let worst = 0;
+    B.forEach((e, i) => {
+      if (!e || e.c === c || e.frozen) return;
+      const hit = (to, eff) => { const q = B[to]; if (!q || q.c !== c) return; eff = Math.max(0, eff - (q.shield || 0)); const v = eff >= q.hp ? 10 + Math.min(VALUE[q.t], 12) * 6 + (q.t === "K" ? 1000 : 0) : eff * Math.min(VALUE[q.t], 12) * 1.2 + (q.t === "K" ? 30 : 0); if (v > worst) worst = v; };
+      movesOf(st2, i).forEach((m) => { if (m.attack) hit(m.to, atkOf(e)); });
+      shotsOf(st2, i).forEach((to) => hit(to, 1 + (e.rage ? 1 : 0)));
+    });
+    return worst;
+  }
+  function simGain(room, c, mv) {
+    const B = room.board.map((p) => (p ? Object.assign({}, p) : null)); let gain = 0;
+    const dmg = (to, eff, mover) => { const q = B[to]; eff = Math.max(0, eff - (q.shield || 0)); if (q.mirror) { gain -= 8; return; }
+      if (eff >= q.hp) { gain += 10 + Math.min(VALUE[q.t], 12) * 6 + (q.t === "K" ? 5000 : 0); B[to] = null; if (mover != null) { B[to] = B[mover]; B[mover] = null; } }
+      else { q.hp -= eff; gain += eff * Math.min(VALUE[q.t], 12) * 1.5 + (q.t === "K" ? 25 : 0); } };
+    if (mv.slot === "move") { if (B[mv.to]) dmg(mv.to, atkOf(B[mv.from]), mv.from); else { B[mv.to] = B[mv.from]; B[mv.from] = null; const t = room.tiles[mv.to]; if (t && t.k === "chest") gain += 6; if (t && (t.k === "meteor" || (t.k === "mine" && t.own !== c))) gain -= 10; } }
+    else if (mv.slot === "shoot") dmg(mv.to, 1 + (B[mv.from].rage ? 1 : 0) + (B[mv.from].rank >= 2 ? 1 : 0), null);
+    else if (mv.slot === "skill") gain += skillScore(room, mv.from) || 0;
+    return gain - replyRisk(room, c, B) * .9;
+  }
+  // посилення за ману: кого саме
+  function planUpgrade(room, c, smart) {
+    const level = lvlOf(smart), mana = (room.mana && room.mana[c]) || 0;
+    if (room.ts.up || (level === 1 && Math.random() < .7) || (level === 2 && Math.random() < .35)) return null;
+    let best = null, bs = -1;
+    room.board.forEach((p, i) => { if (!p || p.c !== c || p.clone || (p.rank || 0) >= 2 || mana < UP_COST[p.rank || 0]) return;
+      const s = (p.t === "K" ? 7 : Math.min(VALUE[p.t], 9)) + (p.hp < p.max ? 2 : 0) + movesOf(room.st(), i).filter((m) => m.attack).length * 2 + Math.random();
+      if (s > bs) { bs = s; best = i; } });
+    return best == null ? null : { slot: "upgrade", from: best };
+  }
+  function planMove(room, c, smart) {
+    const level = lvlOf(smart);
     const st = room.st(), danger = threats(st, other(c)), all = [];
     room.board.forEach((p, i) => {
       if (!p || p.c !== c || p.frozen) return; if (room.ts.lock != null && room.ts.lock !== p.id) return;
@@ -765,10 +828,13 @@
         else { if (danger.has(m.to)) s -= VALUE[p.t] * 3; if (danger.has(i)) s += VALUE[p.t] * 2.5; if (p.t === "P") s += .6; const r = rc(m.to)[0]; s += (3.5 - Math.abs(3.5 - r)) * .15;
           const t = room.tiles[m.to]; if (t && t.k === "chest") s += 6; if (t && t.k === "meteor") s -= 8; if (t && t.k === "mine" && t.own !== c) s -= 8; }
         if (p.t === "K" && !m.attack) s -= 1.5;
+        if (level === 1) s = Math.random() * 10 + (m.attack ? 4 : 0);
+        else if (level === 3) s = simGain(room, c, { slot: "move", from: i, to: m.to }) + Math.random() * .8 + (p.t === "P" ? .4 : 0) + (3.5 - Math.abs(3.5 - rc(m.to)[0])) * .2;
         all.push([s, { slot: "move", from: i, to: m.to }]);
       });
-      shotsOf(st, i).forEach((to) => { const q = room.board[to]; all.push([(q.hp <= 1 ? 9 + Math.min(VALUE[q.t], 12) * 6 + (q.t === "K" ? 500 : 0) : Math.min(VALUE[q.t], 12) * 2) + (q.t === "K" ? 20 : 0) + Math.random(), { slot: "shoot", from: i, to }]); });
-      const sk = skillScore(room, i); if (sk != null) all.push([sk, { slot: "skill", from: i }]);
+      shotsOf(st, i).forEach((to) => { const q = room.board[to]; const mv = { slot: "shoot", from: i, to };
+        all.push([level === 3 ? simGain(room, c, mv) + Math.random() : (q.hp <= 1 ? 9 + Math.min(VALUE[q.t], 12) * 6 + (q.t === "K" ? 500 : 0) : Math.min(VALUE[q.t], 12) * 2) + (q.t === "K" ? 20 : 0) + Math.random() * (level === 1 ? 8 : 1), mv]); });
+      const sk = skillScore(room, i); if (sk != null && !(level === 1 && Math.random() < .6)) all.push([level === 3 ? simGain(room, c, { slot: "skill", from: i }) : sk, { slot: "skill", from: i }]);
     });
     if (!all.length) return null;
     all.sort((a, b) => b[0] - a[0]);
@@ -786,7 +852,7 @@
     room.touch();
   }
 
-  const api = { MChessRoom, PIECES, SKILLS, CARDS, EVENTS, REALMS, COMBOS, SHAPES, VALUE, ECLIPSE, REALM_ROUNDS, movesOf, shotsOf, skillTargets, skillReady, threats, pathOf, planCard, planMove, autoPlay, rc, at, around, atkOf,
+  const api = { MChessRoom, PIECES, SKILLS, CARDS, EVENTS, REALMS, COMBOS, SHAPES, VALUE, ECLIPSE, REALM_ROUNDS, MANA_MAX, UP_COST, BOT_LEVELS, movesOf, shotsOf, skillTargets, skillReady, threats, pathOf, planCard, planMove, planUpgrade, autoPlay, rc, at, around, atkOf,
     MIN_PLAYERS, MAX_PLAYERS, TURN_SECONDS, HAND_MAX };
   root.MChess = api;
   Engine.MChessRoom = MChessRoom;

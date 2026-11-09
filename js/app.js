@@ -934,6 +934,8 @@ function renderOverlay() {
     body = S.room ? `<h2>📖 Як грати</h2><div class="rou-rules">${rouRulesHtml(modeOf(S.room))}</div>` : "";
   } else if (S.sheet.type === "mc-settings") {
     body = S.room ? mcSettingsSheet() : "";
+  } else if (S.sheet.type === "mc-help") {
+    body = mcHelpSheet();
   } else if (S.sheet.type === "spy-settings") {
     body = spySettingsSheet();
   } else if (S.sheet.type === "spy-guess") {

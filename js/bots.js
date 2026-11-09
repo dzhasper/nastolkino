@@ -647,13 +647,15 @@ const Bots = (() => {
     if (room.phase !== "play") return;
     const c = room.colorOf(id); if (!c || room.turn !== c) return;
     const m = mem(room, id), turnKey = room.ply;
-    if (m.mcTurn !== turnKey) { m.mcTurn = turnKey; m.mcCard = false; return think(id, 900, 2200); }   // «думає» перед ходом
+    if (m.mcTurn !== turnKey) { m.mcTurn = turnKey; m.mcCard = false; m.mcUp = false; return think(id, 900, 2200); }   // «думає» перед ходом
+    const lvl = room.settings.bot || 2;                                // складність: 1 новачок, 2 звичайний, 3 майстер
+    if (!m.mcUp) { m.mcUp = true; const up = MChess.planUpgrade(room, c, lvl); if (up) return act(h, id, up, 700, 1300); }
     if (!m.mcCard) {
       m.mcCard = true;
-      const card = MChess.planCard(room, c, true);
+      const card = MChess.planCard(room, c, lvl);
       if (card) { if (chance(.25)) say(h, room, id, pick(["Тримай чари ✨", "А ось і магія", "Ха!", "Не чекав?", "🔥🔥🔥"])); return act(h, id, card, 900, 1800); }
     }
-    const mv = MChess.planMove(room, c);
+    const mv = MChess.planMove(room, c, lvl);
     if (!mv) return act(h, id, { slot: "end" }, 600, 1200);
     act(h, id, mv, 1000, 2200);
   }
