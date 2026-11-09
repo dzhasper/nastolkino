@@ -312,7 +312,11 @@ function render() {
   else setColors();
   const screens = { connecting: viewConnecting, loading: viewLoading, register: viewRegister, home: viewHome, profile: viewProfile, shop: viewShop, pets: viewPets, solo: viewSolo, "solo-bj": viewSoloBj, "solo-hilo": viewSoloHilo, "solo-cups": viewSoloCups, "solo-wheel": viewSoloWheel, "solo-memo": viewSoloMemo, "solo-react": viewSoloReact, "solo-shoot": viewSoloShoot, "solo-snake": viewSoloSnake, petfun: viewPetFun, league: viewLeague, pass: viewPass, cup: viewCup, mini: viewMini, mafia: viewMafia, spy: viewSpyMenu, draw: viewDrawMenu, roulette: viewRouletteMenu, blackjack: viewBlackjackMenu, mchess: viewMChessMenu, room: viewRoom };
   const gated = Api.on && Api.state && Api.state.gate && !Api.state.admin && !["register", "connecting", "loading"].includes(S.screen);   // админ сделал подписку на группу обязательной
-  $app.innerHTML = gated ? viewGate() : (screens[S.screen] || viewLoading)();
+  const html = gated ? viewGate() : (screens[S.screen] || viewLoading)();
+  const mcKey = !gated && S.screen === "room" && S.room && S.room.game === "mchess" ? S.room.code + ":" + S.room.phase : "";
+  if (mcKey && $app.dataset.mc === mcKey) mcMorph($app, html);           // шахи: точкове оновлення, без мерехтіння
+  else $app.innerHTML = html;
+  $app.dataset.mc = mcKey;
   renderOverlay();
   MChat.sync();                                                   // мафия в виде чата живёт поверх экрана
   if (PX()) Pixel.apply();
@@ -1106,7 +1110,7 @@ const actions = {
     const go = () => { haptic("medium"); if (S.room && S.room.phase === "lobby" && isHost()) groupDone(S.room.code, "gone"); send({ t: "leave" }); };
     if (S.room && !["lobby", "end"].includes(S.room.phase)) {
       const q = isHost() ? "Ти хост: якщо вийдеш, гра закінчиться в усіх. Вийти?" : CELLAR_GAMES.includes(S.room.game) ? "Вийти з гри? Ти встанеш з-за столу й вибудеш" : "Вийти з гри?";
-      if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
+      if (tg) { try { tg.showConfirm(q, (ok) => ok && go()); } catch (e) { if (confirm(q)) go(); } } else if (confirm(q)) go();
     } else go();
   },
   "ref-share": () => {

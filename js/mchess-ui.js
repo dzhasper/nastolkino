@@ -70,7 +70,38 @@ function mcPiece(p, o = {}) {
   const extra = (p.frozen ? '<i class="mc-ice"></i>' : "") + (p.shield ? '<i class="mc-bub"></i>' : "")
     + (burn ? '<i class="mc-flame f1"></i><i class="mc-flame f2"></i><i class="mc-flame f3"></i>' : "") + (p.poison ? '<i class="mc-bubs"></i>' : "") + (p.vamp ? '<i class="mc-bat">🦇</i>' : "")
     + (p.rank ? `<i class="mc-rank r${p.rank}">${p.rank >= 2 ? "★★" : "★"}</i>` : "") + (o.ready ? '<i class="mc-ready"></i>' : "");
-  return `<span class="mc-pw ${cls} ${o.anim || ""}"${o.style || ""}>${halo}${svg}${extra}</span>`;
+  return `<span class="mc-pw ${cls} ${o.anim || ""}"${o.key ? ` data-k="${o.key}"` : ""}${o.style || ""}>${halo}${svg}${extra}</span>`;
+}
+
+/* ---------------------------------------------------------------- точкове оновлення екрана: живі вузли лишаються, тож анімації не перезапускаються,
+   а кнопки не підміняються під пальцем. Вузли з data-k зіставляються за ключем, решта — за порядком */
+function mcMorph(root, html) {
+  const tpl = document.createElement("template"); tpl.innerHTML = html;
+  mcSyncKids(root, tpl.content);
+}
+function mcSyncKids(a, b) {
+  const old = [...a.childNodes], neu = [...b.childNodes], keyed = new Map(), loose = [];
+  old.forEach((n) => { const k = n.nodeType === 1 && n.getAttribute("data-k"); if (k) keyed.set(k, n); else loose.push(n); });
+  let li = 0; const out = [];
+  for (const y of neu) {
+    const k = y.nodeType === 1 && y.getAttribute("data-k");
+    let x = null;
+    if (k) { x = keyed.get(k) || null; if (x) keyed.delete(k); } else if (li < loose.length) x = loose[li++];
+    if (x && x.nodeType === y.nodeType && x.nodeName === y.nodeName && mcSyncNode(x, y)) out.push(x);
+    else out.push(document.importNode(y, true));
+  }
+  out.forEach((n, i) => { if (a.childNodes[i] !== n) a.insertBefore(n, a.childNodes[i] || null); });
+  while (a.childNodes.length > out.length) a.removeChild(a.lastChild);
+}
+function mcSyncNode(x, y) {                     // false — вузол треба замінити
+  if (x.nodeType === 3 || x.nodeType === 8) { if (x.nodeValue !== y.nodeValue) x.nodeValue = y.nodeValue; return true; }
+  if (x.nodeType !== 1) return false;
+  if (x.nodeName === "CANVAS") return ["class", "data-emoji", "data-src", "data-res"].every((n) => x.getAttribute(n) === y.getAttribute(n));
+  if (x.nodeName === "INPUT" || x.nodeName === "TEXTAREA") return false;
+  for (const at of [...y.attributes]) if (x.getAttribute(at.name) !== at.value) x.setAttribute(at.name, at.value);
+  for (const at of [...x.attributes]) if (!y.hasAttribute(at.name)) x.removeAttribute(at.name);
+  mcSyncKids(x, y);
+  return true;
 }
 
 /* ---------------------------------------------------------------- довідники */
@@ -220,7 +251,7 @@ function mcCell(r, sq, ctx) {
     const art = { fire: '<i class="mc-flame tf1"></i><i class="mc-flame tf2"></i>', chest: '<i class="mc-chest">🎁</i>', mine: '<i class="mc-mine">💣</i>', portal: '<i class="mc-swirl"></i>',
       meteor: '<i class="mc-target"></i><i class="mc-metico">☄️</i>', steam: '<i class="mc-puff p1"></i><i class="mc-puff p2"></i>', void: `<i class="mc-voidrim"></i>${crumble ? `<i class="mc-crumb" style="${mcDelay(crumble)}"></i>` : ""}`,
       hole: crumble ? `<i class="mc-crumb" style="${mcDelay(crumble)}"></i>` : "", lava: '<i class="mc-lavab"></i>', water: '<i class="mc-wave"></i>' }[t.k] || "";
-    inner += `<i class="mc-tile">${art}</i>${ttl}`;
+    inner += `<i class="mc-tile" data-k="t-${t.k}${t.pair || ""}">${art}</i>${ttl.replace("<b ", '<b data-k="ttl" ')}`;
   }
   if (p) {
     const ts = r.ts || {}, mv = ctx.fx.find((f) => (f.k === "move" || f.k === "slide") && f.sq === sq && f.from != null);
@@ -229,30 +260,30 @@ function mcCell(r, sq, ctx) {
     if (mv) { const [r0, c0] = MChess.rc(mv.from), k = ctx.flip ? -1 : 1; st = ` style="--dx:${(c0 - col) * k * 100}%;--dy:${(r0 - row) * k * 100}%;${mcDelay(mv)}"`; anim = "moving"; }
     else if (hurt) { st = ` style="${mcDelay(hurt)}"`; anim = "hurt"; }
     const mineTurn = ctx.my && p.c === r.me && (ts.lock == null || ts.lock === p.id);
-    inner += mcPiece(p, { burn: ts.fire === p.id, ghost: ts.ghost === p.id, anim, style: st, ready: mineTurn && !p.cd && MChess.skillReady(mcState(r), sq) });
+    inner += mcPiece(p, { key: "p" + p.id, burn: ts.fire === p.id, ghost: ts.ghost === p.id, anim, style: st, ready: mineTurn && mcSkillWorth(r, sq) });
     const hp = Array.from({ length: Math.max(p.max, p.hp) }, (_, i) => `<i class="${i < p.hp ? (i >= p.max ? "x" : "on") : ""}"></i>`).join("");
-    const chips = [p.shield ? `🛡${p.shield}` : "", p.frozen ? `❄️${p.frozen}` : "", p.poison ? `☠️${p.poison}` : "", p.gun ? `🔫${p.gun}` : "", p.cd && p.c === r.me ? `⏳${p.cd}` : ""].filter(Boolean);
-    inner += `<span class="mc-hp">${hp}</span>${chips.length ? `<span class="mc-st">${chips.slice(0, 2).map((x) => `<em>${x}</em>`).join("")}</span>` : ""}`;
+    const chips = [p.gun ? `🔫${p.gun}` : ""].filter(Boolean);                          // решту станів видно з вигляду фігури, подробиці — дотиком
+    inner += `<span class="mc-hp" data-k="hp">${hp}</span>${chips.length ? `<span class="mc-st" data-k="st">${chips.slice(0, 2).map((x) => `<em>${x}</em>`).join("")}</span>` : ""}`;
   }
   ctx.fx.filter((f) => f.sq === sq && !["move", "card", "skill", "combo", "crumble"].includes(f.k)).forEach((f) => {
     const txt = { hit: `−${f.dmg || 1}`, die: "💥", heal: "+", shield: "🛡", bolt: "⚡", boom: "💥", freeze: "❄️", portal: "🌀", shot: "💥", fire: "🔥", mirror: "✨", chest: "🎁", slide: "💨", promote: "👑", frog: "🐸",
       rank: f.rank >= 2 ? "ГЕРОЙ!" : "ВЕТЕРАН!", slash: "", holy: "", steam: "♨️", clone: "👥", vamp: "🩸", poison: "☠️", rage: "😡", meteor: "☄️", blackhole: "", vortex: "" }[f.k];
-    if (txt != null) inner += `<i class="mc-fx fx-${f.k}" style="${mcDelay(f)}">${txt}</i>`;
-    if (f.k === "die" && f.t) inner += `<span class="mc-dying" style="${mcDelay(f)}">${mcPiece({ t: f.t, c: f.c, hp: 1, max: 1 }, { mini: true })}</span>`;
+    if (txt != null) inner += `<i class="mc-fx fx-${f.k}" data-k="f${f.n}" style="${mcDelay(f)}">${txt}</i>`;
+    if (f.k === "die" && f.t) inner += `<span class="mc-dying" data-k="d${f.n}" style="${mcDelay(f)}">${mcPiece({ t: f.t, c: f.c, hp: 1, max: 1 }, { mini: true })}</span>`;
   });
-  return `<button class="mc-c ${cls.join(" ")}" data-a="mc-cell" data-v="${sq}"${style.length ? ` style="${style.join(";")}"` : ""}>${inner}</button>`;
+  return `<button class="mc-c ${cls.join(" ")}" data-k="c${sq}" data-a="mc-cell" data-v="${sq}"${style.length ? ` style="${style.join(";")}"` : ""}>${inner}</button>`;
 }
 
 function mcBanner(r, live, me) {
   const pick = (k) => live.filter((f) => f.k === k).slice(-1)[0];
   const ev = pick("event"), realm = pick("realm"), combo = pick("combo"), start = pick("start"), cast = pick("card"), skill = pick("skill");
-  if (ev) { const E = MChess.EVENTS[ev.ev]; return `<div class="mc-evbig ${E.realm ? "realm-" + ev.ev : ""}" style="${mcDelay(ev)}"><small class="k">${E.realm ? "НОВИЙ СВІТ" : "КАТАКЛІЗМ"}</small><span>${E.e}</span><b>${E.name}!</b><small>${esc(E.desc)}</small></div>`; }
-  if (realm && realm.realm === "arcana") return `<div class="mc-evbig realm-arcana" style="${mcDelay(realm)}"><small class="k">СВІТ ЗМІНИВСЯ</small><span>🔮</span><b>Аркана</b><small>Дошка повертається до звичайної магії</small></div>`;
-  if (combo) return `<div class="mc-combo-b" style="${mcDelay(combo)}"><small>КОМБО!</small><b>${esc(combo.name)}</b></div>`;
+  if (ev) { const E = MChess.EVENTS[ev.ev]; return `<div class="mc-evbig ${E.realm ? "realm-" + ev.ev : ""}" data-k="b${ev.n}" style="${mcDelay(ev)}"><small class="k">${E.realm ? "НОВИЙ СВІТ" : "КАТАКЛІЗМ"}</small><span>${E.e}</span><b>${E.name}!</b><small>${esc(E.desc)}</small></div>`; }
+  if (realm && realm.realm === "arcana") return `<div class="mc-evbig realm-arcana" data-k="b${realm.n}" style="${mcDelay(realm)}"><small class="k">СВІТ ЗМІНИВСЯ</small><span>🔮</span><b>Аркана</b><small>Дошка повертається до звичайної магії</small></div>`;
+  if (combo) return `<div class="mc-combo-b" data-k="b${combo.n}" style="${mcDelay(combo)}"><small>КОМБО!</small><b>${esc(combo.name)}</b></div>`;
   if (start) { const n = (c) => esc((r.players.find((p) => p.id === r.seats[c]) || { name: mcCol(c) }).name);
-    return `<div class="mc-vs" style="${mcDelay(start)}"><div class="w">${mcPiece({ t: "K", c: "w", hp: 1, max: 1 }, { mini: true })}<b>${n("w")}</b></div><span>VS</span><div class="b">${mcPiece({ t: "K", c: "b", hp: 1, max: 1 }, { mini: true })}<b>${n("b")}</b></div></div>`; }
-  if (cast) { const C = MChess.CARDS[cast.card]; return `<div class="mc-cast c-${cast.c}" style="${mcDelay(cast)}"><span>${C.e}</span><b>${C.name}</b><small>${cast.c === me ? "твоя карта" : `грають ${mcCol(cast.c)}`}</small></div>`; }
-  if (skill) { const K = MChess.SKILLS[skill.t]; return `<div class="mc-cast skill c-${skill.c}" style="${mcDelay(skill)}"><span>${K.e}</span><b>${K.name}</b><small>${MChess.PIECES[skill.t].name}</small></div>`; }
+    return `<div class="mc-vs" data-k="b${start.n}" style="${mcDelay(start)}"><div class="w">${mcPiece({ t: "K", c: "w", hp: 1, max: 1 }, { mini: true })}<b>${n("w")}</b></div><span>VS</span><div class="b">${mcPiece({ t: "K", c: "b", hp: 1, max: 1 }, { mini: true })}<b>${n("b")}</b></div></div>`; }
+  if (cast) { const C = MChess.CARDS[cast.card]; return `<div class="mc-cast c-${cast.c}" data-k="b${cast.n}" style="${mcDelay(cast)}"><span>${C.e}</span><b>${C.name}</b><small>${cast.c === me ? "твоя карта" : `грають ${mcCol(cast.c)}`}</small></div>`; }
+  if (skill) { const K = MChess.SKILLS[skill.t]; return `<div class="mc-cast skill c-${skill.c}" data-k="b${skill.n}" style="${mcDelay(skill)}"><span>${K.e}</span><b>${K.name}</b><small>${MChess.PIECES[skill.t].name}</small></div>`; }
   return "";
 }
 
@@ -276,7 +307,7 @@ function mcTable() {
   const line = (f, cls) => {
     const [r0, c0] = MChess.rc(f.from), [r1, c1] = MChess.rc(f.sq), k = flip ? -1 : 1, x0 = flip ? 7 - c0 : c0, y0 = flip ? 7 - r0 : r0;
     const dx = (c1 - c0) * k, dy = (r1 - r0) * k, len = Math.hypot(dx, dy) * 12.5, ang = Math.atan2(dy, dx) * 180 / Math.PI;
-    return `<i class="${cls}" style="left:${(x0 + .5) * 12.5}%;top:${(y0 + .5) * 12.5}%;width:${len}%;transform:rotate(${ang}deg);${mcDelay(f)}"></i>`;
+    return `<i class="${cls}" data-k="l${f.n}" style="left:${(x0 + .5) * 12.5}%;top:${(y0 + .5) * 12.5}%;width:${len}%;transform:rotate(${ang}deg);${mcDelay(f)}"></i>`;
   };
   const lines = live.filter((f) => f.k === "shot" && f.from != null).map((f) => line(f, "mc-tracer")).join("")
     + live.filter((f) => f.k === "slash" && f.from != null).map((f) => line(f, "mc-slashline")).join("");
@@ -328,9 +359,29 @@ function mcControls() {
   const canCard = my && !ts.card && !ts.used;
   const hand = `<div class="mc-hand">${(r.hand || []).map((k, i) => { const C = MChess.CARDS[k]; return `<button class="mc-card ck-${k} ${sel.card === i ? "on" : ""} ${canCard ? "" : "off"}" data-a="mc-card" data-v="${i}"><span>${C.e}</span><b>${C.name}</b><small>${esc(C.desc)}</small></button>`; }).join("")}
     ${(r.hand || []).length ? "" : `<div class="small muted mc-nohand">Карт немає — нові приходять на початку ходу й зі скринь 🎁</div>`}</div>`;
-  const btns = `<div class="row mt mc-btns">${my && ts.used && (ts.moves || 1) > ts.used ? `<button class="btn grow" data-a="mc-end">Завершити хід</button>` : ""}
-    <button class="btn ghost small" data-a="mc-resign">🏳 Здатися</button>${isHost() ? `<button class="btn ghost small" data-a="mc-skip" title="пропустити хід, якщо гравець завис">⏭</button>` : ""}</div>`;
+  const stuck = my && !mcCanAct(r);
+  const btns = `<div class="row mt mc-btns">${my && ts.used && (ts.moves || 1) > ts.used ? `<button class="btn grow" data-a="mc-end">Завершити хід</button>` : stuck ? `<button class="btn grow" data-a="mc-end">Пропустити хід</button>` : ""}
+    ${S.mcResign && Date.now() - S.mcResign < 5000 ? `<button class="btn small mc-resign-ok" data-a="mc-resign-ok">🏳 Так, здаюся</button><button class="btn ghost small" data-a="mc-resign-no">Ні</button>`
+      : `<button class="btn ghost small" data-a="mc-resign">🏳 Здатися</button>`}${isHost() && mcAway(r) ? `<button class="btn ghost small" data-a="mc-skip">⏭ Пропустити хід (гравець не на зв’язку)</button>` : ""}</div>`;
   return status + target + skill + hand + btns;
+}
+
+// той, чий хід, вийшов зі зв’язку — хост може пропустити його хід
+const mcAway = (r) => { const p = r.players.find((x) => x.id === r.seats[r.turn]); return !!p && !p.online; };
+// іскра «навичка готова» — лише там, де навичка зараз справді щось дасть (а не на кожному пішаку)
+function mcSkillWorth(r, sq) {
+  const p = r.board[sq]; if (!p || p.cd || p.frozen) return false;
+  const st = mcState(r), t = MChess.skillTargets(st, sq);
+  if (p.t === "P") return t.buff.length >= 4;
+  if (p.t === "K") return t.buff.some((x) => MChess.movesOf(st, x).some((m) => m.attack)) || (p.hp <= 2 && t.buff.length > 0);
+  return t.hit.length > 0 || t.heal.length > 0;
+}
+// чи може гравець щось зробити фігурами (хід, постріл, навичка) — інакше покажемо «Пропустити хід»
+function mcCanAct(r) {
+  const st = mcState(r), ts = r.ts || {};
+  for (let i = 0; i < 64; i++) { const p = r.board[i]; if (!p || p.c !== r.me || (ts.lock != null && ts.lock !== p.id)) continue;
+    if (MChess.movesOf(st, i, { ghost: ts.ghost === p.id }).length || MChess.shotsOf(st, i).length || MChess.skillReady(st, i)) return true; }
+  return false;
 }
 
 function mcInfo() {
@@ -418,9 +469,8 @@ const MC_ACTIONS = {
   "mc-cancel": () => { const sel = mcSel(); sel.card = null; sel.a = null; render(); },
   "mc-end": () => { send({ t: "act", slot: "end" }); haptic("light"); },
   "mc-skip": () => send({ t: "skip" }),
-  "mc-resign": () => {
-    const go = () => { send({ t: "act", slot: "resign" }); haptic("heavy"); };
-    const q = "Здатися? Перемога дістанеться суперникові.";
-    if (tg) tg.showConfirm(q, (ok) => ok && go()); else if (confirm(q)) go();
-  },
+  // здатися — у два дотики прямо на екрані (без системного вікна Telegram, яке в частині клієнтів не відкривається)
+  "mc-resign": () => { S.mcResign = Date.now(); haptic("medium"); render(); setTimeout(() => { if (S.mcResign && Date.now() - S.mcResign >= 5000) { S.mcResign = 0; if (S.room && S.room.game === "mchess") render(); } }, 5100); },
+  "mc-resign-ok": () => { S.mcResign = 0; send({ t: "act", slot: "resign" }); haptic("heavy"); render(); },
+  "mc-resign-no": () => { S.mcResign = 0; render(); },
 };

@@ -13,7 +13,7 @@
   const { GameError } = Engine;
 
   const MIN_PLAYERS = 2, MAX_PLAYERS = 6, TURN_SECONDS = 75, ECLIPSE = 30, OFFLINE_SECONDS = 10, REALM_ROUNDS = 4;
-  const HAND_MAX = 3, CHAT_LIMIT = 80, DRAW_CHANCE = .55;
+  const HAND_MAX = 3, CHAT_LIMIT = 80, DRAW_CHANCE = .55, SHIELD_MAX = 3;   // щити не накопичуються безкінечно
   const PIECES = { K: { hp: 4, atk: 1, name: "Король" }, Q: { hp: 3, atk: 2, name: "Ферзь" }, R: { hp: 3, atk: 2, name: "Тура" }, B: { hp: 2, atk: 2, name: "Слон" }, N: { hp: 2, atk: 2, name: "Кінь" }, P: { hp: 1, atk: 1, name: "Пішак" } };
   const VALUE = { K: 60, Q: 9, R: 5, B: 3, N: 3, P: 1 };
   // навички фігур: замість ходу, з перезарядкою (у власних ходах)
@@ -171,7 +171,8 @@
     else if (p.t === "B") DIAG.forEach(([dr, dc]) => { const x = first(dr, dc); if (x < 0) return; if (B[x].c !== p.c) out.hit.push(x); else if (B[x].hp < B[x].max) out.heal.push(x); });
     return out;
   }
-  const skillReady = (st, sq) => { const p = st.board[sq]; if (!p || p.frozen || p.cd) return false; const t = skillTargets(st, sq); return !!(t.hit.length || t.heal.length || (p.t === "P" ? true : t.buff.length)); };
+  const skillReady = (st, sq) => { const p = st.board[sq]; if (!p || p.frozen || p.cd) return false; const t = skillTargets(st, sq);
+    return !!(t.hit.length || t.heal.length || (p.t === "P" ? t.buff.some((x) => (st.board[x].shield || 0) < 3) : t.buff.length)); };
   // клітинки, яких торкається хід (для вогняного сліду): старт і проміжні
   function pathOf(from, to) {
     const [r1, c1] = rc(from), [r2, c2] = rc(to), dr = Math.sign(r2 - r1), dc = Math.sign(c2 - c1), n = Math.max(Math.abs(r2 - r1), Math.abs(c2 - c1));
@@ -493,14 +494,14 @@
       const p = this.pieceOk(c, from), S = SKILLS[p.t];
       if (p.cd) throw new GameError(`${S.e} ${S.name} перезаряджається: ще ${p.cd} ${p.cd === 1 ? "хід" : "ходи"}`);
       const tg = skillTargets(this.st(), from);
-      const need = p.t === "P" ? true : p.t === "K" ? tg.buff.length : p.t === "B" ? tg.hit.length || tg.heal.length : tg.hit.length;
-      if (!need) throw new GameError(p.t === "K" ? "Поруч немає союзників" : p.t === "B" ? "На діагоналях нікого" : "Поруч немає ворогів");
+      const need = p.t === "P" ? tg.buff.some((x) => (this.board[x].shield || 0) < SHIELD_MAX) : p.t === "K" ? tg.buff.length : p.t === "B" ? tg.hit.length || tg.heal.length : tg.hit.length;
+      if (!need) throw new GameError(p.t === "P" ? "Щити вже повні" : p.t === "K" ? "Поруч немає союзників" : p.t === "B" ? "На діагоналях нікого" : "Поруч немає ворогів");
       p.cd = S.cd; this.stats[c].skills += 1;
       this.note(`${S.e} ${PIECES[p.t].name} ${c === "w" ? "білих" : "чорних"}: «${S.name}»`);
       this.effect("skill", from, { t: p.t, c });
       if (p.t === "P") {
         const ph = tg.buff.length >= 4;
-        tg.buff.forEach((x) => { this.board[x].shield = (this.board[x].shield || 0) + (ph ? 2 : 1); this.effect("shield", x); });
+        tg.buff.forEach((x) => { this.board[x].shield = Math.min(SHIELD_MAX, (this.board[x].shield || 0) + (ph ? 2 : 1)); this.effect("shield", x); });
         if (ph) this.combo("Фаланга", c, from);
       } else if (p.t === "N") tg.hit.forEach((x) => { if (this.phase === "play" && this.board[x] && this.board[from] === p) { this.effect("boom", x); this.damage(x, 1, from); } });
       else if (p.t === "R") tg.hit.forEach((x) => { if (this.phase === "play" && this.board[x] && this.board[from] === p) { this.effect("shot", x, { from }); this.damage(x, 1, from); } });
@@ -519,7 +520,7 @@
         });
       } else if (p.t === "K") {
         const last = p.hp <= 2;
-        tg.buff.forEach((x) => { const q = this.board[x]; q.rage = Math.max(q.rage || 0, 3); if (last) q.shield = (q.shield || 0) + 1; this.effect("rage", x); });
+        tg.buff.forEach((x) => { const q = this.board[x]; q.rage = Math.max(q.rage || 0, 3); if (last) q.shield = Math.min(SHIELD_MAX, (q.shield || 0) + 1); this.effect("rage", x); });
         if (last) this.combo("Останній бій", c, from);
       }
       if (this.phase !== "play") return;
@@ -558,7 +559,7 @@
         if (P.poison) { P.poison = 0; P.hp = Math.min(P.max, P.hp + 1); this.effect("heal", a); this.combo("Випалювання", c, a); }
       }
       else if (k === "gun") P.gun = 3;
-      else if (k === "shield") { P.shield = (P.shield || 0) + 2; this.effect("shield", a); }
+      else if (k === "shield") { P.shield = Math.min(SHIELD_MAX, (P.shield || 0) + 2); this.effect("shield", a); }
       else if (k === "freeze") {
         const hot = this.tiles[a] && ["fire", "lava"].includes(this.tiles[a].k);
         if (hot) { this.combo("Термошок", c, a); this.tiles[a] = null; this.damage(a, 2, null); }
